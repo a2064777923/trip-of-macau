@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="375" height="812" viewBox="0 0 375 812" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 柔和粉彩渐变 -->
+    <linearGradient id="pastelPink" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFB6C1"/>
+      <stop offset="50%" style="stop-color:#FFC0CB"/>
+      <stop offset="100%" style="stop-color:#FFE4E1"/>
+    </linearGradient>
+    <linearGradient id="pastelBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#B0E0E6"/>
+      <stop offset="50%" style="stop-color:#ADD8E6"/>
+      <stop offset="100%" style="stop-color:#E0FFFF"/>
+    </linearGradient>
+    <linearGradient id="pastelMint" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#98FB98"/>
+      <stop offset="50%" style="stop-color:#90EE90"/>
+      <stop offset="100%" style="stop-color:#F0FFF0"/>
+    </linearGradient>
+    <linearGradient id="pastelLavender" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E6E6FA"/>
+      <stop offset="50%" style="stop-color:#DDA0DD"/>
+      <stop offset="100%" style="stop-color:#FFF0F5"/>
+    </linearGradient>
+    <linearGradient id="pastelCream" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFF8DC"/>
+      <stop offset="50%" style="stop-color:#FFFAF0"/>
+      <stop offset="100%" style="stop-color:#FFFAFA"/>
+    </linearGradient>
+    
+    <!-- 柔和阴影 -->
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12"/>
+      <feOffset dx="0" dy="8" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.15"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- 内发光 -->
+    <filter id="innerGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+      <feComposite in="blur" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1"/>
+    </filter>
+    
+    <!-- 发光效果 -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 背景层 -->
+  <rect width="375" height="812" fill="#FFFAF0"/>
+  
+  <!-- 顶部装饰 -->
+  <circle cx="80" cy="80" r="120" fill="url(#pastelPink)" opacity="0.15"/>
+  <circle cx="300" cy="150" r="80" fill="url(#pastelBlue)" opacity="0.1"/>
+  <circle cx="150" cy="300" r="100" fill="url(#pastelMint)" opacity="0.12"/>
+  
+  <!-- 主内容区 -->
+  <g transform="translate(20, 100)">
+    <!-- 标题区 -->
+    <text x="167.5" y="40" font-family="'PingFang SC', sans-serif" font-size="28" fill="#4A5568" text-anchor="middle" font-weight="700">📚 秘籍</text>
+    <text x="167.5" y="70" font-family="'PingFang SC', sans-serif" font-size="14" fill="#718096" text-anchor="middle">发现澳门的精彩攻略和游记</text>
+    
+    <!-- 搜索框 -->
+    <g transform="translate(0, 100)">
+      <rect width="335" height="48" rx="24" fill="white" filter="url(#softShadow)"/>
+      <text x="24" y="30" font-size="20" fill="#A0AEC0">🔍</text>
+      <text x="56" y="30" font-family="'PingFang SC', sans-serif" font-size="15" fill="#A0AEC0">搜索攻略、游记、景点...</text>
+    </g>
+    
+    <!-- 分类标签 -->
+    <g transform="translate(0, 170)">
+      <rect x="0" y="0" width="72" height="36" rx="18" fill="url(#pastelPink)" opacity="0.3"/>
+      <rect x="2" y="2" width="68" height="32" rx="16" fill="white" opacity="0.9"/>
+      <text x="36" y="24" font-family="'PingFang SC', sans-serif" font-size="13" fill="#F687B3" text-anchor="middle" font-weight="600">推荐</text>
+      
+      <g transform="translate(80, 0)">
+        <rect x="0" y="0" width="72" height="36" rx="18" fill="#F7FAFC"/>
+        <text x="36" y="24" font-family="'PingFang SC', sans-serif" font-size="13" fill="#718096" text-anchor="middle">攻略</text>
+      </g>
+      
+      <g transform="translate(160, 0)">
+        <rect x="0" y="0" width="72" height="36" rx="18" fill="#F7FAFC"/>
+        <text x="36" y="24" font-family="'PingFang SC', sans-serif" font-size="13" fill="#718096" text-anchor="middle">游记</text>
+      </g>
+      
+      <g transform="translate(240, 0)">
+        <rect x="0" y="0" width="72" height="36" rx="18" fill="#F7FAFC"/>
+        <text x="36" y="24" font-family="'PingFang SC', sans-serif" font-size="13" fill="#718096" text-anchor="middle">美食</text>
+      </g>
+    </g>
+    
+    <!-- 内容列表 -->
+    <g transform="translate(0, 230)">
+      <!-- 文章1 -->
+      <g filter="url(#softShadow)">
+        <rect x="0" y="0" width="335" height="140" rx="20" fill="white"/>
+        <rect x="12" y="12" width="100" height="116" rx="12" fill="url(#pastelPink)" opacity="0.2"/>
+        <text x="62" y="78" font-size="36" text-anchor="middle">🏛️</text>
+        
+        <g transform="translate(126, 20)">
+          <rect x="0" y="0" width="56" height="20" rx="10" fill="url(#pastelMint)" opacity="0.3"/>
+          <rect x="2" y="2" width="52" height="16" rx="8" fill="white" opacity="0.9"/>
+          <text x="28" y="13" font-family="'PingFang SC', sans-serif" font-size="10" fill="#48BB78" text-anchor="middle" font-weight="600">精华</text>
+          
+          <text x="0" y="44" font-family="'PingFang SC', sans-serif" font-size="16" fill="#4A5568" font-weight="600">大三巴牌坊游玩全攻略</text>
+          <text x="0" y="68" font-family="'PingFang SC', sans-serif" font-size="12" fill="#718096">历史建筑 · 拍照打卡 · 3小时</text>
+          <text x="0" y="88" font-family="'PingFang SC', sans-serif" font-size="11" fill="#A0AEC0">👤 旅行达人小明 · ❤️ 1.2k</text>
+        </g>
+      </g>
+      
+      <!-- 文章2 -->
+      <g transform="translate(0, 160)" filter="url(#softShadow)">
+        <rect x="0" y="0" width="335" height="140" rx="20" fill="white"/>
+        <rect x="12" y="12" width="100" height="116" rx="12" fill="url(#pastelBlue)" opacity="0.2"/>
+        <text x="62" y="78" font-size="36" text-anchor="middle">🍽️</text>
+        
+        <g transform="translate(126, 20)">
+          <rect x="0" y="0" width="56" height="20" rx="10" fill="url(#pastelLavender)" opacity="0.3"/>
+          <rect x="2" y="2" width="52" height="16" rx="8" fill="white" opacity="0.9"/>
+          <text x="28" y="13" font-family="'PingFang SC', sans-serif" font-size="10" fill="#9F7AEA" text-anchor="middle" font-weight="600">热门</text>
+          
+          <text x="0" y="44" font-family="'PingFang SC', sans-serif" font-size="16" fill="#4A5568" font-weight="600">澳门葡国菜推荐</text>
+          <text x="0" y="68" font-family="'PingFang SC', sans-serif" font-size="12" fill="#718096">美食探店 · 人均100 · 1.5小时</text>
+          <text x="0" y="88" font-family="'PingFang SC', sans-serif" font-size="11" fill="#A0AEC0">👤 吃货小王 · ❤️ 856</text>
+        </g>
+      </g>
+      
+      <!-- 文章3 -->
+      <g transform="translate(0, 320)" filter="url(#softShadow)">
+        <rect x="0" y="0" width="335" height="140" rx="20" fill="white"/>
+        <rect x="12" y="12" width="100" height="116" rx="12" fill="url(#pastelMint)" opacity="0.2"/>
+        <text x="62" y="78" font-size="36" text-anchor="middle">🏛️</text>
+        
+        <g transform="translate(126, 20)">
+          <text x="0" y="44" font-family="'PingFang SC', sans-serif" font-size="16" fill="#4A5568" font-weight="600">妈阁庙历史故事</text>
+          <text x="0" y="68" font-family="'PingFang SC', sans-serif" font-size="12" fill="#718096">文化探索 · 历史建筑 · 2小时</text>
+          <text x="0" y="88" font-family="'PingFang SC', sans-serif" font-size="11" fill="#A0AEC0">👤 历史迷小张 · ❤️ 623</text>
+        </g>
+      </g>
+    </g>
+  </g>
+  
+  <!-- 底部导航栏 -->
+  <g transform="translate(0, 734)">
+    <rect width="375" height="78" fill="white" opacity="0.95"/>
+    
+    <g transform="translate(0, 8)">
+      <!-- 首页 -->
+      <g transform="translate(37.5, 0)">
+        <text x="0" y="16" font-size="20" fill="#A0AEC0" text-anchor="middle">🏠</text>
+        <text x="0" y="36" font-family="'PingFang SC', sans-serif" font-size="10" fill="#A0AEC0" text-anchor="middle">首页</text>
+      </g>
+      <!-- 地图 (Active) -->
+      <g transform="translate(112.5, 0)">
+        <circle cx="0" cy="10" r="20" fill="url(#pastelPink)" opacity="0.3"/>
+        <text x="0" y="16" font-size="20" fill="#F687B3" text-anchor="middle">🗺️</text>
+        <text x="0" y="36" font-family="'PingFang SC', sans-serif" font-size="10" fill="#F687B3" text-anchor="middle" font-weight="600">地图</text>
+      </g>
+      <!-- 秘籍 -->
+      <g transform="translate(187.5, 0)">
+        <circle cx="0" cy="10" r="20" fill="url(#pastelMint)" opacity="0.3"/>
+        <text x="0" y="16" font-size="18" fill="#68D391" text-anchor="middle">📚</text>
+        <text x="0" y="36" font-family="'PingFang SC', sans-serif" font-size="10" fill="#68D391" text-anchor="middle">秘籍</text>
+      </g>
+      <!-- 发现 -->
+      <g transform="translate(262.5, 0)">
+        <text x="0" y="16" font-size="20" fill="#A0AEC0" text-anchor="middle">🔍</text>
+        <text x="0" y="36" font-family="'PingFang SC', sans-serif" font-size="10" fill="#A0AEC0" text-anchor="middle">发现</text>
+      </g>
+      <!-- 我的 -->
+      <g transform="translate(337.5, 0)">
+        <text x="0" y="16" font-size="20" fill="#A0AEC0" text-anchor="middle">👤</text>
+        <text x="0" y="36" font-family="'PingFang SC', sans-serif" font-size="10" fill="#A0AEC0" text-anchor="middle">我的</text>
+      </g>
+    </g>
+  </g>
+  
+  <!-- 底部安全区 -->
+  <rect x="0" y="790" width="375" height="22" fill="#FFFAF0"/>
+</svg>

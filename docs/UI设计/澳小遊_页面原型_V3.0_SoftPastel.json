@@ -1,0 +1,161 @@
+{
+  "version": "3.0",
+  "style": "SoftPastel",
+  "lastUpdated": "2026-04-06",
+  "pages": [
+    {
+      "id": "home",
+      "name": "首页",
+      "file": "V3_SoftPastel_01_首页.svg",
+      "components": ["userCard", "recommendCard", "quickActions", "storyCard"]
+    },
+    {
+      "id": "map",
+      "name": "地图页",
+      "file": "V3_SoftPastel_02_地图.svg",
+      "components": ["mapView", "routeGuide", "virtualItems", "targetMarkers", "userLocation"]
+    },
+    {
+      "id": "arrival",
+      "name": "到达触发",
+      "file": "V3_SoftPastel_03_到达.svg",
+      "components": ["arrivalModal", "cameraButton", "audioGuide", "ugcContent", "stampReward"]
+    },
+    {
+      "id": "tips",
+      "name": "秘籍页",
+      "file": "V3_SoftPastel_04_秘籍.svg",
+      "style": "Xiaohongshu",
+      "components": ["searchBar", "categoryTags", "waterfallList", "contentCard"]
+    },
+    {
+      "id": "discover",
+      "name": "发现页",
+      "file": "V3_SoftPastel_05_发现.svg",
+      "components": ["activityList", "merchantCard", "hotCheckin"]
+    },
+    {
+      "id": "profile",
+      "name": "我的页面",
+      "file": "V3_SoftPastel_06_我的.svg",
+      "components": ["userInfo", "statsGrid", "achievementBadge", "menuList"]
+    },
+    {
+      "id": "senior",
+      "name": "长者模式",
+      "file": "V3_SoftPastel_07_长者.svg",
+      "features": ["largeFont", "highContrast", "simpleLayout", "voiceAssistant", "emergencyButton"]
+    }
+  ],
+  "designTokens": {
+    "colors": {
+      "pastelPink": "#FFB6C1",
+      "pastelBlue": "#B0E0E6",
+      "pastelMint": "#98FB98",
+      "pastelLavender": "#E6E6FA",
+      "pastelCream": "#FFF8DC",
+      "textPrimary": "#4A5568",
+      "textSecondary": "#718096",
+      "textTertiary": "#A0AEC0",
+      "background": "#FFFAF0",
+      "cardBg": "#FFFFFF"
+    },
+    "typography": {
+      "fontFamily": "'PingFang SC', 'Noto Sans SC', sans-serif",
+      "sizes": {
+        "h1": "28px",
+        "h2": "22px",
+        "h3": "18px",
+        "body": "16px",
+        "bodySm": "14px",
+        "caption": "12px"
+      }
+    },
+    "spacing": {
+      "xs": "4px",
+      "sm": "8px",
+      "md": "16px",
+      "lg": "24px",
+      "xl": "32px"
+    },
+    "borderRadius": {
+      "sm": "8px",
+      "md": "12px",
+      "lg": "16px",
+      "xl": "20px",
+      "full": "9999px"
+    }
+  },
+  "components": {
+    "button": {
+      "primary": {
+        "bg": "pastelPink",
+        "text": "#FFFFFF",
+        "borderRadius": "full",
+        "height": "48px",
+        "padding": "0 24px"
+      },
+      "secondary": {
+        "bg": "pastelBlue opacity 0.2",
+        "text": "textPrimary",
+        "borderRadius": "full",
+        "height": "40px",
+        "padding": "0 20px"
+      }
+    },
+    "card": {
+      "standard": {
+        "bg": "cardBg",
+        "borderRadius": "lg",
+        "shadow": "soft",
+        "padding": "md"
+      },
+      "image": {
+        "imageBorderRadius": "lg",
+        "contentPadding": "md"
+      }
+    },
+    "input": {
+      "standard": {
+        "bg": "#F7FAFC",
+        "borderRadius": "md",
+        "height": "48px",
+        "padding": "0 16px",
+        "border": "1px solid transparent",
+        "focusBorder": "pastelBlue"
+      },
+      "search": {
+        "bg": "cardBg",
+        "shadow": "soft",
+        "borderRadius": "full",
+        "height": "48px",
+        "leftIcon": "search"
+      }
+    },
+    "navigation": {
+      "top": {
+        "bg": "cardBg opacity 0.95",
+        "height": "56px",
+        "titleSize": "18px",
+        "titleAlign": "center",
+        "buttonSize": "40px"
+      },
+      "bottom": {
+        "bg": "cardBg opacity 0.95",
+        "height": "78px",
+        "iconSize": "24px",
+        "textSize": "10px",
+        "activeColor": "pastelPink",
+        "inactiveColor": "textTertiary"
+      }
+    }
+  },
+  "seniorMode": {
+    "fontScale": 1.5,
+    "minTouchTarget": "64px",
+    "minButtonHeight": "64px",
+    "highContrast": true,
+    "autoVoice": true,
+    "simpleLayout": true
+  }
+}
