@@ -1,0 +1,44 @@
+{
+  "name": "@aoxiaoyou/client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "澳小遊 Trip of Macau - 微信小程序前端",
+  "scripts": {
+    "dev:weapp": "taro build --type weapp --watch",
+    "dev:h5": "taro build --type h5 --watch",
+    "build:weapp": "taro build --type weapp",
+    "build:h5": "taro build --type h5",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint src --ext .ts,.tsx,.js,.jsx --fix"
+  },
+  "dependencies": {
+    "@tarojs/components": "^3.6.30",
+    "@tarojs/plugin-framework-react": "^3.6.30",
+    "@tarojs/plugin-platform-weapp": "^3.6.30",
+    "@tarojs/react": "^3.6.30",
+    "@tarojs/runtime": "^3.6.30",
+    "@tarojs/taro": "^3.6.30",
+    "@tarojs/webpack5-runner": "^3.6.30",
+    "jotai": "^2.6.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^4.4.7",
+    "framer-motion": "^10.18.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.6",
+    "@tarojs/cli": "^3.6.30",
+    "@types/react": "^18.2.46",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "babel-preset-taro": "^3.6.30",
+    "eslint": "^8.56.0",
+    "eslint-config-taro": "^3.6.30",
+    "eslint-plugin-react": "^7.33.2",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
