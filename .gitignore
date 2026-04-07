@@ -56,3 +56,4 @@ admin/aoxiaoyou-admin-backend/src/main/resources/application-local.yml
 # Logs
 *.log
 logs/
+admin-frontend/
