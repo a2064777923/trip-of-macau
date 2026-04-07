@@ -1,0 +1,90 @@
+// 澳小遊设计系统 - 变量定义
+
+// ==================== 主色调 ====================
+$primary: #C8102E;        // 澳门红
+$primary-dark: #8B0A1A;   // 深红
+$primary-light: #E01A2B;  // 亮红
+
+// ==================== 辅助色 ====================
+$secondary: #003399;      // 葡式蓝
+$gold: #FFD700;           // 金色（等级）
+$orange: #FFA500;         // 橙色
+
+// ==================== 中性色 ====================
+$white: #FFFFFF;
+$black: #000000;
+$gray-100: #F5F5F5;
+$gray-200: #EEEEEE;
+$gray-300: #E0E0E0;
+$gray-400: #BDBDBD;
+$gray-500: #9E9E9E;
+$gray-600: #757575;
+$gray-700: #616161;
+$gray-800: #424242;
+$gray-900: #212121;
+
+// ==================== 功能色 ====================
+$success: #4CAF50;
+$warning: #FFC107;
+$error: #F44336;
+$info: #2196F3;
+
+// ==================== 字体大小 ====================
+// 标准模式
+$font-size-xs: 20px;      // 10px
+$font-size-sm: 24px;      // 12px
+$font-size-base: 28px;    // 14px
+$font-size-md: 32px;      // 16px
+$font-size-lg: 36px;      // 18px
+$font-size-xl: 40px;      // 20px
+$font-size-2xl: 48px;     // 24px
+
+// 长者模式
+$font-size-elderly-base: 40px;   // 20px
+$font-size-elderly-lg: 44px;     // 22px
+$font-size-elderly-xl: 52px;     // 26px
+$font-size-elderly-2xl: 64px;    // 32px
+
+// ==================== 行高 ====================
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+$line-height-loose: 2;
+
+// ==================== 间距 ====================
+$spacing-unit: 8px;
+
+$spacing-xs: 8px;     // 4px
+$spacing-sm: 16px;    // 8px
+$spacing-md: 24px;    // 12px
+$spacing-lg: 32px;    // 16px
+$spacing-xl: 48px;    // 24px
+$spacing-2xl: 64px;   // 32px
+
+// ==================== 圆角 ====================
+$border-radius-none: 0;
+$border-radius-sm: 8px;
+$border-radius-md: 16px;
+$border-radius-lg: 24px;
+$border-radius-xl: 32px;
+$border-radius-full: 9999px;
+
+// ==================== 阴影 ====================
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 16px 24px rgba(0, 0, 0, 0.12);
+
+// ==================== 触摸目标尺寸 ====================
+$touch-target-min: 48px;
+$touch-target-elderly: 60px;
+
+// ==================== 动画时长 ====================
+$duration-fast: 150ms;
+$duration-normal: 250ms;
+$duration-slow: 350ms;
+
+// ==================== 断点 ====================
+$breakpoint-sm: 375px;
+$breakpoint-md: 414px;
+$breakpoint-lg: 768px;

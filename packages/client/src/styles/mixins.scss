@@ -1,0 +1,218 @@
+// 澳小遊设计系统 - Mixins
+
+// ==================== Flexbox ====================
+@mixin flex($direction: row, $justify: flex-start, $align: stretch, $wrap: nowrap) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+  flex-wrap: $wrap;
+}
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+// ==================== 文本 ====================
+@mixin text-ellipsis($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@mixin text-hide {
+  text-indent: -9999px;
+  overflow: hidden;
+}
+
+// ==================== 按钮 ====================
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md $spacing-lg;
+  font-size: $font-size-md;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid transparent;
+  border-radius: $border-radius-md;
+  transition: all $duration-fast ease-in-out;
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+@mixin button-variant($bg-color, $text-color: $white, $border-color: $bg-color) {
+  color: $text-color;
+  background-color: $bg-color;
+  border-color: $border-color;
+  
+  &:hover:not(:disabled) {
+    background-color: darken($bg-color, 10%);
+    border-color: darken($border-color, 10%);
+  }
+  
+  &:active:not(:disabled) {
+    background-color: darken($bg-color, 15%);
+    border-color: darken($border-color, 15%);
+  }
+}
+
+@mixin button-outline($color, $hover-bg: $color) {
+  color: $color;
+  background-color: transparent;
+  border-color: $color;
+  
+  &:hover:not(:disabled) {
+    color: $white;
+    background-color: $hover-bg;
+    border-color: $hover-bg;
+  }
+}
+
+// ==================== 卡片 ====================
+@mixin card($padding: $spacing-md, $radius: $border-radius-lg) {
+  padding: $padding;
+  background-color: $white;
+  border-radius: $radius;
+  box-shadow: $shadow-md;
+}
+
+@mixin card-hover {
+  transition: box-shadow $duration-normal ease-in-out;
+  
+  &:hover {
+    box-shadow: $shadow-lg;
+  }
+}
+
+// ==================== 遮罩 ====================
+@mixin overlay($bg-color: rgba(0, 0, 0, 0.5), $z-index: 1000) {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: $z-index;
+  background-color: $bg-color;
+}
+
+// ==================== 滚动 ====================
+@mixin scrollable($direction: y) {
+  @if $direction == y {
+    overflow-y: auto;
+    overflow-x: hidden;
+  } @else if $direction == x {
+    overflow-x: auto;
+    overflow-y: hidden;
+  } @else {
+    overflow: auto;
+  }
+  -webkit-overflow-scrolling: touch;
+}
+
+@mixin hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// ==================== 动画 ====================
+@mixin keyframes($name) {
+  @keyframes #{$name} {
+    @content;
+  }
+}
+
+@mixin animation($name, $duration: 1s, $timing: ease, $delay: 0s, $iteration: 1, $direction: normal, $fill: forwards) {
+  animation: $name $duration $timing $delay $iteration $direction $fill;
+}
+
+// ==================== 媒体查询 ====================
+@mixin media($breakpoint) {
+  @if $breakpoint == sm {
+    @media (max-width: $breakpoint-sm) { @content; }
+  } @else if $breakpoint == md {
+    @media (max-width: $breakpoint-md) { @content; }
+  } @else if $breakpoint == lg {
+    @media (max-width: $breakpoint-lg) { @content; }
+  }
+}
+
+// ==================== 长者模式 ====================
+@mixin elderly-mode {
+  page[data-interface-mode='elderly'] & {
+    @content;
+  }
+}
+
+// ==================== 工具 ====================
+@mixin clearfix {
+  &::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+}
+
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// 响应式字体大小
+@mixin responsive-font($min-size, $max-size, $min-width: 320px, $max-width: 1200px) {
+  font-size: clamp(
+    #{$min-size},
+    #{$min-size} + (#{$max-size} - #{$min-size}) * ((100vw - #{$min-width}) / (#{$max-width} - #{$min-width})),
+    #{$max-size}
+  );
+}
+
+// 安全区域适配（刘海屏）
+@mixin safe-area($direction: bottom) {
+  @if $direction == top {
+    padding-top: constant(safe-area-inset-top);
+    padding-top: env(safe-area-inset-top);
+  } @else if $direction == bottom {
+    padding-bottom: constant(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

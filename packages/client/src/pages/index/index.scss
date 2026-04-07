@@ -1,0 +1,247 @@
+@import '../../styles/variables.scss';
+
+.index-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFF5F5 0%, #FFFFFF 100%);
+  padding-bottom: 40px;
+}
+
+// 顶部背景区域
+.hero-section {
+  background: linear-gradient(135deg, #C8102E 0%, #8B0A1A 100%);
+  padding: 60px 32px 100px;
+  border-radius: 0 0 40px 40px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.app-title {
+  font-size: 56px;
+  font-weight: bold;
+  color: #FFFFFF;
+  display: block;
+  margin-bottom: 12px;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.app-subtitle {
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.9);
+  display: block;
+  margin-bottom: 40px;
+}
+
+// 用户等级卡片
+.user-level-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.level-badge {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24px;
+  box-shadow: 0 4px 12px rgba(255, 165, 0, 0.4);
+}
+
+.level-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #8B4513;
+}
+
+.level-info {
+  flex: 1;
+}
+
+.level-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.stamp-count {
+  font-size: 24px;
+  color: #666;
+}
+
+// 主要功能入口
+.main-actions {
+  padding: 0 32px;
+  margin-top: -40px;
+  position: relative;
+  z-index: 2;
+}
+
+.action-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  &.primary {
+    background: linear-gradient(135deg, #C8102E 0%, #8B0A1A 100%);
+  }
+}
+
+.action-icon {
+  font-size: 64px;
+  margin-right: 24px;
+}
+
+.action-text {
+  flex: 1;
+}
+
+.action-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #FFFFFF;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.action-desc {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+// 快捷入口
+.quick-access {
+  padding: 40px 32px;
+}
+
+.section-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 24px;
+  display: block;
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.quick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.quick-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.quick-text {
+  font-size: 22px;
+  color: #666;
+}
+
+// 推荐故事线
+.featured-stories {
+  padding: 0 32px 40px;
+}
+
+.story-scroll {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.story-card {
+  display: inline-block;
+  width: 560px;
+  background: #FFFFFF;
+  border-radius: 24px;
+  overflow: hidden;
+  margin-right: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.story-cover {
+  height: 200px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-emoji {
+  font-size: 80px;
+}
+
+.story-info {
+  padding: 24px;
+}
+
+.story-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.story-desc {
+  font-size: 24px;
+  color: #666;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.story-progress {
+  font-size: 22px;
+  color: #C8102E;
+}
+
+// 底部留白
+.bottom-spacer {
+  height: 40px;
+}
