@@ -1,0 +1,905 @@
+openapi: 3.0.3
+info:
+  title: 澳小遊后台管理系统 API
+  description: |
+    澳小遊（Trip of Macau）后台管理系统 Swagger / OpenAPI 文档模板。
+
+    当前版本用于前后端并行开发阶段的接口契约约束，优先覆盖 MVP 范围：
+    - 认证与权限
+    - 内容管理（POI / 故事线）
+    - 测试控制台
+    - 运营配置
+    - 系统审计
+
+    说明：
+    1. 本文档是模板与骨架，字段和枚举可在联调前继续细化。
+    2. 建议后端按此模板落地 Springdoc/OpenAPI；前端按 schemas 和 examples 进行 Mock 联调。
+    3. 所有写操作必须记录操作审计日志。
+  version: 1.0.0-template
+servers:
+  - url: https://api.tripofmacau.com/admin-api
+    description: Production
+  - url: https://staging-api.tripofmacau.com/admin-api
+    description: Staging
+  - url: http://localhost:8080/admin-api
+    description: Local
+
+tags:
+  - name: Auth
+    description: 登录鉴权与当前用户信息
+  - name: User
+    description: 后台用户与测试账号管理
+  - name: Poi
+    description: POI 内容管理
+  - name: Storyline
+    description: 故事线与任务编排
+  - name: TestConsole
+    description: 测试控制台能力
+  - name: Campaign
+    description: 活动与广告位配置
+  - name: Reward
+    description: 奖励与印章配置
+  - name: AuditLog
+    description: 操作审计与排查日志
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: 后台管理员登录
+      operationId: adminLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              username: admin
+              password: <SECRET>
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseLoginVO'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: 获取当前登录用户信息
+      operationId: getCurrentAdmin
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseCurrentUserVO'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users:
+    get:
+      tags: [User]
+      summary: 查询用户列表
+      operationId: pageUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageNum'
+        - $ref: '#/components/parameters/PageSize'
+        - in: query
+          name: keyword
+          schema:
+            type: string
+          description: 支持昵称 / openId / 手机号模糊搜索
+        - in: query
+          name: testFlag
+          schema:
+            type: boolean
+          description: 是否为测试账号
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePageUserVO'
+
+  /users/{userId}/test-flag:
+    patch:
+      tags: [User]
+      summary: 设置或取消测试账号标记
+      operationId: updateUserTestFlag
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [testFlag]
+              properties:
+                testFlag:
+                  type: boolean
+            example:
+              testFlag: true
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseBoolean'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /pois:
+    get:
+      tags: [Poi]
+      summary: 分页查询 POI 列表
+      operationId: pagePois
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageNum'
+        - $ref: '#/components/parameters/PageSize'
+        - in: query
+          name: keyword
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/PublishStatus'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePagePoiVO'
+    post:
+      tags: [Poi]
+      summary: 新建 POI
+      operationId: createPoi
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PoiCreateRequest'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseIdResponse'
+
+  /pois/{poiId}:
+    get:
+      tags: [Poi]
+      summary: 获取 POI 详情
+      operationId: getPoiDetail
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PoiId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePoiDetailVO'
+    put:
+      tags: [Poi]
+      summary: 更新 POI
+      operationId: updatePoi
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PoiId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PoiUpdateRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseBoolean'
+
+  /storylines:
+    get:
+      tags: [Storyline]
+      summary: 查询故事线列表
+      operationId: pageStorylines
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageNum'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePageStorylineVO'
+    post:
+      tags: [Storyline]
+      summary: 创建故事线
+      operationId: createStoryline
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StorylineCreateRequest'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseIdResponse'
+
+  /test-console/users/{userId}/location-mock:
+    post:
+      tags: [TestConsole]
+      summary: 模拟用户定位
+      operationId: mockUserLocation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationMockRequest'
+      responses:
+        '200':
+          description: 执行成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseBoolean'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /test-console/users/{userId}/stamps/grant:
+    post:
+      tags: [TestConsole]
+      summary: 为测试账号发放印章
+      operationId: grantStampToTestUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrantStampRequest'
+      responses:
+        '200':
+          description: 发放成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseBoolean'
+
+  /campaigns:
+    get:
+      tags: [Campaign]
+      summary: 查询活动/广告位列表
+      operationId: pageCampaigns
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageNum'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePageCampaignVO'
+
+  /rewards:
+    get:
+      tags: [Reward]
+      summary: 查询奖励配置列表
+      operationId: pageRewards
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageNum'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePageRewardVO'
+
+  /audit-logs:
+    get:
+      tags: [AuditLog]
+      summary: 查询操作审计日志
+      operationId: pageAuditLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageNum'
+        - $ref: '#/components/parameters/PageSize'
+        - in: query
+          name: operatorName
+          schema:
+            type: string
+        - in: query
+          name: module
+          schema:
+            type: string
+            enum: [AUTH, USER, POI, STORYLINE, TEST_CONSOLE, CAMPAIGN, REWARD, SYSTEM]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponsePageAuditLogVO'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PageNum:
+      in: query
+      name: pageNum
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: 页码
+    PageSize:
+      in: query
+      name: pageSize
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: 每页条数
+    UserId:
+      in: path
+      name: userId
+      required: true
+      schema:
+        type: integer
+        format: int64
+    PoiId:
+      in: path
+      name: poiId
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    Unauthorized:
+      description: 未认证或 token 已过期
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseVoid'
+          example:
+            code: 401
+            message: Unauthorized
+            data: null
+    Forbidden:
+      description: 无权限访问
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponseVoid'
+          example:
+            code: 403
+            message: Forbidden
+            data: null
+
+  schemas:
+    PublishStatus:
+      type: string
+      enum: [DRAFT, PUBLISHED, OFFLINE]
+
+    AdminRole:
+      type: string
+      enum: [SUPER_ADMIN, CONTENT_OPERATOR, ACTIVITY_OPERATOR, CUSTOMER_SERVICE, TESTER, ANALYST_READONLY]
+
+    ApiResponseVoid:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          nullable: true
+          example: null
+
+    ApiResponseBoolean:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          type: boolean
+          example: true
+
+    ApiResponseIdResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          $ref: '#/components/schemas/IdResponse'
+
+    ApiResponseLoginVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          $ref: '#/components/schemas/LoginVO'
+
+    ApiResponseCurrentUserVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          $ref: '#/components/schemas/CurrentUserVO'
+
+    ApiResponsePageUserVO:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PageUserVO'
+
+    ApiResponsePagePoiVO:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PagePoiVO'
+
+    ApiResponsePoiDetailVO:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PoiDetailVO'
+
+    ApiResponsePageStorylineVO:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PageStorylineVO'
+
+    ApiResponsePageCampaignVO:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PageCampaignVO'
+
+    ApiResponsePageRewardVO:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PageRewardVO'
+
+    ApiResponsePageAuditLogVO:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PageAuditLogVO'
+
+    IdResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10001
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          example: admin
+        password:
+          type: string
+          format: password
+          example: <SECRET>
+
+    LoginVO:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiJ9.xxx.yyy
+        refreshToken:
+          type: string
+          example: refresh-token-demo
+        expiresIn:
+          type: integer
+          example: 7200
+
+    CurrentUserVO:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        username:
+          type: string
+        displayName:
+          type: string
+        roleCodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminRole'
+        permissions:
+          type: array
+          items:
+            type: string
+
+    PageMeta:
+      type: object
+      properties:
+        pageNum:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+          format: int64
+
+    UserVO:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        nickname:
+          type: string
+        openId:
+          type: string
+        phone:
+          type: string
+        testFlag:
+          type: boolean
+        level:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    PageUserVO:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserVO'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    PoiCreateRequest:
+      type: object
+      required: [name, latitude, longitude, regionCode, status]
+      properties:
+        name:
+          type: string
+        subtitle:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        regionCode:
+          type: string
+        coverImageUrl:
+          type: string
+        status:
+          $ref: '#/components/schemas/PublishStatus'
+        tags:
+          type: array
+          items:
+            type: string
+
+    PoiUpdateRequest:
+      allOf:
+        - $ref: '#/components/schemas/PoiCreateRequest'
+
+    PoiVO:
+      type: object
+      properties:
+        poiId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        regionCode:
+          type: string
+        status:
+          $ref: '#/components/schemas/PublishStatus'
+        updatedAt:
+          type: string
+          format: date-time
+
+    PoiDetailVO:
+      allOf:
+        - $ref: '#/components/schemas/PoiVO'
+        - type: object
+          properties:
+            subtitle:
+              type: string
+            latitude:
+              type: number
+              format: double
+            longitude:
+              type: number
+              format: double
+            coverImageUrl:
+              type: string
+            tags:
+              type: array
+              items:
+                type: string
+            storylineIds:
+              type: array
+              items:
+                type: integer
+                format: int64
+
+    PagePoiVO:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/PoiVO'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    StorylineCreateRequest:
+      type: object
+      required: [name, status]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/PublishStatus'
+        poiIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+
+    StorylineVO:
+      type: object
+      properties:
+        storylineId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/PublishStatus'
+        poiCount:
+          type: integer
+        updatedAt:
+          type: string
+          format: date-time
+
+    PageStorylineVO:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/StorylineVO'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    LocationMockRequest:
+      type: object
+      required: [latitude, longitude]
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        remark:
+          type: string
+          description: 审计备注，说明模拟原因
+
+    GrantStampRequest:
+      type: object
+      required: [stampCode, quantity]
+      properties:
+        stampCode:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 999
+        remark:
+          type: string
+
+    CampaignVO:
+      type: object
+      properties:
+        campaignId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        type:
+          type: string
+          example: BANNER
+        status:
+          $ref: '#/components/schemas/PublishStatus'
+        updatedAt:
+          type: string
+          format: date-time
+
+    PageCampaignVO:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampaignVO'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    RewardVO:
+      type: object
+      properties:
+        rewardId:
+          type: integer
+          format: int64
+        rewardName:
+          type: string
+        rewardType:
+          type: string
+          example: COUPON
+        status:
+          $ref: '#/components/schemas/PublishStatus'
+        updatedAt:
+          type: string
+          format: date-time
+
+    PageRewardVO:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/RewardVO'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    AuditLogVO:
+      type: object
+      properties:
+        logId:
+          type: integer
+          format: int64
+        operatorName:
+          type: string
+        module:
+          type: string
+        action:
+          type: string
+        targetId:
+          type: string
+        result:
+          type: string
+          example: SUCCESS
+        createdAt:
+          type: string
+          format: date-time
+
+    PageAuditLogVO:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogVO'
+        page:
+          $ref: '#/components/schemas/PageMeta'
