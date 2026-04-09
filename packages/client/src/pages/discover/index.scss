@@ -1,0 +1,116 @@
+@import '../../styles/variables.scss';
+
+.discover-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffef7 0%, #fff8fd 100%);
+  padding-bottom: 40px;
+}
+
+.discover-hero,
+.discover-list {
+  width: 100%;
+  max-width: $max-page-width;
+  margin: 0 auto;
+  padding-left: 28px;
+  padding-right: 28px;
+}
+
+.discover-hero {
+  padding-top: 48px;
+
+  &__title,
+  &__subtitle {
+    display: block;
+  }
+
+  &__title {
+    font-size: 46px;
+    font-weight: 700;
+    color: $text-primary;
+  }
+
+  &__subtitle {
+    margin-top: 12px;
+    font-size: 24px;
+    line-height: 1.7;
+    color: $text-secondary;
+  }
+}
+
+.discover-list {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.discover-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: $shadow-md;
+
+  &__cover {
+    height: 180px;
+    padding: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  &__tag,
+  &__icon,
+  &__title,
+  &__subtitle,
+  &__description {
+    display: block;
+  }
+
+  &__tag {
+    padding: 8px 16px;
+    border-radius: $border-radius-full;
+    background: rgba(255,255,255,0.86);
+    font-size: 20px;
+    color: $text-primary;
+  }
+
+  &__icon {
+    font-size: 54px;
+  }
+
+  &__body {
+    padding: 24px;
+  }
+
+  &__title {
+    font-size: 30px;
+    font-weight: 700;
+    color: $text-primary;
+  }
+
+  &__subtitle {
+    margin-top: 8px;
+    font-size: 22px;
+    color: #ff8ba7;
+  }
+
+  &__description {
+    margin-top: 12px;
+    font-size: 22px;
+    line-height: 1.7;
+    color: $text-secondary;
+  }
+
+  &__button {
+    margin: 0 24px 24px;
+    height: 82px;
+    border-radius: $border-radius-full;
+    border: none;
+    background: linear-gradient(135deg, #ffb6c1 0%, #ffcf93 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+}

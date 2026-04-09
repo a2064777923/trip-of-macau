@@ -1,294 +1,126 @@
-import { useState, useEffect } from 'react'
-import { View, Text, Switch, Button } from '@tarojs/components'
+import { useEffect, useState } from 'react'
+import { Button, Switch, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { loadGameState, updateUserPreference } from '../../services/gameService'
+import PageShell from '../../components/PageShell'
 import './index.scss'
 
-// 设置页面
+const scaleOptions = [1, 1.2, 1.4, 1.6, 1.8, 2]
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
-    // 界面设置
-    elderlyMode: false,
-    fontScale: 1.0,
+    interfaceMode: 'standard',
+    fontScale: 1,
     highContrast: false,
-    
-    // 功能设置
-    voiceGuide: false,
-    autoPlayStory: false,
-    backgroundLocation: true,
-    
-    // 通知设置
-    pushNotification: true,
-    storyUpdateAlert: true,
-    rewardAlert: true
+    voiceGuideEnabled: false,
   })
 
   useEffect(() => {
-    loadSettings()
+    const state = loadGameState()
+    setSettings({
+      interfaceMode: state.user.interfaceMode,
+      fontScale: state.user.fontScale,
+      highContrast: state.user.highContrast,
+      voiceGuideEnabled: state.user.voiceGuideEnabled,
+    })
   }, [])
 
-  // 加载设置
-  const loadSettings = () => {
-    try {
-      const storedSettings = Taro.getStorageSync('appSettings')
-      if (storedSettings) {
-        setSettings(prev => ({ ...prev, ...storedSettings }))
-      }
-    } catch (e) {
-      console.error('加载设置失败:', e)
-    }
-  }
-
-  // 保存设置
-  const saveSettings = (newSettings: any) => {
-    try {
-      Taro.setStorageSync('appSettings', newSettings)
-    } catch (e) {
-      console.error('保存设置失败:', e)
-    }
-  }
-
-  // 更新设置
-  const updateSetting = (key: string, value: any) => {
-    const newSettings = { ...settings, [key]: value }
-    setSettings(newSettings)
-    saveSettings(newSettings)
-
-    // 特殊处理
-    if (key === 'elderlyMode' && value) {
-      Taro.showModal({
-        title: '长者模式已开启',
-        content: '界面将切换为大字体、高对比度模式，操作按钮也会相应放大。',
-        showCancel: false
-      })
-    }
-  }
-
-  // 清除缓存
-  const handleClearCache = () => {
-    Taro.showModal({
-      title: '清除缓存',
-      content: '确定要清除所有缓存数据吗？这将重置您的本地设置（但不会删除已收集的印章数据）。',
-      success: (res) => {
-        if (res.confirm) {
-          try {
-            // 清除本地存储（保留用户信息和印章）
-            const userInfo = Taro.getStorageSync('userInfo')
-            const stamps = Taro.getStorageSync('userStamps')
-            
-            Taro.clearStorageSync()
-            
-            // 恢复重要数据
-            if (userInfo) Taro.setStorageSync('userInfo', userInfo)
-            if (stamps) Taro.setStorageSync('userStamps', stamps)
-            
-            Taro.showToast({ title: '缓存已清除', icon: 'success' })
-          } catch (e) {
-            Taro.showToast({ title: '清除失败', icon: 'none' })
-          }
-        }
-      }
-    })
-  }
-
-  // 关于我们
-  const handleAbout = () => {
-    Taro.navigateTo({
-      url: '/pages/settings/about/index'
-    })
-  }
-
-  // 退出登录
-  const handleLogout = () => {
-    Taro.showModal({
-      title: '退出登录',
-      content: '确定要退出登录吗？',
-      success: (res) => {
-        if (res.confirm) {
-          // 清除登录状态
-          Taro.removeStorageSync('token')
-          Taro.removeStorageSync('userInfo')
-          
-          Taro.showToast({ 
-            title: '已退出登录', 
-            icon: 'success',
-            complete: () => {
-              // 跳转到首页
-              Taro.switchTab({ url: '/pages/index/index' })
-            }
-          })
-        }
-      }
-    })
+  const applySetting = (patch) => {
+    const next = { ...settings, ...patch }
+    setSettings(next)
+    updateUserPreference(next)
   }
 
   return (
-    <View className='settings-page'>
-      {/* 页面标题 */}
+    <PageShell className='settings-page'>
       <View className='page-header'>
         <Text className='page-title'>设置</Text>
+        <Text className='page-subtitle'>把旅程调成你最舒服的节奏，字體大小、語音提醒與閱讀對比都可以自己決定。</Text>
       </View>
 
-      {/* 界面设置 */}
       <View className='settings-section'>
         <View className='section-header'>
-          <Text className='section-title'>🎨 界面设置</Text>
+          <Text className='section-title'>👴 长者模式</Text>
         </View>
-
         <View className='settings-list'>
-          {/* 长者模式 */}
           <View className='setting-item'>
             <View className='setting-info'>
-              <Text className='setting-name'>长者模式</Text>
-              <Text className='setting-desc'>大字体、高对比度、简化操作</Text>
+              <Text className='setting-name'>开启长者模式</Text>
+              <Text className='setting-desc'>界面更清爽、按钮更大，每一步都更好看也更好点。</Text>
             </View>
             <Switch
               className='setting-switch'
-              checked={settings.elderlyMode}
-              onChange={(e) => updateSetting('elderlyMode', e.detail.value)}
-              color='#C8102E'
+              checked={settings.interfaceMode === 'elderly'}
+              color='#FF8BA7'
+              onChange={(e) => applySetting({ interfaceMode: e.detail.value ? 'elderly' : 'standard' })}
             />
           </View>
-
-          {/* 语音导览 */}
-          <View className='setting-item'>
+          <View className='setting-item column'>
             <View className='setting-info'>
-              <Text className='setting-name'>语音导览</Text>
-              <Text className='setting-desc'>自动播放景点语音介绍</Text>
+              <Text className='setting-name'>字体倍率</Text>
+              <Text className='setting-desc'>把重要内容放大一点，看路牌和故事会更轻松。</Text>
             </View>
-            <Switch
-              className='setting-switch'
-              checked={settings.voiceGuide}
-              onChange={(e) => updateSetting('voiceGuide', e.detail.value)}
-              color='#C8102E'
-            />
+            <View className='scale-options'>
+              {scaleOptions.map((option) => (
+                <View
+                  key={option}
+                  className={`scale-options__item ${settings.fontScale === option ? 'active' : ''}`}
+                  onClick={() => applySetting({ fontScale: option })}
+                >
+                  <Text className='scale-options__text'>{option.toFixed(1)}x</Text>
+                </View>
+              ))}
+            </View>
+            <Text className='slider-value'>当前 {settings.fontScale.toFixed(1)}x</Text>
           </View>
         </View>
       </View>
 
-      {/* 功能设置 */}
       <View className='settings-section'>
         <View className='section-header'>
-          <Text className='section-title'>⚙️ 功能设置</Text>
+          <Text className='section-title'>🔊 探索体验</Text>
         </View>
-
         <View className='settings-list'>
-          {/* 后台定位 */}
           <View className='setting-item'>
             <View className='setting-info'>
-              <Text className='setting-name'>后台定位</Text>
-              <Text className='setting-desc'>允许后台获取位置用于打卡</Text>
+              <Text className='setting-name'>自动语音导览</Text>
+              <Text className='setting-desc'>走到景点附近时，让介绍自己响起，像有位同行导览员陪着你。</Text>
             </View>
             <Switch
               className='setting-switch'
-              checked={settings.backgroundLocation}
-              onChange={(e) => updateSetting('backgroundLocation', e.detail.value)}
-              color='#C8102E'
+              checked={settings.voiceGuideEnabled}
+              color='#98FB98'
+              onChange={(e) => applySetting({ voiceGuideEnabled: e.detail.value })}
             />
           </View>
-
-          {/* 自动播放故事 */}
           <View className='setting-item'>
             <View className='setting-info'>
-              <Text className='setting-name'>自动播放故事</Text>
-              <Text className='setting-desc'>到达景点后自动播放故事动画</Text>
+              <Text className='setting-name'>高对比度</Text>
+              <Text className='setting-desc'>让标题、按钮和重点信息更醒目，白天户外查看也更清楚。</Text>
             </View>
             <Switch
               className='setting-switch'
-              checked={settings.autoPlayStory}
-              onChange={(e) => updateSetting('autoPlayStory', e.detail.value)}
-              color='#C8102E'
+              checked={settings.highContrast}
+              color='#63B3ED'
+              onChange={(e) => applySetting({ highContrast: e.detail.value })}
             />
           </View>
         </View>
       </View>
 
-      {/* 通知设置 */}
-      <View className='settings-section'>
-        <View className='section-header'>
-          <Text className='section-title'>🔔 通知设置</Text>
-        </View>
-
-        <View className='settings-list'>
-          {/* 推送通知 */}
-          <View className='setting-item'>
-            <View className='setting-info'>
-              <Text className='setting-name'>推送通知</Text>
-              <Text className='setting-desc'>接收系统和活动通知</Text>
-            </View>
-            <Switch
-              className='setting-switch'
-              checked={settings.pushNotification}
-              onChange={(e) => updateSetting('pushNotification', e.detail.value)}
-              color='#C8102E'
-            />
-          </View>
-
-          {/* 故事更新提醒 */}
-          <View className='setting-item'>
-            <View className='setting-info'>
-              <Text className='setting-name'>故事更新提醒</Text>
-              <Text className='setting-desc'>新章节上线时通知我</Text>
-            </View>
-            <Switch
-              className='setting-switch'
-              checked={settings.storyUpdateAlert}
-              onChange={(e) => updateSetting('storyUpdateAlert', e.detail.value)}
-              color='#C8102E'
-            />
-          </View>
-
-          {/* 奖励到账提醒 */}
-          <View className='setting-item'>
-            <View className='setting-info'>
-              <Text className='setting-name'>奖励到账提醒</Text>
-              <Text className='setting-desc'>获得奖励时通知我</Text>
-            </View>
-            <Switch
-              className='setting-switch'
-              checked={settings.rewardAlert}
-              onChange={(e) => updateSetting('rewardAlert', e.detail.value)}
-              color='#C8102E'
-            />
-          </View>
-        </View>
+      <View className='settings-section tips'>
+        <Text className='tips-title'>旅程小提醒</Text>
+        <Text className='tips-text'>- 想快速开始，就先去探索页挑一个附近地标</Text>
+        <Text className='tips-text'>- 如果喜欢慢慢走，建议打开语音导览和更大的字体</Text>
+        <Text className='tips-text'>- 收集到更多足跡章后，可以回来兑换旅途惊喜</Text>
       </View>
 
-      {/* 其他选项 */}
-      <View className='settings-section'>
-        <View className='section-header'>
-          <Text className='section-title'>📱 其他</Text>
-        </View>
-
-        <View className='settings-list'>
-          {/* 清除缓存 */}
-          <View className='setting-item action' onClick={handleClearCache}>
-            <View className='setting-info'>
-              <Text className='setting-name'>🗑️ 清除缓存</Text>
-              <Text className='setting-desc'>清除本地缓存数据</Text>
-            </View>
-            <Text className='action-arrow'>›</Text>
-          </View>
-
-          {/* 关于我们 */}
-          <View className='setting-item action' onClick={handleAbout}>
-            <View className='setting-info'>
-              <Text className='setting-name'>ℹ️ 关于我们</Text>
-              <Text className='setting-desc'>版本信息、用户协议</Text>
-            </View>
-            <Text className='action-arrow'>›</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 退出登录 */}
       <View className='logout-section'>
-        <Button className='logout-btn' onClick={handleLogout}>
-          退出登录
-        </Button>
+        <Button className='logout-btn' onClick={() => Taro.switchTab({ url: '/pages/index/index' })}>返回首页</Button>
       </View>
-
-      {/* 底部留白 */}
-      <View className='bottom-spacer' />
-    </View>
+    </PageShell>
   )
 }
+
+
+

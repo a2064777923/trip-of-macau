@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Card, Form, InputNumber, Slider, Button, Space, Tag, message, Row, Col, Statistic, Progress, Divider, Typography, Avatar, Badge } from 'antd';
-import { TrophyOutlined, RiseOutlined, FallOutlined, CheckCircleOutlined, StarOutlined, CrownOutlined, GemOutlined } from '@ant-design/icons';
+import { Card, Form, InputNumber, Button, Space, Tag, message, Row, Col, Statistic, Progress, Typography, Avatar } from 'antd';
+import { TrophyOutlined } from '@ant-design/icons';
+
+import { adjustTestAccountLevel } from '../../../services/api';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -55,16 +57,16 @@ const LevelControl: React.FC<LevelControlProps> = ({
   const handleAdjustLevel = async (values: any) => {
     setLoading(true);
     try {
-      // TODO: 调用 API
-      // await adjustLevel(testAccountId, values.level, values.experience);
-      
-      setTimeout(() => {
-        message.success(`等级调整成功！当前等级: Lv.${values.level} ${getLevelInfo(values.level).name}`);
-        onSuccess?.(`等级调整成功！当前等级: Lv.${values.level}`);
-        setLoading(false);
-      }, 500);
+      await adjustTestAccountLevel(testAccountId, {
+        targetLevel: values.level,
+        targetExp: values.experience,
+        reason: `调整等级到 Lv.${values.level}，经验值 ${values.experience}`,
+      });
+      message.success(`等级调整成功！当前等级: Lv.${values.level} ${getLevelInfo(values.level).name}`);
+      onSuccess?.(`等级调整成功！当前等级: Lv.${values.level}`);
     } catch (error) {
       message.error('等级调整失败');
+    } finally {
       setLoading(false);
     }
   };

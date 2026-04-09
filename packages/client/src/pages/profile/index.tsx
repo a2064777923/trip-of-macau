@@ -1,164 +1,104 @@
-import { useState, useEffect } from 'react'
-import { View, Text, Button, Image } from '@tarojs/components'
+import { useMemo, useState } from 'react'
+import { Button, Image, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { getCheckinHistory, getStorylines, loadGameState, loginWithWeChatProfile } from '../../services/gameService'
+import PageShell from '../../components/PageShell'
 import './index.scss'
 
-// 个人中心页面
 export default function ProfilePage() {
-  const [userInfo, setUserInfo] = useState<any>(null)
-  const [stats, setStats] = useState({
-    stamps: 12,
-    stories: 2,
-    pois: 8,
-    level: 3
-  })
-  const [achievements, setAchievements] = useState<any[]>([])
+  const [state, setState] = useState(() => loadGameState())
+  const stories = useMemo(() => getStorylines(), [])
+  const history = useMemo(() => getCheckinHistory(), [])
 
-  useEffect(() => {
-    loadUserInfo()
-    loadAchievements()
-  }, [])
-
-  // 加载用户信息
-  const loadUserInfo = () => {
-    const storedUserInfo = Taro.getStorageSync('userInfo')
-    if (storedUserInfo) {
-      setUserInfo(storedUserInfo)
-    } else {
-      setUserInfo({
-        nickname: '探索者',
-        avatarUrl: '',
-        level: 3,
-        title: '澳门见习生'
-      })
+  const handleWechatLogin = async () => {
+    try {
+      const user = await loginWithWeChatProfile()
+      setState((prev) => ({
+        ...prev,
+        user,
+      }))
+      Taro.showToast({ title: '旅人名片已同步', icon: 'success' })
+    } catch (error) {
+      Taro.showToast({ title: '暂未完成授权', icon: 'none' })
     }
   }
 
-  // 加载成就
-  const loadAchievements = () => {
-    setAchievements([
-      { id: 1, name: '初探澳门', desc: '收集3个印章', icon: '🎯', completed: true },
-      { id: 2, name: '历史爱好者', desc: '完成1条故事线', icon: '📖', completed: true },
-      { id: 3, name: '走遍澳门', desc: '收集15个印章', icon: '🏃', completed: false },
-      { id: 4, name: '故事大师', desc: '完成3条故事线', icon: '🎭', completed: false }
-    ])
-  }
-
-  // 编辑资料
-  const handleEditProfile = () => {
-    Taro.navigateTo({
-      url: '/pages/profile/edit/index'
-    })
-  }
-
-  // 查看设置
-  const handleSettings = () => {
-    Taro.navigateTo({
-      url: '/pages/settings/index'
-    })
-  }
-
-  // 查看印章
-  const handleViewStamps = () => {
-    Taro.navigateTo({
-      url: '/pages/stamps/index'
-    })
-  }
-
-  // 查看故事
-  const handleViewStories = () => {
-    Taro.navigateTo({
-      url: '/pages/story/index'
-    })
-  }
-
   return (
-    <View className='profile-page'>
-      {/* 头部背景 */}
+    <PageShell className='profile-page'>
       <View className='header-bg'>
         <View className='header-content'>
-          {/* 设置按钮 */}
-          <View className='settings-btn' onClick={handleSettings}>
+          <View className='settings-btn' onClick={() => Taro.navigateTo({ url: '/pages/settings/index' })}>
             <Text className='settings-icon'>⚙️</Text>
           </View>
 
-          {/* 用户信息 */}
           <View className='user-info'>
             <View className='avatar-wrap'>
-              {userInfo?.avatarUrl ? (
-                <Image className='avatar' src={userInfo.avatarUrl} mode='aspectFill' />
+              {state.user.avatarUrl ? (
+                <Image className='avatar-image' src={state.user.avatarUrl} mode='aspectFill' />
               ) : (
-                <View className='avatar-placeholder'>👤</View>
+                <View className='avatar-placeholder'>🧭</View>
               )}
               <View className='level-badge'>
-                <Text className='level-text'>Lv.{stats.level}</Text>
+                <Text className='level-text'>Lv.{state.user.level}</Text>
               </View>
             </View>
 
             <View className='user-details'>
-              <Text className='nickname'>{userInfo?.nickname || '探索者'}</Text>
-              <Text className='title'>🏆 {userInfo?.title || '澳门见习生'}</Text>
-            </View>
-
-            <View className='edit-btn' onClick={handleEditProfile}>
-              <Text className='edit-text'>编辑资料</Text>
+              <Text className='nickname'>{state.user.nickname}</Text>
+              <Text className='title'>🏆 {state.user.title}</Text>
+              <Text className='subtitle'>{state.user.isGuest ? '登入後可同步你的旅人名片與探索足跡' : '今日旅程已展開，去解鎖下一枚足跡章吧'}</Text>
             </View>
           </View>
+
+          {state.user.isGuest && (
+            <Button className='wechat-login-btn' onClick={handleWechatLogin}>使用微信頭像暱稱登入</Button>
+          )}
         </View>
       </View>
 
-      {/* 数据统计 */}
       <View className='stats-section'>
         <View className='stats-grid'>
-          <View className='stat-item' onClick={handleViewStamps}>
-            <Text className='stat-number'>{stats.stamps}</Text>
+          <View className='stat-item' onClick={() => Taro.navigateTo({ url: '/pages/stamps/index' })}>
+            <Text className='stat-number'>{state.user.totalStamps}</Text>
             <Text className='stat-label'>印章</Text>
           </View>
           <View className='stat-divider' />
-          <View className='stat-item' onClick={handleViewStories}>
-            <Text className='stat-number'>{stats.stories}</Text>
+          <View className='stat-item' onClick={() => Taro.navigateTo({ url: '/pages/story/index' })}>
+            <Text className='stat-number'>{stories.length}</Text>
             <Text className='stat-label'>故事</Text>
           </View>
           <View className='stat-divider' />
-          <View className='stat-item'>
-            <Text className='stat-number'>{stats.pois}</Text>
-            <Text className='stat-label'>地点</Text>
+          <View className='stat-item' onClick={() => Taro.switchTab({ url: '/pages/map/index' })}>
+            <Text className='stat-number'>{history.length}</Text>
+            <Text className='stat-label'>足跡</Text>
           </View>
         </View>
       </View>
 
-      {/* 成就列表 */}
       <View className='achievements-section'>
         <View className='section-header'>
-          <Text className='section-title'>🏆 我的成就</Text>
-          <Text className='section-subtitle'>
-            {achievements.filter(a => a.completed).length}/{achievements.length} 已完成
-          </Text>
+          <Text className='section-title'>🎯 最近旅程</Text>
+          <Text className='section-subtitle'>{history.length} 段回忆</Text>
         </View>
 
-        <View className='achievements-list'>
-          {achievements.map((achievement) => (
-            <View 
-              key={achievement.id}
-              className={`achievement-item ${achievement.completed ? 'completed' : ''}`}
-            >
-              <View className='achievement-icon-wrap'>
-                <Text className='achievement-icon'>{achievement.icon}</Text>
-                {achievement.completed && (
-                  <View className='completed-mark'>✓</View>
-                )}
-              </View>
-              <View className='achievement-info'>
-                <Text className='achievement-name'>{achievement.name}</Text>
-                <Text className='achievement-desc'>{achievement.desc}</Text>
+        <View className='timeline-list'>
+          {history.length ? history.map((item) => (
+            <View key={`${item.poiId}-${item.checkedAt}`} className='timeline-item'>
+              <View className='timeline-item__dot' />
+              <View className='timeline-item__content'>
+                <Text className='timeline-item__title'>{item.poiName}</Text>
+                <Text className='timeline-item__desc'>收下 {item.stampName} · +{item.experienceGained} EXP · {item.triggerMode === 'gps' ? '到站解鎖' : item.triggerMode === 'manual' ? '補簽成功' : '旅程紀錄已補全'}</Text>
               </View>
             </View>
-          ))}
+          )) : (
+            <View className='empty-panel'>
+              <Text className='empty-panel__emoji'>🌤️</Text>
+              <Text className='empty-panel__text'>還沒有新的旅程回憶，去探索頁走走吧。</Text>
+            </View>
+          )}
         </View>
       </View>
-
-      {/* 底部留白 */}
-      <View className='bottom-spacer' />
-    </View>
+    </PageShell>
   )
 }
+

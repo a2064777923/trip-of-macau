@@ -1,0 +1,152 @@
+@import '../../styles/variables.scss';
+
+.rewards-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffdf6 0%, #fff8fd 100%);
+}
+
+.rewards-hero {
+  padding: 48px 28px 28px;
+
+  &__title,
+  &__subtitle,
+  &__badge {
+    display: block;
+  }
+
+  &__title {
+    font-size: 46px;
+    font-weight: 700;
+    color: #454c5b;
+  }
+
+  &__subtitle {
+    margin-top: 12px;
+    font-size: 24px;
+    color: #7c8396;
+    line-height: 1.7;
+  }
+
+  &__badge {
+    margin-top: 18px;
+    width: fit-content;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: #fff0f6;
+    color: #ff8ba7;
+    font-size: 22px;
+  }
+}
+
+.rewards-list {
+  height: calc(100vh - 180px);
+  padding: 0 28px;
+}
+
+.reward-card {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 22px;
+  margin-bottom: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 26px;
+  box-shadow: 0 12px 24px rgba(73, 78, 94, 0.07);
+
+  &__icon {
+    width: 92px;
+    height: 92px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ffe5ef 0%, #fff1bf 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    flex-shrink: 0;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__name,
+  &__subtitle,
+  &__desc,
+  &__meta,
+  &__highlight,
+  &__status {
+    display: block;
+  }
+
+  &__name {
+    font-size: 28px;
+    font-weight: 700;
+    color: #454c5b;
+  }
+
+  &__status {
+    font-size: 20px;
+    border-radius: 999px;
+    padding: 6px 12px;
+    background: #fff6df;
+    color: #8d7d45;
+
+    &.available {
+      background: #eefde8;
+      color: #2f7d55;
+    }
+
+    &.redeemed {
+      background: #e9edf4;
+      color: #717786;
+    }
+  }
+
+  &__subtitle {
+    margin-top: 8px;
+    font-size: 22px;
+    color: #ff8ba7;
+  }
+
+  &__desc,
+  &__meta,
+  &__highlight {
+    margin-top: 10px;
+    font-size: 20px;
+    color: #80889a;
+    line-height: 1.6;
+  }
+
+  &__highlight {
+    color: #63b3ed;
+  }
+
+  &__btn {
+    width: 156px;
+    min-height: 72px;
+    border-radius: 999px;
+    border: none;
+    background: #edf2f7;
+    color: #677083;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.active {
+      background: linear-gradient(135deg, #ff8ba7 0%, #ffb38a 100%);
+      color: #fff;
+    }
+  }
+}
+
+.bottom-spacer {
+  height: 48px;
+}

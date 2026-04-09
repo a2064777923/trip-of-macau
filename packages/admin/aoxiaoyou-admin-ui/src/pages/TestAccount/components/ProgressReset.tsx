@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Button, Radio, Space, Alert, Typography, Descriptions, Tag, Modal, message, Divider } from 'antd';
 import { ExclamationCircleOutlined, DeleteOutlined, SyncOutlined, WarningOutlined } from '@ant-design/icons';
+import { resetTestAccountProgress } from '../../../services/api';
 
 const { Title, Text, Paragraph } = Typography;
 const { confirm } = Modal;
@@ -95,16 +96,15 @@ const ProgressReset: React.FC<ProgressResetProps> = ({
       onOk: async () => {
         setLoading(true);
         try {
-          // TODO: 调用 API
-          // await resetProgress(testAccountId, resetType);
-          
-          setTimeout(() => {
-            message.success(`✅ 已成功${selectedOption?.label}！`);
-            onSuccess?.(`已成功${selectedOption?.label}！`);
-            setLoading(false);
-          }, 800);
+          await resetTestAccountProgress(testAccountId, {
+            resetType,
+            reason: `重置进度: ${selectedOption?.label}`,
+          });
+          message.success(`已成功${selectedOption?.label}！`);
+          onSuccess?.(`已成功${selectedOption?.label}！`);
         } catch (error) {
-          message.error('❌ 重置失败，请重试');
+          message.error('重置失败，请重试');
+        } finally {
           setLoading(false);
         }
       },

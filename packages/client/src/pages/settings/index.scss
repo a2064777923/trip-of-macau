@@ -1,0 +1,130 @@
+@import '../../styles/variables.scss';
+
+.settings-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffef8 0%, #fff7fb 100%);
+  padding-bottom: 48px;
+}
+
+.page-header {
+  padding: 48px 28px 24px;
+}
+
+.page-title,
+.page-subtitle,
+.section-title,
+.setting-name,
+.setting-desc,
+.slider-value,
+.tips-title,
+.tips-text {
+  display: block;
+}
+
+.page-title {
+  font-size: 46px;
+  font-weight: 700;
+  color: #454c5b;
+}
+
+.page-subtitle {
+  margin-top: 12px;
+  font-size: 24px;
+  line-height: 1.7;
+  color: #7c8396;
+}
+
+.settings-section {
+  margin: 0 28px 18px;
+  padding: 22px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 24px rgba(73, 78, 94, 0.06);
+
+  &.tips {
+    background: linear-gradient(135deg, rgba(176, 224, 230, 0.28) 0%, rgba(255, 248, 220, 0.95) 100%);
+  }
+}
+
+.section-header {
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #4a5364;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  background: #fffafc;
+  border-radius: 22px;
+
+  &.column {
+    display: block;
+  }
+}
+
+.setting-info {
+  flex: 1;
+}
+
+.setting-name {
+  font-size: 24px;
+  font-weight: 600;
+  color: #4a5364;
+}
+
+.setting-desc {
+  margin-top: 8px;
+  font-size: 20px;
+  line-height: 1.6;
+  color: #82899c;
+}
+
+.slider-value {
+  margin-top: 12px;
+  font-size: 20px;
+  color: #ff8ba7;
+}
+
+.tips-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #4a5364;
+}
+
+.tips-text {
+  margin-top: 10px;
+  font-size: 20px;
+  line-height: 1.6;
+  color: #737b8e;
+}
+
+.logout-section {
+  padding: 10px 28px 0;
+}
+
+.logout-btn {
+  width: 100%;
+  height: 82px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #ff8ba7 0%, #ffb38a 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}

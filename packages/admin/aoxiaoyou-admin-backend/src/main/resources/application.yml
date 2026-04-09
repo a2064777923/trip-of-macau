@@ -2,45 +2,59 @@ spring:
   application:
     name: aoxiaoyou-admin-backend
   profiles:
-    active: local
+    group:
+      prod: cloudbase
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/aoxiaoyou_admin?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
-    username: root
-    password: password
+    hikari:
+      initialization-fail-timeout: -1
+      connection-timeout: 10000
+      validation-timeout: 5000
+      maximum-pool-size: 5
+      minimum-idle: 1
+      keepalive-time: 30000
+      max-lifetime: 600000
+      idle-timeout: 120000
   data:
-    redis:
-      host: localhost
-      port: 6379
-      password: ''
-      database: 1
+    mongodb:
+      auto-index-creation: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
+  shutdown: graceful
 
 mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.aoxiaoyou.admin.entity
   configuration:
     map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
+    banner: false
     db-config:
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
+      id-type: auto
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
 
 jwt:
-  secret: admin-secret-key-change-in-production
-  access-token-validity: 7200
-  refresh-token-validity: 604800
-
-xxl:
-  job:
-    admin:
-      addresses: http://localhost:8080/xxl-job-admin
-    executor:
-      appname: aoxiaoyou-admin-executor
-      port: 9999
-      logpath: /tmp/xxl-job/jobhandler
+  secret: ${JWT_SECRET:please-change-this-secret-in-production}
+  access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY:7200}
+  refresh-token-validity: ${JWT_REFRESH_TOKEN_VALIDITY:604800}
 
 logging:
   level:
-    com.aoxiaoyou.admin: DEBUG
+    com.aoxiaoyou.admin: ${APP_LOG_LEVEL:INFO}
+    org.springframework.jdbc: WARN
+
+

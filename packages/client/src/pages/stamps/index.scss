@@ -1,0 +1,172 @@
+@import '../../styles/variables.scss';
+
+.stamps-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fff8fb 0%, #fffdf7 100%);
+}
+
+.header-stats {
+  padding: 30px 28px 12px;
+}
+
+.stats-card {
+  border-radius: 28px;
+  padding: 24px;
+  background: linear-gradient(135deg, #ffe6f1 0%, #fff4cf 100%);
+  box-shadow: 0 14px 28px rgba(115, 104, 140, 0.08);
+}
+
+.stats-content {
+  display: flex;
+  align-items: center;
+}
+
+.stats-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stats-number,
+.stats-label,
+.stats-tip,
+.category-name,
+.stamp-name,
+.stamp-type,
+.stamp-rarity,
+.stamp-desc,
+.empty-text {
+  display: block;
+}
+
+.stats-number {
+  font-size: 42px;
+  font-weight: 700;
+  color: #454c5c;
+}
+
+.stats-label {
+  margin-top: 8px;
+  font-size: 22px;
+  color: #8a90a2;
+}
+
+.stats-divider {
+  width: 1px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.stats-tip {
+  margin-top: 14px;
+  font-size: 20px;
+  color: #7c8396;
+  text-align: center;
+}
+
+.category-filter {
+  padding: 12px 28px 18px;
+}
+
+.category-scroll {
+  white-space: nowrap;
+}
+
+.category-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  margin-right: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 18px rgba(73, 78, 94, 0.06);
+
+  &.active {
+    background: #fff0f6;
+    color: #ff8ba7;
+  }
+}
+
+.category-icon {
+  font-size: 24px;
+}
+
+.category-name {
+  font-size: 22px;
+}
+
+.stamps-grid {
+  height: calc(100vh - 260px);
+  padding: 0 28px;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stamp-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  padding: 22px 18px;
+  box-shadow: 0 10px 22px rgba(73, 78, 94, 0.06);
+
+  &.locked {
+    opacity: 0.78;
+  }
+}
+
+.stamp-icon-wrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  margin: 0 auto 18px;
+  background: linear-gradient(135deg, #fff1b8 0%, #ffe0a7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stamp-icon {
+  font-size: 42px;
+}
+
+.collected-badge {
+  position: absolute;
+  right: -2px;
+  bottom: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #98fb98;
+  color: #2f7d55;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stamp-info {
+  text-align: center;
+}
+
+.stamp-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #474e5c;
+}
+
+.stamp-type,
+.stamp-rarity,
+.stamp-desc {
+  margin-top: 8px;
+  font-size: 20px;
+  color: #8a90a2;
+  line-height: 1.5;
+}
+
+.bottom-spacer {
+  height: 48px;
+}

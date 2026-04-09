@@ -4,10 +4,11 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
 @MapperScan("com.aoxiaoyou.admin.mapper")
+@SpringBootApplication
 public class AoxiaoyouAdminApplication {
     public static void main(String[] args) {
         SpringApplication.run(AoxiaoyouAdminApplication.class, args);
     }
 }
+

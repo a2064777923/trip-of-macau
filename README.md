@@ -35,11 +35,52 @@ trip-of-macau/
 
 - Node.js >= 18
 - JDK 17+
-- MySQL 8.0
-- Redis 7.x
+- Docker Desktop（推薦，用於本地 MySQL / MongoDB）
 - 微信開發者工具
 
-### 本地開發
+### 推薦的本地聯調方式
+
+```bash
+# 1) 在倉庫根目錄啟動本地資料庫
+cd d:/Archive/trip-of-macau
+docker compose -f docker-compose.local.yml up -d
+
+# 2) 啟動後台後端（默認連接本地 MySQL：127.0.0.1:3306/aoxiaoyou）
+cd packages/admin/aoxiaoyou-admin-backend
+mvn spring-boot:run
+
+# 3) 啟動後台前端（.env.local 已默認指向 http://127.0.0.1:8081）
+cd packages/admin/aoxiaoyou-admin-ui
+npm install
+npm run dev
+```
+
+### 本地資料庫說明
+
+- `docker-compose.local.yml` 會啟動：
+  - `MySQL 8.0`：`127.0.0.1:3306`
+  - `MongoDB 7.0`：`127.0.0.1:27017`
+- 默認賬號密碼：
+  - MySQL：`root / root`
+  - MongoDB：`root / root`
+- MySQL 初始化腳本：`scripts/local/mysql/init/01-init.sql`
+- Mongo 初始化腳本：`scripts/local/mongo/init/01-init.js`
+
+> 当前 `packages/admin/aoxiaoyou-admin-backend` 已接入 **MongoDB 基础连接与集合初始化**，但业务接口当前仍以 **MySQL** 为主；MongoDB 现阶段主要承载文档型配置、故事编排、AI 策略与事件日志的预留集合。
+
+### 後台本地默認登錄
+
+- 地址：`http://127.0.0.1:5173`
+- 用戶名：`admin`
+- 密碼：`admin123`
+
+### 一鍵啟動腳本
+
+- 後台後端：`scripts/local/start-admin-backend.cmd`
+- 後台前端：`scripts/local/start-admin-ui.cmd`
+- 如果你的終端環境還殘留舊版 Java，優先使用上面兩個腳本，它們會直接按本地聯調配置啟動。
+
+### 舊的本地開發方式
 
 ```bash
 # 克隆倉庫
@@ -67,6 +108,7 @@ cd packages/admin/aoxiaoyou-admin-backend
 mvn spring-boot:run
 ```
 
+
 ## 團隊成員
 
 | 成員 | 職責 |
@@ -79,7 +121,43 @@ mvn spring-boot:run
 ## 文檔
 
 - [小程序技術方案](./docs/技術方案%20V5.2.md)
-- [後台管理系統技術方案](./docs/後台管理系統技術方案%20V1.0.md)
+- [後台管理系統技術方案 V1.0](./docs/後台管理系統技術方案%20V1.0.md)
+- **[後台管理系統技術設計 V2.0（最新）](./docs/aoxiaoyou-admin-technical-design-v2.0.md)** ← 六大域重構版
+- **[數據庫設計 V2.0（最新）](./docs/數據庫設計-v2.0.md)** ← 40+ 表完整模型
+- [現狀與缺口清單 2026-04-08](./docs/后台现状与缺口清单_2026-04-08.md)
+- [API 接口設計 V1.1](./docs/澳小遊后台管理系统_API设计_V1.1.md)
+
+## CloudBase 部署信息
+
+- 環境：`macau-trip-2gn2zm5jefa4a987`（別名：`macau-trip`）
+- 地域：`ap-shanghai`
+- 後台後端（Cloud Run）：`aoxiaoyou-admin-api`
+  - 公網地址：`https://aoxiaoyou-admin-api-243434-4-1301163924.sh.run.tcloudbase.com`
+  - 類型：容器型服務
+- 後台前端（靜態托管）：`/admin/`
+  - 訪問地址：`https://macau-trip-2gn2zm5jefa4a987-1301163924.tcloudbaseapp.com/admin/`
+- 使用資源：Cloud Run、靜態網站托管、CloudBase MySQL、雲存儲
+
+### 後台 V2 當前已落地能力
+
+- 六大域分組式導航與 `HashRouter`（已修復 SPA 直連 404）
+- 多城市 `城市管理` 頁面與城市發布接口
+- `城市瓦片地圖` 真實列表頁（已修復 `map-tiles` 500）
+- `室內建築與樓層` 基礎管理頁
+- `AI 能力中心` 真實頁面：覆蓋行程規劃、旅行問答、拍照識別室內定位、NPC 語音對話與導航策略
+- `收集物`、`徽章` 真實管理頁
+- `管理員賬號` 真實列表頁（接現有 `sys_admin`）
+- `角色與權限` 真實權限矩陣頁（角色創建 + 權限保存）
+- 40+ 張後台核心表與種子數據
+
+
+
+### 管理入口
+
+- 環境概覽：`https://tcb.cloud.tencent.com/dev?envId=macau-trip-2gn2zm5jefa4a987#/overview`
+- Cloud Run：`https://tcb.cloud.tencent.com/dev?envId=macau-trip-2gn2zm5jefa4a987#/platform-run`
+- 靜態托管：`https://tcb.cloud.tencent.com/dev?envId=macau-trip-2gn2zm5jefa4a987#/static-hosting`
+- MySQL：`https://tcb.cloud.tencent.com/dev?envId=macau-trip-2gn2zm5jefa4a987#/db/mysql`
 
 ## 許可證
 

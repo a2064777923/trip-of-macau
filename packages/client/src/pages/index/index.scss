@@ -2,14 +2,13 @@
 
 .index-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #FFF5F5 0%, #FFFFFF 100%);
-  padding-bottom: 40px;
+  background: linear-gradient(180deg, #fff6f9 0%, #fffef8 44%, #ffffff 100%);
+  padding-bottom: 48px;
 }
 
-// 顶部背景区域
 .hero-section {
-  background: linear-gradient(135deg, #C8102E 0%, #8B0A1A 100%);
-  padding: 60px 32px 100px;
+  background: linear-gradient(135deg, #ff9eb5 0%, #ffcf93 100%);
+  padding: 56px 28px 112px;
   border-radius: 0 0 40px 40px;
   position: relative;
   overflow: hidden;
@@ -17,12 +16,12 @@
   &::before {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 300px;
-    height: 300px;
-    background: rgba(255, 255, 255, 0.1);
+    width: 360px;
+    height: 360px;
+    right: -80px;
+    top: -140px;
     border-radius: 50%;
+    background: rgba(255, 255, 255, 0.22);
   }
 }
 
@@ -31,48 +30,60 @@
   z-index: 1;
 }
 
-.app-title {
-  font-size: 56px;
-  font-weight: bold;
-  color: #FFFFFF;
+.app-title,
+.app-subtitle,
+.section-title,
+.story-title,
+.story-desc,
+.story-progress,
+.reward-highlight__label,
+.reward-highlight__title,
+.reward-highlight__desc,
+.level-title,
+.stamp-count,
+.action-title,
+.action-desc {
   display: block;
-  margin-bottom: 12px;
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.app-title {
+  font-size: 58px;
+  font-weight: 700;
+  color: #fff;
 }
 
 .app-subtitle {
-  font-size: 28px;
-  color: rgba(255, 255, 255, 0.9);
-  display: block;
-  margin-bottom: 40px;
+  margin-top: 12px;
+  font-size: 26px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.92);
 }
 
-// 用户等级卡片
 .user-level-card {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 24px;
-  padding: 24px 32px;
+  margin-top: 36px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 28px;
+  padding: 24px 28px;
   display: flex;
   align-items: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 14px 30px rgba(84, 71, 95, 0.12);
 }
 
 .level-badge {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  width: 96px;
+  height: 96px;
+  background: linear-gradient(135deg, #ffe492 0%, #ffb86c 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 24px;
-  box-shadow: 0 4px 12px rgba(255, 165, 0, 0.4);
+  margin-right: 22px;
 }
 
 .level-text {
-  font-size: 24px;
-  font-weight: bold;
-  color: #8B4513;
+  font-size: 28px;
+  font-weight: 700;
+  color: #8a5d11;
 }
 
 .level-info {
@@ -81,46 +92,38 @@
 
 .level-title {
   font-size: 32px;
-  font-weight: bold;
-  color: #333;
-  display: block;
-  margin-bottom: 8px;
+  font-weight: 700;
+  color: #3e4350;
 }
 
 .stamp-count {
-  font-size: 24px;
-  color: #666;
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1.6;
+  color: #798093;
 }
 
-// 主要功能入口
 .main-actions {
-  padding: 0 32px;
-  margin-top: -40px;
+  padding: 0 28px;
+  margin-top: -48px;
   position: relative;
   z-index: 2;
 }
 
 .action-card {
-  background: #FFFFFF;
-  border-radius: 24px;
-  padding: 32px;
+  border-radius: 28px;
+  padding: 30px;
   display: flex;
   align-items: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
-
-  &:active {
-    transform: scale(0.98);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  }
+  box-shadow: 0 14px 30px rgba(84, 71, 95, 0.1);
 
   &.primary {
-    background: linear-gradient(135deg, #C8102E 0%, #8B0A1A 100%);
+    background: linear-gradient(135deg, #7cc4ff 0%, #8ee0c4 100%);
   }
 }
 
 .action-icon {
-  font-size: 64px;
+  font-size: 70px;
   margin-right: 24px;
 }
 
@@ -129,29 +132,28 @@
 }
 
 .action-title {
-  font-size: 32px;
-  font-weight: bold;
-  color: #FFFFFF;
-  display: block;
-  margin-bottom: 8px;
+  font-size: 34px;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .action-desc {
-  font-size: 24px;
-  color: rgba(255, 255, 255, 0.8);
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.92);
 }
 
-// 快捷入口
-.quick-access {
-  padding: 40px 32px;
+.quick-access,
+.featured-stories {
+  padding: 36px 28px 0;
 }
 
 .section-title {
   font-size: 32px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 24px;
-  display: block;
+  font-weight: 700;
+  color: #3d4350;
+  margin-bottom: 20px;
 }
 
 .quick-grid {
@@ -161,87 +163,101 @@
 }
 
 .quick-item {
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 22px;
+  padding: 20px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 16px;
-  background: #FFFFFF;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s;
-
-  &:active {
-    transform: scale(0.95);
-  }
+  box-shadow: 0 8px 18px rgba(62, 67, 80, 0.06);
 }
 
 .quick-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
+  font-size: 44px;
 }
 
 .quick-text {
+  margin-top: 10px;
   font-size: 22px;
-  color: #666;
-}
-
-// 推荐故事线
-.featured-stories {
-  padding: 0 32px 40px;
+  color: #6f7790;
 }
 
 .story-scroll {
   white-space: nowrap;
-  width: 100%;
 }
 
 .story-card {
+  width: 520px;
   display: inline-block;
-  width: 560px;
-  background: #FFFFFF;
-  border-radius: 24px;
+  vertical-align: top;
+  margin-right: 18px;
+  border-radius: 26px;
   overflow: hidden;
-  margin-right: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 24px rgba(62, 67, 80, 0.08);
 }
 
 .story-cover {
-  height: 200px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .story-emoji {
-  font-size: 80px;
+  font-size: 84px;
 }
 
 .story-info {
-  padding: 24px;
+  padding: 22px;
 }
 
 .story-title {
-  font-size: 32px;
-  font-weight: bold;
-  color: #333;
-  display: block;
-  margin-bottom: 8px;
+  font-size: 30px;
+  font-weight: 700;
+  color: #3d4350;
 }
 
 .story-desc {
-  font-size: 24px;
-  color: #666;
-  display: block;
-  margin-bottom: 16px;
+  margin-top: 10px;
+  font-size: 22px;
+  line-height: 1.6;
+  color: #798093;
 }
 
 .story-progress {
+  margin-top: 14px;
   font-size: 22px;
-  color: #C8102E;
+  color: #ff8ba7;
 }
 
-// 底部留白
+.reward-highlight {
+  margin: 32px 28px 0;
+  border-radius: 28px;
+  padding: 24px 26px;
+  background: linear-gradient(135deg, rgba(230, 230, 250, 0.8) 0%, rgba(255, 248, 220, 0.95) 100%);
+  box-shadow: 0 14px 24px rgba(102, 92, 128, 0.08);
+
+  &__label {
+    font-size: 22px;
+    color: #8e8aa5;
+  }
+
+  &__title {
+    margin-top: 10px;
+    font-size: 30px;
+    font-weight: 700;
+    color: #474e5c;
+  }
+
+  &__desc {
+    margin-top: 10px;
+    font-size: 22px;
+    line-height: 1.6;
+    color: #737a8d;
+  }
+}
+
 .bottom-spacer {
-  height: 40px;
+  height: 48px;
 }

@@ -1,89 +1,66 @@
 export default defineAppConfig({
   pages: [
-    'pages/index/index',      // 首页 - 游戏入口
-    'pages/map/index',        // 地图 - 探索主入口
-    'pages/profile/index',    // 我的
-    'pages/story/index',      // 故事线
-    'pages/stamps/index',     // 印章收集
-    'pages/rewards/index',    // 奖励兑换
-    'pages/settings/index',   // 设置
+    'pages/index/index',
+    'pages/map/index',
+    'pages/tips/index',
+    'pages/discover/index',
+    'pages/story/index',
+    'pages/stamps/index',
+    'pages/rewards/index',
+    'pages/profile/index',
+    'pages/settings/index',
+    'pages/senior/index',
   ],
   tabBar: {
     custom: false,
-    color: '#999999',
-    selectedColor: '#C8102E',
+    color: '#A0AEC0',
+    selectedColor: '#FFB6C1',
     backgroundColor: '#FFFFFF',
-    borderStyle: 'black',
+    borderStyle: 'white',
     list: [
       {
         pagePath: 'pages/index/index',
-        text: '首页',
-        iconPath: 'assets/icons/home.png',
-        selectedIconPath: 'assets/icons/home-active.png'
+        text: '首頁',
       },
       {
         pagePath: 'pages/map/index',
-        text: '地图',
-        iconPath: 'assets/icons/map.png',
-        selectedIconPath: 'assets/icons/map-active.png'
+        text: '探索',
+      },
+      {
+        pagePath: 'pages/discover/index',
+        text: '發現',
+      },
+      {
+        pagePath: 'pages/tips/index',
+        text: '秘籍',
       },
       {
         pagePath: 'pages/profile/index',
         text: '我的',
-        iconPath: 'assets/icons/profile.png',
-        selectedIconPath: 'assets/icons/profile-active.png'
-      }
-    ]
+      },
+    ],
   },
   window: {
     backgroundTextStyle: 'light',
-    navigationBarBackgroundColor: '#C8102E',
+    backgroundColor: '#FFFAF0',
+    navigationBarBackgroundColor: '#FFFAF0',
     navigationBarTitleText: '澳小遊',
-    navigationBarTextStyle: 'white',
-    navigationStyle: 'default'
+    navigationBarTextStyle: 'black',
+    navigationStyle: 'default',
   },
-  // 使用分包加载优化主包体积
-  subPackages: [
-    {
-      root: 'pages/story/',
-      pages: [
-        'index',
-        'detail/index',
-        'chapter/index'
-      ]
-    },
-    {
-      root: 'pages/stamps/',
-      pages: [
-        'index',
-        'detail/index'
-      ]
-    },
-    {
-      root: 'pages/rewards/',
-      pages: [
-        'index',
-        'detail/index',
-        'exchange/index'
-      ]
-    }
-  ],
-  // 预加载分包
   preloadRule: {
     'pages/index/index': {
       network: 'all',
-      packages: ['pages/story/', 'pages/stamps/']
-    }
+      packages: [],
+    },
   },
-  // 权限配置
   permission: {
     'scope.userLocation': {
-      desc: '您的位置信息将用于澳小遊小程序的定位打卡功能'
-    }
+      desc: '您的位置信息将用于澳小遊小程序的定位探索、附近玩法和故事觸發。',
+    },
   },
-  // 需要使用的地理位置接口
-  requiredPrivateInfos: [
-    'getLocation',
-    'onLocationChange'
-  ]
+  requiredPrivateInfos: ['getLocation', 'onLocationChange'],
+  requiredBackgroundModes: ['location'],
+  lazyCodeLoading: 'requiredComponents',
+  sitemapLocation: 'sitemap.json',
 })

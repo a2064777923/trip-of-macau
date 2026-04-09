@@ -1,179 +1,116 @@
-import { useState, useEffect } from 'react'
-import { View, Text, Image, ScrollView } from '@tarojs/components'
+import { useEffect, useMemo, useState } from 'react'
+import { Button, ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { getStorylines, loadGameState } from '../../services/gameService'
 import './index.scss'
 
-// 故事线页面
 export default function StoryPage() {
-  const [stories, setStories] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [stories, setStories] = useState([])
+  const state = useMemo(() => loadGameState(), [])
 
   useEffect(() => {
-    loadStories()
+    setStories(getStorylines())
   }, [])
 
-  // 加载故事线数据
-  const loadStories = async () => {
-    try {
-      // 模拟API调用
-      const mockStories = [
-        {
-          id: 1,
-          name: '海上丝路',
-          nameEn: 'Maritime Silk Road',
-          description: '澳门开埠历史，从大航海时代到东方明珠',
-          icon: '🚢',
-          coverColor: '#4A90D9',
-          totalChapters: 6,
-          completedChapters: 2,
-          progress: 33,
-          estimatedTime: '2-3小时',
-          difficulty: 'easy',
-          pois: [
-            { id: 3, name: '妈阁庙', completed: true },
-            { id: 4, name: '港务局大楼', completed: false }
-          ]
-        },
-        {
-          id: 2,
-          name: '东西方战事',
-          nameEn: 'East Meets West',
-          description: '葡澳防卫史，见证中西方文明的碰撞与融合',
-          icon: '⚔️',
-          coverColor: '#E74C3C',
-          totalChapters: 8,
-          completedChapters: 0,
-          progress: 0,
-          estimatedTime: '3-4小时',
-          difficulty: 'medium',
-          pois: [
-            { id: 1, name: '大三巴牌坊', completed: false },
-            { id: 2, name: '议事亭前地', completed: false },
-            { id: 5, name: '玫瑰堂', completed: false }
-          ]
-        },
-        {
-          id: 3,
-          name: '家族故事',
-          nameEn: 'Family Stories',
-          description: '土生葡人历史，一段跨越几代人的家国情怀',
-          icon: '🏠',
-          coverColor: '#9B59B6',
-          totalChapters: 5,
-          completedChapters: 0,
-          progress: 0,
-          estimatedTime: '2小时',
-          difficulty: 'easy',
-          pois: [
-            { id: 6, name: '龙嵩街', completed: false },
-            { id: 7, name: '岗顶剧院', completed: false }
-          ]
+  const handleStartStory = (storyId) => {
+    const story = stories.find((item) => item.id === storyId)
+    if (!story) return
+
+    Taro.showModal({
+      title: `开始 ${story.name}`,
+      content: `这条故事线包含 ${story.totalChapters} 个章节，建议预留 ${story.estimatedTime}。沿途会依次解鎖地標故事與小驚喜。`,
+      confirmText: '进入探索',
+      success: (res) => {
+        if (res.confirm) {
+          Taro.switchTab({ url: '/pages/map/index' })
         }
-      ]
-
-      setStories(mockStories)
-    } catch (error) {
-      console.error('加载故事线失败:', error)
-      Taro.showToast({ title: '加载失败', icon: 'none' })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // 查看故事详情
-  const handleStoryClick = (storyId: number) => {
-    Taro.navigateTo({
-      url: `/pages/story/detail/index?id=${storyId}`
+      },
     })
-  }
-
-  // 渲染进度条
-  const renderProgress = (progress: number) => {
-    return (
-      <View className='progress-bar'>
-        <View 
-          className='progress-fill' 
-          style={{ width: `${progress}%` }}
-        />
-      </View>
-    )
   }
 
   return (
     <View className='story-page'>
-      {/* 页面标题 */}
       <View className='page-header'>
         <Text className='page-title'>探索故事线</Text>
-        <Text className='page-subtitle'>通过故事了解澳门的历史与文化</Text>
+        <Text className='page-subtitle'>MVP 先上兩條主線：海上絲路與東西方戰事，故事推進由打卡節點驅動。</Text>
       </View>
 
-      {/* 故事线列表 */}
+      <View className='story-summary'>
+        <View className='story-summary__card'>
+          <Text className='story-summary__value'>{state.user.totalStamps}</Text>
+          <Text className='story-summary__label'>累計印章</Text>
+        </View>
+        <View className='story-summary__card'>
+          <Text className='story-summary__value'>{stories.length}</Text>
+          <Text className='story-summary__label'>可玩故事</Text>
+        </View>
+        <View className='story-summary__card'>
+          <Text className='story-summary__value'>{state.completedStoryIds.length}</Text>
+          <Text className='story-summary__label'>已解鎖主線</Text>
+        </View>
+      </View>
+
       <ScrollView className='story-list' scrollY>
-        {loading ? (
-          <View className='loading-state'>
-            <Text className='loading-text'>加载中...</Text>
-          </View>
-        ) : (
-          stories.map((story, index) => (
-            <View 
-              key={story.id}
-              className='story-card'
-              style={{ animationDelay: `${index * 0.1}s` }}
-              onClick={() => handleStoryClick(story.id)}
-            >
-              {/* 封面 */}
-              <View 
-                className='story-cover'
-                style={{ background: story.coverColor }}
-              >
-                <Text className='story-icon'>{story.icon}</Text>
-                <View className='difficulty-badge'>
-                  <Text className='difficulty-text'>
-                    {story.difficulty === 'easy' ? '简单' : 
-                     story.difficulty === 'medium' ? '中等' : '困难'}
-                  </Text>
-                </View>
-              </View>
-
-              {/* 内容 */}
-              <View className='story-content'>
-                <View className='story-header'>
-                  <Text className='story-name'>{story.name}</Text>
-                  <Text className='story-en'>{story.nameEn}</Text>
-                </View>
-
-                <Text className='story-description'>{story.description}</Text>
-
-                {/* 进度 */}
-                <View className='story-progress'>
-                  <View className='progress-header'>
-                    <Text className='progress-text'>
-                      已完成 {story.completedChapters}/{story.totalChapters} 章节
-                    </Text>
-                    <Text className='progress-percent'>{story.progress}%</Text>
-                  </View>
-                  {renderProgress(story.progress)}
-                </View>
-
-                {/* 元信息 */}
-                <View className='story-meta'>
-                  <View className='meta-item'>
-                    <Text className='meta-icon'>⏱️</Text>
-                    <Text className='meta-text'>{story.estimatedTime}</Text>
-                  </View>
-                  <View className='meta-item'>
-                    <Text className='meta-icon'>📍</Text>
-                    <Text className='meta-text'>{story.pois.length} 个地点</Text>
-                  </View>
-                </View>
+        {stories.map((story, index) => (
+          <View
+            key={story.id}
+            className='story-card'
+            style={{ animationDelay: `${index * 0.08}s` }}
+          >
+            <View className='story-cover' style={{ background: story.coverColor }}>
+              <Text className='story-icon'>{story.icon}</Text>
+              <View className='difficulty-badge'>
+                <Text className='difficulty-text'>{story.difficulty === 'easy' ? '簡單' : story.difficulty === 'medium' ? '中等' : '困難'}</Text>
               </View>
             </View>
-          ))
-        )}
 
-        {/* 底部留白 */}
+            <View className='story-content'>
+              <View className='story-header'>
+                <Text className='story-name'>{story.name}</Text>
+                <Text className='story-en'>{story.nameEn}</Text>
+              </View>
+
+              <Text className='story-description'>{story.description}</Text>
+
+              <View className='story-progress'>
+                <View className='progress-header'>
+                  <Text className='progress-text'>已完成 {story.completedChapters}/{story.totalChapters} 章</Text>
+                  <Text className='progress-percent'>{story.progress}%</Text>
+                </View>
+                <View className='progress-bar'>
+                  <View className='progress-fill' style={{ width: `${story.progress}%` }} />
+                </View>
+              </View>
+
+              <View className='story-chapters'>
+                {story.chapterTitles.slice(0, 3).map((chapter) => (
+                  <Text key={chapter} className='story-chapter'>• {chapter}</Text>
+                ))}
+              </View>
+
+              <View className='story-meta'>
+                <View className='meta-item'>
+                  <Text className='meta-icon'>⏱️</Text>
+                  <Text className='meta-text'>{story.estimatedTime}</Text>
+                </View>
+                <View className='meta-item'>
+                  <Text className='meta-icon'>📍</Text>
+                  <Text className='meta-text'>{story.poiIds.length} 个地点</Text>
+                </View>
+                <View className='meta-item'>
+                  <Text className='meta-icon'>🎁</Text>
+                  <Text className='meta-text'>{story.rewardBadge || '印章奖励'}</Text>
+                </View>
+              </View>
+
+              <Button className='story-start-btn' onClick={() => handleStartStory(story.id)}>去地圖繼續探索</Button>
+            </View>
+          </View>
+        ))}
+
         <View className='bottom-spacer' />
       </ScrollView>
     </View>
   )
 }
+

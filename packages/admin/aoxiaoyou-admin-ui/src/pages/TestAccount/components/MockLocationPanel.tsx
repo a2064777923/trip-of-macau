@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Card, Form, Input, Button, Switch, Space, Tag, message, Row, Col, Descriptions } from 'antd';
+import { Card, Form, Input, Button, Switch, Space, Tag, message, Row, Col, Descriptions, Divider } from 'antd';
 import { EnvironmentOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { updateTestAccountMock } from '../../../services/api';
 
 interface MockLocationPanelProps {
   testAccountId: number;
@@ -27,16 +28,18 @@ const MockLocationPanel: React.FC<MockLocationPanelProps> = ({
   const handleSetLocation = async (values: any) => {
     setLoading(true);
     try {
-      // TODO: 调用 API
-      // await setMockLocation(testAccountId, values);
-      
-      setTimeout(() => {
-        message.success('模拟定位设置成功');
-        onSuccess?.('模拟定位设置成功');
-        setLoading(false);
-      }, 500);
+      await updateTestAccountMock(testAccountId, {
+        enabled: true,
+        latitude: values.latitude,
+        longitude: values.longitude,
+        address: values.address,
+        reason: `设置模拟定位到 ${values.address}`,
+      });
+      message.success('模拟定位设置成功');
+      onSuccess?.('模拟定位设置成功');
     } catch (error) {
       message.error('设置失败');
+    } finally {
       setLoading(false);
     }
   };
@@ -45,17 +48,19 @@ const MockLocationPanel: React.FC<MockLocationPanelProps> = ({
   const handleToggleMock = async (checked: boolean) => {
     setLoading(true);
     try {
-      // TODO: 调用 API
-      // await toggleMockLocation(testAccountId, checked);
-      
-      setTimeout(() => {
-        setEnabled(checked);
-        message.success(`${checked ? '启用' : '禁用'}模拟定位成功`);
-        onSuccess?.(`${checked ? '启用' : '禁用'}模拟定位成功`);
-        setLoading(false);
-      }, 500);
+      await updateTestAccountMock(testAccountId, {
+        enabled: checked,
+        latitude: mockLocation?.latitude,
+        longitude: mockLocation?.longitude,
+        address: mockLocation?.address,
+        reason: `${checked ? '启用' : '禁用'}模拟定位`,
+      });
+      setEnabled(checked);
+      message.success(`${checked ? '启用' : '禁用'}模拟定位成功`);
+      onSuccess?.(`${checked ? '启用' : '禁用'}模拟定位成功`);
     } catch (error) {
       message.error('操作失败');
+    } finally {
       setLoading(false);
     }
   };
@@ -64,17 +69,19 @@ const MockLocationPanel: React.FC<MockLocationPanelProps> = ({
   const handleClearLocation = async () => {
     setLoading(true);
     try {
-      // TODO: 调用 API
-      // await clearMockLocation(testAccountId);
-      
-      setTimeout(() => {
-        form.resetFields();
-        message.success('模拟定位已清除');
-        onSuccess?.('模拟定位已清除');
-        setLoading(false);
-      }, 500);
+      await updateTestAccountMock(testAccountId, {
+        enabled: false,
+        latitude: undefined,
+        longitude: undefined,
+        address: '',
+        reason: '清除模拟定位',
+      });
+      form.resetFields();
+      message.success('模拟定位已清除');
+      onSuccess?.('模拟定位已清除');
     } catch (error) {
       message.error('清除失败');
+    } finally {
       setLoading(false);
     }
   };

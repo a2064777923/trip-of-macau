@@ -19,7 +19,7 @@
     "@ant-design/pro-table": "^3.19.1",
     "@tanstack/react-query": "^5.71.0",
     "@types/node": "^22.13.14",
-    "ahooks": "^3.8.4",
+    "ahooks": "^3.8.5",
     "antd": "^5.24.6",
     "axios": "^1.8.4",
     "classnames": "^2.5.1",

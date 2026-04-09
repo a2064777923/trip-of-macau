@@ -1,24 +1,10 @@
-import React, { useState } from 'react';
-import { Card, Button, Checkbox, Space, Tag, message, Progress, Typography, Row, Col, Divider, Badge } from 'antd';
-import { TrophyOutlined, PlusOutlined, DeleteOutlined, ClearOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Card, Button, Space, Tag, message, Progress, Typography, Row, Col, Divider, InputNumber, Modal } from 'antd';
+import { TrophyOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { batchGrantTestAccountStamps, clearTestAccountStamps, getTestAccountStampSummary } from '../../../services/api';
+import type { AdminTestStampSummary } from '../../../types/admin';
 
-const { Title, Text } = Typography;
-
-// 模拟印章数据
-const MOCK_STAMPS = [
-  { id: 1, name: '大三巴', icon: '🏛️', poiId: 101, collected: true },
-  { id: 2, name: '威尼斯人', icon: '🎰', poiId: 102, collected: true },
-  { id: 3, name: '官也街', icon: '🍜', poiId: 103, collected: true },
-  { id: 4, name: '妈阁庙', icon: '🛕', poiId: 104, collected: false },
-  { id: 5, name: '新葡京', icon: '🎲', poiId: 105, collected: false },
-  { id: 6, name: '龙环葡韵', icon: '🌳', poiId: 106, collected: false },
-  { id: 7, name: '渔人码头', icon: '⚓', poiId: 107, collected: false },
-  { id: 8, name: '澳门塔', icon: '🗼', poiId: 108, collected: false },
-  { id: 9, name: '路环圣方济各堂', icon: '⛪', poiId: 109, collected: false },
-  { id: 10, name: '黑沙滩', icon: '🏖️', poiId: 110, collected: false },
-  { id: 11, name: '议事亭前地', icon: '🏛️', poiId: 111, collected: false },
-  { id: 12, name: '玫瑰堂', icon: '🌹', poiId: 112, collected: false },
-];
+const { Text } = Typography;
 
 interface StampManagerProps {
   testAccountId: number;
@@ -31,90 +17,76 @@ const StampManager: React.FC<StampManagerProps> = ({
   currentStampCount,
   onSuccess,
 }) => {
-  const [selectedStamps, setSelectedStamps] = useState<number[]>([]);
+  const [summary, setSummary] = useState<AdminTestStampSummary | null>(null);
+  const [stampCount, setStampCount] = useState(currentStampCount);
+  const [batchCount, setBatchCount] = useState(3);
   const [loading, setLoading] = useState(false);
 
-  // 计算已收集和未收集的印章
-  const collectedStamps = MOCK_STAMPS.filter(s => s.collected);
-  const uncollectedStamps = MOCK_STAMPS.filter(s => !s.collected);
-
-  // 快速获得印章
-  const handleGrantStamps = async () => {
-    if (selectedStamps.length === 0) {
-      message.warning('请至少选择一个印章');
-      return;
+  const loadSummary = async () => {
+    const response = await getTestAccountStampSummary(testAccountId);
+    if (response.success && response.data) {
+      setSummary(response.data);
+      setStampCount(response.data.stampCount);
     }
+  };
 
+  useEffect(() => {
+    loadSummary();
+  }, [testAccountId]);
+
+  const handleBatchGrant = async (count: number) => {
     setLoading(true);
     try {
-      // TODO: 调用 API
-      // await grantStamps(testAccountId, selectedStamps);
-      
-      setTimeout(() => {
-        const stampNames = selectedStamps.map(id => 
-          MOCK_STAMPS.find(s => s.id === id)?.name
-        ).join(', ');
-        
-        message.success(`成功获得 ${selectedStamps.length} 个印章: ${stampNames}`);
-        onSuccess?.(`成功获得 ${selectedStamps.length} 个印章`);
-        setSelectedStamps([]);
-        setLoading(false);
-      }, 500);
+      await batchGrantTestAccountStamps(testAccountId, {
+        count,
+        stampType: 'check_in',
+        reason: `批量增加 ${count} 个印章`,
+      });
+      await loadSummary();
+      message.success(`成功增加 ${count} 个印章`);
+      onSuccess?.(`成功增加 ${count} 个印章`);
     } catch (error) {
-      message.error('获得印章失败');
+      message.error('批量加章失败');
+    } finally {
       setLoading(false);
     }
   };
 
-  // 删除印章
-  const handleDeleteStamp = async (stampId: number) => {
-    setLoading(true);
-    try {
-      // TODO: 调用 API
-      // await deleteStamp(testAccountId, stampId);
-      
-      setTimeout(() => {
-        const stampName = MOCK_STAMPS.find(s => s.id === stampId)?.name;
-        message.success(`已删除印章: ${stampName}`);
-        onSuccess?.(`已删除印章: ${stampName}`);
-        setLoading(false);
-      }, 500);
-    } catch (error) {
-      message.error('删除印章失败');
-      setLoading(false);
-    }
+  const handleClear = () => {
+    Modal.confirm({
+      title: '确认清空该账号的全部印章？',
+      content: '清空后等级会同步回到初始状态，此操作会写入审计日志。',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        setLoading(true);
+        try {
+          await clearTestAccountStamps(testAccountId, '测试控制台清空全部印章');
+          await loadSummary();
+          message.success('印章已清空');
+          onSuccess?.('印章已清空');
+        } catch (error) {
+          message.error('清空印章失败');
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
-  // 清空所有印章
-  const handleClearAllStamps = async () => {
-    setLoading(true);
-    try {
-      // TODO: 调用 API
-      // await clearStamps(testAccountId);
-      
-      setTimeout(() => {
-        message.success('已清空所有印章');
-        onSuccess?.('已清空所有印章');
-        setLoading(false);
-      }, 500);
-    } catch (error) {
-      message.error('清空印章失败');
-      setLoading(false);
-    }
-  };
+  const totalStamps = summary?.maxStamps || 12;
+  const progress = Math.round((stampCount / totalStamps) * 100);
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="large">
-      {/* 进度概览 */}
       <Card size="small">
         <Row gutter={16} align="middle">
           <Col span={8}>
             <div style={{ textAlign: 'center' }}>
               <Progress
                 type="circle"
-                percent={Math.round((currentStampCount / 12) * 100)}
+                percent={progress}
                 size={80}
-                format={() => `${currentStampCount}/12`}
+                format={() => `${stampCount}/${totalStamps}`}
               />
               <div style={{ marginTop: 8 }}>
                 <Text type="secondary">印章收集进度</Text>
@@ -122,76 +94,51 @@ const StampManager: React.FC<StampManagerProps> = ({
             </div>
           </Col>
           <Col span={16}>
-            <Space wrap>
-              {collectedStamps.map(stamp => (
-                <Tag key={stamp.id} color="success" icon={<TrophyOutlined />}>
-                  {stamp.icon} {stamp.name}
-                </Tag>
-              ))}
+            <Space direction="vertical">
+              <Text>当前已收集 <Tag color="blue">{stampCount}</Tag> 个印章</Text>
+              <Text>当前等级 <Tag color="purple">Lv.{summary?.currentLevel || 1} {summary?.levelName || '新手旅者'}</Tag></Text>
+              <Text type="secondary">距离下一等级还需 <Tag color="orange">{summary?.remainingToNextLevel ?? 0}</Tag> 个印章</Text>
             </Space>
           </Col>
         </Row>
       </Card>
 
-      {/* 快速获得印章 */}
-      <Card size="small" title="快速获得印章">
+      <Card size="small" title="批量印章操作">
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Text type="secondary">选择要获得的印章（可多选）：</Text>
-          <Checkbox.Group
-            value={selectedStamps}
-            onChange={(values) => setSelectedStamps(values as number[])}
-          >
-            <Space wrap>
-              {uncollectedStamps.map(stamp => (
-                <Checkbox key={stamp.id} value={stamp.id}>
-                  <Tag>{stamp.icon} {stamp.name}</Tag>
-                </Checkbox>
-              ))}
-            </Space>
-          </Checkbox.Group>
-          <Space>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleGrantStamps}
-              loading={loading}
-              disabled={selectedStamps.length === 0}
-            >
-              获得选中印章 ({selectedStamps.length})
-            </Button>
-            <Button onClick={() => setSelectedStamps([])}>清空选择</Button>
-          </Space>
-        </Space>
-      </Card>
-
-      {/* 管理已收集的印章 */}
-      <Card size="small" title="管理已收集印章">
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Text type="secondary">删除指定印章或清空所有印章：</Text>
           <Space wrap>
-            {collectedStamps.map(stamp => (
+            {[1, 3, 5].map((n) => (
               <Button
-                key={stamp.id}
-                size="small"
-                icon={<DeleteOutlined />}
-                onClick={() => handleDeleteStamp(stamp.id)}
+                key={n}
+                icon={<PlusOutlined />}
+                onClick={() => handleBatchGrant(n)}
                 loading={loading}
               >
-                {stamp.icon} {stamp.name}
+                +{n}
               </Button>
             ))}
+            <Divider type="vertical" />
+            <InputNumber min={1} max={12} value={batchCount} onChange={(value) => setBatchCount(value || 1)} />
+            <Button type="primary" onClick={() => handleBatchGrant(batchCount)} loading={loading}>
+              自定义批量加章
+            </Button>
+            <Button icon={<TrophyOutlined />} onClick={() => handleBatchGrant(Math.max(1, totalStamps - stampCount))} loading={loading}>
+              补满印章
+            </Button>
           </Space>
-          <Divider style={{ margin: '12px 0' }} />
-          <Button
-            danger
-            icon={<ClearOutlined />}
-            onClick={handleClearAllStamps}
-            loading={loading}
-          >
-            清空所有印章
+          <Button danger icon={<DeleteOutlined />} onClick={handleClear} loading={loading}>
+            清空全部印章
           </Button>
         </Space>
       </Card>
+
+      {stampCount >= totalStamps && (
+        <Card size="small" style={{ background: '#f6ffed', border: '1px solid #b7eb8f' }}>
+          <Space>
+            <TrophyOutlined style={{ color: '#52c41a', fontSize: 20 }} />
+            <Text strong style={{ color: '#52c41a' }}>恭喜！已收集全部 {totalStamps} 个印章！</Text>
+          </Space>
+        </Card>
+      )}
     </Space>
   );
 };
