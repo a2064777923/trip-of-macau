@@ -35,7 +35,7 @@ export default function SeniorPage() {
     <View className='senior-page'>
       <View className='senior-hero'>
         <Text className='senior-hero__title'>長者模式</Text>
-        <Text className='senior-hero__subtitle'>按技術方案與 UI 規範提供更大的字體、更少操作與常駐求助入口。</Text>
+        <Text className='senior-hero__subtitle'>更大的字體、更少的操作與隨時可用的求助入口，讓旅途輕鬆又安心。</Text>
       </View>
 
       <View className='senior-card primary'>

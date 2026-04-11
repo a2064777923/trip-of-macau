@@ -9,11 +9,12 @@
 .discover-hero,
 .discover-list {
   width: 100%;
-  max-width: $max-page-width;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding-left: 28px;
   padding-right: 28px;
 }
+
 
 .discover-hero {
   padding-top: 48px;

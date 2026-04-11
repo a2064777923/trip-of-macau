@@ -1,0 +1,250 @@
+@import '../../../styles/variables.scss';
+
+.tips-publish-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff7fb 100%);
+}
+
+.tips-publish-hero {
+  padding: 28px 28px 24px;
+  background: linear-gradient(135deg, #ffc7d5 0%, #ffdcb1 100%);
+  border-radius: 0 0 42px 42px;
+
+  &__nav,
+  &__eyebrow,
+  &__title,
+  &__subtitle,
+  &__back,
+  &__progressText {
+    display: block;
+  }
+
+  &__nav {
+    width: fit-content;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.84);
+  }
+
+  &__back {
+    font-size: 15px;
+    color: #5a6272;
+  }
+
+  &__eyebrow {
+    margin-top: 16px;
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: rgba(74, 85, 104, 0.72);
+  }
+
+  &__title {
+    margin-top: 10px;
+    font-size: 30px;
+    line-height: 1.25;
+    font-weight: 700;
+    color: #454c5c;
+  }
+
+  &__subtitle {
+    margin-top: 10px;
+    font-size: 16px;
+    line-height: 1.65;
+    color: #626a7a;
+  }
+
+  &__progress {
+    margin-top: 20px;
+    padding: 14px 14px 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 10px 24px rgba(73, 78, 94, 0.08);
+  }
+
+  &__progressTrack {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255, 182, 193, 0.24);
+    overflow: hidden;
+  }
+
+  &__progressBar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff8ba7 0%, #ffb38a 100%);
+  }
+
+  &__progressText {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #727b8d;
+  }
+}
+
+.tips-publish-scroll {
+  padding: 18px 28px 36px;
+}
+
+.tips-publish-panel {
+  padding: 20px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 24px rgba(73, 78, 94, 0.07);
+
+  & + & {
+    margin-top: 16px;
+  }
+
+  &__title,
+  &__hint,
+  &__sectionTitle,
+  &__mediaTitle,
+  &__mediaHint,
+  &__imagePlaceholder {
+    display: block;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: $text-primary;
+  }
+
+  &__hint {
+    margin-top: 8px;
+    font-size: 15px;
+    line-height: 1.65;
+    color: $text-secondary;
+  }
+
+  &__input,
+  &__textarea {
+    margin-top: 14px;
+    min-height: 64px;
+    background: #fff8fc;
+    border-radius: 18px;
+    padding: 16px 18px;
+    box-shadow: inset 0 0 0 2px rgba(255, 139, 167, 0.08);
+    font-size: 15px;
+  }
+
+  &__textarea {
+    min-height: 96px;
+  }
+
+  &__media {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(255, 228, 239, 0.8) 0%, rgba(255, 248, 220, 0.9) 100%);
+  }
+
+  &__mediaHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__mediaTitle {
+    font-size: 17px;
+    font-weight: 700;
+    color: $text-primary;
+  }
+
+  &__mediaHint {
+    font-size: 13px;
+    color: $text-secondary;
+  }
+
+  &__imagePicker {
+    margin-top: 12px;
+    width: 100%;
+    height: 180px;
+    border-radius: 20px;
+    border: 2px dashed rgba(255, 139, 167, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.72);
+    overflow: hidden;
+  }
+
+  &__imagePreview {
+    width: 100%;
+    height: 100%;
+  }
+
+  &__imagePlaceholder {
+    font-size: 16px;
+    color: #ff7aa2;
+  }
+
+  &__sectionTitle {
+    margin-top: 18px;
+    font-size: 16px;
+    color: $text-primary;
+  }
+}
+
+.tips-publish-categories {
+  margin-top: 14px;
+  white-space: nowrap;
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px;
+    padding: 0 18px;
+    margin-right: 12px;
+    border-radius: 999px;
+    background: #fff7fb;
+
+    &.active {
+      background: linear-gradient(135deg, #ff8ba7 0%, #ffb38a 100%);
+    }
+  }
+
+  &__text {
+    font-size: 15px;
+    color: $text-primary;
+  }
+
+  &__item.active &__text {
+    color: #fff;
+  }
+}
+
+.tips-publish-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+
+  &__ghost,
+  &__primary {
+    flex: 1;
+    height: 64px;
+    border-radius: 999px;
+    font-size: 17px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+  }
+
+  &__ghost {
+    background: rgba(255, 255, 255, 0.95);
+    color: $text-primary;
+    box-shadow: 0 10px 20px rgba(73, 78, 94, 0.06);
+  }
+
+  &__primary {
+    background: linear-gradient(135deg, #ff8ba7 0%, #ffb38a 100%);
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(255, 139, 167, 0.22);
+  }
+}
+

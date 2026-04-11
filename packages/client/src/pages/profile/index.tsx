@@ -19,8 +19,9 @@ export default function ProfilePage() {
       }))
       Taro.showToast({ title: '旅人名片已同步', icon: 'success' })
     } catch (error) {
-      Taro.showToast({ title: '暂未完成授权', icon: 'none' })
+      Taro.showToast({ title: '授權未完成，請再試一次', icon: 'none' })
     }
+
   }
 
   return (

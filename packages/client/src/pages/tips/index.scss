@@ -10,43 +10,168 @@
 .tips-search,
 .tips-waterfall {
   width: 100%;
-  max-width: $max-page-width;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding-left: 28px;
   padding-right: 28px;
 }
 
 .tips-hero {
-  padding-top: 48px;
+  padding-top: 28px;
 
+  &__top {
+    padding: 28px;
+    border-radius: 32px;
+    background: linear-gradient(135deg, rgba(255, 205, 218, 0.92) 0%, rgba(255, 231, 190, 0.92) 100%);
+    box-shadow: 0 14px 30px rgba(73, 78, 94, 0.08);
+  }
+
+  &__copy,
+  &__eyebrow,
   &__title,
-  &__subtitle {
+  &__subtitle,
+  &__panelTitle,
+  &__panelDesc,
+  &__statNumber,
+  &__statLabel {
     display: block;
   }
 
+  &__eyebrow {
+    font-size: 18px;
+    letter-spacing: 4px;
+    color: rgba(74, 85, 104, 0.74);
+  }
+
   &__title {
-    font-size: 46px;
+    margin-top: 10px;
+    font-size: 40px;
+    line-height: 1.25;
     font-weight: 700;
-    color: $text-primary;
+    color: #454c5c;
   }
 
   &__subtitle {
     margin-top: 12px;
-    font-size: 24px;
+    font-size: 20px;
+    line-height: 1.7;
+    color: #606879;
+  }
+
+  &__panel {
+    margin-top: 16px;
+    padding: 22px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.88);
+  }
+
+  &__panelTitle {
+    font-size: 28px;
+    font-weight: 700;
+    color: $text-primary;
+  }
+
+  &__panelDesc {
+    margin-top: 10px;
+    font-size: 20px;
     line-height: 1.7;
     color: $text-secondary;
   }
+
+  &__panelStats {
+    margin-top: 18px;
+    display: flex;
+    gap: 14px;
+  }
+
+  &__statCard {
+    flex: 1;
+    padding: 18px 20px;
+    border-radius: 24px;
+    background: #fff8fb;
+  }
+
+  &__statNumber {
+    font-size: 34px;
+    font-weight: 700;
+    color: #434a58;
+  }
+
+  &__statLabel {
+    margin-top: 8px;
+    font-size: 18px;
+    color: #7d8697;
+  }
 }
+
+.tips-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+
+  &__iconBtn,
+  &__icon,
+  &__label,
+  &__badge {
+    display: block;
+  }
+
+  &__iconBtn {
+    position: relative;
+    flex: 0 0 auto;
+    min-width: 88px;
+    min-height: 62px;
+    padding: 10px 12px 8px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.94);
+    color: $text-primary;
+    box-shadow: 0 8px 18px rgba(73, 78, 94, 0.08);
+
+    &--primary {
+      background: linear-gradient(135deg, #ff8ba7 0%, #ffb38a 100%);
+      color: #fff;
+    }
+  }
+
+  &__icon {
+    font-size: 18px;
+  }
+
+  &__label {
+    margin-top: 4px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  &__badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #ff7a9d;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 20px;
+  }
+}
+
 
 .tips-search {
   margin-top: 24px;
 
   &__input {
-    height: 84px;
+    height: 68px;
     background: $card-bg;
     border-radius: $border-radius-full;
-    padding: 0 28px;
+    padding: 0 22px;
     box-shadow: $shadow-md;
+    font-size: 16px;
   }
 }
 
@@ -78,20 +203,21 @@
 
 .tips-waterfall {
   margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  column-count: 2;
+  column-gap: 16px;
 }
 
 .tip-card {
+  break-inside: avoid;
+  margin-bottom: 14px;
   background: rgba(255, 255, 255, 0.96);
-  border-radius: 28px;
+  border-radius: 22px;
   overflow: hidden;
   box-shadow: $shadow-md;
 
   &__cover {
-    height: 180px;
-    padding: 22px;
+    min-height: 200px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -102,61 +228,83 @@
   &__title,
   &__summary,
   &__tag,
-  &__metaText {
+  &__metaText,
+  &__paragraph,
+  &__empty {
     display: block;
   }
 
   &__category {
     width: fit-content;
-    padding: 8px 18px;
+    padding: 6px 14px;
     border-radius: $border-radius-full;
     background: rgba(255,255,255,0.88);
-    font-size: 20px;
+    font-size: 17px;
   }
 
   &__coverText {
-    font-size: 30px;
+    font-size: 26px;
     font-weight: 700;
     color: $text-primary;
   }
 
   &__body {
-    padding: 24px;
+    padding: 18px;
   }
 
   &__title {
-    font-size: 30px;
+    font-size: 24px;
     font-weight: 700;
     color: $text-primary;
   }
 
   &__summary {
-    margin-top: 12px;
-    font-size: 22px;
-    line-height: 1.7;
+    margin-top: 8px;
+    font-size: 18px;
+    line-height: 1.65;
     color: $text-secondary;
   }
 
+  &__content {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__paragraph {
+    font-size: 17px;
+    line-height: 1.75;
+    color: #5b6475;
+  }
+
   &__tags {
-    margin-top: 14px;
+    margin-top: 10px;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
 
   &__tag {
-    font-size: 20px;
+    font-size: 17px;
     color: #ff8ba7;
   }
 
   &__meta {
-    margin-top: 16px;
+    margin-top: 12px;
     display: flex;
-    gap: 18px;
+    gap: 14px;
+    flex-wrap: wrap;
   }
 
   &__metaText {
-    font-size: 20px;
+    font-size: 17px;
     color: $text-tertiary;
+  }
+
+  &__empty {
+    font-size: 18px;
+    color: $text-tertiary;
+    line-height: 1.7;
   }
 }

@@ -15,6 +15,7 @@ export interface AppUserProfile {
   voiceGuideEnabled: boolean
   unlockedStorylines: number
   badges: string[]
+  currentCityId?: string
 }
 
 export interface PoiItem {
@@ -40,6 +41,18 @@ export interface PoiItem {
   rewardStampId?: number
   tags: string[]
   coverColor: string
+  cityId?: string
+}
+
+export interface StoryChapterItem {
+  id: number
+  title: string
+  summary: string
+  detail: string
+  achievement: string
+  collectible: string
+  locationName: string
+  locked: boolean
 }
 
 export interface StorylineItem {
@@ -57,6 +70,10 @@ export interface StorylineItem {
   chapterTitles: string[]
   progress: number
   rewardBadge?: string
+  locked?: boolean
+  unlockHint?: string
+  chapters?: StoryChapterItem[]
+  moodTags?: string[]
 }
 
 export interface StampItem {
@@ -125,6 +142,11 @@ export interface TipArticleItem {
   saves: number
   readMinutes: number
   tags: string[]
+  imageUrl?: string
+  locationName?: string
+  contentParagraphs?: string[]
+  createdAt?: string
+  isPublishedByUser?: boolean
 }
 
 export interface ArrivalExperience {
@@ -135,4 +157,41 @@ export interface ArrivalExperience {
   audioDuration: string
   rewardLabel: string
   canManualCheckin: boolean
+}
+
+export interface NotificationItem {
+  id: number
+  title: string
+  content: string
+  timeLabel: string
+  unread?: boolean
+  type: 'system' | 'ugc' | 'activity'
+}
+
+export interface CityProgressItem {
+  id: string
+  name: string
+  subtitle: string
+  coverColor: string
+  unlocked: boolean
+  firstUnlockedAt?: string
+  explorationProgress: number
+  titleReward: string
+  landmarkCount: number
+}
+
+export interface TravelAssessmentAnswer {
+  ageGroup: string
+  playDuration: string
+  interests: string[]
+  allowLocation: boolean
+}
+
+export interface TravelRecommendation {
+  storyId: number
+  storyName: string
+  activityTitle: string
+  poiName: string
+  ugcTitle: string
+  reason: string
 }

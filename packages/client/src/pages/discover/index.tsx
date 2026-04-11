@@ -12,7 +12,7 @@ export default function DiscoverPage() {
     <PageShell className='discover-page'>
       <View className='discover-hero'>
         <Text className='discover-hero__title'>發現澳門新玩法</Text>
-        <Text className='discover-hero__subtitle'>看看城中的活動靈感、商戶彩蛋與熱門足跡，把今日行程安排得剛剛好。</Text>
+        <Text className='discover-hero__subtitle'>看看城中的活動靈感、旅途彩蛋與熱門足跡，把今天的散步安排得剛剛好。</Text>
       </View>
 
       <View className='discover-list'>

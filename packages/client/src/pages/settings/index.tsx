@@ -34,18 +34,18 @@ export default function SettingsPage() {
   return (
     <PageShell className='settings-page'>
       <View className='page-header'>
-        <Text className='page-title'>设置</Text>
+        <Text className='page-title'>設定</Text>
         <Text className='page-subtitle'>把旅程调成你最舒服的节奏，字體大小、語音提醒與閱讀對比都可以自己決定。</Text>
       </View>
 
       <View className='settings-section'>
         <View className='section-header'>
-          <Text className='section-title'>👴 长者模式</Text>
+          <Text className='section-title'>👴 長者模式</Text>
         </View>
         <View className='settings-list'>
           <View className='setting-item'>
             <View className='setting-info'>
-              <Text className='setting-name'>开启长者模式</Text>
+              <Text className='setting-name'>開啟長者模式</Text>
               <Text className='setting-desc'>界面更清爽、按钮更大，每一步都更好看也更好点。</Text>
             </View>
             <Switch
@@ -57,7 +57,7 @@ export default function SettingsPage() {
           </View>
           <View className='setting-item column'>
             <View className='setting-info'>
-              <Text className='setting-name'>字体倍率</Text>
+              <Text className='setting-name'>字體倍率</Text>
               <Text className='setting-desc'>把重要内容放大一点，看路牌和故事会更轻松。</Text>
             </View>
             <View className='scale-options'>
@@ -111,7 +111,7 @@ export default function SettingsPage() {
       <View className='settings-section tips'>
         <Text className='tips-title'>旅程小提醒</Text>
         <Text className='tips-text'>- 想快速开始，就先去探索页挑一个附近地标</Text>
-        <Text className='tips-text'>- 如果喜欢慢慢走，建议打开语音导览和更大的字体</Text>
+        <Text className='tips-text'>- 如果喜歡慢慢走，建議打開語音導覽和更大的字體</Text>
         <Text className='tips-text'>- 收集到更多足跡章后，可以回来兑换旅途惊喜</Text>
       </View>
 

@@ -1,0 +1,142 @@
+@import '../../../styles/variables.scss';
+
+.tip-detail-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff7fb 100%);
+}
+
+.tip-detail-hero,
+.tip-detail-scroll {
+  padding-left: 28px;
+  padding-right: 28px;
+}
+
+.tip-detail-hero {
+  padding-top: 36px;
+  padding-bottom: 28px;
+  border-radius: 0 0 32px 32px;
+
+  &__category,
+  &__title,
+  &__meta {
+    display: block;
+  }
+
+  &__category {
+    width: fit-content;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.9);
+    font-size: 18px;
+    color: #4b5563;
+  }
+
+  &__title {
+    margin-top: 16px;
+    font-size: 40px;
+    line-height: 1.35;
+    font-weight: 700;
+    color: #2f3542;
+  }
+
+  &__meta {
+    margin-top: 12px;
+    font-size: 20px;
+    color: rgba(47, 53, 66, 0.72);
+  }
+}
+
+.tip-detail-scroll {
+  padding-top: 22px;
+  padding-bottom: 40px;
+}
+
+.tip-detail-card {
+  background: rgba(255,255,255,0.96);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 12px 24px rgba(73, 78, 94, 0.08);
+
+  &__summary,
+  &__stat,
+  &__paragraph,
+  &__tag {
+    display: block;
+  }
+
+  &__summary {
+    font-size: 24px;
+    line-height: 1.8;
+    color: #5f6677;
+  }
+
+  &__stats {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  &__stat {
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #fff8fb;
+    font-size: 18px;
+    color: #7d8697;
+  }
+
+  &__content {
+    margin-top: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  &__paragraph {
+    font-size: 22px;
+    line-height: 1.9;
+    color: #4a5364;
+  }
+
+  &__tags {
+    margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  &__tag {
+    font-size: 18px;
+    color: #ff7aa2;
+  }
+}
+
+.tip-detail-empty {
+  min-height: 100vh;
+  padding: 120px 28px 40px;
+  text-align: center;
+
+  &__emoji,
+  &__title,
+  &__desc {
+    display: block;
+  }
+
+  &__emoji {
+    font-size: 56px;
+  }
+
+  &__title {
+    margin-top: 16px;
+    font-size: 30px;
+    font-weight: 700;
+    color: #434a58;
+  }
+
+  &__desc {
+    margin-top: 12px;
+    font-size: 22px;
+    line-height: 1.7;
+    color: #7d8697;
+  }
+}

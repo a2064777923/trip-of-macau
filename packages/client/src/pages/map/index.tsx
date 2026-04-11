@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Input, Map, ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { fetchAmapInputTips, fetchAmapWalkingRoute, buildAmapLocation } from '../../services/amap'
+import PageShell from '../../components/PageShell'
 import {
   getArrivalExperience,
+  getCities,
   getEmergencyContact,
   getMapBootstrapConfig,
   getNearbyPois,
-  getPoiById,
+  getPoiSearchTips,
   getStoryById,
+  getWalkingRouteSummary,
   loadGameState,
   performMockCheckin,
+  registerCityVisitByLocation,
+  switchCurrentCity,
 } from '../../services/gameService'
-import PageShell from '../../components/PageShell'
 import './index.scss'
 
 const fallbackLocation = {
@@ -22,13 +25,16 @@ const fallbackLocation = {
 }
 
 export default function MapPage() {
-  const bootstrap = useMemo(() => getMapBootstrapConfig(), [])
-  const emergencyContact = useMemo(() => getEmergencyContact(), [])
+  const [state, setState] = useState(() => loadGameState())
   const [location, setLocation] = useState(fallbackLocation)
+  const [cities, setCities] = useState(() => getCities())
+  const [currentCityId, setCurrentCityId] = useState(() => loadGameState().user.currentCityId || 'macau')
+  const bootstrap = useMemo(() => getMapBootstrapConfig(), [currentCityId, state])
+  const emergencyContact = useMemo(() => getEmergencyContact(), [])
   const [pois, setPois] = useState([])
   const [selectedPoiId, setSelectedPoiId] = useState(null)
   const [tips, setTips] = useState([])
-  const [keyword, setKeyword] = useState('大三巴')
+  const [keyword, setKeyword] = useState('')
   const [routeSummary, setRouteSummary] = useState(null)
   const [checkinResult, setCheckinResult] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -42,9 +48,28 @@ export default function MapPage() {
     return selectedPoiId ? pois.find((poi) => poi.id === selectedPoiId) || null : pois[0] || null
   }, [pois, selectedPoiId])
 
+  const relatedStory = useMemo(() => {
+    return selectedPoi?.storyLineId ? getStoryById(selectedPoi.storyLineId) : null
+  }, [selectedPoi?.storyLineId, state.completedStoryIds, state.completedChapterIds])
+
+  const activeStoryChapter = useMemo(() => {
+    if (!relatedStory?.chapters?.length) return null
+    return relatedStory.chapters.find((chapter) => !chapter.locked) || relatedStory.chapters[0]
+  }, [relatedStory])
+
   const arrivalExperience = useMemo(() => {
     return selectedPoi ? getArrivalExperience(selectedPoi.id) : null
-  }, [selectedPoi && selectedPoi.id])
+  }, [selectedPoi?.id])
+
+  const refreshByCity = (lat, lng, accuracy, cityId = currentCityId) => {
+
+    const nearby = getNearbyPois(lat, lng, accuracy, cityId)
+    setPois(nearby)
+    setSelectedPoiId(nearby[0] ? nearby[0].id : null)
+    if (nearby[0]) {
+      setRouteSummary(getWalkingRouteSummary(nearby[0], { latitude: lat, longitude: lng }))
+    }
+  }
 
   useEffect(() => {
     bootstrapPage()
@@ -55,7 +80,6 @@ export default function MapPage() {
       audioRef.current.onStop(() => setVoicePlaying(false))
       audioRef.current.onError(() => setVoicePlaying(false))
     }
-
     return () => {
       if (audioRef.current) {
         audioRef.current.destroy()
@@ -69,18 +93,17 @@ export default function MapPage() {
       setDwellSeconds(0)
       return
     }
-
     setSelectedPoiId(selectedPoi.id)
-    updateRoute(selectedPoi)
+    setRouteSummary(getWalkingRouteSummary(selectedPoi, location))
     setDwellSeconds(selectedPoi.inRange ? selectedPoi.staySeconds : 0)
     if (selectedPoi.inRange) {
       setArrivalVisible(true)
     }
-  }, [selectedPoi && selectedPoi.id, selectedPoi && selectedPoi.inRange])
+  }, [selectedPoi && selectedPoi.id, selectedPoi && selectedPoi.inRange, location.latitude, location.longitude])
 
   useEffect(() => {
-    const state = loadGameState()
-    if (arrivalVisible && arrivalExperience && state.user.interfaceMode === 'elderly' && state.user.voiceGuideEnabled) {
+    const latestState = loadGameState()
+    if (arrivalVisible && arrivalExperience && latestState.user.interfaceMode === 'elderly' && latestState.user.voiceGuideEnabled) {
       playArrivalAudio()
     }
   }, [arrivalVisible, arrivalExperience && arrivalExperience.poiId])
@@ -94,38 +117,29 @@ export default function MapPage() {
         longitude: res.longitude,
         accuracy: res.accuracy || 30,
       }
+      const unlockedCityId = registerCityVisitByLocation(nextLocation.latitude, nextLocation.longitude)
       setLocation(nextLocation)
-      const nearby = getNearbyPois(nextLocation.latitude, nextLocation.longitude, nextLocation.accuracy)
-      setPois(nearby)
-      setSelectedPoiId(nearby[0] ? nearby[0].id : null)
+      setCurrentCityId(unlockedCityId)
+      setState(loadGameState())
+      setCities(getCities())
+      refreshByCity(nextLocation.latitude, nextLocation.longitude, nextLocation.accuracy, unlockedCityId)
     } catch (error) {
-      const nearby = getNearbyPois(fallbackLocation.latitude, fallbackLocation.longitude, fallbackLocation.accuracy)
-      setPois(nearby)
-      setSelectedPoiId(nearby[0] ? nearby[0].id : null)
-      Taro.showToast({ title: '先为你打开附近熱門地標', icon: 'none' })
+      refreshByCity(fallbackLocation.latitude, fallbackLocation.longitude, fallbackLocation.accuracy, currentCityId)
+      Taro.showToast({ title: '先为你打開當前城市的熱門地標', icon: 'none' })
     } finally {
       setLoading(false)
     }
   }
 
-  const updateRoute = async (poi) => {
-    const summary = await fetchAmapWalkingRoute(
-      buildAmapLocation(location.latitude, location.longitude),
-      buildAmapLocation(poi.gcj02Latitude, poi.gcj02Longitude),
-    )
-    setRouteSummary(summary)
-  }
-
-  const handleSearchInput = async (event) => {
+  const handleSearchInput = (event) => {
     const value = event.detail.value || ''
     setKeyword(value)
     if (!value.trim()) {
       setTips([])
       return
     }
-
     setSearching(true)
-    const result = await fetchAmapInputTips(value)
+    const result = getPoiSearchTips(value, currentCityId)
     setTips(result.map((item) => ({ id: item.id, name: item.name, address: item.address })))
     setSearching(false)
   }
@@ -136,7 +150,7 @@ export default function MapPage() {
     if (poi) {
       setKeyword(poi.name)
       setTips([])
-      updateRoute(poi)
+      setRouteSummary(getWalkingRouteSummary(poi, location))
     }
   }
 
@@ -144,19 +158,42 @@ export default function MapPage() {
     await bootstrapPage()
   }
 
+  const handleSwitchCity = (cityId) => {
+    try {
+      const city = switchCurrentCity(cityId)
+      setCurrentCityId(cityId)
+      setState(loadGameState())
+      setCities(getCities())
+      refreshByCity(location.latitude, location.longitude, location.accuracy, cityId)
+      Taro.showToast({ title: `已切換到 ${city.name}`, icon: 'none' })
+    } catch (error) {
+      Taro.showToast({ title: error.message || '先走近該城市再試試', icon: 'none' })
+    }
+  }
+
+  const handleOpenStoryChapter = () => {
+    if (!relatedStory) {
+      Taro.navigateTo({ url: '/pages/story/index' })
+      return
+    }
+    const chapterId = activeStoryChapter?.id
+    const query = chapterId ? `?storyId=${relatedStory.id}&chapterId=${chapterId}` : `?storyId=${relatedStory.id}`
+    Taro.navigateTo({ url: `/pages/story/index${query}` })
+  }
+
+
+
+
+
   const playArrivalAudio = () => {
     if (!arrivalExperience) return
     setVoicePlaying(true)
-
     if (audioRef.current) {
       audioRef.current.stop()
-      audioRef.current.src = 'https://cdn.jsdelivr.net/gh/mdn/webaudio-examples/audio-basics/techno.wav'
-      audioRef.current.play()
-      return
     }
-
-    Taro.showToast({ title: `${arrivalExperience.audioTitle} 播放中`, icon: 'none' })
+    Taro.showToast({ title: `${arrivalExperience.audioTitle} 已開始播報`, icon: 'none' })
   }
+
 
   const stopArrivalAudio = () => {
     if (audioRef.current) {
@@ -165,18 +202,16 @@ export default function MapPage() {
     setVoicePlaying(false)
   }
 
+
   const completeCheckin = (mode) => {
     if (!selectedPoi) return
     const result = performMockCheckin(selectedPoi.id, mode)
     setCheckinResult(result)
     setArrivalVisible(false)
+    setState(loadGameState())
+    setCities(getCities())
     Taro.showToast({ title: `已獲得 ${result.stampName}`, icon: 'success' })
-    const refreshed = getNearbyPois(location.latitude, location.longitude, location.accuracy)
-    setPois(refreshed)
-  }
-
-  const handleMockCheckin = () => {
-    completeCheckin(selectedPoi && selectedPoi.inRange ? 'gps' : 'mock')
+    refreshByCity(location.latitude, location.longitude, location.accuracy, loadGameState().user.currentCityId || currentCityId)
   }
 
   const handleManualCheckin = () => {
@@ -187,7 +222,7 @@ export default function MapPage() {
 
     Taro.showModal({
       title: '手動補簽確認',
-      content: '若 GPS 訊號不穩，可使用 200 米內補簽兜底。是否繼續？',
+      content: '若訊號不穩，可使用附近補簽方式完成這段旅程。是否繼續？',
       success: (res) => {
         if (res.confirm) {
           completeCheckin('manual')
@@ -196,38 +231,61 @@ export default function MapPage() {
     })
   }
 
-  const state = loadGameState()
-
   return (
     <PageShell className='map-page'>
-
       <View className='map-hero'>
         <View className='map-hero__content'>
-          <Text className='map-hero__eyebrow'>探索主戰場</Text>
-          <Text className='map-hero__title'>高德地圖 + 澳門故事玩法</Text>
-          <Text className='map-hero__subtitle'>不做瓦片地圖，但把到達觸發、語音導覽、手動補簽、故事與獎勵閉環補齊。</Text>
+          <View className='map-hero__main'>
+            <View className='map-hero__text'>
+              <Text className='map-hero__eyebrow'>城市探索進行中</Text>
+              <Text className='map-hero__title'>澳門故事地圖</Text>
+              <Text className='map-hero__subtitle'>沿着地標一路前行，聽見城市回聲，解鎖故事與旅途驚喜。</Text>
+            </View>
+            <View className='map-hero__stats'>
+              <View className='map-hero__progressCard'>
+                <Text className='map-hero__progressLabel'>探索進度</Text>
+                <Text className='map-hero__progressValue'>{cities.find((city) => city.id === currentCityId)?.explorationProgress || 0}%</Text>
+              </View>
+              <View className='map-hero__titleBadge'>
+                <Text className='map-hero__titleBadgeText'>{cities.find((city) => city.id === currentCityId)?.titleReward || state.user.title}</Text>
+              </View>
+            </View>
+          </View>
+          <View className='map-hero__storyCard' onClick={handleOpenStoryChapter}>
+
+            <Text className='map-hero__storyLabel'>對應故事章節</Text>
+            <Text className='map-hero__storyTitle'>{activeStoryChapter?.title || relatedStory?.name || '城市漫遊篇章'}</Text>
+            <Text className='map-hero__storyDesc'>{activeStoryChapter?.summary || '點開後可直接查看這段地標對應的故事詳情。'}</Text>
+            <Text className='map-hero__storyAction'>查看章節詳情</Text>
+          </View>
         </View>
       </View>
 
+
+
       <View className='map-shell'>
+        <ScrollView className='city-switcher' scrollX>
+          {cities.map((city) => (
+            <View key={city.id} className={`city-switcher__item ${currentCityId === city.id ? 'active' : ''} ${city.unlocked ? '' : 'locked'}`} onClick={() => handleSwitchCity(city.id)}>
+              <Text className='city-switcher__name'>{city.name}</Text>
+            </View>
+          ))}
+        </ScrollView>
+
+
         <View className='map-card'>
           <View className='map-toolbar'>
             <View className='map-search'>
-              <Input
-                className='map-search__input'
-                value={keyword}
-                placeholder='搜索附近地点，如：大三巴'
-                onInput={handleSearchInput}
-              />
-              <Button className='map-search__button' size='mini' onClick={handleQuickLocate}>刷新定位</Button>
+              <Input className='map-search__input' value={keyword} placeholder='搜尋附近地標或故事關鍵字' onInput={handleSearchInput} />
+              <Button className='map-search__button' size='mini' onClick={handleQuickLocate}>刷新位置</Button>
             </View>
-            <Text className='map-toolbar__meta'>高德 Key 已接入 · 当前城市 {bootstrap.city} · {searching ? '搜索中…' : '探索就绪'}</Text>
+            <Text className='map-toolbar__meta'>{bootstrap.city} · {searching ? '正在替你尋找靈感…' : '旅程已準備好'}</Text>
           </View>
 
           {!!tips.length && (
             <View className='tips-panel'>
               {tips.map((tip) => (
-                <View key={tip.id} className='tips-panel__item'>
+                <View key={tip.id} className='tips-panel__item' onClick={() => handleSelectPoi(Number(tip.id))}>
                   <Text className='tips-panel__name'>{tip.name}</Text>
                   <Text className='tips-panel__addr'>{tip.address}</Text>
                 </View>
@@ -243,25 +301,6 @@ export default function MapPage() {
             showLocation
             enableRotate={false}
             enableOverlooking={false}
-            markers={pois.map((poi) => ({
-              id: poi.id,
-              latitude: poi.gcj02Latitude,
-              longitude: poi.gcj02Longitude,
-              width: poi.id === selectedPoiId ? 40 : 32,
-              height: poi.id === selectedPoiId ? 40 : 32,
-              iconPath: poi.id === selectedPoiId
-                ? 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-red.png'
-                : 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-default.png',
-              callout: {
-                content: poi.name,
-                color: '#3d4350',
-                fontSize: 12,
-                borderRadius: 12,
-                bgColor: '#fff7fb',
-                padding: 8,
-                display: 'BYCLICK',
-              },
-            }))}
             circles={selectedPoi ? [{
               latitude: selectedPoi.gcj02Latitude,
               longitude: selectedPoi.gcj02Longitude,
@@ -270,39 +309,31 @@ export default function MapPage() {
               fillColor: 'rgba(255,139,167,0.14)',
               strokeWidth: 2,
             }] : []}
-            onMarkerTap={(event) => handleSelectPoi(Number(event.detail.markerId))}
           />
 
-          <View className='location-strip'>
-            <Text className='location-strip__title'>目前定位</Text>
-            <Text className='location-strip__value'>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</Text>
-            <Text className='location-strip__tip'>精度 ±{Math.round(location.accuracy)} 米 · 动态半径规则 {bootstrap.checkinRules.radiusPolicy} · 手动补签 {bootstrap.checkinRules.manualFallback}</Text>
-          </View>
+
+
         </View>
 
         <View className='explore-grid'>
           <View className='explore-panel nearby-panel'>
             <View className='panel-header'>
-              <Text className='panel-title'>附近任务点</Text>
-              <Text className='panel-subtitle'>{loading ? '定位中...' : `${pois.length} 个可探索地点`}</Text>
+              <Text className='panel-title'>附近任務點</Text>
+              <Text className='panel-subtitle'>{loading ? '正在整理附近地標…' : `${pois.length} 個值得駐足的地點`}</Text>
             </View>
             <ScrollView scrollY className='poi-scroll'>
               {pois.map((poi) => (
-                <View
-                  key={poi.id}
-                  className={`poi-card ${selectedPoiId === poi.id ? 'poi-card--active' : ''}`}
-                  onClick={() => handleSelectPoi(poi.id)}
-                >
+                <View key={poi.id} className={`poi-card ${selectedPoiId === poi.id ? 'poi-card--active' : ''}`} onClick={() => handleSelectPoi(poi.id)}>
                   <View className='poi-card__cover' style={{ background: poi.coverColor }}>
                     <Text className='poi-card__emoji'>{poi.icon}</Text>
                   </View>
                   <View className='poi-card__body'>
                     <View className='poi-card__top'>
                       <Text className='poi-card__name'>{poi.name}</Text>
-                      <Text className={`poi-card__badge ${poi.inRange ? 'ready' : ''}`}>{poi.inRange ? '可触发' : poi.distanceText}</Text>
+                      <Text className={`poi-card__badge ${poi.inRange ? 'ready' : ''}`}>{poi.inRange ? '可解鎖' : poi.distanceText}</Text>
                     </View>
                     <Text className='poi-card__subtitle'>{poi.subtitle}</Text>
-                    <Text className='poi-card__meta'>{poi.category} · {poi.storyName || '自由探索'} · 需停留 {poi.staySeconds}s</Text>
+                    <Text className='poi-card__meta'>{poi.category} · {poi.storyName || '城市漫遊篇章'} · 建議停留 {poi.staySeconds}s</Text>
                   </View>
                 </View>
               ))}
@@ -331,40 +362,56 @@ export default function MapPage() {
                       <Text key={tag} className='selected-poi__chip'>{tag}</Text>
                     ))}
                   </View>
+
+                  <View className='selected-poi__stats'>
+                    <View className='selected-poi__stat'>
+                      <Text className='selected-poi__statLabel'>目前距離</Text>
+                      <Text className='selected-poi__statValue'>{selectedPoi.inRange ? '已到達範圍內' : selectedPoi.distanceText}</Text>
+                    </View>
+                    <View className='selected-poi__stat'>
+                      <Text className='selected-poi__statLabel'>停留建議</Text>
+                      <Text className='selected-poi__statValue'>{selectedPoi.staySeconds} 秒</Text>
+                    </View>
+                    <View className='selected-poi__stat selected-poi__stat--full'>
+                      <Text className='selected-poi__statLabel'>故事關聯</Text>
+                      <Text className='selected-poi__statValue'>{selectedPoi.storyName || '城市漫遊篇章'}</Text>
+                    </View>
+                  </View>
                 </View>
 
                 <View className='route-card'>
-                  <Text className='route-card__title'>高德步行路线</Text>
+                  <Text className='route-card__title'>前往路線</Text>
                   {routeSummary ? (
                     <>
-                      <Text className='route-card__summary'>约 {Math.round(Number(routeSummary.distance) / 100) / 10} km · {Math.ceil(Number(routeSummary.duration) / 60)} 分钟</Text>
+                      <Text className='route-card__summary'>約 {Math.round(Number(routeSummary.distance) / 100) / 10} km · {Math.ceil(Number(routeSummary.duration) / 60)} 分鐘</Text>
                       {routeSummary.steps.slice(0, 3).map((step, index) => (
                         <Text key={`${step}-${index}`} className='route-card__step'>{index + 1}. {step}</Text>
                       ))}
                     </>
                   ) : (
-                    <Text className='route-card__summary'>当前以 Mock 方式展示路线说明，若高德接口不可用会自动回退。</Text>
+                    <Text className='route-card__summary'>先跟著附近地標慢慢走，我會陪你把路線整理得更清楚。</Text>
                   )}
                 </View>
 
                 <View className='story-card-lite'>
-                  <Text className='story-card-lite__title'>关联故事线</Text>
-                  <Text className='story-card-lite__name'>{(getStoryById(selectedPoi.storyLineId || 0) || {}).name || '自由探索模式'}</Text>
-                  <Text className='story-card-lite__progress'>已解锁 {state.completedStoryIds.length} 条故事线 · 当前印章 {state.user.totalStamps} 枚</Text>
+                  <Text className='story-card-lite__title'>這段旅程會帶你去</Text>
+                  <Text className='story-card-lite__name'>{(getStoryById(selectedPoi.storyLineId || 0) || {}).name || '城市漫遊篇章'}</Text>
+                  <Text className='story-card-lite__progress'>已點亮 {state.completedStoryIds.length} 條主線 · 當前印章 {state.user.totalStamps} 枚</Text>
                 </View>
 
                 <View className='arrival-hint'>
-                  <Text className='arrival-hint__title'>{selectedPoi.inRange ? '已进入触发范围' : '尚未进入触发范围'}</Text>
-                  <Text className='arrival-hint__desc'>{selectedPoi.inRange ? `建议停留 ${dwellSeconds}s 后完成打卡` : '可先跟随路线接近目的地，定位不稳时可尝试手动补签。'}</Text>
+                  <Text className='arrival-hint__title'>{selectedPoi.inRange ? '可以準備收下這枚印章了' : '再靠近一點就能觸發故事'}</Text>
+                  <Text className='arrival-hint__desc'>{selectedPoi.inRange ? `建議停留 ${dwellSeconds}s 後完成這段旅程` : '先沿著推薦路線靠近，若訊號不穩也能稍後補簽。'}</Text>
                 </View>
 
                 <View className='action-bar'>
-                  <Button className='action-bar__primary' onClick={handleMockCheckin}>完成到达打卡</Button>
-                  <Button className='action-bar__secondary' onClick={() => Taro.navigateTo({ url: '/pages/story/index' })}>查看故事线</Button>
+                  <Button className='action-bar__primary' onClick={() => completeCheckin(selectedPoi && selectedPoi.inRange ? 'gps' : 'mock')}>{selectedPoi.inRange ? '收下這枚印章' : '先記錄這次到達'}</Button>
+                  <Button className='action-bar__secondary' onClick={() => Taro.navigateTo({ url: '/pages/story/index' })}>查看故事線</Button>
                 </View>
               </>
             ) : (
-              <Text className='empty-tip'>请选择一个地点以查看玩法详情。</Text>
+
+              <Text className='empty-tip'>請選擇一個地點查看玩法詳情。</Text>
             )}
           </View>
         </View>
@@ -410,7 +457,7 @@ export default function MapPage() {
         {checkinResult && (
           <View className='reward-banner'>
             <Text className='reward-banner__title'>🎉 本次探索成功</Text>
-            <Text className='reward-banner__desc'>你已在 {checkinResult.poiName} 获得 {checkinResult.stampName}，并获得 {checkinResult.experienceGained} 经验。</Text>
+            <Text className='reward-banner__desc'>你已在 {checkinResult.poiName} 获得 {checkinResult.stampName}，并获得 {checkinResult.experienceGained} 經驗值。</Text>
           </View>
         )}
       </View>

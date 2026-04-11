@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "minium_mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@diaz9810/miniprogram-minium-mcp"],
+      "env": {
+        "MINIUM_MCP_PROJECT_PATH": "d:/Archive/trip-of-macau/packages/client/dist",
+        "MINIUM_MCP_WECHAT_DEVTOOL_PATH": "D:/Software/微信web开发者工具/cli.bat",
+        "MINIUM_MCP_LANGUAGE": "zh-CN"
+      },
+      "description": "微信小程序 Minium 调试 MCP"
+    }
+  }
+}

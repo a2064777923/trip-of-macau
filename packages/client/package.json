@@ -5,7 +5,7 @@
   "description": "澳小遊小程序前端 - Trip of Macau",
   "main": "dist/app.js",
   "scripts": {
-    "build:weapp": "taro build --type weapp",
+    "build:weapp": "taro build --type weapp && node scripts/write-weapp-project-config.js",
     "build:swan": "taro build --type swan",
     "build:alipay": "taro build --type alipay",
     "build:tt": "taro build --type tt",

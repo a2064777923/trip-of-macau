@@ -42,7 +42,18 @@
 .level-title,
 .stamp-count,
 .action-title,
-.action-desc {
+.action-desc,
+.assessment-card__title,
+.assessment-card__desc,
+.assessment-card__label,
+.assessment-card__helper,
+.assessment-card__stepLabel,
+.assessment-card__stepValue,
+.assessment-card__locationTitle,
+.assessment-card__locationText,
+.recommend-card__title,
+.recommend-card__reason,
+.recommend-card__meta {
   display: block;
 }
 
@@ -103,6 +114,201 @@
   color: #798093;
 }
 
+.assessment-card,
+.recommend-panel,
+.quick-access,
+.featured-stories {
+  padding: 0 28px;
+}
+
+.assessment-card {
+  margin-top: -48px;
+  position: relative;
+  z-index: 2;
+
+  &__header,
+  &__section,
+  &__location {
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 28px;
+    box-shadow: 0 14px 30px rgba(84, 71, 95, 0.1);
+  }
+
+  &__header {
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  &__title {
+    font-size: 34px;
+    font-weight: 700;
+    color: #3d4350;
+  }
+
+  &__desc {
+    margin-top: 10px;
+    font-size: 22px;
+    line-height: 1.7;
+    color: #7a8192;
+  }
+
+  &__skip {
+    min-width: 160px;
+    height: 72px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(176, 224, 230, 0.34);
+    color: #566275;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  &__steps {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  &__step {
+    padding: 18px 20px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 10px 20px rgba(84, 71, 95, 0.06);
+  }
+
+  &__stepLabel {
+    font-size: 18px;
+    color: #8b92a2;
+  }
+
+  &__stepValue {
+    margin-top: 8px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #434a58;
+  }
+
+  &__section,
+  &__location {
+    margin-top: 18px;
+    padding: 22px;
+  }
+
+  &__labelRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__label {
+    font-size: 24px;
+    font-weight: 700;
+    color: #434a58;
+  }
+
+  &__helper {
+    font-size: 18px;
+    color: #8b92a2;
+  }
+
+  &__chips {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  &__chip {
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: #fff8fb;
+    box-shadow: inset 0 0 0 1px rgba(255, 139, 167, 0.12);
+
+    &.active {
+      background: linear-gradient(135deg, #ff8ba7 0%, #ffb38a 100%);
+    }
+  }
+
+  &__chipText {
+    font-size: 20px;
+    color: #5f6677;
+  }
+
+  &__chip.active &__chipText,
+  &__chip.active .assessment-card__chipText {
+    color: #fff;
+  }
+
+  &__locationTitle {
+    font-size: 24px;
+    font-weight: 700;
+    color: #434a58;
+  }
+
+  &__locationText {
+    margin-top: 8px;
+    font-size: 20px;
+    line-height: 1.7;
+    color: #7d8697;
+  }
+
+  &__locationBtn {
+    margin-top: 18px;
+    width: 100%;
+    height: 78px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(176, 224, 230, 0.34);
+    color: #566275;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+
+    &.active {
+      background: linear-gradient(135deg, #7cc4ff 0%, #8ee0c4 100%);
+      color: #fff;
+    }
+  }
+
+  &__actions {
+    margin-top: 18px;
+    display: flex;
+    gap: 14px;
+  }
+
+  &__secondary,
+  &__submit {
+    flex: 1;
+    height: 82px;
+    border: none;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  &__secondary {
+    background: rgba(255, 255, 255, 0.92);
+    color: #5f6677;
+    box-shadow: 0 10px 20px rgba(84, 71, 95, 0.08);
+  }
+
+  &__submit {
+    background: linear-gradient(135deg, #ff8ba7 0%, #ffb38a 100%);
+    color: #fff;
+    box-shadow: 0 14px 24px rgba(255, 139, 167, 0.2);
+  }
+}
+
 .main-actions {
   padding: 0 28px;
   margin-top: -48px;
@@ -144,9 +350,10 @@
   color: rgba(255, 255, 255, 0.92);
 }
 
+.recommend-panel,
 .quick-access,
 .featured-stories {
-  padding: 36px 28px 0;
+  padding-top: 34px;
 }
 
 .section-title {
@@ -154,6 +361,32 @@
   font-weight: 700;
   color: #3d4350;
   margin-bottom: 20px;
+}
+
+.recommend-card {
+  padding: 24px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 24px rgba(62, 67, 80, 0.08);
+
+  &__title {
+    font-size: 30px;
+    font-weight: 700;
+    color: #3d4350;
+  }
+
+  &__reason {
+    margin-top: 10px;
+    font-size: 22px;
+    line-height: 1.7;
+    color: #798093;
+  }
+
+  &__meta {
+    margin-top: 10px;
+    font-size: 20px;
+    color: #ff7aa2;
+  }
 }
 
 .quick-grid {
@@ -261,3 +494,4 @@
 .bottom-spacer {
   height: 48px;
 }
+
