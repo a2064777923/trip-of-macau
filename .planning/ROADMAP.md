@@ -1,0 +1,129 @@
+# Roadmap: Trip of Macau
+
+## Overview
+
+This roadmap turns the existing mock-heavy mini-program and partially complete admin/public backends into a live, admin-driven platform. The work starts by establishing a canonical schema and contract foundation, then completes the admin control plane, builds the public read/write APIs in `packages/server`, adds Tencent COS asset handling, migrates the existing mock dataset, and ends with full end-to-end hardening and verification.
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: Canonical Backend Foundation** - Establish the shared schema, contract rules, and local runtime baseline for live mini-program integration.
+- [ ] **Phase 2: Admin Control Plane Completion** - Fill the admin-side CRUD and configuration gaps for all mini-program-facing content and runtime settings.
+- [ ] **Phase 3: Public Read APIs Cutover** - Build the public read endpoints needed to replace mock-driven home, discover, map, story, and content reads.
+- [ ] **Phase 4: Public Progress and Gameplay Writes** - Implement live user-progress, check-in, preference, and reward-write APIs in the public backend.
+- [ ] **Phase 5: COS Media Pipeline** - Add backend-managed Tencent COS uploads and canonical asset resolution for admin and public clients.
+- [ ] **Phase 6: Migration, Cutover, and Hardening** - Seed mock data, switch the mini-program to live services, and run end-to-end verification/performance hardening.
+
+## Phase Details
+
+### Phase 1: Canonical Backend Foundation
+**Goal**: Establish a canonical shared content/runtime contract, expand the core MySQL schema, and make the local public/admin backend environment reproducible for live integration work.
+**Depends on**: Nothing (first phase)
+**Requirements**: [DATA-01, DATA-03, OPS-01]
+**Success Criteria** (what must be TRUE):
+  1. Core MySQL tables and contract semantics exist for the mini-program domains currently trapped in mocks.
+  2. `packages/server` and the admin backend compile against the same publish-state, locale, sort-order, and asset-reference rules.
+  3. The local public/admin backend environment can start against the shared data stores with documented configuration.
+  4. Phase deliverables remove obvious public-backend foundation blockers, including current contract/config mismatches.
+**Plans**: 4 plans
+
+Plans:
+- [ ] 01-01: Create the canonical mini-program/admin/public contract matrix and shared domain conventions
+- [ ] 01-02: Add the MySQL schema foundation and migration-safe bootstrap scripts
+- [ ] 01-03: Implement `packages/server` persistence/domain scaffolding against the canonical contract
+- [ ] 01-04: Wire the local runtime and smoke harness for public/admin backend foundation checks
+
+### Phase 2: Admin Control Plane Completion
+**Goal**: Make the admin platform the authoritative write/control surface for every mini-program-facing entity and runtime setting needed in the live app.
+**Depends on**: Phase 1
+**Requirements**: [ADM-01, ADM-02]
+**Success Criteria** (what must be TRUE):
+  1. Admin users can CRUD all mini-program-facing content entities required by the live app.
+  2. Admin users can manage multilingual copy, publish state, sort order, asset references, and runtime rules.
+  3. Admin writes persist in MySQL using the canonical schema introduced in Phase 1.
+**Plans**: TBD
+
+Plans:
+- [ ] 02-01: Complete admin entities, DTOs, and MyBatis mappings for missing mini-program domains
+- [ ] 02-02: Add admin APIs and validation rules for content/runtime configuration management
+- [ ] 02-03: Complete admin UI screens and forms for live mini-program content control
+
+### Phase 3: Public Read APIs Cutover
+**Goal**: Replace mock-backed mini-program read flows with real `packages/server` endpoints for content, maps, discovery, and published runtime configuration.
+**Depends on**: Phase 2
+**Requirements**: [PUB-01, PUB-02, PUB-04]
+**Success Criteria** (what must be TRUE):
+  1. The mini-program can fetch home/discover/runtime configuration data from live public endpoints.
+  2. The mini-program can fetch map, city, POI, storyline, tips, rewards, stamps, and notifications data from live public endpoints.
+  3. Public responses honor publish state, ordering, and filtering rules defined in the admin system.
+**Plans**: TBD
+
+Plans:
+- [ ] 03-01: Implement public catalog/read services and DTOs for published content
+- [ ] 03-02: Expose public controllers for map/story/tips/rewards/stamps/runtime content
+- [ ] 03-03: Integrate mini-program read paths with live public APIs and remove corresponding mock dependencies
+
+### Phase 4: Public Progress and Gameplay Writes
+**Goal**: Move the mini-program's stateful gameplay and preference writes to live public APIs backed by MySQL.
+**Depends on**: Phase 3
+**Requirements**: [PUB-03]
+**Success Criteria** (what must be TRUE):
+  1. User progress, check-ins, unlocks, preferences, emergency-contact data, and reward redemption persist through public APIs.
+  2. Live write APIs preserve the gameplay behavior expected by the current mini-program UI.
+  3. Public write paths are validated, idempotent where needed, and observable in local verification.
+**Plans**: TBD
+
+Plans:
+- [ ] 04-01: Implement public progress/check-in/reward services and persistence model
+- [ ] 04-02: Add public write endpoints and verification coverage for user-state mutations
+- [ ] 04-03: Replace mini-program gameplay write flows with live API calls
+
+### Phase 5: COS Media Pipeline
+**Goal**: Add backend-managed Tencent COS upload and asset-resolution flows so admin-managed media can power the live mini-program.
+**Depends on**: Phase 2
+**Requirements**: [MED-01, MED-02]
+**Success Criteria** (what must be TRUE):
+  1. Admin uploads pass through backend APIs into Tencent COS with automatic object-key generation.
+  2. Asset metadata is stored in MySQL and linked to mini-program-facing content entities.
+  3. Public/admin responses expose canonical URLs usable by the admin UI and mini-program.
+**Plans**: TBD
+
+Plans:
+- [ ] 05-01: Implement COS integration service and asset metadata model
+- [ ] 05-02: Add admin upload APIs/UI and asset reference workflows
+- [ ] 05-03: Add public/admin asset resolution behavior and smoke coverage
+
+### Phase 6: Migration, Cutover, and Hardening
+**Goal**: Seed current mock data into MySQL, cut the mini-program over to live services, and verify the integrated stack with operational safeguards.
+**Depends on**: Phase 5
+**Requirements**: [DATA-02, ADM-03, OPS-02, OPS-03]
+**Success Criteria** (what must be TRUE):
+  1. Existing mock content is loaded into MySQL through repeatable seed/migration scripts.
+  2. Admin users can inspect seeded content state and integration health.
+  3. End-to-end smoke checks prove admin writes, public reads/writes, asset delivery, and mini-program consumption are working together.
+  4. The live backend exposes baseline health, logging, validation, and performance safeguards appropriate for ongoing expansion.
+**Plans**: TBD
+
+Plans:
+- [ ] 06-01: Convert mock datasets into repeatable seed/import scripts and load them into MySQL
+- [ ] 06-02: Add integration health visibility and operational safeguards
+- [ ] 06-03: Switch the mini-program to live data paths and verify the full stack end-to-end
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Canonical Backend Foundation | 0/4 | Not started | - |
+| 2. Admin Control Plane Completion | 0/3 | Not started | - |
+| 3. Public Read APIs Cutover | 0/3 | Not started | - |
+| 4. Public Progress and Gameplay Writes | 0/3 | Not started | - |
+| 5. COS Media Pipeline | 0/3 | Not started | - |
+| 6. Migration, Cutover, and Hardening | 0/3 | Not started | - |
