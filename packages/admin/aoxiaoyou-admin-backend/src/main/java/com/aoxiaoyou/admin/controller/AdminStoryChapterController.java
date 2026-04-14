@@ -41,7 +41,7 @@ public class AdminStoryChapterController {
     public ApiResponse<AdminStoryChapterResponse> create(
             @PathVariable Long storylineId,
             @Valid @RequestBody AdminStoryChapterUpsertRequest.Upsert request) {
-        request.setStoryLineId(storylineId);
+        request.setStorylineId(storylineId);
         return ApiResponse.success(adminStoryChapterService.create(request));
     }
 
@@ -51,7 +51,7 @@ public class AdminStoryChapterController {
             @PathVariable Long storylineId,
             @PathVariable Long chapterId,
             @Valid @RequestBody AdminStoryChapterUpsertRequest.Upsert request) {
-        request.setStoryLineId(storylineId);
+        request.setStorylineId(storylineId);
         return ApiResponse.success(adminStoryChapterService.update(chapterId, request));
     }
 

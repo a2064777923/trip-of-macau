@@ -1,8 +1,11 @@
+export type AuthStatus = 'anonymous' | 'authenticated' | 'dev-bypass'
+
 export interface AppUserProfile {
   userId: string
   nickname: string
   avatarUrl: string
-  isGuest?: boolean
+  authStatus: AuthStatus
+  localeCode?: 'zh-Hant' | 'zh-Hans' | 'en' | 'pt'
   openId?: string
   level: number
   title: string
@@ -16,6 +19,7 @@ export interface AppUserProfile {
   unlockedStorylines: number
   badges: string[]
   currentCityId?: string
+  currentSubMapId?: string
 }
 
 export interface PoiItem {
@@ -42,7 +46,19 @@ export interface PoiItem {
   tags: string[]
   coverColor: string
   cityId?: string
+  subMapId?: string
+  subMapName?: string
+  markerKey?: 'church' | 'ghost' | 'lisboa' | 'ruins' | 'theater' | 'user'
+  mapIconUrl?: string
+  introTitle?: string
+  introSummary?: string
+  indoorMapTitle?: string
+  indoorMapHint?: string
+  recommendedTipIds?: number[]
+  recommendedDiscoverIds?: number[]
+  collectibleHints?: string[]
 }
+
 
 export interface StoryChapterItem {
   id: number
@@ -119,7 +135,7 @@ export interface MapCameraState {
 }
 
 export interface DiscoverCardItem {
-  id: number
+  id: number | string
   title: string
   subtitle: string
   description: string
@@ -173,10 +189,27 @@ export interface CityProgressItem {
   name: string
   subtitle: string
   coverColor: string
+  centerLat?: number
+  centerLng?: number
   unlocked: boolean
   firstUnlockedAt?: string
   explorationProgress: number
   titleReward: string
+  landmarkCount: number
+  currentSubMapId?: string
+  subMaps?: SubMapProgressItem[]
+}
+
+export interface SubMapProgressItem {
+  id: string
+  cityId: string
+  name: string
+  subtitle: string
+  coverColor: string
+  centerLat?: number
+  centerLng?: number
+  unlocked: boolean
+  explorationProgress: number
   landmarkCount: number
 }
 

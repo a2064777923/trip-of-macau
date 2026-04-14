@@ -5,7 +5,8 @@
   "description": "澳小遊小程序前端 - Trip of Macau",
   "main": "dist/app.js",
   "scripts": {
-    "build:weapp": "taro build --type weapp && node scripts/write-weapp-project-config.js",
+    "clean:dist": "node scripts/clean-output.js",
+    "build:weapp": "npm run clean:dist && taro build --type weapp && node scripts/write-weapp-project-config.js",
     "build:swan": "taro build --type swan",
     "build:alipay": "taro build --type alipay",
     "build:tt": "taro build --type tt",
@@ -13,7 +14,7 @@
     "build:rn": "taro build --type rn",
     "build:qq": "taro build --type qq",
     "build:jd": "taro build --type jd",
-    "dev:weapp": "npm run build:weapp -- --watch",
+    "dev:weapp": "node scripts/dev-weapp.js",
     "dev:swan": "npm run build:swan -- --watch",
     "dev:alipay": "npm run build:alipay -- --watch",
     "dev:tt": "npm run build:tt -- --watch",

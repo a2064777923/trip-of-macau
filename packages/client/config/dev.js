@@ -3,10 +3,18 @@ module.exports = {
     quiet: false,
     stats: true
   },
-  // 开发环境使用 mock 数据
   defineConstants: {
-    API_BASE_URL: '"http://localhost:8080/api/v1"',
+    WECHAT_DEV_BYPASS_ENABLED: JSON.stringify(process.env.WECHAT_DEV_BYPASS_ENABLED || 'false'),
+    API_BASE_URL: '"http://127.0.0.1:8080/api/v1"',
     CDN_BASE_URL: '"https://cdn.tripofmacau.com"',
-    USE_MOCK: 'true'
+    USE_MOCK: 'false',
+    __WECHAT_DEV_BYPASS_ENABLED__: JSON.stringify(process.env.WECHAT_DEV_BYPASS_ENABLED || 'false'),
+    __API_BASE_URL__: '"http://127.0.0.1:8080/api/v1"',
+    __CDN_BASE_URL__: '"https://cdn.tripofmacau.com"',
+    __USE_MOCK__: '"false"',
+    'process.env.WECHAT_DEV_BYPASS_ENABLED': JSON.stringify(process.env.WECHAT_DEV_BYPASS_ENABLED || 'false'),
+    'process.env.API_BASE_URL': '"http://127.0.0.1:8080/api/v1"',
+    'process.env.CDN_BASE_URL': '"https://cdn.tripofmacau.com"',
+    'process.env.USE_MOCK': '"false"'
   }
 }

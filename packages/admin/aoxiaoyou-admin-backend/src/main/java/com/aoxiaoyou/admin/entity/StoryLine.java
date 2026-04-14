@@ -11,11 +11,14 @@ import java.time.LocalDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("story_lines")
+@TableName("storylines")
 public class StoryLine extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     private Long id;
+
+    @TableField("city_id")
+    private Long cityId;
 
     private String code;
 
@@ -25,44 +28,52 @@ public class StoryLine extends BaseEntity {
     @TableField("name_en")
     private String nameEn;
 
-    private String description;
+    @TableField("name_zht")
+    private String nameZht;
 
-    @TableField("cover_url")
-    private String coverUrl;
+    @TableField("name_pt")
+    private String namePt;
 
-    @TableField("banner_url")
-    private String bannerUrl;
+    @TableField("description_zh")
+    private String descriptionZh;
 
-    private String category;
+    @TableField("description_en")
+    private String descriptionEn;
+
+    @TableField("description_zht")
+    private String descriptionZht;
+
+    @TableField("description_pt")
+    private String descriptionPt;
+
+    @TableField("estimated_minutes")
+    private Integer estimatedMinutes;
 
     private String difficulty;
 
-    @TableField("estimated_duration_minutes")
-    private Integer estimatedDurationMinutes;
+    @TableField("cover_asset_id")
+    private Long coverAssetId;
 
-    private String tags;
+    @TableField("banner_asset_id")
+    private Long bannerAssetId;
 
-    @TableField("total_chapters")
-    private Integer totalChapters;
+    @TableField("reward_badge_zh")
+    private String rewardBadgeZh;
+
+    @TableField("reward_badge_en")
+    private String rewardBadgeEn;
+
+    @TableField("reward_badge_zht")
+    private String rewardBadgeZht;
+
+    @TableField("reward_badge_pt")
+    private String rewardBadgePt;
 
     private String status;
 
-    @TableField("publish_at")
-    private LocalDateTime publishAt;
+    @TableField("sort_order")
+    private Integer sortOrder;
 
-    @TableField("start_at")
-    private LocalDateTime startAt;
-
-    @TableField("end_at")
-    private LocalDateTime endAt;
-
-    @TableField("participation_count")
-    private Integer participationCount;
-
-    @TableField("completion_count")
-    private Integer completionCount;
-
-    @TableField("average_completion_time")
-    private Integer averageCompletionTime;
+    @TableField("published_at")
+    private LocalDateTime publishedAt;
 }
-

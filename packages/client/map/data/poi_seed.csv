@@ -1,0 +1,64 @@
+sort_order,floor_id,code,name_en,name_tc,category,source_type,source_x,source_y,notes
+1,1f,R100,ZIPCITY MACAU,澳門飛索,entertainment,map,117.65,645.33,Main tower entrance block.
+2,1f,KR01-KR20,Night Market@Lisboeta,葡京人夜市,entertainment,legend,337.00,646.00,Manual center across the night market stalls wedge.
+3,1f,L03,Signature Noodles,招牌麵,food_beverage,map,433.57,645.98,From visible label block.
+4,1f,L01,Royal Palace,皇家海鮮舫,food_beverage,map,369.01,810.94,From visible label block.
+5,1f,L02,Stanley's Cafe,樂哥冰室,food_beverage,map,790.00,654.00,Manual center inside the large yellow cafe zone.
+6,1f,L04,One Shot,一索,food_beverage,map,705.00,684.00,Manual center inside the left yellow lobe of the merged cafe block.
+7,1f,KR50-KR51,Herbal Tea Shop,舊街涼茶舖,food_beverage,legend,551.31,538.38,Average of the two OCR hits.
+8,1f,KR36,Moow Coffee,摩爾咖啡,food_beverage,legend,644.50,558.62,OCR anchored.
+9,1f,F07,McDonald's,麥當勞,food_beverage,legend,1184.00,611.00,Manual center on the upper yellow food segment.
+10,1f,F10,My Name is Curry Gor,不同咖喱,food_beverage,legend,1198.00,724.00,Manual center on the lower yellow food segment.
+11,1f,K04,Pepper Lunch,胡椒廚房,food_beverage,legend,1230.00,528.00,Manual center on the upper small roadside kiosk.
+12,1f,R19,Rethink Coffee,Rethink Coffee,food_beverage,legend,749.25,492.62,OCR anchored.
+13,1f,F08,Roppongi Japanese,六本木,food_beverage,legend,1176.00,642.00,Manual center on the upper yellow food segment.
+14,1f,F09,SOGOD TEA,酥岡鮮茶,food_beverage,legend,1160.00,700.00,Manual center on the lower left yellow food segment.
+15,1f,K01,Toei Delights,十八番,food_beverage,legend,1238.00,593.00,Manual center on the lower small roadside kiosk.
+16,1f,K02,Good Fortune Kitchen,百福小廚,food_beverage,legend,1221.00,560.00,Manual center on the middle small roadside kiosk.
+17,1f,R51-R52,6ixty8ight,6ixty8ight,shopping,legend,964.94,425.75,Average of R51 and R52 OCR hits.
+18,1f,KR36a,853 Mask,853 Mask,shopping,legend,617.38,560.50,OCR anchored.
+19,1f,KR25,A80 Anoufa Paris,A80 Anoufa Paris,shopping,legend,961.25,525.75,OCR anchored.
+20,1f,R22-R23,ADIDAS ORIGINALS,ADIDAS ORIGINALS,shopping,legend,872.00,493.56,Average of R22 and R23 OCR hits.
+21,1f,R87,Bee Cheng Hiang,美珍香,shopping,legend,1168.25,750.38,OCR anchored.
+22,1f,R27,Best Mart 360,優品360°,shopping,legend,826.38,456.50,OCR anchored.
+23,1f,R38a,CC Shop,CC Shop,shopping,legend,1020.00,340.00,Manual center inside the shared top-right green block.
+24,1f,R86,Ninebot,九號,car_showroom,legend,1169.12,782.38,OCR anchored.
+25,1f,R85,Circle K,OK便利店,shopping,legend,1164.12,825.62,OCR anchored.
+26,1f,R21,Converse,匡威,shopping,legend,826.00,491.62,OCR anchored.
+27,1f,KR57,Cotton Candy,Cotton Candy,shopping,legend,1212.25,390.38,OCR anchored.
+28,1f,R39,D-Mop,D-Mop,shopping,legend,962.75,340.25,OCR anchored.
+29,1f,KR23,The Mineral Boutique,The Mineral Boutique,shopping,legend,868.75,538.25,OCR anchored.
+30,1f,R25,The Mineral Boutique,The Mineral Boutique,shopping,legend,883.50,456.38,OCR anchored.
+31,1f,R26,Farmacia Tsan Heng,振興藥房,shopping,legend,856.50,455.75,OCR anchored.
+32,1f,R65,FILA,FILA,shopping,legend,1014.75,577.12,OCR anchored.
+33,1f,R28-R29,Grab Grab Store,格格多,shopping,legend,778.88,442.62,Average of R28 and R29 OCR hits.
+34,1f,R76,H853 Gift Shop,H853 禮品店,shopping,legend,950.75,707.12,OCR anchored.
+35,1f,R17,H853 Kids,H853 Kids,shopping,legend,850.50,567.75,OCR anchored.
+36,1f,"R53-R58,R59",Heinemann,海內曼,shopping,legend,1042.00,533.90,Center of the long Heinemann strip.
+37,1f,R82-R83,Humarish Club,Humarish Club,shopping,legend,1143.88,715.87,Average of R82 and R83 OCR hits.
+38,1f,KR26,Lens Town,Lens Town,shopping,legend,985.62,543.88,OCR anchored.
+39,1f,KR22,Les Nereides,Les Nereides,shopping,legend,839.75,538.75,OCR anchored.
+40,1f,KR39,Liège,列日比利時傳統窩夫,shopping,legend,1273.88,363.25,OCR anchored.
+41,1f,R15,New Balance,New Balance,shopping,legend,794.25,565.25,OCR anchored.
+42,1f,R63,Nike,Nike,shopping,legend,968.38,575.50,OCR anchored.
+43,1f,KR52,Okashiland,零食物語,shopping,legend,1278.25,385.50,OCR anchored.
+44,1f,R18,Pandora,潘多拉珠寶,shopping,legend,883.12,571.38,OCR anchored.
+45,1f,KR31,POP MART POP-UP STORE,泡泡瑪特快閃店,shopping,legend,1234.88,338.88,OCR anchored.
+46,1f,R81,Seer Lab,Seer Lab,shopping,legend,1098.75,712.75,OCR anchored.
+47,1f,KR53,Selfie Macau,Selfie Macau,shopping,legend,1200.88,418.62,OCR anchored.
+48,1f,R20,THE BIG APPLE,THE BIG APPLE,shopping,legend,798.00,492.25,OCR anchored.
+49,1f,R78,Trevi Fashion,特普維時裝有限公司,shopping,legend,1007.00,707.25,OCR anchored.
+50,1f,R61,Under Armour,Under Armour,shopping,legend,1176.31,417.44,Manual center inside the small upper-right green block.
+51,1f,R89,ZIPCITY MACAU Retail Shop,澳門飛索零售商店,shopping,legend,1264.12,214.25,OCR anchored.
+52,1f,R04,Food Court,美食廣場,food_beverage,map,1258.88,524.88,Visible map-only label.
+53,1f,R90-R91,Tesla,特斯拉,car_showroom,legend,1243.50,251.75,OCR anchored.
+54,1f,R99,GoAirborne,GoAirborne 室內跳傘,entertainment,map,1052.62,289.88,OCR anchored.
+56,2f,R98,Emperor Cinemas,英皇戲院,entertainment,map,784.86,419.90,2F cinema block.
+57,g,B101,Challenger,挑戰者汽車美容中心,shopping,legend,646.08,271.25,Ground-floor green kiosk.
+58,g,KR55,Ninebot,九號,car_showroom,legend,639.13,310.57,Ground-floor showroom counter.
+59,g,G-R13-G-R16,NIO,蔚來,car_showroom,legend,703.63,218.59,Top showroom strip.
+60,g,G-R11-G-R12,GAC,廣汽,car_showroom,legend,796.00,268.00,Manual center along the vertical showroom strip.
+61,g,G-R10,E-KCar,E-KCar,car_showroom,legend,796.00,312.00,Manual center along the vertical showroom strip.
+62,g,G-R09,Geometry,吉利幾何,car_showroom,legend,796.00,338.00,Manual center along the vertical showroom strip.
+63,g,G-R07-G-R08,Vicuñas,Vicuñas,car_showroom,legend,796.00,364.00,Manual center along the vertical showroom strip.
+64,g,G-R06,Next Station,時光屋,car_showroom,legend,796.00,402.00,Manual center along the vertical showroom strip.

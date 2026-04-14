@@ -1,0 +1,17 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pin" x1="256" y1="72" x2="256" y2="432" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB35C"/>
+      <stop offset="0.58" stop-color="#E4572E"/>
+      <stop offset="1" stop-color="#7A2033"/>
+    </linearGradient>
+  </defs>
+  <path d="M256 448C256 448 392 318.592 392 216C392 125.471 331.529 64 256 64C180.471 64 120 125.471 120 216C120 318.592 256 448 256 448Z" fill="url(#pin)"/>
+  <circle cx="256" cy="214" r="96" fill="#FFF2D5"/>
+  <rect x="214" y="162" width="84" height="118" rx="18" fill="#D94532"/>
+  <rect x="204" y="178" width="104" height="18" rx="9" fill="#8F2030"/>
+  <rect x="204" y="246" width="104" height="18" rx="9" fill="#8F2030"/>
+  <rect x="242" y="142" width="28" height="26" rx="10" fill="#7A2033"/>
+  <path d="M256 116L278 142H234L256 116Z" fill="#FFDF89"/>
+  <path d="M236 280H276L266 316H246L236 280Z" fill="#7A2033"/>
+</svg>

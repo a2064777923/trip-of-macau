@@ -20,6 +20,8 @@ public class DashboardStatsResponse {
     private Long testAccounts;
     private List<RecentActivity> recentActivities;
     private SystemStatus systemStatus;
+    private ContentSummary contentSummary;
+    private IntegrationHealth integrationHealth;
 
     @Data
     @Builder
@@ -37,5 +39,47 @@ public class DashboardStatsResponse {
         private Boolean database;
         private Boolean api;
         private Boolean cloudRun;
+    }
+
+    @Data
+    @Builder
+    public static class ContentSummary {
+        private Long publishedCities;
+        private Long publishedStoryLines;
+        private Long publishedStoryChapters;
+        private Long publishedPois;
+        private Long publishedStamps;
+        private Long publishedRewards;
+        private Long publishedTips;
+        private Long publishedNotifications;
+        private Long publishedRuntimeSettings;
+    }
+
+    @Data
+    @Builder
+    public static class IntegrationHealth {
+        private ComponentStatus database;
+        private ComponentStatus publicApi;
+        private ComponentStatus cos;
+        private SeedStatus seedMigration;
+    }
+
+    @Data
+    @Builder
+    public static class ComponentStatus {
+        private Boolean healthy;
+        private String status;
+        private String detail;
+        private Long latencyMs;
+        private String checkedAt;
+    }
+
+    @Data
+    @Builder
+    public static class SeedStatus {
+        private String seedKey;
+        private String status;
+        private String executedAt;
+        private String notes;
     }
 }

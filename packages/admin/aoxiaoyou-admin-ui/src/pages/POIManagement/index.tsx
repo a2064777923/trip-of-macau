@@ -1,249 +1,607 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { PageContainer } from '@ant-design/pro-layout';
-import ProTable from '@ant-design/pro-table';
-import { Button, Drawer, Form, Input, InputNumber, message, Select, Space, Tag, Typography } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, EnvironmentOutlined } from '@ant-design/icons';
-import type { ProColumns, ActionType } from '@ant-design/pro-table';
-import { createAdminPoi, deleteAdminPoi, getAdminPoiDetail, getAdminPois, getAdminStorylines, updateAdminPoi } from '../../services/api';
-import type { AdminPoiDetail, AdminPoiListItem, AdminStorylineListItem } from '../../types/admin';
+import React, { useMemo, useState } from 'react';
+import { PageContainer } from '@ant-design/pro-components';
+import { useRequest } from 'ahooks';
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Drawer,
+  Form,
+  Input,
+  InputNumber,
+  Row,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from 'antd';
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  createAdminPoi,
+  deleteAdminPoi,
+  getAdminPoiDetail,
+  getAdminPois,
+  getAdminTranslationSettings,
+  getCities,
+  updateAdminPoi,
+  type CityItem,
+} from '../../services/api';
+import type {
+  AdminPoiDetail,
+  AdminPoiListItem,
+  AdminPoiPayload,
+  AdminSubMapItem,
+} from '../../types/admin';
+import LocalizedFieldGroup, { buildLocalizedFieldNames } from '../../components/localization/LocalizedFieldGroup';
+import SpatialAssetPickerField from '../../components/spatial/SpatialAssetPickerField';
+import SpatialAttachmentListField from '../../components/spatial/SpatialAttachmentListField';
+import SpatialCoordinateFieldGroup from '../../components/spatial/SpatialCoordinateFieldGroup';
+import SpatialPopupDisplayField from '../../components/spatial/SpatialPopupDisplayField';
 
-const { Text } = Typography;
+const { Paragraph, Text } = Typography;
 
-const regionOptions = [
-  { label: '澳门半岛', value: 'macau_central' },
-  { label: '氹仔', value: 'macau_taipa' },
-  { label: '路氹', value: 'macau_cotai' },
+const statusOptions = [
+  { label: '草稿', value: 'draft' },
+  { label: '已發布', value: 'published' },
+  { label: '已封存', value: 'archived' },
 ];
 
-const poiTypeOptions = [
-  { label: '故事点', value: 'story_point' },
-  { label: '地标', value: 'landmark' },
-  { label: '博物馆', value: 'museum' },
-  { label: '餐饮', value: 'restaurant' },
-  { label: '活动场地', value: 'event_venue' },
+const difficultyOptions = [
+  { label: '簡單', value: 'easy' },
+  { label: '中等', value: 'medium' },
+  { label: '困難', value: 'hard' },
 ];
+
+const poiCategoryOptions = [
+  { label: '歷史古蹟', value: 'historic' },
+  { label: '博物館 / 展館', value: 'museum' },
+  { label: '地標景點', value: 'landmark' },
+  { label: '街區漫遊', value: 'neighbourhood' },
+  { label: '餐飲美食', value: 'food' },
+  { label: '購物商場', value: 'shopping' },
+  { label: '校園地點', value: 'campus' },
+  { label: '交通節點', value: 'transport' },
+  { label: '活動場地', value: 'event' },
+  { label: '服務設施', value: 'service' },
+];
+
+const CUSTOM_CATEGORY_VALUE = '__custom_category__';
+
+const nameFields = buildLocalizedFieldNames('name');
+const subtitleFields = buildLocalizedFieldNames('subtitle');
+const addressFields = buildLocalizedFieldNames('address');
+const introTitleFields = buildLocalizedFieldNames('introTitle');
+const introSummaryFields = buildLocalizedFieldNames('introSummary');
+const descriptionFields = buildLocalizedFieldNames('description');
+
+const defaultPopupConfig = JSON.stringify(
+  {
+    enabled: false,
+    mode: 'sheet',
+    mediaUsageType: 'cover',
+  },
+  null,
+  2,
+);
+
+const defaultDisplayConfig = JSON.stringify(
+  {
+    layout: 'card',
+    theme: 'default',
+    showSubtitle: true,
+  },
+  null,
+  2,
+);
+
+interface AdminPoiFormValues extends AdminPoiPayload {
+  categoryPreset?: string;
+  categoryCustom?: string;
+}
+
+function pickCityName(city?: CityItem | null) {
+  if (!city) {
+    return '';
+  }
+  return city.nameZht || city.nameZh || city.nameEn || city.namePt || city.code;
+}
+
+function pickSubMapName(subMap?: AdminSubMapItem | null) {
+  if (!subMap) {
+    return '';
+  }
+  return subMap.nameZht || subMap.nameZh || subMap.nameEn || subMap.namePt || subMap.code;
+}
+
+function pickPoiName(record?: AdminPoiListItem | AdminPoiDetail | null) {
+  if (!record) {
+    return '';
+  }
+  return record.nameZht || record.nameZh || record.nameEn || record.namePt || record.code;
+}
+
+function renderStatus(status?: string) {
+  if (status === 'published') {
+    return <Tag color="green">已發布</Tag>;
+  }
+  if (status === 'archived') {
+    return <Tag>已封存</Tag>;
+  }
+  return <Tag color="gold">草稿</Tag>;
+}
+
+function resolveCategoryFields(categoryCode?: string | null) {
+  if (!categoryCode) {
+    return {};
+  }
+  const isPreset = poiCategoryOptions.some((item) => item.value === categoryCode);
+  if (isPreset) {
+    return { categoryPreset: categoryCode };
+  }
+  return {
+    categoryPreset: CUSTOM_CATEGORY_VALUE,
+    categoryCustom: categoryCode,
+  };
+}
+
+function withPoiDefaults(detail?: Partial<AdminPoiDetail>): Partial<AdminPoiFormValues> {
+  return {
+    difficulty: detail?.difficulty || 'easy',
+    triggerRadius: detail?.triggerRadius ?? 50,
+    manualCheckinRadius: detail?.manualCheckinRadius ?? 200,
+    staySeconds: detail?.staySeconds ?? 30,
+    sourceCoordinateSystem: detail?.sourceCoordinateSystem || 'GCJ02',
+    popupConfigJson: detail?.popupConfigJson || defaultPopupConfig,
+    displayConfigJson: detail?.displayConfigJson || defaultDisplayConfig,
+    attachments: detail?.attachments || [],
+    sortOrder: detail?.sortOrder ?? 0,
+    status: detail?.status || 'draft',
+    ...resolveCategoryFields(detail?.categoryCode),
+    ...detail,
+  };
+}
+
+function buildPoiPayload(values: AdminPoiFormValues): AdminPoiPayload {
+  const { categoryPreset, categoryCustom, ...rest } = values;
+  const categoryCode =
+    categoryPreset === CUSTOM_CATEGORY_VALUE ? categoryCustom?.trim() : categoryPreset?.trim();
+
+  return {
+    ...rest,
+    categoryCode: categoryCode || undefined,
+  };
+}
 
 const POIManagement: React.FC = () => {
-  const actionRef = useRef<ActionType>();
+  const [filters, setFilters] = useState<{ keyword?: string; cityId?: number; subMapId?: number }>({});
   const [editorOpen, setEditorOpen] = useState(false);
-  const [editing, setEditing] = useState<AdminPoiDetail | null>(null);
-  const [storylineOptions, setStorylineOptions] = useState<AdminStorylineListItem[]>([]);
-  const [form] = Form.useForm();
+  const [editingPoi, setEditingPoi] = useState<AdminPoiDetail | null>(null);
+  const [form] = Form.useForm<AdminPoiFormValues>();
 
-  const loadStorylines = async () => {
-    const response = await getAdminStorylines({ pageNum: 1, pageSize: 100 });
-    setStorylineOptions(response.data?.list || []);
-  };
-
-  const openCreate = async () => {
-    await loadStorylines();
-    setEditing(null);
-    form.resetFields();
-    form.setFieldsValue({
-      regionCode: 'macau_central',
-      poiType: 'story_point',
-      checkInMethod: 'gps_only',
-      importance: 'normal',
-      triggerRadius: 50,
-      difficulty: 'easy',
-      suggestedVisitMinutes: 30,
-      status: 'published',
-      openTime: '09:00-18:00',
-    });
-    setEditorOpen(true);
-  };
-
-  const openEdit = async (record: AdminPoiListItem) => {
-    await loadStorylines();
-    const response = await getAdminPoiDetail(record.poiId);
-    if (!response.success || !response.data) return;
-    const detail = response.data;
-    setEditing(detail);
-    form.setFieldsValue({
-      ...detail,
-      nameZh: detail.name,
-      nameEn: detail.subtitle,
-      storyLineId: detail.storylineId,
-      tagsText: detail.tags?.join(', '),
-      imageUrlsText: detail.imageUrls?.join('\n'),
-    });
-    setEditorOpen(true);
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteAdminPoi(id);
-      message.success('删除成功');
-      actionRef.current?.reload();
-    } catch {
-      message.error('删除失败，请重试');
-    }
-  };
-
-  const columns = useMemo<ProColumns<AdminPoiListItem>[]>(() => [
+  const translationSettingsRequest = useRequest(getAdminTranslationSettings);
+  const citiesRequest = useRequest(() => getCities({ pageNum: 1, pageSize: 100 }), {});
+  const poiRequest = useRequest(
+    () =>
+      getAdminPois({
+        pageNum: 1,
+        pageSize: 200,
+        keyword: filters.keyword,
+        cityId: filters.cityId,
+        subMapId: filters.subMapId,
+      }),
     {
-      title: 'POI 名称',
-      dataIndex: 'name',
-      copyable: true,
-      render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <Text strong>{record.name}</Text>
-          <Text type="secondary">{record.subtitle || '未配置副标题'}</Text>
-        </Space>
-      ),
+      refreshDeps: [filters.keyword, filters.cityId, filters.subMapId],
     },
-    {
-      title: '区域',
-      dataIndex: 'regionName',
-      hideInSearch: true,
-      render: (value) => value || '澳门半岛',
-    },
-    {
-      title: '分类',
-      dataIndex: 'categoryName',
-      hideInSearch: true,
-      render: (value) => value || '-',
-    },
-    {
-      title: '重要性',
-      dataIndex: 'importance',
-      valueType: 'select',
-      valueEnum: {
-        very_important: { text: '非常重要' },
-        important: { text: '重要' },
-        normal: { text: '普通' },
+  );
+
+  const cities = citiesRequest.data?.data?.list || [];
+  const selectedCityId = Form.useWatch('cityId', form);
+  const selectedCategoryPreset = Form.useWatch('categoryPreset', form);
+
+  const formSubMaps = useMemo(
+    () => cities.find((city) => city.id === selectedCityId)?.subMaps || [],
+    [cities, selectedCityId],
+  );
+  const filterSubMaps = useMemo(
+    () => cities.find((city) => city.id === filters.cityId)?.subMaps || [],
+    [cities, filters.cityId],
+  );
+
+  const columns = useMemo(
+    () => [
+      {
+        title: 'POI',
+        key: 'poi',
+        render: (_: unknown, record: AdminPoiListItem) => (
+          <Space direction="vertical" size={0}>
+            <Text strong>{pickPoiName(record)}</Text>
+            <Text type="secondary">代碼：{record.code}</Text>
+          </Space>
+        ),
       },
-      render: (_, record) => <Tag color={record.importance === 'very_important' ? 'red' : record.importance === 'important' ? 'orange' : 'green'}>{record.importance || 'normal'}</Tag>,
-    },
-    {
-      title: '故事线',
-      dataIndex: 'storylineName',
-      hideInSearch: true,
-      render: (value) => value || '-',
-    },
-    {
-      title: '触发半径',
-      dataIndex: 'geofenceRadius',
-      hideInSearch: true,
-      render: (_, record) => (
-        <Space>
-          <EnvironmentOutlined />
-          {record.geofenceRadius || 0} 米
-        </Space>
-      ),
-    },
-    {
-      title: '坐标',
-      dataIndex: 'latitude',
-      hideInSearch: true,
-      render: (_, record) => <Text type="secondary">{record.latitude?.toFixed?.(4)}, {record.longitude?.toFixed?.(4)}</Text>,
-    },
-    {
-      title: '操作',
-      key: 'action',
-      valueType: 'option',
-      render: (_, record) => [
-        <Button key="edit" size="small" icon={<EditOutlined />} onClick={() => openEdit(record)}>编辑</Button>,
-        <Button key="delete" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.poiId)}>删除</Button>,
-      ],
-    },
-  ], []);
+      {
+        title: '綁定地圖 / 子地圖',
+        key: 'spatial',
+        render: (_: unknown, record: AdminPoiListItem) => (
+          <Space direction="vertical" size={0}>
+            <Text>{record.cityName || '未設定城市'}</Text>
+            <Text type="secondary">{record.subMapName || '未綁定子地圖'}</Text>
+          </Space>
+        ),
+      },
+      {
+        title: '坐標',
+        key: 'coordinate',
+        render: (_: unknown, record: AdminPoiListItem) => `${record.latitude}, ${record.longitude}`,
+      },
+      {
+        title: '分類',
+        dataIndex: 'categoryCode',
+        render: (value: string | undefined) => value || '未設定',
+      },
+      {
+        title: '地圖圖標',
+        key: 'mapIcon',
+        render: (_: unknown, record: AdminPoiListItem) => record.mapIconAssetId || '未設定',
+      },
+      {
+        title: '狀態',
+        key: 'status',
+        render: (_: unknown, record: AdminPoiListItem) => renderStatus(record.status),
+      },
+      {
+        title: '操作',
+        key: 'action',
+        render: (_: unknown, record: AdminPoiListItem) => (
+          <Space wrap>
+            <Button type="link" icon={<EditOutlined />} onClick={() => void openEdit(record.poiId)}>
+              編輯
+            </Button>
+            <Button type="link" danger icon={<DeleteOutlined />} onClick={() => void handleDelete(record.poiId)}>
+              刪除
+            </Button>
+          </Space>
+        ),
+      },
+    ],
+    [],
+  );
+
+  const refreshPois = async () => {
+    await poiRequest.refreshAsync();
+  };
+
+  const openCreate = () => {
+    form.setFieldsValue({
+      ...withPoiDefaults(),
+      categoryPreset: 'landmark',
+    });
+    setEditingPoi(null);
+    setEditorOpen(true);
+  };
+
+  const openEdit = async (poiId: number) => {
+    const response = await getAdminPoiDetail(poiId);
+    if (!response.success || !response.data) {
+      message.error(response.message || '無法載入 POI 詳情');
+      return;
+    }
+    form.setFieldsValue(withPoiDefaults(response.data));
+    setEditingPoi(response.data);
+    setEditorOpen(true);
+  };
+
+  const handleDelete = async (poiId: number) => {
+    const response = await deleteAdminPoi(poiId);
+    if (!response.success) {
+      message.error(response.message || 'POI 刪除失敗');
+      return;
+    }
+    message.success('POI 已刪除');
+    await refreshPois();
+  };
+
+  const handleSubmit = async () => {
+    const values = await form.validateFields();
+    const payload = buildPoiPayload(values);
+    if (editingPoi?.poiId) {
+      const response = await updateAdminPoi(editingPoi.poiId, {
+        ...payload,
+        storylineId: editingPoi.storylineId,
+      });
+      if (!response.success) {
+        throw new Error(response.message || 'POI 更新失敗');
+      }
+      message.success('POI 已更新');
+    } else {
+      const response = await createAdminPoi(payload);
+      if (!response.success) {
+        throw new Error(response.message || 'POI 建立失敗');
+      }
+      message.success('POI 已建立');
+    }
+    setEditorOpen(false);
+    await refreshPois();
+  };
 
   return (
     <PageContainer
       title="POI 管理"
-      subTitle="管理景点位置信息、地理围栏、多媒体资源与故事线挂载关系"
-      extra={[<Button key="add" type="primary" icon={<PlusOutlined />} onClick={openCreate}>添加 POI</Button>]}
+      subTitle="以城市 / 子地圖綁定、地圖圖標、坐標換算、彈窗展示與多媒體附件為核心整理 POI。"
     >
-      <ProTable<AdminPoiListItem>
-        actionRef={actionRef}
-        rowKey="poiId"
-        columns={columns}
-        request={async (params) => {
-          const response = await getAdminPois({
-            pageNum: params.current,
-            pageSize: params.pageSize,
-            keyword: params.name as string,
-          });
-          return {
-            data: response.data?.list || [],
-            total: response.data?.total || 0,
-            success: response.success,
-          };
-        }}
-        search={{ labelWidth: 'auto' }}
-        pagination={{ pageSize: 10 }}
-        dateFormatter="string"
-        headerTitle="POI 列表"
-        toolBarRender={() => [<Button key="export">导出数据</Button>]}
-      />
+      <Card style={{ marginBottom: 16 }}>
+        <Space wrap>
+          <Input.Search
+            allowClear
+            placeholder="搜尋 POI 代碼或名稱"
+            style={{ width: 280 }}
+            onSearch={(value) => setFilters((current) => ({ ...current, keyword: value || undefined }))}
+          />
+          <Select
+            allowClear
+            placeholder="城市"
+            style={{ width: 220 }}
+            options={cities.map((city) => ({
+              label: `${pickCityName(city)} (${city.code})`,
+              value: city.id,
+            }))}
+            onChange={(value) => setFilters((current) => ({ ...current, cityId: value, subMapId: undefined }))}
+          />
+          <Select
+            allowClear
+            placeholder="子地圖"
+            style={{ width: 220 }}
+            options={filterSubMaps.map((subMap) => ({
+              label: `${pickSubMapName(subMap)} (${subMap.code})`,
+              value: subMap.id,
+            }))}
+            onChange={(value) => setFilters((current) => ({ ...current, subMapId: value }))}
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+            新增 POI
+          </Button>
+        </Space>
+      </Card>
+
+      <Card>
+        <Table<AdminPoiListItem>
+          rowKey="poiId"
+          loading={poiRequest.loading}
+          columns={columns}
+          dataSource={poiRequest.data?.data?.list || []}
+          pagination={{ pageSize: 10 }}
+          locale={{ emptyText: '尚未建立任何 POI' }}
+        />
+      </Card>
 
       <Drawer
         open={editorOpen}
-        title={editing ? '编辑 POI' : '新建 POI'}
-        width={680}
-        onClose={() => setEditorOpen(false)}
+        width={1180}
         destroyOnClose
-      >
-        <Form
-          layout="vertical"
-          form={form}
-          onFinish={async (values) => {
-            const payload = {
-              ...values,
-              imageUrls: values.imageUrlsText ? JSON.stringify(values.imageUrlsText.split('\n').map((item: string) => item.trim()).filter(Boolean)) : undefined,
-              tags: values.tagsText ? JSON.stringify(values.tagsText.split(',').map((item: string) => item.trim()).filter(Boolean)) : undefined,
-            };
-            delete payload.tagsText;
-            delete payload.imageUrlsText;
-
-            if (editing) {
-              await updateAdminPoi(editing.poiId, payload);
-              message.success('POI 更新成功');
-            } else {
-              await createAdminPoi(payload);
-              message.success('POI 创建成功');
-            }
-            setEditorOpen(false);
-            actionRef.current?.reload();
-          }}
-        >
-          <Form.Item label="中文名称" name="nameZh" rules={[{ required: true, message: '请输入中文名称' }]}><Input /></Form.Item>
-          <Form.Item label="副标题 / 英文名" name="subtitle"><Input /></Form.Item>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="纬度" name="latitude" rules={[{ required: true, message: '请输入纬度' }]} style={{ width: '100%' }}><InputNumber style={{ width: '100%' }} step={0.000001} /></Form.Item>
-            <Form.Item label="经度" name="longitude" rules={[{ required: true, message: '请输入经度' }]} style={{ width: '100%' }}><InputNumber style={{ width: '100%' }} step={0.000001} /></Form.Item>
-          </Space>
-          <Form.Item label="地址" name="address"><Input /></Form.Item>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="区域" name="regionCode" style={{ width: '100%' }}><Select options={regionOptions} /></Form.Item>
-            <Form.Item label="点位类型" name="poiType" style={{ width: '100%' }}><Select options={poiTypeOptions} /></Form.Item>
-          </Space>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="故事线" name="storyLineId" style={{ width: '100%' }}><Select allowClear options={storylineOptions.map((item) => ({ label: item.name, value: item.storylineId }))} /></Form.Item>
-            <Form.Item label="重要性" name="importance" style={{ width: '100%' }}><Select options={[{ label: '普通', value: 'normal' }, { label: '重要', value: 'important' }, { label: '非常重要', value: 'very_important' }]} /></Form.Item>
-          </Space>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="打卡方式" name="checkInMethod" style={{ width: '100%' }}><Select options={[{ label: '仅 GPS', value: 'gps_only' }, { label: '管理员补签', value: 'manual_admin' }, { label: '二维码', value: 'qr_code' }]} /></Form.Item>
-            <Form.Item label="触发半径（米）" name="triggerRadius" style={{ width: '100%' }}><InputNumber style={{ width: '100%' }} min={10} max={300} /></Form.Item>
-          </Space>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="难度" name="difficulty" style={{ width: '100%' }}><Select options={[{ label: '简单', value: 'easy' }, { label: '中等', value: 'medium' }, { label: '困难', value: 'hard' }]} /></Form.Item>
-            <Form.Item label="建议游览时长（分钟）" name="suggestedVisitMinutes" style={{ width: '100%' }}><InputNumber style={{ width: '100%' }} min={5} max={240} /></Form.Item>
-          </Space>
-          <Form.Item label="开放时间" name="openTime"><Input placeholder="例如：09:00-18:00" /></Form.Item>
-          <Form.Item label="封面图 URL" name="coverImageUrl"><Input /></Form.Item>
-          <Form.Item label="图片列表（每行一个 URL）" name="imageUrlsText"><Input.TextArea rows={3} /></Form.Item>
-          <Form.Item label="语音导览 URL" name="audioGuideUrl"><Input /></Form.Item>
-          <Form.Item label="视频 URL" name="videoUrl"><Input /></Form.Item>
-          <Form.Item label="AR 内容 URL" name="arContentUrl"><Input /></Form.Item>
-          <Form.Item label="标签（逗号分隔）" name="tagsText"><Input placeholder="世遗, 打卡, 夜游" /></Form.Item>
-          <Form.Item label="印章类型" name="stampType"><Input placeholder="location / story / mission" /></Form.Item>
-          <Form.Item label="描述" name="description"><Input.TextArea rows={5} /></Form.Item>
+        title={editingPoi ? `編輯 POI：${pickPoiName(editingPoi)}` : '新增 POI'}
+        onClose={() => setEditorOpen(false)}
+        extra={
           <Space>
-            <Button type="primary" htmlType="submit">保存</Button>
             <Button onClick={() => setEditorOpen(false)}>取消</Button>
+            <Button type="primary" onClick={() => void handleSubmit()}>
+              儲存
+            </Button>
           </Space>
+        }
+      >
+        <Form form={form} layout="vertical">
+          {editingPoi?.storylineName ? (
+            <Alert
+              showIcon
+              type="info"
+              style={{ marginBottom: 16 }}
+              message="故事線回顯"
+              description={`這個 POI 目前已被故事線「${editingPoi.storylineName}」引用；故事線綁定請到故事線 / 章節編排中維護。`}
+            />
+          ) : null}
+
+          <Alert
+            showIcon
+            type="info"
+            style={{ marginBottom: 16 }}
+            message="區域資訊改為由地圖綁定推導"
+            description="POI 不再獨立編寫行政區 / 分區。只要正確綁定城市與子地圖，前台展示與統計都會以這個綁定為準。"
+          />
+
+          <Row gutter={16}>
+            <Col xs={24} md={8}>
+              <Form.Item
+                name="cityId"
+                label="所屬城市"
+                rules={[{ required: true, message: '請選擇所屬城市' }]}
+              >
+                <Select
+                  options={cities.map((city) => ({
+                    label: `${pickCityName(city)} (${city.code})`,
+                    value: city.id,
+                  }))}
+                  onChange={() => form.setFieldValue('subMapId', undefined)}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item name="subMapId" label="所屬子地圖">
+                <Select
+                  allowClear
+                  placeholder="可不綁定"
+                  options={formSubMaps.map((subMap) => ({
+                    label: `${pickSubMapName(subMap)} (${subMap.code})`,
+                    value: subMap.id,
+                  }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item
+                name="code"
+                label="POI 代碼"
+                rules={[{ required: true, message: '請輸入 POI 代碼' }]}
+              >
+                <Input placeholder="例如 a-ma-temple" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <LocalizedFieldGroup
+            form={form}
+            label="POI 名稱"
+            fieldNames={nameFields}
+            required
+            translationDefaults={translationSettingsRequest.data?.data}
+          />
+
+          <LocalizedFieldGroup
+            form={form}
+            label="POI 副標"
+            fieldNames={subtitleFields}
+            translationDefaults={translationSettingsRequest.data?.data}
+          />
+
+          <SpatialCoordinateFieldGroup
+            form={form}
+            required
+            sourceSystemName="sourceCoordinateSystem"
+            sourceLatitudeName="sourceLatitude"
+            sourceLongitudeName="sourceLongitude"
+            normalizedLatitudeName="latitude"
+            normalizedLongitudeName="longitude"
+          />
+
+          <LocalizedFieldGroup
+            form={form}
+            label="地址"
+            fieldNames={addressFields}
+            translationDefaults={translationSettingsRequest.data?.data}
+          />
+
+          <Row gutter={16}>
+            <Col xs={24} md={8}>
+              <Form.Item name="categoryPreset" label="分類代碼">
+                <Select
+                  options={[
+                    ...poiCategoryOptions,
+                    { label: '自定義分類', value: CUSTOM_CATEGORY_VALUE },
+                  ]}
+                  placeholder="請選擇分類"
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item name="difficulty" label="難度">
+                <Select options={difficultyOptions} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item name="triggerRadius" label="自動觸發半徑（米）">
+                <InputNumber style={{ width: '100%' }} min={10} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {selectedCategoryPreset === CUSTOM_CATEGORY_VALUE ? (
+            <Form.Item
+              name="categoryCustom"
+              label="自定義分類代碼"
+              rules={[{ required: true, message: '請輸入自定義分類代碼' }]}
+            >
+              <Input placeholder="例如 heritage-route / hidden-scene / art-space" />
+            </Form.Item>
+          ) : null}
+
+          <Form.Item name="manualCheckinRadius" label="手動打卡半徑（米）">
+            <InputNumber style={{ width: '100%' }} min={10} />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col xs={24} md={8}>
+              <SpatialAssetPickerField
+                name="coverAssetId"
+                label="封面資源"
+                required
+                assetKind="image"
+                help="可直接上傳圖片，成功後會自動選取。"
+              />
+            </Col>
+            <Col xs={24} md={8}>
+              <SpatialAssetPickerField
+                name="mapIconAssetId"
+                label="地圖圖標資源"
+                required
+                assetKind="icon"
+                help="可直接上傳 icon / 小圖標，地圖展示會使用這個資源。"
+              />
+            </Col>
+            <Col xs={24} md={8}>
+              <SpatialAssetPickerField
+                name="audioAssetId"
+                label="音訊資源"
+                assetKind="audio"
+                help="可選配語音導覽或現場聲景。"
+              />
+            </Col>
+          </Row>
+
+          <Form.Item name="staySeconds" label="建議停留秒數">
+            <InputNumber style={{ width: '100%' }} min={0} />
+          </Form.Item>
+
+          <LocalizedFieldGroup
+            form={form}
+            label="導覽標題"
+            fieldNames={introTitleFields}
+            translationDefaults={translationSettingsRequest.data?.data}
+          />
+
+          <LocalizedFieldGroup
+            form={form}
+            label="導覽摘要"
+            fieldNames={introSummaryFields}
+            multiline
+            rows={4}
+            translationDefaults={translationSettingsRequest.data?.data}
+          />
+
+          <LocalizedFieldGroup
+            form={form}
+            label="POI 詳細介紹"
+            fieldNames={descriptionFields}
+            multiline
+            rows={6}
+            translationDefaults={translationSettingsRequest.data?.data}
+          />
+
+          <SpatialPopupDisplayField
+            form={form}
+            popupFieldName="popupConfigJson"
+            displayFieldName="displayConfigJson"
+          />
+
+          <SpatialAttachmentListField name="attachments" title="POI 附件" />
+
+          <Row gutter={16}>
+            <Col xs={24} md={12}>
+              <Form.Item name="sortOrder" label="排序">
+                <InputNumber style={{ width: '100%' }} min={0} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item name="status" label="狀態">
+                <Select options={statusOptions} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+            故事線與章節的綁定不在這裡主動維護。若某條故事線引用了這個 POI，系統會在此頁回顯對應資訊。
+          </Paragraph>
         </Form>
       </Drawer>
     </PageContainer>

@@ -25,24 +25,28 @@ public class MongoConfig {
                     "indoor_anchor_documents"
             );
 
-            for (String collection : collections) {
-                if (!mongoTemplate.collectionExists(collection)) {
-                    mongoTemplate.createCollection(collection);
-                    log.info("Created Mongo collection: {}", collection);
+            try {
+                for (String collection : collections) {
+                    if (!mongoTemplate.collectionExists(collection)) {
+                        mongoTemplate.createCollection(collection);
+                        log.info("Created Mongo collection: {}", collection);
+                    }
                 }
-            }
 
-            if (mongoTemplate.findById("mongo-bootstrap", org.bson.Document.class, "system_meta") == null) {
-                if (!mongoTemplate.collectionExists("system_meta")) {
-                    mongoTemplate.createCollection("system_meta");
+                if (mongoTemplate.findById("mongo-bootstrap", org.bson.Document.class, "system_meta") == null) {
+                    if (!mongoTemplate.collectionExists("system_meta")) {
+                        mongoTemplate.createCollection("system_meta");
+                    }
+                    org.bson.Document doc = new org.bson.Document();
+                    doc.put("_id", "mongo-bootstrap");
+                    doc.put("project", "trip-of-macau-admin");
+                    doc.put("description", "Local MongoDB bootstrap for admin backend document collections.");
+                    doc.put("createdAt", Instant.now().toString());
+                    doc.put("collections", collections);
+                    mongoTemplate.save(doc, "system_meta");
                 }
-                org.bson.Document doc = new org.bson.Document();
-                doc.put("_id", "mongo-bootstrap");
-                doc.put("project", "trip-of-macau-admin");
-                doc.put("description", "本地 MongoDB 已接入 admin-backend，用于承载文档型配置、故事编排、AI 策略与日志扩展。");
-                doc.put("createdAt", Instant.now().toString());
-                doc.put("collections", collections);
-                mongoTemplate.save(doc, "system_meta");
+            } catch (Exception ex) {
+                log.warn("Skipping Mongo bootstrap because the document store is unavailable or credentials are invalid. Admin HTTP services will continue to start.", ex);
             }
         };
     }

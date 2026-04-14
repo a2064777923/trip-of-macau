@@ -57,4 +57,18 @@ logging:
     com.aoxiaoyou.admin: ${APP_LOG_LEVEL:INFO}
     org.springframework.jdbc: WARN
 
+app:
+  integration:
+    public-base-url: ${APP_PUBLIC_BASE_URL:http://127.0.0.1:8080}
+    public-health-path: ${APP_PUBLIC_HEALTH_PATH:/api/v1/health}
+    timeout-ms: ${APP_INTEGRATION_TIMEOUT_MS:5000}
+    phase6-seed-key: ${APP_PHASE6_SEED_KEY:phase6-mock-dataset-migration}
+  translation:
+    bridge-enabled: ${APP_TRANSLATION_BRIDGE_ENABLED:false}
+    python-command: ${APP_TRANSLATION_PYTHON_COMMAND:python}
+    bridge-script-path: ${APP_TRANSLATION_BRIDGE_SCRIPT_PATH:}
+    request-timeout-ms: ${APP_TRANSLATION_REQUEST_TIMEOUT_MS:8000}
+    max-text-length: ${APP_TRANSLATION_MAX_TEXT_LENGTH:5000}
+    default-engine-priority: ${APP_TRANSLATION_DEFAULT_ENGINE_PRIORITY:google,bing,deepl,yandex,baidu,alibaba,sogou,iciba,tencent}
+
 

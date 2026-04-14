@@ -8,17 +8,16 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class AdminStoryLineListItemResponse {
-
     private Long storylineId;
+    private Long cityId;
+    private String cityName;
     private String code;
-    private String name;
-    private String description;
-    private String coverImageUrl;
-    private String category;
+    private String nameZh;
     private String difficulty;
     private String status;
-    private Integer poiCount;
-    private Integer participationCount;
-    private Integer completionCount;
+    private Integer estimatedMinutes;
+    private Integer totalChapters;
+    private Long coverAssetId;
+    private Integer sortOrder;
     private LocalDateTime createdAt;
 }

@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,7 +30,7 @@ public class AdminStoryChapterServiceImpl implements AdminStoryChapterService {
         verifyStoryline(storylineId);
         Page<StoryChapter> page = storyChapterMapper.selectPage(new Page<>(pageNum, pageSize),
                 new LambdaQueryWrapper<StoryChapter>()
-                        .eq(StoryChapter::getStoryLineId, storylineId)
+                        .eq(StoryChapter::getStorylineId, storylineId)
                         .orderByAsc(StoryChapter::getChapterOrder)
                         .orderByAsc(StoryChapter::getId));
         Page<AdminStoryChapterResponse> responsePage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
@@ -41,7 +42,7 @@ public class AdminStoryChapterServiceImpl implements AdminStoryChapterService {
     public List<AdminStoryChapterResponse> listByStoryline(Long storylineId) {
         verifyStoryline(storylineId);
         return storyChapterMapper.selectList(new LambdaQueryWrapper<StoryChapter>()
-                        .eq(StoryChapter::getStoryLineId, storylineId)
+                        .eq(StoryChapter::getStorylineId, storylineId)
                         .orderByAsc(StoryChapter::getChapterOrder)
                         .orderByAsc(StoryChapter::getId))
                 .stream()
@@ -51,55 +52,67 @@ public class AdminStoryChapterServiceImpl implements AdminStoryChapterService {
 
     @Override
     public AdminStoryChapterResponse create(AdminStoryChapterUpsertRequest.Upsert request) {
-        verifyStoryline(request.getStoryLineId());
+        verifyStoryline(request.getStorylineId());
         StoryChapter chapter = new StoryChapter();
         applyRequest(chapter, request);
-        chapter.setOpenid("");
         storyChapterMapper.insert(chapter);
-        recalculateChapterCount(request.getStoryLineId());
-        return toResponse(storyChapterMapper.selectById(chapter.getId()));
+        return toResponse(requireChapter(chapter.getId()));
     }
 
     @Override
     public AdminStoryChapterResponse update(Long chapterId, AdminStoryChapterUpsertRequest.Upsert request) {
+        verifyStoryline(request.getStorylineId());
         StoryChapter chapter = requireChapter(chapterId);
-        verifyStoryline(request.getStoryLineId());
-        Long oldStorylineId = chapter.getStoryLineId();
         applyRequest(chapter, request);
         storyChapterMapper.updateById(chapter);
-        recalculateChapterCount(oldStorylineId);
-        recalculateChapterCount(request.getStoryLineId());
-        return toResponse(storyChapterMapper.selectById(chapterId));
+        return toResponse(requireChapter(chapterId));
     }
 
     @Override
     public void delete(Long chapterId) {
-        StoryChapter chapter = requireChapter(chapterId);
-        Long storylineId = chapter.getStoryLineId();
+        requireChapter(chapterId);
         storyChapterMapper.deleteById(chapterId);
-        recalculateChapterCount(storylineId);
     }
 
     private void applyRequest(StoryChapter chapter, AdminStoryChapterUpsertRequest.Upsert request) {
-        chapter.setStoryLineId(request.getStoryLineId());
+        chapter.setStorylineId(request.getStorylineId());
         chapter.setChapterOrder(request.getChapterOrder());
         chapter.setTitleZh(request.getTitleZh());
         chapter.setTitleEn(request.getTitleEn());
         chapter.setTitleZht(request.getTitleZht());
-        chapter.setMediaType(StringUtils.hasText(request.getMediaType()) ? request.getMediaType() : "image");
-        chapter.setMediaUrl(request.getMediaUrl());
-        chapter.setScriptZh(request.getScriptZh());
-        chapter.setScriptEn(request.getScriptEn());
-        chapter.setScriptZht(request.getScriptZht());
-        chapter.setUnlockType(StringUtils.hasText(request.getUnlockType()) ? request.getUnlockType() : "sequential");
-        chapter.setUnlockParam(request.getUnlockParam());
-        chapter.setDuration(request.getDuration() == null ? 180 : request.getDuration());
+        chapter.setTitlePt(request.getTitlePt());
+        chapter.setSummaryZh(request.getSummaryZh());
+        chapter.setSummaryEn(request.getSummaryEn());
+        chapter.setSummaryZht(request.getSummaryZht());
+        chapter.setSummaryPt(request.getSummaryPt());
+        chapter.setDetailZh(request.getDetailZh());
+        chapter.setDetailEn(request.getDetailEn());
+        chapter.setDetailZht(request.getDetailZht());
+        chapter.setDetailPt(request.getDetailPt());
+        chapter.setAchievementZh(request.getAchievementZh());
+        chapter.setAchievementEn(request.getAchievementEn());
+        chapter.setAchievementZht(request.getAchievementZht());
+        chapter.setAchievementPt(request.getAchievementPt());
+        chapter.setCollectibleZh(request.getCollectibleZh());
+        chapter.setCollectibleEn(request.getCollectibleEn());
+        chapter.setCollectibleZht(request.getCollectibleZht());
+        chapter.setCollectiblePt(request.getCollectiblePt());
+        chapter.setLocationNameZh(request.getLocationNameZh());
+        chapter.setLocationNameEn(request.getLocationNameEn());
+        chapter.setLocationNameZht(request.getLocationNameZht());
+        chapter.setLocationNamePt(request.getLocationNamePt());
+        chapter.setMediaAssetId(request.getMediaAssetId());
+        chapter.setUnlockType(StringUtils.hasText(request.getUnlockType()) ? request.getUnlockType() : "sequence");
+        chapter.setUnlockParamJson(request.getUnlockParamJson());
+        chapter.setStatus(StringUtils.hasText(request.getStatus()) ? request.getStatus() : "draft");
+        chapter.setSortOrder(request.getSortOrder() == null ? request.getChapterOrder() : request.getSortOrder());
+        chapter.setPublishedAt(parseDateTime(request.getPublishedAt()));
     }
 
     private StoryChapter requireChapter(Long chapterId) {
         StoryChapter chapter = storyChapterMapper.selectById(chapterId);
         if (chapter == null) {
-            throw new BusinessException(4044, "章节不存在");
+            throw new BusinessException(4044, "Story chapter not found");
         }
         return chapter;
     }
@@ -107,42 +120,52 @@ public class AdminStoryChapterServiceImpl implements AdminStoryChapterService {
     private StoryLine verifyStoryline(Long storylineId) {
         StoryLine storyLine = storyLineMapper.selectById(storylineId);
         if (storyLine == null) {
-            throw new BusinessException(4042, "故事线不存在");
+            throw new BusinessException(4042, "Storyline not found");
         }
         return storyLine;
-    }
-
-    private void recalculateChapterCount(Long storylineId) {
-        if (storylineId == null) {
-            return;
-        }
-        long count = storyChapterMapper.selectCount(new LambdaQueryWrapper<StoryChapter>()
-                .eq(StoryChapter::getStoryLineId, storylineId));
-        StoryLine storyLine = storyLineMapper.selectById(storylineId);
-        if (storyLine != null) {
-            storyLine.setTotalChapters((int) count);
-            storyLineMapper.updateById(storyLine);
-        }
     }
 
     private AdminStoryChapterResponse toResponse(StoryChapter chapter) {
         return AdminStoryChapterResponse.builder()
                 .id(chapter.getId())
-                .storyLineId(chapter.getStoryLineId())
+                .storylineId(chapter.getStorylineId())
                 .chapterOrder(chapter.getChapterOrder())
                 .titleZh(chapter.getTitleZh())
                 .titleEn(chapter.getTitleEn())
                 .titleZht(chapter.getTitleZht())
-                .mediaType(chapter.getMediaType())
-                .mediaUrl(chapter.getMediaUrl())
-                .scriptZh(chapter.getScriptZh())
-                .scriptEn(chapter.getScriptEn())
-                .scriptZht(chapter.getScriptZht())
+                .titlePt(chapter.getTitlePt())
+                .summaryZh(chapter.getSummaryZh())
+                .summaryEn(chapter.getSummaryEn())
+                .summaryZht(chapter.getSummaryZht())
+                .summaryPt(chapter.getSummaryPt())
+                .detailZh(chapter.getDetailZh())
+                .detailEn(chapter.getDetailEn())
+                .detailZht(chapter.getDetailZht())
+                .detailPt(chapter.getDetailPt())
+                .achievementZh(chapter.getAchievementZh())
+                .achievementEn(chapter.getAchievementEn())
+                .achievementZht(chapter.getAchievementZht())
+                .achievementPt(chapter.getAchievementPt())
+                .collectibleZh(chapter.getCollectibleZh())
+                .collectibleEn(chapter.getCollectibleEn())
+                .collectibleZht(chapter.getCollectibleZht())
+                .collectiblePt(chapter.getCollectiblePt())
+                .locationNameZh(chapter.getLocationNameZh())
+                .locationNameEn(chapter.getLocationNameEn())
+                .locationNameZht(chapter.getLocationNameZht())
+                .locationNamePt(chapter.getLocationNamePt())
+                .mediaAssetId(chapter.getMediaAssetId())
                 .unlockType(chapter.getUnlockType())
-                .unlockParam(chapter.getUnlockParam())
-                .duration(chapter.getDuration())
+                .unlockParamJson(chapter.getUnlockParamJson())
+                .status(chapter.getStatus())
+                .sortOrder(chapter.getSortOrder())
+                .publishedAt(chapter.getPublishedAt())
                 .createdAt(chapter.getCreatedAt() == null ? null : chapter.getCreatedAt().toString())
                 .updatedAt(chapter.getUpdatedAt() == null ? null : chapter.getUpdatedAt().toString())
                 .build();
+    }
+
+    private LocalDateTime parseDateTime(String value) {
+        return StringUtils.hasText(value) ? LocalDateTime.parse(value) : null;
     }
 }

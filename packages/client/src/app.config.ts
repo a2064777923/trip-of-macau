@@ -2,6 +2,7 @@ export default defineAppConfig({
   pages: [
     'pages/index/index',
     'pages/map/index',
+    'pages/map/indoor/index',
     'pages/tips/index',
     'pages/tips/notifications/index',
     'pages/tips/publish/index',
@@ -24,22 +25,32 @@ export default defineAppConfig({
       {
         pagePath: 'pages/index/index',
         text: '首頁',
+        iconPath: 'assets/tabbar/home.png',
+        selectedIconPath: 'assets/tabbar/home-active.png',
       },
       {
         pagePath: 'pages/map/index',
         text: '探索',
+        iconPath: 'assets/tabbar/map.png',
+        selectedIconPath: 'assets/tabbar/map-active.png',
       },
       {
         pagePath: 'pages/discover/index',
         text: '發現',
+        iconPath: 'assets/tabbar/discover.png',
+        selectedIconPath: 'assets/tabbar/discover-active.png',
       },
       {
         pagePath: 'pages/tips/index',
         text: '秘籍',
+        iconPath: 'assets/tabbar/tips.png',
+        selectedIconPath: 'assets/tabbar/tips-active.png',
       },
       {
         pagePath: 'pages/profile/index',
         text: '我的',
+        iconPath: 'assets/tabbar/profile.png',
+        selectedIconPath: 'assets/tabbar/profile-active.png',
       },
     ],
   },
@@ -51,19 +62,12 @@ export default defineAppConfig({
     navigationBarTextStyle: 'black',
     navigationStyle: 'default',
   },
-  preloadRule: {
-    'pages/index/index': {
-      network: 'all',
-      packages: [],
-    },
-  },
   permission: {
     'scope.userLocation': {
-      desc: '您的位置信息将用于澳小遊小程序的定位探索、附近玩法和故事觸發。',
+      desc: '您的位置信息将用于澳小遊小程序的定位探索。',
     },
   },
   requiredPrivateInfos: ['getLocation', 'onLocationChange'],
   requiredBackgroundModes: ['location'],
-  lazyCodeLoading: 'requiredComponents',
   sitemapLocation: 'sitemap.json',
 })

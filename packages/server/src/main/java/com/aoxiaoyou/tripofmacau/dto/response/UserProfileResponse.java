@@ -3,7 +3,6 @@ package com.aoxiaoyou.tripofmacau.dto.response;
 import lombok.Builder;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -14,15 +13,14 @@ public class UserProfileResponse {
     private String openId;
     private String nickname;
     private String avatarUrl;
-    private String languagePreference;
     private Integer level;
     private String title;
     private Integer totalStamps;
-    private String interfaceMode;
-    private BigDecimal fontScale;
-    private Boolean highContrast;
-    private Boolean voiceGuideEnabled;
-    private Boolean simplifiedMode;
+    private Integer currentExp;
+    private Integer nextLevelExp;
+    private Long currentCityId;
+    private String currentCityCode;
+    private String currentLocaleCode;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

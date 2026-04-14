@@ -1,9 +1,22 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
-import ProTable from '@ant-design/pro-table';
-import { Button, DatePicker, Drawer, Form, Input, InputNumber, Popconfirm, Select, Space, Table, Tag, message } from 'antd';
+import ProTable, { type ActionType, type ProColumns } from '@ant-design/pro-table';
+import {
+  Button,
+  DatePicker,
+  Drawer,
+  Form,
+  Input,
+  InputNumber,
+  Popconfirm,
+  Select,
+  Space,
+  Table,
+  Tag,
+  message,
+} from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns } from '@ant-design/pro-table';
+import { useRequest } from 'ahooks';
 import dayjs from 'dayjs';
 import {
   createAdminStoryline,
@@ -12,11 +25,42 @@ import {
   deleteStorylineChapter,
   getAdminStorylineDetail,
   getAdminStorylines,
+  getAdminTranslationSettings,
+  getCities,
   getStorylineChapters,
   updateAdminStoryline,
   updateStorylineChapter,
 } from '../../services/api';
-import type { AdminStoryChapterItem, AdminStorylineDetail, AdminStorylineListItem } from '../../types/admin';
+import type {
+  AdminStoryChapterItem,
+  AdminStorylineDetail,
+  AdminStorylineListItem,
+  CityItem,
+} from '../../types/admin';
+import LocalizedFieldGroup, {
+  buildLocalizedFieldNames,
+} from '../../components/localization/LocalizedFieldGroup';
+
+const statusOptions = [
+  { label: '草稿', value: 'draft' },
+  { label: '已發布', value: 'published' },
+  { label: '已封存', value: 'archived' },
+];
+
+const storylineNameFields = buildLocalizedFieldNames('name');
+const storylineDescriptionFields = buildLocalizedFieldNames('description');
+const rewardBadgeFields = buildLocalizedFieldNames('rewardBadge');
+
+const chapterTitleFields = buildLocalizedFieldNames('title');
+const chapterSummaryFields = buildLocalizedFieldNames('summary');
+const chapterDetailFields = buildLocalizedFieldNames('detail');
+const chapterAchievementFields = buildLocalizedFieldNames('achievement');
+const chapterCollectibleFields = buildLocalizedFieldNames('collectible');
+const chapterLocationFields = buildLocalizedFieldNames('locationName');
+
+function pickStorylineName(record: AdminStorylineListItem) {
+  return record.nameZht || record.nameZh || record.nameEn || record.namePt || record.code;
+}
 
 const StorylineManagement: React.FC = () => {
   const actionRef = useRef<ActionType>();
@@ -26,10 +70,16 @@ const StorylineManagement: React.FC = () => {
   const [chapterEditing, setChapterEditing] = useState<AdminStoryChapterItem | null>(null);
   const [chapterStoryline, setChapterStoryline] = useState<AdminStorylineListItem | null>(null);
   const [chapterList, setChapterList] = useState<AdminStoryChapterItem[]>([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [chapterSubmitting, setChapterSubmitting] = useState(false);
+  const [cityOptions, setCityOptions] = useState<CityItem[]>([]);
   const [form] = Form.useForm();
   const [chapterForm] = Form.useForm();
+
+  const translationSettingsRequest = useRequest(getAdminTranslationSettings);
+
+  const loadCities = async () => {
+    const res = await getCities({ pageNum: 1, pageSize: 100 });
+    setCityOptions(res.data?.list || []);
+  };
 
   const loadChapters = async (storylineId: number) => {
     const response = await getStorylineChapters(storylineId, { pageNum: 1, pageSize: 100 });
@@ -43,102 +93,102 @@ const StorylineManagement: React.FC = () => {
     setChapterEditing(null);
     chapterForm.resetFields();
     await loadChapters(record.storylineId);
+    chapterForm.setFieldsValue({
+      chapterOrder: 1,
+      unlockType: 'sequence',
+      sortOrder: 1,
+      status: 'draft',
+    });
     setChapterDrawerOpen(true);
   };
 
-  const columns = useMemo<ProColumns<AdminStorylineListItem>[]>(() => [
-    { title: '名称', dataIndex: 'name' },
-    { title: '编码', dataIndex: 'code', copyable: true, hideInSearch: true },
-    {
-      title: '分类',
-      dataIndex: 'category',
-      hideInSearch: true,
-      render: (value) => <Tag>{value || 'historical'}</Tag>,
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      valueType: 'select',
-      valueEnum: {
-        draft: { text: '草稿' },
-        published: { text: '已发布' },
-        archived: { text: '已归档' },
+  const columns = useMemo<ProColumns<AdminStorylineListItem>[]>(
+    () => [
+      { title: '代碼', dataIndex: 'code', copyable: true, width: 140 },
+      { title: '故事線名稱', render: (_, record) => pickStorylineName(record) },
+      { title: '城市', dataIndex: 'cityName', hideInSearch: true },
+      { title: '難度', dataIndex: 'difficulty', hideInSearch: true },
+      { title: '預估分鐘', dataIndex: 'estimatedMinutes', hideInSearch: true, width: 110 },
+      { title: '章節數', dataIndex: 'totalChapters', hideInSearch: true, width: 90 },
+      {
+        title: '狀態',
+        dataIndex: 'status',
+        valueType: 'select',
+        valueEnum: {
+          draft: { text: '草稿' },
+          published: { text: '已發布' },
+          archived: { text: '已封存' },
+        },
+        render: (_, record) => {
+          const color = record.status === 'published' ? 'green' : record.status === 'archived' ? 'default' : 'gold';
+          const label = record.status === 'published' ? '已發布' : record.status === 'archived' ? '已封存' : '草稿';
+          return <Tag color={color}>{label}</Tag>;
+        },
+        width: 120,
       },
-      render: (_, record) => <Tag color={record.status === 'published' ? 'success' : 'default'}>{record.status}</Tag>,
-    },
-    { title: '章节数', dataIndex: 'poiCount', hideInSearch: true },
-    { title: '参与人数', dataIndex: 'participationCount', hideInSearch: true },
-    { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
-    {
-      title: '操作',
-      key: 'action',
-      valueType: 'option',
-      render: (_, record) => [
-        <Button
-          key="edit"
-          type="link"
-          onClick={async () => {
-            const response = await getAdminStorylineDetail(record.storylineId);
-            if (response.success) {
-              setEditing(response.data);
-              form.setFieldsValue({
-                code: response.data.code,
-                nameZh: response.data.name,
-                nameEn: response.data.code,
-                description: response.data.description,
-                coverUrl: response.data.coverImageUrl,
-                bannerUrl: response.data.bannerImageUrl,
-                totalChapters: response.data.totalChapters,
-                category: response.data.category,
-                difficulty: response.data.difficulty,
-                estimatedDurationMinutes: response.data.estimatedDurationMinutes,
-                tagsText: response.data.tags?.join(', '),
-                status: response.data.status,
-                publishAt: response.data.publishAt ? dayjs(response.data.publishAt) : undefined,
-                startAt: response.data.startAt ? dayjs(response.data.startAt) : undefined,
-                endAt: response.data.endAt ? dayjs(response.data.endAt) : undefined,
-              });
-              setEditorOpen(true);
-            }
-          }}
-        >
-          编辑
-        </Button>,
-        <Button key="chapters" type="link" onClick={() => openChapterDrawer(record)}>
-          章节管理
-        </Button>,
-        <Popconfirm
-          key="delete"
-          title="确认删除该故事线吗？"
-          onConfirm={async () => {
-            await deleteAdminStoryline(record.storylineId);
-            message.success('故事线已删除');
-            actionRef.current?.reload();
-          }}
-        >
-          <Button type="link" danger>删除</Button>
-        </Popconfirm>,
-      ],
-    },
-  ], [form]);
+      {
+        title: '操作',
+        key: 'action',
+        valueType: 'option',
+        render: (_, record) => [
+          <Button
+            key="edit"
+            type="link"
+            onClick={async () => {
+              await loadCities();
+              const response = await getAdminStorylineDetail(record.storylineId);
+              if (response.success && response.data) {
+                setEditing(response.data);
+                form.setFieldsValue({
+                  ...response.data,
+                  publishedAt: response.data.publishedAt ? dayjs(response.data.publishedAt) : undefined,
+                });
+                setEditorOpen(true);
+              }
+            }}
+          >
+            編輯
+          </Button>,
+          <Button key="chapters" type="link" onClick={() => void openChapterDrawer(record)}>
+            章節編排
+          </Button>,
+          <Popconfirm
+            key="delete"
+            title="確定刪除這條故事線？"
+            onConfirm={async () => {
+              await deleteAdminStoryline(record.storylineId);
+              message.success('故事線已刪除');
+              actionRef.current?.reload();
+            }}
+          >
+            <Button type="link" danger>
+              刪除
+            </Button>
+          </Popconfirm>,
+        ],
+      },
+    ],
+    [form],
+  );
 
   return (
     <PageContainer
-      title="故事线管理"
-      subTitle="维护小程序故事线、运营节奏与章节内容配置"
+      title="故事線管理"
+      subTitle="管理故事線四語內容、章節編排、封面資源與發布狀態。"
       extra={[
         <Button
           key="add"
           type="primary"
           icon={<PlusOutlined />}
-          onClick={() => {
+          onClick={async () => {
+            await loadCities();
             setEditing(null);
             form.resetFields();
-            form.setFieldsValue({ status: 'draft', totalChapters: 0, category: 'historical', difficulty: 'easy', estimatedDurationMinutes: 60 });
+            form.setFieldsValue({ difficulty: 'easy', sortOrder: 0, status: 'draft' });
             setEditorOpen(true);
           }}
         >
-          新建故事线
+          新增故事線
         </Button>,
       ]}
     >
@@ -150,7 +200,7 @@ const StorylineManagement: React.FC = () => {
           const response = await getAdminStorylines({
             pageNum: params.current,
             pageSize: params.pageSize,
-            keyword: params.name as string,
+            keyword: params.code as string,
             status: params.status as string,
           });
           return {
@@ -165,8 +215,8 @@ const StorylineManagement: React.FC = () => {
 
       <Drawer
         open={editorOpen}
-        title={editing ? '编辑故事线' : '新建故事线'}
-        width={620}
+        title={editing ? '編輯故事線' : '新增故事線'}
+        width={980}
         onClose={() => setEditorOpen(false)}
         destroyOnClose
       >
@@ -174,58 +224,103 @@ const StorylineManagement: React.FC = () => {
           layout="vertical"
           form={form}
           onFinish={async (values) => {
-            setSubmitting(true);
-            try {
-              const payload = {
-                ...values,
-                tags: values.tagsText ? JSON.stringify(values.tagsText.split(',').map((item: string) => item.trim()).filter(Boolean)) : undefined,
-                publishAt: values.publishAt ? values.publishAt.format('YYYY-MM-DDTHH:mm:ss') : undefined,
-                startAt: values.startAt ? values.startAt.format('YYYY-MM-DDTHH:mm:ss') : undefined,
-                endAt: values.endAt ? values.endAt.format('YYYY-MM-DDTHH:mm:ss') : undefined,
-              };
-              delete payload.tagsText;
-
-              if (editing) {
-                await updateAdminStoryline(editing.storylineId, payload);
-                message.success('故事线更新成功');
-              } else {
-                await createAdminStoryline(payload);
-                message.success('故事线创建成功');
-              }
-              setEditorOpen(false);
-              actionRef.current?.reload();
-            } finally {
-              setSubmitting(false);
+            const payload = {
+              ...values,
+              publishedAt: values.publishedAt ? values.publishedAt.format('YYYY-MM-DDTHH:mm:ss') : undefined,
+            };
+            if (editing) {
+              await updateAdminStoryline(editing.storylineId, payload);
+              message.success('故事線已更新');
+            } else {
+              await createAdminStoryline(payload);
+              message.success('故事線已建立');
             }
+            setEditorOpen(false);
+            actionRef.current?.reload();
           }}
         >
-          <Form.Item label="故事线编码" name="code" rules={[{ required: true, message: '请输入编码' }]}><Input /></Form.Item>
-          <Form.Item label="中文名称" name="nameZh" rules={[{ required: true, message: '请输入名称' }]}><Input /></Form.Item>
-          <Form.Item label="英文名称" name="nameEn"><Input /></Form.Item>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="分类" name="category" style={{ width: '100%' }}><Select options={[{ label: '历史', value: 'historical' }, { label: '文化', value: 'cultural' }, { label: '美食', value: 'food' }, { label: '亲子', value: 'family' }]} /></Form.Item>
-            <Form.Item label="难度" name="difficulty" style={{ width: '100%' }}><Select options={[{ label: '简单', value: 'easy' }, { label: '中等', value: 'medium' }, { label: '困难', value: 'hard' }]} /></Form.Item>
-          </Space>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="章节数" name="totalChapters" style={{ width: '100%' }}><InputNumber min={0} style={{ width: '100%' }} disabled /></Form.Item>
-            <Form.Item label="预计时长（分钟）" name="estimatedDurationMinutes" style={{ width: '100%' }}><InputNumber min={10} max={600} style={{ width: '100%' }} /></Form.Item>
-          </Space>
-          <Form.Item label="故事简介" name="description"><Input.TextArea rows={4} /></Form.Item>
-          <Form.Item label="封面地址" name="coverUrl"><Input /></Form.Item>
-          <Form.Item label="Banner 地址" name="bannerUrl"><Input /></Form.Item>
-          <Form.Item label="标签（逗号分隔）" name="tagsText"><Input placeholder="海上丝路, 世界遗产, 文化探索" /></Form.Item>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="定时发布时间" name="publishAt" style={{ width: '100%' }}><DatePicker showTime style={{ width: '100%' }} /></Form.Item>
-            <Form.Item label="活动开始" name="startAt" style={{ width: '100%' }}><DatePicker showTime style={{ width: '100%' }} /></Form.Item>
-          </Space>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="活动结束" name="endAt" style={{ width: '100%' }}><DatePicker showTime style={{ width: '100%' }} /></Form.Item>
-            <Form.Item label="状态" name="status" style={{ width: '100%' }}>
-              <Select options={[{ label: '草稿', value: 'draft' }, { label: '已发布', value: 'published' }, { label: '已归档', value: 'archived' }]} />
+          <Space style={{ display: 'flex' }} size={16} align="start">
+            <Form.Item name="cityId" label="關聯城市 / 子地圖" style={{ flex: 1 }}>
+              <Select
+                allowClear
+                options={cityOptions.map((item) => ({
+                  label: `${item.nameZht || item.nameZh || item.code} (${item.code})`,
+                  value: item.id,
+                }))}
+              />
+            </Form.Item>
+            <Form.Item
+              name="code"
+              label="故事線代碼"
+              rules={[{ required: true, message: '請輸入故事線代碼' }]}
+              style={{ flex: 1 }}
+            >
+              <Input />
             </Form.Item>
           </Space>
+
+          <LocalizedFieldGroup
+            form={form}
+            label="故事線名稱"
+            fieldNames={storylineNameFields}
+            required
+            translationDefaults={translationSettingsRequest.data?.data}
+          />
+
+          <Space style={{ display: 'flex' }} size={16} align="start">
+            <Form.Item name="difficulty" label="難度" style={{ flex: 1 }}>
+              <Select
+                options={[
+                  { label: '簡單', value: 'easy' },
+                  { label: '中等', value: 'medium' },
+                  { label: '困難', value: 'hard' },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item name="estimatedMinutes" label="預估分鐘" style={{ flex: 1 }}>
+              <InputNumber style={{ width: '100%' }} min={0} />
+            </Form.Item>
+            <Form.Item name="sortOrder" label="排序" style={{ flex: 1 }}>
+              <InputNumber style={{ width: '100%' }} min={0} />
+            </Form.Item>
+          </Space>
+
+          <Space style={{ display: 'flex' }} size={16} align="start">
+            <Form.Item name="coverAssetId" label="封面資源 ID" style={{ flex: 1 }}>
+              <InputNumber style={{ width: '100%' }} min={1} />
+            </Form.Item>
+            <Form.Item name="bannerAssetId" label="橫幅資源 ID" style={{ flex: 1 }}>
+              <InputNumber style={{ width: '100%' }} min={1} />
+            </Form.Item>
+            <Form.Item name="status" label="狀態" style={{ flex: 1 }}>
+              <Select options={statusOptions} />
+            </Form.Item>
+          </Space>
+
+          <LocalizedFieldGroup
+            form={form}
+            label="故事線介紹"
+            fieldNames={storylineDescriptionFields}
+            multiline
+            rows={4}
+            translationDefaults={translationSettingsRequest.data?.data}
+          />
+
+          <LocalizedFieldGroup
+            form={form}
+            label="完成獎勵名稱"
+            fieldNames={rewardBadgeFields}
+            translationDefaults={translationSettingsRequest.data?.data}
+          />
+
+          <Form.Item name="publishedAt" label="發布時間">
+            <DatePicker showTime style={{ width: '100%' }} />
+          </Form.Item>
+
           <Space>
-            <Button type="primary" htmlType="submit" loading={submitting}>保存</Button>
+            <Button type="primary" htmlType="submit">
+              儲存
+            </Button>
             <Button onClick={() => setEditorOpen(false)}>取消</Button>
           </Space>
         </Form>
@@ -233,8 +328,8 @@ const StorylineManagement: React.FC = () => {
 
       <Drawer
         open={chapterDrawerOpen}
-        title={chapterStoryline ? `章节管理 · ${chapterStoryline.name}` : '章节管理'}
-        width={920}
+        title={chapterStoryline ? `章節編排：${pickStorylineName(chapterStoryline)}` : '章節編排'}
+        width={1100}
         onClose={() => setChapterDrawerOpen(false)}
         destroyOnClose
       >
@@ -244,10 +339,15 @@ const StorylineManagement: React.FC = () => {
             onClick={() => {
               setChapterEditing(null);
               chapterForm.resetFields();
-              chapterForm.setFieldsValue({ chapterOrder: chapterList.length + 1, mediaType: 'image', unlockType: 'sequential', duration: 180 });
+              chapterForm.setFieldsValue({
+                chapterOrder: chapterList.length + 1,
+                unlockType: 'sequence',
+                sortOrder: chapterList.length + 1,
+                status: 'draft',
+              });
             }}
           >
-            新建章节
+            新增章節
           </Button>
 
           <Table<AdminStoryChapterItem>
@@ -255,11 +355,23 @@ const StorylineManagement: React.FC = () => {
             pagination={false}
             dataSource={chapterList}
             columns={[
-              { title: '顺序', dataIndex: 'chapterOrder', width: 80 },
-              { title: '章节标题', dataIndex: 'titleZh' },
-              { title: '媒体类型', dataIndex: 'mediaType', width: 100, render: (value) => <Tag>{value || 'image'}</Tag> },
-              { title: '解锁方式', dataIndex: 'unlockType', width: 120 },
-              { title: '时长', dataIndex: 'duration', width: 90, render: (value) => `${value || 0}s` },
+              { title: '章節序', dataIndex: 'chapterOrder', width: 90 },
+              {
+                title: '章節名稱',
+                render: (_, record) => record.titleZht || record.titleZh || record.titleEn || record.titlePt || '-',
+              },
+              { title: '解鎖方式', dataIndex: 'unlockType', width: 120 },
+              { title: '媒體資源', dataIndex: 'mediaAssetId', width: 120 },
+              {
+                title: '狀態',
+                dataIndex: 'status',
+                width: 100,
+                render: (value) => {
+                  const color = value === 'published' ? 'green' : value === 'archived' ? 'default' : 'gold';
+                  const label = value === 'published' ? '已發布' : value === 'archived' ? '已封存' : '草稿';
+                  return <Tag color={color}>{label}</Tag>;
+                },
+              },
               {
                 title: '操作',
                 key: 'action',
@@ -270,22 +382,27 @@ const StorylineManagement: React.FC = () => {
                       type="link"
                       onClick={() => {
                         setChapterEditing(record);
-                        chapterForm.setFieldsValue(record);
+                        chapterForm.setFieldsValue({
+                          ...record,
+                          publishedAt: record.publishedAt ? dayjs(record.publishedAt) : undefined,
+                        });
                       }}
                     >
-                      编辑
+                      編輯
                     </Button>
                     <Popconfirm
-                      title="确认删除该章节吗？"
+                      title="確定刪除這個章節？"
                       onConfirm={async () => {
                         if (!chapterStoryline) return;
                         await deleteStorylineChapter(chapterStoryline.storylineId, record.id);
-                        message.success('章节已删除');
+                        message.success('章節已刪除');
                         await loadChapters(chapterStoryline.storylineId);
                         actionRef.current?.reload();
                       }}
                     >
-                      <Button type="link" danger>删除</Button>
+                      <Button type="link" danger>
+                        刪除
+                      </Button>
                     </Popconfirm>
                   </Space>
                 ),
@@ -298,47 +415,127 @@ const StorylineManagement: React.FC = () => {
             form={chapterForm}
             onFinish={async (values) => {
               if (!chapterStoryline) return;
-              setChapterSubmitting(true);
-              try {
-                if (chapterEditing) {
-                  await updateStorylineChapter(chapterStoryline.storylineId, chapterEditing.id, values);
-                  message.success('章节更新成功');
-                } else {
-                  await createStorylineChapter(chapterStoryline.storylineId, values);
-                  message.success('章节创建成功');
-                }
-                setChapterEditing(null);
-                chapterForm.resetFields();
-                await loadChapters(chapterStoryline.storylineId);
-                actionRef.current?.reload();
-              } finally {
-                setChapterSubmitting(false);
+              const payload = {
+                ...values,
+                publishedAt: values.publishedAt ? values.publishedAt.format('YYYY-MM-DDTHH:mm:ss') : undefined,
+              };
+              if (chapterEditing) {
+                await updateStorylineChapter(chapterStoryline.storylineId, chapterEditing.id, payload);
+                message.success('章節已更新');
+              } else {
+                await createStorylineChapter(chapterStoryline.storylineId, payload);
+                message.success('章節已建立');
               }
+              setChapterEditing(null);
+              chapterForm.resetFields();
+              chapterForm.setFieldsValue({
+                chapterOrder: chapterList.length + 1,
+                unlockType: 'sequence',
+                sortOrder: chapterList.length + 1,
+                status: 'draft',
+              });
+              await loadChapters(chapterStoryline.storylineId);
+              actionRef.current?.reload();
             }}
           >
-            <Space style={{ width: '100%' }} align="start">
-              <Form.Item label="章节顺序" name="chapterOrder" style={{ width: '100%' }} rules={[{ required: true, message: '请输入顺序' }]}>
+            <Space style={{ display: 'flex' }} size={16} align="start">
+              <Form.Item
+                name="chapterOrder"
+                label="章節順序"
+                rules={[{ required: true, message: '請輸入章節順序' }]}
+                style={{ flex: 1 }}
+              >
                 <InputNumber min={1} style={{ width: '100%' }} />
               </Form.Item>
-              <Form.Item label="媒体类型" name="mediaType" style={{ width: '100%' }}>
-                <Select options={[{ label: '图片', value: 'image' }, { label: '音频', value: 'audio' }, { label: '视频', value: 'video' }]} />
+              <Form.Item name="sortOrder" label="排序" style={{ flex: 1 }}>
+                <InputNumber min={0} style={{ width: '100%' }} />
               </Form.Item>
-              <Form.Item label="时长（秒）" name="duration" style={{ width: '100%' }}>
-                <InputNumber min={30} max={3600} style={{ width: '100%' }} />
+              <Form.Item name="mediaAssetId" label="媒體資源 ID" style={{ flex: 1 }}>
+                <InputNumber min={1} style={{ width: '100%' }} />
               </Form.Item>
             </Space>
-            <Form.Item label="章节标题" name="titleZh" rules={[{ required: true, message: '请输入章节标题' }]}><Input /></Form.Item>
-            <Form.Item label="媒体地址" name="mediaUrl"><Input /></Form.Item>
-            <Space style={{ width: '100%' }} align="start">
-              <Form.Item label="解锁方式" name="unlockType" style={{ width: '100%' }}>
-                <Select options={[{ label: '顺序解锁', value: 'sequential' }, { label: '印章解锁', value: 'stamp_count' }, { label: '时间解锁', value: 'time' }]} />
+
+            <LocalizedFieldGroup
+              form={chapterForm}
+              label="章節名稱"
+              fieldNames={chapterTitleFields}
+              required
+              translationDefaults={translationSettingsRequest.data?.data}
+            />
+
+            <LocalizedFieldGroup
+              form={chapterForm}
+              label="章節摘要"
+              fieldNames={chapterSummaryFields}
+              multiline
+              rows={3}
+              translationDefaults={translationSettingsRequest.data?.data}
+            />
+
+            <LocalizedFieldGroup
+              form={chapterForm}
+              label="章節內容"
+              fieldNames={chapterDetailFields}
+              multiline
+              rows={4}
+              translationDefaults={translationSettingsRequest.data?.data}
+            />
+
+            <Space style={{ display: 'flex' }} size={16} align="start">
+              <Form.Item name="unlockType" label="解鎖方式" style={{ flex: 1 }}>
+                <Select
+                  options={[
+                    { label: '順序解鎖', value: 'sequence' },
+                    { label: '印章數量', value: 'stamp_count' },
+                    { label: '指定時間', value: 'time' },
+                  ]}
+                />
               </Form.Item>
-              <Form.Item label="解锁参数" name="unlockParam" style={{ width: '100%' }}><Input /></Form.Item>
+              <Form.Item name="unlockParamJson" label="解鎖條件 JSON" style={{ flex: 2 }}>
+                <Input placeholder='例如：{"requiredPoiId":1001}' />
+              </Form.Item>
+              <Form.Item name="status" label="狀態" style={{ flex: 1 }}>
+                <Select options={statusOptions} />
+              </Form.Item>
             </Space>
-            <Form.Item label="章节脚本" name="scriptZh"><Input.TextArea rows={4} /></Form.Item>
+
+            <LocalizedFieldGroup
+              form={chapterForm}
+              label="完成成就"
+              fieldNames={chapterAchievementFields}
+              translationDefaults={translationSettingsRequest.data?.data}
+            />
+
+            <LocalizedFieldGroup
+              form={chapterForm}
+              label="收集物提示"
+              fieldNames={chapterCollectibleFields}
+              translationDefaults={translationSettingsRequest.data?.data}
+            />
+
+            <LocalizedFieldGroup
+              form={chapterForm}
+              label="地點名稱"
+              fieldNames={chapterLocationFields}
+              translationDefaults={translationSettingsRequest.data?.data}
+            />
+
+            <Form.Item name="publishedAt" label="發布時間">
+              <DatePicker showTime style={{ width: '100%' }} />
+            </Form.Item>
+
             <Space>
-              <Button type="primary" htmlType="submit" loading={chapterSubmitting}>{chapterEditing ? '更新章节' : '创建章节'}</Button>
-              <Button onClick={() => { setChapterEditing(null); chapterForm.resetFields(); }}>清空</Button>
+              <Button type="primary" htmlType="submit">
+                {chapterEditing ? '更新章節' : '建立章節'}
+              </Button>
+              <Button
+                onClick={() => {
+                  setChapterEditing(null);
+                  chapterForm.resetFields();
+                }}
+              >
+                清空
+              </Button>
             </Space>
           </Form>
         </Space>

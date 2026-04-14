@@ -7,7 +7,7 @@ import com.aoxiaoyou.admin.dto.response.AdminPoiListItemResponse;
 
 public interface AdminPoiService {
 
-    PageResponse<AdminPoiListItemResponse> pagePois(long pageNum, long pageSize, String keyword, Long storylineId);
+    PageResponse<AdminPoiListItemResponse> pagePois(long pageNum, long pageSize, String keyword, Long cityId, Long subMapId, Long storylineId);
 
     AdminPoiDetailResponse getDetail(Long poiId);
 

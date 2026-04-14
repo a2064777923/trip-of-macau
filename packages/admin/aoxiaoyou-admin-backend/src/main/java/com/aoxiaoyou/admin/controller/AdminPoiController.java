@@ -26,8 +26,10 @@ public class AdminPoiController {
             @RequestParam(defaultValue = "1") long pageNum,
             @RequestParam(defaultValue = "10") long pageSize,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long cityId,
+            @RequestParam(required = false) Long subMapId,
             @RequestParam(required = false) Long storylineId) {
-        return ApiResponse.success(adminPoiService.pagePois(pageNum, pageSize, keyword, storylineId));
+        return ApiResponse.success(adminPoiService.pagePois(pageNum, pageSize, keyword, cityId, subMapId, storylineId));
     }
 
     @Operation(summary = "后台查看 POI 详情")

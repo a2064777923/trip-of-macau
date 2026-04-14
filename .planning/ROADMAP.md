@@ -1,129 +1,147 @@
 # Roadmap: Trip of Macau
 
-## Overview
+## Milestones
 
-This roadmap turns the existing mock-heavy mini-program and partially complete admin/public backends into a live, admin-driven platform. The work starts by establishing a canonical schema and contract foundation, then completes the admin control plane, builds the public read/write APIs in `packages/server`, adds Tencent COS asset handling, migrates the existing mock dataset, and ends with full end-to-end hardening and verification.
+- [x] **v1.0 Live Backend Cutover** - Phases 1-6 shipped on 2026-04-13. Archive: `.planning/milestones/v1.0-ROADMAP.md`
+- [ ] **v2.0 後台管理系統的改進與完善** - Phases 7-13 planned on 2026-04-13
 
-## Phases
+## Active Milestone
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+**Milestone v2.0: 後台管理系統的改進與完善**
 
-Decimal phases appear between their surrounding integers in numeric order.
+**Goal:** Turn `/admin` into a Traditional Chinese-first control plane that can author the live mini-program's multilingual content, spatial structures, media, and story/task orchestration end-to-end while aligning the mini-program and public backend with real authenticated behavior.
 
-- [ ] **Phase 1: Canonical Backend Foundation** - Establish the shared schema, contract rules, and local runtime baseline for live mini-program integration.
-- [ ] **Phase 2: Admin Control Plane Completion** - Fill the admin-side CRUD and configuration gaps for all mini-program-facing content and runtime settings.
-- [ ] **Phase 3: Public Read APIs Cutover** - Build the public read endpoints needed to replace mock-driven home, discover, map, story, and content reads.
-- [ ] **Phase 4: Public Progress and Gameplay Writes** - Implement live user-progress, check-in, preference, and reward-write APIs in the public backend.
-- [ ] **Phase 5: COS Media Pipeline** - Add backend-managed Tencent COS uploads and canonical asset resolution for admin and public clients.
-- [ ] **Phase 6: Migration, Cutover, and Hardening** - Seed mock data, switch the mini-program to live services, and run end-to-end verification/performance hardening.
+**Coverage:** 7 phases, 32 requirements, 32 mapped, 0 unmapped
+
+| # | Phase | Goal | Requirements |
+|---|-------|------|--------------|
+| 7 | Admin Shell and Real Auth Alignment | Rebuild the admin shell/navigation baseline and replace guest-based traveler identity with real WeChat-authenticated session flow | `ADMIN-01`, `ADMIN-02`, `ADMIN-03`, `AUTH-01`, `AUTH-02`, `AUTH-03`, `AUTH-04` |
+| 8 | Multilingual Authoring Foundation | Establish the four-language content model, translation settings, and locale-aware read/write flow | `LOCL-01`, `LOCL-02`, `LOCL-03`, `LOCL-04` |
+| 9 | Spatial Model Rebuild | Rebuild cities, sub-maps, coordinate normalization, and POI authoring around the richer spatial hierarchy | `MAP-01`, `MAP-02`, `MAP-03`, `MAP-04` |
+| 10 | Media Asset Pipeline and Library | Deliver the richer COS-backed upload pipeline, upload-policy handling, and reusable media resource center | `MEDIA-01`, `MEDIA-02`, `MEDIA-03`, `MEDIA-04` |
+| 11 | Story, Activity, and Collection Composition | Rebuild storylines, chapters, tasks/activities, and collections around the new authoring model | `STORY-01`, `STORY-02`, `STORY-03`, `ACT-01`, `COLL-01` |
+| 12 | Indoor Map Authoring Basics | Deliver indoor building/floor/tile/marker authoring without pulling the full rules engine into v2.0 | `INDO-01`, `INDO-02`, `INDO-03`, `INDO-04` |
+| 13 | User Progress, Operations, and System Control Plane | Complete user-progress visibility, operations/testing alignment, system settings cleanup, and end-to-end v2.0 verification | `OPER-01`, `OPER-02`, `OPER-03`, `OPER-04` |
 
 ## Phase Details
 
-### Phase 1: Canonical Backend Foundation
-**Goal**: Establish a canonical shared content/runtime contract, expand the core MySQL schema, and make the local public/admin backend environment reproducible for live integration work.
-**Depends on**: Nothing (first phase)
-**Requirements**: [DATA-01, DATA-03, OPS-01]
-**Success Criteria** (what must be TRUE):
-  1. Core MySQL tables and contract semantics exist for the mini-program domains currently trapped in mocks.
-  2. `packages/server` and the admin backend compile against the same publish-state, locale, sort-order, and asset-reference rules.
-  3. The local public/admin backend environment can start against the shared data stores with documented configuration.
-  4. Phase deliverables remove obvious public-backend foundation blockers, including current contract/config mismatches.
-**Plans**: 4 plans
+### Phase 7: Admin Shell and Real Auth Alignment
 
-Plans:
-- [ ] 01-01: Create the canonical mini-program/admin/public contract matrix and shared domain conventions
-- [ ] 01-02: Add the MySQL schema foundation and migration-safe bootstrap scripts
-- [ ] 01-03: Implement `packages/server` persistence/domain scaffolding against the canonical contract
-- [ ] 01-04: Wire the local runtime and smoke harness for public/admin backend foundation checks
+**Goal:** Rebuild the admin shell/navigation baseline and replace guest-based traveler identity with real WeChat-authenticated session flow.
 
-### Phase 2: Admin Control Plane Completion
-**Goal**: Make the admin platform the authoritative write/control surface for every mini-program-facing entity and runtime setting needed in the live app.
-**Depends on**: Phase 1
-**Requirements**: [ADM-01, ADM-02]
-**Success Criteria** (what must be TRUE):
-  1. Admin users can CRUD all mini-program-facing content entities required by the live app.
-  2. Admin users can manage multilingual copy, publish state, sort order, asset references, and runtime rules.
-  3. Admin writes persist in MySQL using the canonical schema introduced in Phase 1.
-**Plans**: TBD
+**Requirements:** `ADMIN-01`, `ADMIN-02`, `ADMIN-03`, `AUTH-01`, `AUTH-02`, `AUTH-03`, `AUTH-04`
 
-Plans:
-- [ ] 02-01: Complete admin entities, DTOs, and MyBatis mappings for missing mini-program domains
-- [ ] 02-02: Add admin APIs and validation rules for content/runtime configuration management
-- [ ] 02-03: Complete admin UI screens and forms for live mini-program content control
+**Success criteria:**
+1. Operators see milestone-covered admin routes, labels, actions, and validation messages in Traditional Chinese and the admin shell uses the mini-program icon/brand identity.
+2. Chapter, activity, media, collection, user, operations, and system entries each navigate to owned module surfaces instead of redirects or reused placeholder consoles.
+3. The mini-program establishes traveler identity through a real WeChat login exchange in `packages/server` instead of client-generated or client-submitted `openId`.
+4. Unauthenticated travelers are blocked from stateful/interactive flows and are prompted to log in consistently at the defined entry points.
+5. Admin traveler inspection surfaces read the same authenticated profile/progress records used by the public backend.
 
-### Phase 3: Public Read APIs Cutover
-**Goal**: Replace mock-backed mini-program read flows with real `packages/server` endpoints for content, maps, discovery, and published runtime configuration.
-**Depends on**: Phase 2
-**Requirements**: [PUB-01, PUB-02, PUB-04]
-**Success Criteria** (what must be TRUE):
-  1. The mini-program can fetch home/discover/runtime configuration data from live public endpoints.
-  2. The mini-program can fetch map, city, POI, storyline, tips, rewards, stamps, and notifications data from live public endpoints.
-  3. Public responses honor publish state, ordering, and filtering rules defined in the admin system.
-**Plans**: TBD
+**Depends on:** None
 
-Plans:
-- [ ] 03-01: Implement public catalog/read services and DTOs for published content
-- [ ] 03-02: Expose public controllers for map/story/tips/rewards/stamps/runtime content
-- [ ] 03-03: Integrate mini-program read paths with live public APIs and remove corresponding mock dependencies
+### Phase 8: Multilingual Authoring Foundation
 
-### Phase 4: Public Progress and Gameplay Writes
-**Goal**: Move the mini-program's stateful gameplay and preference writes to live public APIs backed by MySQL.
-**Depends on**: Phase 3
-**Requirements**: [PUB-03]
-**Success Criteria** (what must be TRUE):
-  1. User progress, check-ins, unlocks, preferences, emergency-contact data, and reward redemption persist through public APIs.
-  2. Live write APIs preserve the gameplay behavior expected by the current mini-program UI.
-  3. Public write paths are validated, idempotent where needed, and observable in local verification.
-**Plans**: TBD
+**Goal:** Establish the four-language content model, translation settings, and locale-aware read/write flow.
 
-Plans:
-- [ ] 04-01: Implement public progress/check-in/reward services and persistence model
-- [ ] 04-02: Add public write endpoints and verification coverage for user-state mutations
-- [ ] 04-03: Replace mini-program gameplay write flows with live API calls
+**Requirements:** `LOCL-01`, `LOCL-02`, `LOCL-03`, `LOCL-04`
 
-### Phase 5: COS Media Pipeline
-**Goal**: Add backend-managed Tencent COS upload and asset-resolution flows so admin-managed media can power the live mini-program.
-**Depends on**: Phase 2
-**Requirements**: [MED-01, MED-02]
-**Success Criteria** (what must be TRUE):
-  1. Admin uploads pass through backend APIs into Tencent COS with automatic object-key generation.
-  2. Asset metadata is stored in MySQL and linked to mini-program-facing content entities.
-  3. Public/admin responses expose canonical URLs usable by the admin UI and mini-program.
-**Plans**: TBD
+**Success criteria:**
+1. Operators can edit four locale values (`zh-Hant`, `zh-Hans`, `en`, `pt`) through shared multilingual field patterns across milestone-covered domains.
+2. Operators can set the primary authoring language and translation-engine priority/fallback from system settings.
+3. One-click translation can populate remaining locales without making core content saves depend on third-party translator availability.
+4. Admin previews and public read APIs return locale-specific values from canonical storage for localized fields.
 
-Plans:
-- [ ] 05-01: Implement COS integration service and asset metadata model
-- [ ] 05-02: Add admin upload APIs/UI and asset reference workflows
-- [ ] 05-03: Add public/admin asset resolution behavior and smoke coverage
+**Depends on:** Phase 7
 
-### Phase 6: Migration, Cutover, and Hardening
-**Goal**: Seed current mock data into MySQL, cut the mini-program over to live services, and verify the integrated stack with operational safeguards.
-**Depends on**: Phase 5
-**Requirements**: [DATA-02, ADM-03, OPS-02, OPS-03]
-**Success Criteria** (what must be TRUE):
-  1. Existing mock content is loaded into MySQL through repeatable seed/migration scripts.
-  2. Admin users can inspect seeded content state and integration health.
-  3. End-to-end smoke checks prove admin writes, public reads/writes, asset delivery, and mini-program consumption are working together.
-  4. The live backend exposes baseline health, logging, validation, and performance safeguards appropriate for ongoing expansion.
-**Plans**: TBD
+### Phase 9: Spatial Model Rebuild
 
-Plans:
-- [ ] 06-01: Convert mock datasets into repeatable seed/import scripts and load them into MySQL
-- [ ] 06-02: Add integration health visibility and operational safeguards
-- [ ] 06-03: Switch the mini-program to live data paths and verify the full stack end-to-end
+**Goal:** Rebuild cities, sub-maps, coordinate normalization, and POI authoring around the richer spatial hierarchy.
+
+**Requirements:** `MAP-01`, `MAP-02`, `MAP-03`, `MAP-04`
+
+**Success criteria:**
+1. Operators can create/edit switchable cities with localized metadata, cover image, editable country/center coordinates, and suggested defaults.
+2. Operators can create/edit sub-maps beneath cities with localized metadata, cover image, attachments, and popup/display settings.
+3. Coordinate entry stores raw coordinate-system metadata and normalized AMap-compatible values for downstream runtime use.
+4. POI authoring supports binding to city/sub-map, map icon assignment, multi-asset attachments, popup/display settings, and location metadata.
+
+**Depends on:** Phase 8
+
+### Phase 10: Media Asset Pipeline and Library
+
+**Goal:** Deliver the richer COS-backed upload pipeline, upload-policy handling, and reusable media resource center.
+
+**Requirements:** `MEDIA-01`, `MEDIA-02`, `MEDIA-03`, `MEDIA-04`
+
+**Success criteria:**
+1. Operators can upload supported assets through file picker, drag/drop, folder import, and clipboard paste in the admin.
+2. Upload processing respects per-admin lossless-upload permission and records which processing policy was applied before COS publication.
+3. Operators can search/filter/retrieve assets from a central media library with canonical metadata and status.
+4. Milestone-covered domains can attach and order multiple shared assets from the media library instead of relying on isolated raw URL fields only.
+
+**Depends on:** Phase 8
+
+### Phase 11: Story, Activity, and Collection Composition
+
+**Goal:** Rebuild storylines, chapters, tasks/activities, and collections around the new authoring model.
+
+**Requirements:** `STORY-01`, `STORY-02`, `STORY-03`, `ACT-01`, `COLL-01`
+
+**Success criteria:**
+1. Operators can create/edit storylines with localized cover/introduction/media content and bindings to multiple maps or sub-maps.
+2. Operators can create/edit chapters in a dedicated composition flow and bind them to supported anchor entities with basic prerequisite/completion/reward metadata.
+3. Operators can create/edit tasks or discovery activities with localized content, HTML-rich content, schedule windows, organizer/signup metadata, and pinning.
+4. Operators can create/edit collectibles, badges, and rewards with richer relationship metadata and icon/media assets tied to the new content graph.
+
+**Depends on:** Phases 9-10
+
+### Phase 12: Indoor Map Authoring Basics
+
+**Goal:** Deliver indoor building/floor/tile/marker authoring without pulling the full rules engine into v2.0.
+
+**Requirements:** `INDO-01`, `INDO-02`, `INDO-03`, `INDO-04`
+
+**Success criteria:**
+1. Operators can create/edit indoor buildings bound to city/sub-map or POI, with localized metadata, cover image, and media assets.
+2. Operators can create/edit floors with area, localized introduction, popup settings, zoom bounds, and media assets.
+3. Operators can import floor tiles from zip packages or by uploading a full floor image that the backend slices and stages correctly.
+4. Operators can add markers/overlays by CSV preview validation or direct editing with minimap-assisted coordinate picking.
+
+**Depends on:** Phases 9-10
+
+### Phase 13: User Progress, Operations, and System Control Plane
+
+**Goal:** Complete user-progress visibility, operations/testing alignment, system settings cleanup, and end-to-end v2.0 verification.
+
+**Requirements:** `OPER-01`, `OPER-02`, `OPER-03`, `OPER-04`
+
+**Success criteria:**
+1. Operators can inspect detailed traveler profiles including collections, progression, and interaction logs through the admin.
+2. Operators can view sub-map and city exploration progress that recomputes from the correct managed content graph.
+3. Operations/testing pages align with the live runtime domains rather than legacy placeholder tooling.
+4. System configuration surfaces clearly control translation defaults, upload policies, map zoom defaults, and other milestone-owned runtime/admin settings.
+5. End-to-end verification proves the v2.0 chain across admin writes, MySQL/COS persistence, public reads, and mini-program behavior for milestone domains.
+
+**Depends on:** Phases 7-12
+
+## Archived Milestones
+
+<details>
+<summary>[x] v1.0 Live Backend Cutover (Phases 1-6) - SHIPPED 2026-04-13</summary>
+
+- [x] Phase 1: Canonical Backend Foundation - Canonical contract, shared enums, schema foundation, and local smoke baseline completed.
+- [x] Phase 2: Admin Control Plane Completion - Admin CRUD and UI surfaces aligned to canonical MySQL-backed mini-program domains.
+- [x] Phase 3: Public Read APIs Cutover - Public catalog/runtime reads replaced mock-backed mini-program content flows.
+- [x] Phase 4: Public Progress and Gameplay Writes - Traveler login, preferences, check-ins, progress, and rewards moved to live public APIs.
+- [x] Phase 5: COS Media Pipeline - Authenticated admin uploads, canonical asset metadata, and Tencent COS-backed media delivery went live.
+- [x] Phase 6: Migration, Cutover, and Hardening - Mock data migrated into MySQL, health visibility added, and end-to-end live smoke verification completed.
+
+</details>
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Canonical Backend Foundation | 0/4 | Not started | - |
-| 2. Admin Control Plane Completion | 0/3 | Not started | - |
-| 3. Public Read APIs Cutover | 0/3 | Not started | - |
-| 4. Public Progress and Gameplay Writes | 0/3 | Not started | - |
-| 5. COS Media Pipeline | 0/3 | Not started | - |
-| 6. Migration, Cutover, and Hardening | 0/3 | Not started | - |
+| Milestone | Phase Range | Plans Complete | Status | Completed |
+|-----------|-------------|----------------|--------|-----------|
+| v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
+| v2.0 後台管理系統的改進與完善 | 7-13 | 0/0 | Planned | - |

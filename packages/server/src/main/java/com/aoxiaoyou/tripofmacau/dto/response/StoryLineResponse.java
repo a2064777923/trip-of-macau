@@ -3,16 +3,25 @@ package com.aoxiaoyou.tripofmacau.dto.response;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class StoryLineResponse {
 
     private Long id;
+    private Long cityId;
+    private String cityCode;
     private String code;
-    private String nameZh;
+    private String name;
     private String nameEn;
     private String description;
-    private String coverUrl;
+    private Integer estimatedMinutes;
+    private String difficulty;
+    private String rewardBadge;
+    private String coverImageUrl;
+    private String bannerImageUrl;
     private Integer totalChapters;
-    private String status;
+    private Integer sortOrder;
+    private List<StoryChapterResponse> chapters;
 }

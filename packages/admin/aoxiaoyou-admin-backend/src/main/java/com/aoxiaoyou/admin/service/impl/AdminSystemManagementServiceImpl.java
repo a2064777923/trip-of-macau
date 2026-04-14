@@ -38,7 +38,8 @@ public class AdminSystemManagementServiceImpl implements AdminSystemManagementSe
         Page<Reward> page = rewardMapper.selectPage(new Page<>(pageNum, pageSize),
                 new LambdaQueryWrapper<Reward>()
                         .eq(StringUtils.hasText(status), Reward::getStatus, status)
-                        .orderByDesc(Reward::getCreatedAt));
+                        .orderByAsc(Reward::getSortOrder)
+                        .orderByAsc(Reward::getId));
         Page<AdminRewardResponse> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         result.setRecords(page.getRecords().stream().map(this::toRewardResponse).toList());
         return PageResponse.of(result);
@@ -49,25 +50,20 @@ public class AdminSystemManagementServiceImpl implements AdminSystemManagementSe
         Reward reward = new Reward();
         applyRewardRequest(reward, request);
         rewardMapper.insert(reward);
-        return toRewardResponse(rewardMapper.selectById(reward.getId()));
+        return toRewardResponse(requireReward(reward.getId()));
     }
 
     @Override
     public AdminRewardResponse updateReward(Long rewardId, AdminRewardUpsertRequest.Upsert request) {
-        Reward reward = rewardMapper.selectById(rewardId);
-        if (reward == null) {
-            throw new BusinessException(4045, "奖励不存在");
-        }
+        Reward reward = requireReward(rewardId);
         applyRewardRequest(reward, request);
         rewardMapper.updateById(reward);
-        return toRewardResponse(rewardMapper.selectById(rewardId));
+        return toRewardResponse(requireReward(rewardId));
     }
 
     @Override
     public void deleteReward(Long rewardId) {
-        if (rewardMapper.selectById(rewardId) == null) {
-            throw new BusinessException(4045, "奖励不存在");
-        }
+        requireReward(rewardId);
         rewardMapper.deleteById(rewardId);
     }
 
@@ -132,36 +128,77 @@ public class AdminSystemManagementServiceImpl implements AdminSystemManagementSe
         return PageResponse.of(result);
     }
 
+    private Reward requireReward(Long rewardId) {
+        Reward reward = rewardMapper.selectById(rewardId);
+        if (reward == null) {
+            throw new BusinessException(4045, "Reward not found");
+        }
+        return reward;
+    }
+
     private void applyRewardRequest(Reward reward, AdminRewardUpsertRequest.Upsert request) {
-        reward.setNameZh(request.getName());
-        reward.setDescription(request.getDescription());
-        reward.setStampsRequired(request.getStampsRequired() == null ? 1 : Math.max(request.getStampsRequired(), 0));
-        reward.setTotalQuantity(request.getTotalQuantity() == null ? 0 : Math.max(request.getTotalQuantity(), 0));
-        reward.setRedeemedCount(request.getRedeemedCount() == null ? 0 : Math.max(request.getRedeemedCount(), 0));
-        reward.setStartTime(parseDateTime(request.getStartTime()));
-        reward.setEndTime(parseDateTime(request.getEndTime()));
-        reward.setStatus(StringUtils.hasText(request.getStatus()) ? request.getStatus() : "inactive");
+        reward.setCode(request.getCode());
+        reward.setNameZh(request.getNameZh());
+        reward.setNameEn(request.getNameEn());
+        reward.setNameZht(request.getNameZht());
+        reward.setNamePt(request.getNamePt());
+        reward.setSubtitleZh(request.getSubtitleZh());
+        reward.setSubtitleEn(request.getSubtitleEn());
+        reward.setSubtitleZht(request.getSubtitleZht());
+        reward.setSubtitlePt(request.getSubtitlePt());
+        reward.setDescriptionZh(request.getDescriptionZh());
+        reward.setDescriptionEn(request.getDescriptionEn());
+        reward.setDescriptionZht(request.getDescriptionZht());
+        reward.setDescriptionPt(request.getDescriptionPt());
+        reward.setHighlightZh(request.getHighlightZh());
+        reward.setHighlightEn(request.getHighlightEn());
+        reward.setHighlightZht(request.getHighlightZht());
+        reward.setHighlightPt(request.getHighlightPt());
+        reward.setStampCost(request.getStampCost() == null ? 0 : Math.max(request.getStampCost(), 0));
+        reward.setInventoryTotal(request.getInventoryTotal() == null ? 0 : Math.max(request.getInventoryTotal(), 0));
+        reward.setInventoryRedeemed(request.getInventoryRedeemed() == null ? 0 : Math.max(request.getInventoryRedeemed(), 0));
+        reward.setCoverAssetId(request.getCoverAssetId());
+        reward.setStatus(StringUtils.hasText(request.getStatus()) ? request.getStatus() : "draft");
+        reward.setSortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder());
+        reward.setPublishStartAt(parseDateTime(request.getPublishStartAt()));
+        reward.setPublishEndAt(parseDateTime(request.getPublishEndAt()));
     }
 
     private LocalDateTime parseDateTime(String value) {
-        if (!StringUtils.hasText(value)) {
-            return null;
-        }
-        return LocalDateTime.parse(value);
+        return StringUtils.hasText(value) ? LocalDateTime.parse(value) : null;
     }
 
     private AdminRewardResponse toRewardResponse(Reward item) {
+        int total = item.getInventoryTotal() == null ? 0 : item.getInventoryTotal();
+        int redeemed = item.getInventoryRedeemed() == null ? 0 : item.getInventoryRedeemed();
         return AdminRewardResponse.builder()
                 .id(item.getId())
-                .name(item.getNameZh())
-                .description(item.getDescription())
-                .stampsRequired(item.getStampsRequired())
-                .totalQuantity(item.getTotalQuantity())
-                .redeemedCount(item.getRedeemedCount())
-                .remainingQuantity((item.getTotalQuantity() == null ? 0 : item.getTotalQuantity()) - (item.getRedeemedCount() == null ? 0 : item.getRedeemedCount()))
-                .startTime(item.getStartTime())
-                .endTime(item.getEndTime())
+                .code(item.getCode())
+                .nameZh(item.getNameZh())
+                .nameEn(item.getNameEn())
+                .nameZht(item.getNameZht())
+                .namePt(item.getNamePt())
+                .subtitleZh(item.getSubtitleZh())
+                .subtitleEn(item.getSubtitleEn())
+                .subtitleZht(item.getSubtitleZht())
+                .subtitlePt(item.getSubtitlePt())
+                .descriptionZh(item.getDescriptionZh())
+                .descriptionEn(item.getDescriptionEn())
+                .descriptionZht(item.getDescriptionZht())
+                .descriptionPt(item.getDescriptionPt())
+                .highlightZh(item.getHighlightZh())
+                .highlightEn(item.getHighlightEn())
+                .highlightZht(item.getHighlightZht())
+                .highlightPt(item.getHighlightPt())
+                .stampCost(item.getStampCost())
+                .inventoryTotal(total)
+                .inventoryRedeemed(redeemed)
+                .inventoryRemaining(Math.max(total - redeemed, 0))
+                .coverAssetId(item.getCoverAssetId())
                 .status(item.getStatus())
+                .sortOrder(item.getSortOrder())
+                .publishStartAt(item.getPublishStartAt())
+                .publishEndAt(item.getPublishEndAt())
                 .createdAt(item.getCreatedAt())
                 .build();
     }

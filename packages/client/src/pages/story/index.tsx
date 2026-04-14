@@ -3,14 +3,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button, ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import PageShell from '../../components/PageShell'
-import { getStorylines } from '../../services/gameService'
+import { getStorylines, refreshPublicContent } from '../../services/gameService'
 import './index.scss'
 
 export default function StoryPage() {
   const router = Taro.getCurrentInstance().router
   const initialStoryId = Number(router?.params?.storyId || 1)
   const initialChapterId = router?.params?.chapterId ? Number(router.params.chapterId) : 1011
-  const [stories] = useState(() => getStorylines())
+  const [stories, setStories] = useState(() => getStorylines())
   const [expandedStoryId, setExpandedStoryId] = useState(initialStoryId)
   const [expandedChapterId, setExpandedChapterId] = useState<number | null>(initialChapterId)
 
@@ -18,6 +18,28 @@ export default function StoryPage() {
   const unlockedStories = useMemo(() => stories.filter((story) => !story.locked), [stories])
   const lockedStories = useMemo(() => stories.filter((story) => story.locked), [stories])
   const activeStory = useMemo(() => stories.find((story) => story.id === expandedStoryId) || unlockedStories[0] || stories[0], [stories, expandedStoryId, unlockedStories])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const hydrateStories = async () => {
+      try {
+        await refreshPublicContent()
+      } catch (error) {
+        console.warn('Failed to refresh story content.', error)
+      }
+
+      if (!cancelled) {
+        setStories(getStorylines())
+      }
+    }
+
+    void hydrateStories()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
 

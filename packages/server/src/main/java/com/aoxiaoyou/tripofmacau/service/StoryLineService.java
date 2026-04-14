@@ -6,5 +6,7 @@ import java.util.List;
 
 public interface StoryLineService {
 
-    List<StoryLineResponse> listPublished();
+    List<StoryLineResponse> listPublished(String localeHint);
+
+    StoryLineResponse getDetail(Long storyLineId, String localeHint);
 }

@@ -1,12 +1,34 @@
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { getDiscoverCards } from '../../services/gameService'
+import { getDiscoverCards, refreshPublicContent } from '../../services/gameService'
 import PageShell from '../../components/PageShell'
 import './index.scss'
 
 export default function DiscoverPage() {
-  const cards = useMemo(() => getDiscoverCards(), [])
+  const [cards, setCards] = useState(() => getDiscoverCards())
+
+  useEffect(() => {
+    let cancelled = false
+
+    const hydrateDiscover = async () => {
+      try {
+        await refreshPublicContent()
+      } catch (error) {
+        console.warn('Failed to refresh discover cards.', error)
+      }
+
+      if (!cancelled) {
+        setCards(getDiscoverCards())
+      }
+    }
+
+    void hydrateDiscover()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <PageShell className='discover-page'>

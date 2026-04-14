@@ -1,0 +1,31 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="180" y1="60" x2="1360" y2="840" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE1A8"/>
+      <stop offset="0.45" stop-color="#F5A35C"/>
+      <stop offset="1" stop-color="#7B2F2F"/>
+    </linearGradient>
+    <linearGradient id="water" x1="800" y1="520" x2="800" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#154A77"/>
+      <stop offset="1" stop-color="#0C213A"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <circle cx="1230" cy="170" r="86" fill="#FFF2C6" fill-opacity="0.9"/>
+  <path d="M0 520H1600V900H0V520Z" fill="url(#water)"/>
+  <path d="M0 566C131 540 256 532 374 544C526 560 658 610 812 607C978 604 1104 538 1260 520C1379 507 1492 521 1600 550V900H0V566Z" fill="#11395C"/>
+  <path d="M0 624C146 591 266 590 400 618C548 649 683 713 836 711C978 710 1117 639 1260 621C1388 606 1497 614 1600 647V900H0V624Z" fill="#0C2D4A"/>
+  <path d="M150 500L210 440L255 500H320V630H150V500Z" fill="#2D2234"/>
+  <path d="M318 470L368 420L422 470V630H318V470Z" fill="#35253A"/>
+  <path d="M432 514L520 410L628 514V630H432V514Z" fill="#3E2A43"/>
+  <path d="M1000 496L1078 440L1140 496V630H1000V496Z" fill="#372640"/>
+  <path d="M1148 462L1220 398L1292 462V630H1148V462Z" fill="#432D48"/>
+  <path d="M1294 512L1362 454L1428 512V630H1294V512Z" fill="#2F2237"/>
+  <rect x="662" y="330" width="62" height="300" rx="14" fill="#4A384A"/>
+  <path d="M614 356L692 276L772 356V630H614V356Z" fill="#F4E4C8"/>
+  <rect x="650" y="410" width="88" height="16" rx="8" fill="#D7B986"/>
+  <path d="M742 630H646L662 704H726L742 630Z" fill="#4A384A"/>
+  <ellipse cx="694" cy="734" rx="120" ry="18" fill="#091420" fill-opacity="0.25"/>
+  <text x="120" y="140" fill="#FFF6E6" font-family="'Noto Serif TC', serif" font-size="72" font-weight="700">Trip of Macau</text>
+  <text x="120" y="220" fill="#FCE3C0" font-family="'Noto Sans TC', sans-serif" font-size="34">澳門城市地圖示例封面</text>
+</svg>

@@ -1,0 +1,64 @@
+﻿floor_id,floor_label_en,floor_label_tc,floor_label_sc,code,name_en,name_tc,name_sc,category,source_type,center_x,center_y,tile_id,tile_col,tile_row,tile_local_x,tile_local_y,tile_path,notes
+1f,1st Floor,一樓,一楼,R100,ZIPCITY MACAU,澳門飛索,澳门飞索,entertainment,map,156,810,1f_0_3,0,3,156,42,../tiles/1f/0_3.png,Main tower entrance block.
+1f,1st Floor,一樓,一楼,KR01-KR20,Night Market@Lisboeta,葡京人夜市,葡京人夜市,entertainment,legend,446,811,1f_1_3,1,3,190,43,../tiles/1f/1_3.png,Manual center across the night market stalls wedge.
+1f,1st Floor,一樓,一楼,L03,Signature Noodles,招牌麵,招牌面,food_beverage,map,573,811,1f_2_3,2,3,61,43,../tiles/1f/2_3.png,From visible label block.
+1f,1st Floor,一樓,一楼,L01,Royal Palace,皇家海鮮舫,皇家海鲜舫,food_beverage,map,488,1018,1f_1_3,1,3,232,250,../tiles/1f/1_3.png,From visible label block.
+1f,1st Floor,一樓,一楼,L02,Stanley's Cafe,樂哥冰室,乐哥冰室,food_beverage,map,1045,821,1f_4_3,4,3,21,53,../tiles/1f/4_3.png,Manual center inside the large yellow cafe zone.
+1f,1st Floor,一樓,一楼,L04,One Shot,一索,一索,food_beverage,map,932,858,1f_3_3,3,3,164,90,../tiles/1f/3_3.png,Manual center inside the left yellow lobe of the merged cafe block.
+1f,1st Floor,一樓,一楼,KR50-KR51,Herbal Tea Shop,舊街涼茶舖,旧街凉茶舖,food_beverage,legend,729,676,1f_2_2,2,2,217,164,../tiles/1f/2_2.png,Average of the two OCR hits.
+1f,1st Floor,一樓,一楼,KR36,Moow Coffee,摩爾咖啡,摩尔咖啡,food_beverage,legend,852,701,1f_3_2,3,2,84,189,../tiles/1f/3_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,F07,McDonald's,麥當勞,麦当劳,food_beverage,legend,1566,767,1f_6_2,6,2,30,255,../tiles/1f/6_2.png,Manual center on the upper yellow food segment.
+1f,1st Floor,一樓,一楼,F10,My Name is Curry Gor,不同咖喱,不同咖喱,food_beverage,legend,1584,909,1f_6_3,6,3,48,141,../tiles/1f/6_3.png,Manual center on the lower yellow food segment.
+1f,1st Floor,一樓,一楼,K04,Pepper Lunch,胡椒廚房,胡椒厨房,food_beverage,legend,1627,663,1f_6_2,6,2,91,151,../tiles/1f/6_2.png,Manual center on the upper small roadside kiosk.
+1f,1st Floor,一樓,一楼,R19,Rethink Coffee,Rethink Coffee,Rethink Coffee,food_beverage,legend,991,618,1f_3_2,3,2,223,106,../tiles/1f/3_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,F08,Roppongi Japanese,六本木,六本木,food_beverage,legend,1555,806,1f_6_3,6,3,19,38,../tiles/1f/6_3.png,Manual center on the upper yellow food segment.
+1f,1st Floor,一樓,一楼,F09,SOGOD TEA,酥岡鮮茶,酥冈鲜茶,food_beverage,legend,1534,878,1f_5_3,5,3,254,110,../tiles/1f/5_3.png,Manual center on the lower left yellow food segment.
+1f,1st Floor,一樓,一楼,K01,Toei Delights,十八番,十八番,food_beverage,legend,1637,744,1f_6_2,6,2,101,232,../tiles/1f/6_2.png,Manual center on the lower small roadside kiosk.
+1f,1st Floor,一樓,一楼,K02,Good Fortune Kitchen,百福小廚,百福小厨,food_beverage,legend,1615,703,1f_6_2,6,2,79,191,../tiles/1f/6_2.png,Manual center on the middle small roadside kiosk.
+1f,1st Floor,一樓,一楼,R51-R52,6ixty8ight,6ixty8ight,6ixty8ight,shopping,legend,1276,534,1f_4_2,4,2,252,22,../tiles/1f/4_2.png,Average of R51 and R52 OCR hits.
+1f,1st Floor,一樓,一楼,KR36a,853 Mask,853 Mask,853 Mask,shopping,legend,816,703,1f_3_2,3,2,48,191,../tiles/1f/3_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,KR25,A80 Anoufa Paris,A80 Anoufa Paris,A80 Anoufa Paris,shopping,legend,1271,660,1f_4_2,4,2,247,148,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R22-R23,ADIDAS ORIGINALS,ADIDAS ORIGINALS,ADIDAS ORIGINALS,shopping,legend,1153,619,1f_4_2,4,2,129,107,../tiles/1f/4_2.png,Average of R22 and R23 OCR hits.
+1f,1st Floor,一樓,一楼,R87,Bee Cheng Hiang,美珍香,美珍香,shopping,legend,1545,942,1f_6_3,6,3,9,174,../tiles/1f/6_3.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R27,Best Mart 360,優品360°,优品360°,shopping,legend,1093,573,1f_4_2,4,2,69,61,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R38a,CC Shop,CC Shop,CC Shop,shopping,legend,1349,427,1f_5_1,5,1,69,171,../tiles/1f/5_1.png,Manual center inside the shared top-right green block.
+1f,1st Floor,一樓,一楼,R86,Ninebot,九號,九号,car_showroom,legend,1546,982,1f_6_3,6,3,10,214,../tiles/1f/6_3.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R85,Circle K,OK便利店,OK便利店,shopping,legend,1540,1036,1f_6_4,6,4,4,12,../tiles/1f/6_4.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R21,Converse,匡威,匡威,shopping,legend,1092,617,1f_4_2,4,2,68,105,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,KR57,Cotton Candy,Cotton Candy,Cotton Candy,shopping,legend,1603,490,1f_6_1,6,1,67,234,../tiles/1f/6_1.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R39,D-Mop,D-Mop,D-Mop,shopping,legend,1273,427,1f_4_1,4,1,249,171,../tiles/1f/4_1.png,OCR anchored.
+1f,1st Floor,一樓,一楼,KR23,The Mineral Boutique,The Mineral Boutique,The Mineral Boutique,shopping,legend,1149,675,1f_4_2,4,2,125,163,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R25,The Mineral Boutique,The Mineral Boutique,The Mineral Boutique,shopping,legend,1168,573,1f_4_2,4,2,144,61,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R26,Farmacia Tsan Heng,振興藥房,振兴药房,shopping,legend,1133,572,1f_4_2,4,2,109,60,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R65,FILA,FILA,FILA,shopping,legend,1342,724,1f_5_2,5,2,62,212,../tiles/1f/5_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R28-R29,Grab Grab Store,格格多,格格多,shopping,legend,1030,555,1f_4_2,4,2,6,43,../tiles/1f/4_2.png,Average of R28 and R29 OCR hits.
+1f,1st Floor,一樓,一楼,R76,H853 Gift Shop,H853 禮品店,H853 礼品店,shopping,legend,1257,887,1f_4_3,4,3,233,119,../tiles/1f/4_3.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R17,H853 Kids,H853 Kids,H853 Kids,shopping,legend,1125,712,1f_4_2,4,2,101,200,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,"R53-R58,R59",Heinemann,海內曼,海内曼,shopping,legend,1378,670,1f_5_2,5,2,98,158,../tiles/1f/5_2.png,Center of the long Heinemann strip.
+1f,1st Floor,一樓,一楼,R82-R83,Humarish Club,Humarish Club,Humarish Club,shopping,legend,1513,898,1f_5_3,5,3,233,130,../tiles/1f/5_3.png,Average of R82 and R83 OCR hits.
+1f,1st Floor,一樓,一楼,KR26,Lens Town,Lens Town,Lens Town,shopping,legend,1303,683,1f_5_2,5,2,23,171,../tiles/1f/5_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,KR22,Les Nereides,Les Nereides,Les Nereides,shopping,legend,1111,676,1f_4_2,4,2,87,164,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,KR39,Liège,列日比利時傳統窩夫,列日比利时传统窝夫,shopping,legend,1685,456,1f_6_1,6,1,149,200,../tiles/1f/6_1.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R15,New Balance,New Balance,New Balance,shopping,legend,1050,709,1f_4_2,4,2,26,197,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R63,Nike,Nike,Nike,shopping,legend,1281,722,1f_5_2,5,2,1,210,../tiles/1f/5_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,KR52,Okashiland,零食物語,零食物语,shopping,legend,1690,484,1f_6_1,6,1,154,228,../tiles/1f/6_1.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R18,Pandora,潘多拉珠寶,潘多拉珠宝,shopping,legend,1168,717,1f_4_2,4,2,144,205,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,KR31,POP MART POP-UP STORE,泡泡瑪特快閃店,泡泡玛特快闪店,shopping,legend,1633,425,1f_6_1,6,1,97,169,../tiles/1f/6_1.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R81,Seer Lab,Seer Lab,Seer Lab,shopping,legend,1453,894,1f_5_3,5,3,173,126,../tiles/1f/5_3.png,OCR anchored.
+1f,1st Floor,一樓,一楼,KR53,Selfie Macau,Selfie Macau,Selfie Macau,shopping,legend,1588,525,1f_6_2,6,2,52,13,../tiles/1f/6_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R20,THE BIG APPLE,THE BIG APPLE,THE BIG APPLE,shopping,legend,1055,618,1f_4_2,4,2,31,106,../tiles/1f/4_2.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R78,Trevi Fashion,特普維時裝有限公司,特普维时装有限公司,shopping,legend,1332,888,1f_5_3,5,3,52,120,../tiles/1f/5_3.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R61,Under Armour,Under Armour,Under Armour,shopping,legend,1556,524,1f_6_2,6,2,20,12,../tiles/1f/6_2.png,Manual center inside the small upper-right green block.
+1f,1st Floor,一樓,一楼,R89,ZIPCITY MACAU Retail Shop,澳門飛索零售商店,澳门飞索零售商店,shopping,legend,1672,269,1f_6_1,6,1,136,13,../tiles/1f/6_1.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R04,Food Court,美食廣場,美食广场,food_beverage,map,1665,659,1f_6_2,6,2,129,147,../tiles/1f/6_2.png,Visible map-only label.
+1f,1st Floor,一樓,一楼,R90-R91,Tesla,特斯拉,特斯拉,car_showroom,legend,1645,316,1f_6_1,6,1,109,60,../tiles/1f/6_1.png,OCR anchored.
+1f,1st Floor,一樓,一楼,R99,GoAirborne,GoAirborne 室內跳傘,GoAirborne 室内跳伞,entertainment,map,1392,364,1f_5_1,5,1,112,108,../tiles/1f/5_1.png,OCR anchored.
+2f,2nd Floor,二樓,二楼,R98,Emperor Cinemas,英皇戲院,英皇戏院,entertainment,map,1122,573,2f_4_2,4,2,98,61,../tiles/2f/4_2.png,2F cinema block.
+g,Ground Floor,地下,地下,B101,Challenger,挑戰者汽車美容中心,挑战者汽车美容中心,shopping,legend,880,352,g_3_1,3,1,112,96,../tiles/g/3_1.png,Ground-floor green kiosk.
+g,Ground Floor,地下,地下,KR55,Ninebot,九號,九号,car_showroom,legend,870,403,g_3_1,3,1,102,147,../tiles/g/3_1.png,Ground-floor showroom counter.
+g,Ground Floor,地下,地下,G-R13-G-R16,NIO,蔚來,蔚来,car_showroom,legend,958,283,g_3_1,3,1,190,27,../tiles/g/3_1.png,Top showroom strip.
+g,Ground Floor,地下,地下,G-R11-G-R12,GAC,廣汽,广汽,car_showroom,legend,1084,347,g_4_1,4,1,60,91,../tiles/g/4_1.png,Manual center along the vertical showroom strip.
+g,Ground Floor,地下,地下,G-R10,E-KCar,E-KCar,E-KCar,car_showroom,legend,1084,404,g_4_1,4,1,60,148,../tiles/g/4_1.png,Manual center along the vertical showroom strip.
+g,Ground Floor,地下,地下,G-R09,Geometry,吉利幾何,吉利几何,car_showroom,legend,1084,438,g_4_1,4,1,60,182,../tiles/g/4_1.png,Manual center along the vertical showroom strip.
+g,Ground Floor,地下,地下,G-R07-G-R08,Vicuñas,Vicuñas,Vicuñas,car_showroom,legend,1084,472,g_4_1,4,1,60,216,../tiles/g/4_1.png,Manual center along the vertical showroom strip.
+g,Ground Floor,地下,地下,G-R06,Next Station,時光屋,时光屋,car_showroom,legend,1084,521,g_4_2,4,2,60,9,../tiles/g/4_2.png,Manual center along the vertical showroom strip.

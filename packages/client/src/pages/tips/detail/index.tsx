@@ -1,14 +1,36 @@
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import PageShell from '../../../components/PageShell'
-import { getTipArticleById } from '../../../services/gameService'
+import { getTipArticleById, refreshPublicContent } from '../../../services/gameService'
 import './detail.scss'
 
 export default function TipDetailPage() {
   const router = Taro.getCurrentInstance().router
   const articleId = Number(router?.params?.id || 0)
-  const article = useMemo(() => getTipArticleById(articleId), [articleId])
+  const [article, setArticle] = useState(() => getTipArticleById(articleId))
+
+  useEffect(() => {
+    let cancelled = false
+
+    const hydrateDetail = async () => {
+      try {
+        await refreshPublicContent()
+      } catch (error) {
+        console.warn('Failed to refresh tip detail.', error)
+      }
+
+      if (!cancelled) {
+        setArticle(getTipArticleById(articleId))
+      }
+    }
+
+    void hydrateDetail()
+
+    return () => {
+      cancelled = true
+    }
+  }, [articleId])
 
   if (!article) {
     return (

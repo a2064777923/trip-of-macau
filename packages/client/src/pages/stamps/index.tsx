@@ -1,22 +1,63 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { getStamps, loadGameState } from '../../services/gameService'
+import { getStamps, loadGameState, refreshPublicContent, requireAuth } from '../../services/gameService'
 import './index.scss'
 
 const categoryMeta = [
-  { id: 'all', name: '全部', icon: '🏆' },
+  { id: 'all', name: '全部', icon: '🎁' },
   { id: 'location', name: '足跡', icon: '📍' },
   { id: 'story', name: '故事', icon: '📖' },
-  { id: 'mission', name: '任務', icon: '🎯' },
-  { id: 'secret', name: '秘密', icon: '🌟' },
+  { id: 'mission', name: '任務', icon: '🎆' },
+  { id: 'secret', name: '祕密', icon: '🔒' },
 ] as const
 
 export default function StampsPage() {
-  const state = useMemo(() => loadGameState(), [])
-  const stamps = useMemo(() => getStamps(), [])
+  const [state, setState] = useState(() => loadGameState())
+  const [stamps, setStamps] = useState(() => getStamps())
   const collected = stamps.filter((stamp) => stamp.collected)
-  const progress = Math.round((collected.length / stamps.length) * 100)
+  const progress = useMemo(() => (stamps.length ? Math.round((collected.length / stamps.length) * 100) : 0), [collected.length, stamps.length])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const hydrateStamps = async () => {
+      try {
+        await refreshPublicContent()
+      } catch (error) {
+        console.warn('Failed to refresh stamps.', error)
+      }
+
+      if (!cancelled) {
+        setState(loadGameState())
+        setStamps(getStamps())
+      }
+    }
+
+    void hydrateStamps()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (state.user.authStatus === 'anonymous') {
+      void requireAuth('查看印章收藏前，請先使用微信登入。')
+    }
+  }, [state.user.authStatus])
+
+  if (state.user.authStatus === 'anonymous') {
+    return (
+      <View className='stamps-page'>
+        <View className='header-stats'>
+          <View className='stats-card'>
+            <Text className='stats-tip'>正在前往「我的」頁面完成登入。</Text>
+          </View>
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View className='stamps-page'>
@@ -38,7 +79,7 @@ export default function StampsPage() {
               <Text className='stats-label'>完成度</Text>
             </View>
           </View>
-          <Text className='stats-tip'>當前等級 Lv.{state.user.level} · 稱號 {state.user.title}</Text>
+          <Text className='stats-tip'>目前等級 Lv.{state.user.level}，稱號 {state.user.title}</Text>
         </View>
       </View>
 

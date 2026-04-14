@@ -1,86 +1,131 @@
 # Requirements: Trip of Macau
 
-**Defined:** 2026-04-12
+**Defined:** 2026-04-13
 **Core Value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
 
-## v1 Requirements
-
-### Data Model
-
-- [ ] **DATA-01**: MySQL stores the canonical mini-program content model, including cities, POIs, storylines, chapters, tips, rewards, stamps, notifications, runtime settings, media references, and user progress records.
-- [ ] **DATA-02**: Existing mock data from the mini-program is transformed into repeatable seed or migration scripts and loaded into MySQL with deterministic identifiers.
-- [ ] **DATA-03**: Public and admin services use consistent publish-state, locale, sort-order, and asset-reference semantics for shared domains.
-
-### Public APIs
-
-- [ ] **PUB-01**: The mini-program can fetch home/discover/runtime configuration data from `packages/server` instead of local mock state.
-- [ ] **PUB-02**: The mini-program can fetch map, city, POI, storyline, tips, rewards, stamps, and notifications data from `packages/server` instead of local mock state.
-- [ ] **PUB-03**: The mini-program can read and write user progress, check-ins, unlocks, preferences, emergency-contact data, and reward redemption through `packages/server`.
-- [ ] **PUB-04**: Public APIs expose only published/admin-approved content and honor configured sort/filter/pagination rules.
+## v2.0 Requirements
 
 ### Admin Control Plane
 
-- [ ] **ADM-01**: Admin users can create, edit, and publish all mini-program-facing content entities and runtime configuration records required by the live app.
-- [ ] **ADM-02**: Admin users can manage multilingual copy, publish state, asset references, sort order, and runtime rules consumed by the mini-program.
-- [ ] **ADM-03**: Admin users can inspect seeded content state and integration health for the live mini-program backend.
+- [ ] **ADMIN-01**: Operator can use `/admin` with Traditional Chinese labels, actions, helper text, and validation messages across milestone-covered modules.
+- [ ] **ADMIN-02**: Operator sees a corrected admin information architecture where chapter, activity, media, collection, user, operations, and system modules each have their own coherent entry points instead of reused placeholder or misrouted pages.
+- [ ] **ADMIN-03**: Operator sees the mini-program brand icon and aligned visual identity reused in the admin shell.
 
-### Media and Assets
+### Authentication
 
-- [ ] **MED-01**: Admin uploads store images/files in Tencent COS through backend APIs with automatic object-key generation and persisted asset metadata.
-- [ ] **MED-02**: Public and admin APIs can resolve stored media metadata into canonical client-usable URLs.
+- [ ] **AUTH-01**: Traveler can establish a session through a real WeChat mini-program login flow based on `wx.login` code exchange instead of client-supplied `openId`.
+- [ ] **AUTH-02**: Unauthenticated travelers are blocked from stateful or interactive mini-program functions and are prompted to log in at the required entry points.
+- [ ] **AUTH-03**: Traveler sessions can be resumed and refreshed against the real public backend without reverting to guest/mock fallback behavior.
+- [ ] **AUTH-04**: Admin inspection surfaces read the same authenticated traveler profile/progress records that the public backend writes.
 
-### Operations and Verification
+### Localization And Translation
 
-- [ ] **OPS-01**: The local environment can boot the public backend, admin backend, MySQL, MongoDB, and required supporting services with documented environment variables.
-- [ ] **OPS-02**: Scripted smoke checks or integration tests prove admin writes are visible through public APIs and consumable by the mini-program.
-- [ ] **OPS-03**: The live backend includes baseline health, logging, validation, and performance safeguards needed for high availability and expansion.
+- [ ] **LOCL-01**: Operator can edit `zh-Hant`, `zh-Hans`, `en`, and `pt` values for every admin-managed mini-program display field covered by v2.0.
+- [ ] **LOCL-02**: Operator can choose a primary authoring language and trigger one-click machine translation into the remaining supported locales.
+- [ ] **LOCL-03**: Operator can configure translation engine priority/fallback and default source language in system settings.
+- [ ] **LOCL-04**: Mini-program and admin preview/read APIs can return locale-specific content from canonical storage for the v2.0 domains.
 
-## v2 Requirements
+### Spatial Model
 
-### Advanced AI and Operations
+- [ ] **MAP-01**: Operator can create and edit top-level switchable cities with localized metadata, cover image, editable country/center coordinates, and system-suggested defaults.
+- [ ] **MAP-02**: Operator can create and edit sub-maps beneath a city, with localized metadata, cover image, multi-asset attachments, and popup/display settings.
+- [ ] **MAP-03**: Operator can enter coordinates with source coordinate-system metadata and have them normalized into AMap-compatible values for storage and downstream use.
+- [ ] **MAP-04**: Operator can create and edit POIs bound to a city or sub-map, with cover image, map icon, multi-asset attachments, popup/display settings, and location metadata.
 
-- **AIOP-01**: AI scenario execution and provider orchestration move from admin visibility/configuration into production-grade runtime execution paths.
-- **AIOP-02**: Operators receive richer analytics dashboards and automated alerting for content freshness, integration failures, and traveler behavior.
+### Media Assets
 
-### Platform Expansion
+- [ ] **MEDIA-01**: Operator can upload image, video, audio, and file assets to COS from the admin via file picker, drag/drop, folder import, and clipboard paste.
+- [ ] **MEDIA-02**: Upload processing respects per-admin lossless-upload permission and records the applied processing policy before asset publication.
+- [ ] **MEDIA-03**: Operator can search, filter, and retrieve uploaded assets from a central media resource center.
+- [ ] **MEDIA-04**: Operator can attach and order multiple media assets on maps, sub-maps, POIs, storylines, chapters, activities, collectibles, badges, and indoor entities covered by v2.0.
 
-- **PLAT-01**: Support additional public clients beyond the WeChat mini-program without duplicating domain logic.
-- **PLAT-02**: Introduce more advanced caching, background jobs, and rollout controls for higher traffic volumes.
+### Story, Chapter, Activity, And Collection Composition
+
+- [ ] **STORY-01**: Operator can create and edit storylines with localized cover/introduction/media content and bindings to multiple maps or sub-maps.
+- [ ] **STORY-02**: Operator can create and edit chapters in a dedicated chapter composition workflow rather than being redirected back into storyline CRUD.
+- [ ] **STORY-03**: Operator can bind each chapter to an anchor entity such as a POI, task/activity, marker, or overlay, and define basic prerequisite, completion, and reward metadata.
+- [ ] **ACT-01**: Operator can create and edit global tasks or discovery activities with localized content, schedule windows, organizer/signup metadata, HTML-rich content, and pinning.
+- [ ] **COLL-01**: Operator can create and edit collectibles, badges, and rewards with richer metadata including related storyline/map/sub-map bindings and icon/media assets.
+
+### Indoor Maps
+
+- [ ] **INDO-01**: Operator can create and edit indoor buildings bound to a city/sub-map or POI, with localized metadata, cover image, and media attachments.
+- [ ] **INDO-02**: Operator can create and edit floors with area, localized introduction, popup settings, cover/media assets, and zoom-bound settings.
+- [ ] **INDO-03**: Operator can import floor tiles either from a prepared zip package or from a single floor image that the backend slices into uploadable tiles.
+- [ ] **INDO-04**: Operator can import or create floor markers/overlays through CSV preview validation or direct editing with minimap-assisted position picking.
+
+### User Progress, Operations, And System Settings
+
+- [ ] **OPER-01**: Operator can view detailed traveler profiles including collections, progression, and interaction logs instead of only the current shallow summaries.
+- [ ] **OPER-02**: Operator can view sub-map and city exploration progress computed from the correct related content graph and updated when managed content changes.
+- [ ] **OPER-03**: Operator can use operations/testing pages that align with the live runtime domains instead of legacy or placeholder test surfaces.
+- [ ] **OPER-04**: Operator can manage translation defaults, upload policies, map zoom defaults, and other runtime/admin settings from a clearer system configuration surface.
+
+## v2.1 Requirements
+
+### Indoor Runtime Rules
+
+- **RULE-01**: Operator can define full appearance conditions, trigger conditions, trigger chains, and effects for indoor overlays/markers.
+- **RULE-02**: Operator can configure animated path-based appearance/effect behaviors for indoor overlays.
+- **RULE-03**: Mini-program runtime can evaluate the configured indoor trigger/effect rules safely and predictably.
+
+### AI Capability Platform
+
+- **AI-01**: Operator can manage an AI capability center with per-capability provider configuration across multiple mainstream providers and custom endpoints.
+- **AI-02**: Operator can configure provider fallback, manual switching, quotas, suspicious-concurrency throttling, and usage governance without exposing API secrets.
+- **AI-03**: Operator can inspect cross-capability AI usage, health, and status from a central overview.
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Direct manual COS object management from frontend clients | Upload security and naming rules must stay in backend-controlled flows |
-| New payment, checkout, or unrelated commerce flows | Not required to replace mocks and fully connect the current mini-program |
-| Hardcoded mock-only traveler experience as the long-term runtime path | Conflicts with the core value of a live admin-driven backend |
-| Committing cloud secrets into source or planning docs | Violates basic operational security and maintainability |
+| Full indoor trigger/effect runtime engine in v2.0 | Too large for the control-plane/data-model rebuild milestone; deferred to v2.1 |
+| Full AI provider orchestration platform in v2.0 | Multi-provider switching, quotas, throttling, and usage governance are a separate platform effort; deferred to v2.1 |
+| Replacing the current Taro/Spring/MySQL brownfield stack | Not required to satisfy the milestone and would add avoidable delivery risk |
+| Frontend-only translation behavior that bypasses admin/system settings | The admin must remain the authoritative control plane |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 1 | Pending |
-| DATA-02 | Phase 6 | Pending |
-| DATA-03 | Phase 1 | Pending |
-| PUB-01 | Phase 3 | Pending |
-| PUB-02 | Phase 3 | Pending |
-| PUB-03 | Phase 4 | Pending |
-| PUB-04 | Phase 3 | Pending |
-| ADM-01 | Phase 2 | Pending |
-| ADM-02 | Phase 2 | Pending |
-| ADM-03 | Phase 6 | Pending |
-| MED-01 | Phase 5 | Pending |
-| MED-02 | Phase 5 | Pending |
-| OPS-01 | Phase 1 | Pending |
-| OPS-02 | Phase 6 | Pending |
-| OPS-03 | Phase 6 | Pending |
+| ADMIN-01 | Phase 7 | Pending |
+| ADMIN-02 | Phase 7 | Pending |
+| ADMIN-03 | Phase 7 | Pending |
+| AUTH-01 | Phase 7 | Pending |
+| AUTH-02 | Phase 7 | Pending |
+| AUTH-03 | Phase 7 | Pending |
+| AUTH-04 | Phase 7 | Pending |
+| LOCL-01 | Phase 8 | Pending |
+| LOCL-02 | Phase 8 | Pending |
+| LOCL-03 | Phase 8 | Pending |
+| LOCL-04 | Phase 8 | Pending |
+| MAP-01 | Phase 9 | Pending |
+| MAP-02 | Phase 9 | Pending |
+| MAP-03 | Phase 9 | Pending |
+| MAP-04 | Phase 9 | Pending |
+| MEDIA-01 | Phase 10 | Pending |
+| MEDIA-02 | Phase 10 | Pending |
+| MEDIA-03 | Phase 10 | Pending |
+| MEDIA-04 | Phase 10 | Pending |
+| STORY-01 | Phase 11 | Pending |
+| STORY-02 | Phase 11 | Pending |
+| STORY-03 | Phase 11 | Pending |
+| ACT-01 | Phase 11 | Pending |
+| COLL-01 | Phase 11 | Pending |
+| INDO-01 | Phase 12 | Pending |
+| INDO-02 | Phase 12 | Pending |
+| INDO-03 | Phase 12 | Pending |
+| INDO-04 | Phase 12 | Pending |
+| OPER-01 | Phase 13 | Pending |
+| OPER-02 | Phase 13 | Pending |
+| OPER-03 | Phase 13 | Pending |
+| OPER-04 | Phase 13 | Pending |
 
 **Coverage:**
-- v1 requirements: 15 total
-- Mapped to phases: 15
+- v2.0 requirements: 32 total
+- Mapped to phases: 32
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-04-12*
-*Last updated: 2026-04-12 after initial definition*
+*Requirements defined: 2026-04-13*
+*Last updated: 2026-04-13 after roadmap mapping*

@@ -1,218 +1,324 @@
-import React, { useMemo, useState } from 'react';
-import { PageContainer } from '@ant-design/pro-layout';
-import { Card, Col, Row, Table, Tag, Typography, Space, Button, Drawer, Form, Input, InputNumber, DatePicker, Select, Popconfirm, message } from 'antd';
-import { GiftOutlined, SettingOutlined, AuditOutlined, GlobalOutlined, PlusOutlined } from '@ant-design/icons';
-import { useRequest } from 'ahooks';
-import dayjs from 'dayjs';
+import React, { useEffect, useMemo, useState } from 'react';
+import { PageContainer } from '@ant-design/pro-components';
 import {
-  createAdminReward,
-  deleteAdminReward,
-  getAdminAuditLogs,
-  getAdminMapTiles,
-  getAdminRewards,
-  getAdminSystemConfigs,
-  updateAdminReward,
+  Alert,
+  Button,
+  Card,
+  Col,
+  Descriptions,
+  Form,
+  Input,
+  List,
+  Result,
+  Row,
+  Select,
+  Space,
+  Switch,
+  Tag,
+  Typography,
+  message,
+} from 'antd';
+import { SyncOutlined, TranslationOutlined } from '@ant-design/icons';
+import { useRequest } from 'ahooks';
+import {
+  getAdminTranslationSettings,
+  translateAdminText,
+  updateAdminTranslationSettings,
 } from '../../services/api';
-import type { AdminRewardItem } from '../../types/admin';
+import type {
+  AdminTranslateLocaleResult,
+  SupportedLocale,
+} from '../../types/admin';
+import {
+  LOCALE_LABELS,
+  SUPPORTED_LOCALES,
+} from '../../components/localization/LocalizedFieldGroup';
 
-const { Text } = Typography;
+const { Paragraph, Text } = Typography;
+
+const ENGINE_OPTIONS = [
+  { value: 'google', label: 'Google' },
+  { value: 'bing', label: 'Bing' },
+  { value: 'deepl', label: 'DeepL' },
+  { value: 'yandex', label: 'Yandex' },
+  { value: 'baidu', label: 'Baidu' },
+  { value: 'alibaba', label: 'Alibaba' },
+  { value: 'iciba', label: 'Iciba' },
+  { value: 'sogou', label: 'Sogou' },
+  { value: 'tencent', label: 'Tencent' },
+];
 
 const SystemManagement: React.FC = () => {
-  const [rewardDrawerOpen, setRewardDrawerOpen] = useState(false);
-  const [rewardEditing, setRewardEditing] = useState<AdminRewardItem | null>(null);
-  const [rewardSubmitting, setRewardSubmitting] = useState(false);
-  const [form] = Form.useForm();
+  const [settingsForm] = Form.useForm();
+  const [labForm] = Form.useForm();
+  const [labResults, setLabResults] = useState<AdminTranslateLocaleResult[]>([]);
+  const [labSubmitting, setLabSubmitting] = useState(false);
 
-  const rewards = useRequest(() => getAdminRewards({ pageNum: 1, pageSize: 20 }));
-  const configs = useRequest(() => getAdminSystemConfigs({ pageNum: 1, pageSize: 6 }));
-  const auditLogs = useRequest(() => getAdminAuditLogs({ pageNum: 1, pageSize: 8 }));
-  const mapTiles = useRequest(() => getAdminMapTiles({ pageNum: 1, pageSize: 4 }));
+  const settingsRequest = useRequest(getAdminTranslationSettings);
 
-  const rewardColumns = useMemo(() => ([
-    { title: '奖励', dataIndex: 'name' },
-    { title: '印章门槛', dataIndex: 'stampsRequired', width: 100 },
-    { title: '总量', dataIndex: 'totalQuantity', width: 90 },
-    { title: '已兑换', dataIndex: 'redeemedCount', width: 90 },
-    { title: '余量', dataIndex: 'remainingQuantity', width: 80 },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      width: 90,
-      render: (value: string) => <Tag color={value === 'active' ? 'success' : 'default'}>{value || 'inactive'}</Tag>,
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 180,
-      render: (_: unknown, record: AdminRewardItem) => (
-        <Space>
-          <Button
-            type="link"
-            onClick={() => {
-              setRewardEditing(record);
-              form.setFieldsValue({
-                ...record,
-                startTime: record.startTime ? dayjs(record.startTime) : undefined,
-                endTime: record.endTime ? dayjs(record.endTime) : undefined,
-              });
-              setRewardDrawerOpen(true);
-            }}
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确认删除该奖励吗？"
-            onConfirm={async () => {
-              await deleteAdminReward(record.id);
-              message.success('奖励已删除');
-              rewards.refresh();
-            }}
-          >
-            <Button type="link" danger>删除</Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ]), [form, rewards]);
+  useEffect(() => {
+    if (settingsRequest.data?.success && settingsRequest.data.data) {
+      const settings = settingsRequest.data.data;
+      settingsForm.setFieldsValue({
+        primaryAuthoringLocale: settings.primaryAuthoringLocale,
+        enginePriority: settings.enginePriority,
+        overwriteFilledLocales: settings.overwriteFilledLocales,
+      });
+      labForm.setFieldsValue({
+        sourceLocale: settings.primaryAuthoringLocale,
+        targetLocales: SUPPORTED_LOCALES.filter((locale) => locale !== settings.primaryAuthoringLocale),
+        overwriteFilledLocales: settings.overwriteFilledLocales,
+      });
+    }
+  }, [labForm, settingsForm, settingsRequest.data]);
+
+  const settings = settingsRequest.data?.data;
+
+  const localeOptions = useMemo(
+    () =>
+      SUPPORTED_LOCALES.map((locale) => ({
+        value: locale,
+        label: LOCALE_LABELS[locale],
+      })),
+    [],
+  );
+
+  const renderLabStatus = (result: AdminTranslateLocaleResult) => {
+    if (result.status === 'success') {
+      return <Tag color="success">成功</Tag>;
+    }
+    if (result.status === 'skipped') {
+      return <Tag color="gold">略過</Tag>;
+    }
+    return <Tag color="error">失敗</Tag>;
+  };
 
   return (
     <PageContainer
-      title="系统管理"
-      subTitle="集中查看奖励、审计日志、地图资源与触发配置"
-      extra={[
-        <Button
-          key="add-reward"
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setRewardEditing(null);
-            form.resetFields();
-            form.setFieldsValue({ status: 'inactive', stampsRequired: 1, totalQuantity: 100, redeemedCount: 0 });
-            setRewardDrawerOpen(true);
-          }}
-        >
-          新建奖励
-        </Button>,
-      ]}
+      title="翻譯與多語設定"
+      subTitle="管理四語內容的主欄位語言、翻譯引擎優先序與翻譯測試流程。"
     >
-      <Row gutter={[16, 16]}>
+      <Row gutter={[24, 24]}>
         <Col xs={24} xl={14}>
-          <Card title={<Space><GiftOutlined />奖励配置</Space>} loading={rewards.loading}>
-            <Table
-              size="small"
-              rowKey="id"
-              pagination={false}
-              dataSource={rewards.data?.data?.list || []}
-              columns={rewardColumns}
-            />
+          <Card title="全域翻譯預設" bordered={false}>
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              <Alert
+                type="info"
+                showIcon
+                message="Phase 8 僅要求主欄位可儲存草稿，其餘語言可以透過翻譯補齊。"
+                description="一般內容儲存不會因翻譯引擎短暫失效而被阻塞。翻譯是明確的作者操作，不會在輸入或儲存時自動觸發。"
+              />
+
+              <Form
+                form={settingsForm}
+                layout="vertical"
+                onFinish={async (values) => {
+                  const response = await updateAdminTranslationSettings(values);
+                  if (!response.success || !response.data) {
+                    message.error(response.message || '儲存翻譯設定失敗');
+                    return;
+                  }
+                  message.success('翻譯設定已更新');
+                  settingsRequest.refresh();
+                }}
+              >
+                <Form.Item
+                  name="primaryAuthoringLocale"
+                  label="主欄位語言"
+                  rules={[{ required: true, message: '請選擇主欄位語言' }]}
+                >
+                  <Select options={localeOptions} />
+                </Form.Item>
+
+                <Form.Item
+                  name="enginePriority"
+                  label="翻譯引擎優先順序"
+                  rules={[{ required: true, message: '請至少選擇一個翻譯引擎' }]}
+                  extra="系統會依照這個順序嘗試翻譯；前一個引擎失敗時，才會自然切換到下一個。"
+                >
+                  <Select
+                    mode="multiple"
+                    options={ENGINE_OPTIONS}
+                    placeholder="請選擇並排序翻譯引擎"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="overwriteFilledLocales"
+                  label="預設覆蓋策略"
+                  valuePropName="checked"
+                  extra="開啟後，「全部重新翻譯」會直接覆蓋既有欄位；關閉時只補空白欄位。"
+                >
+                  <Switch checkedChildren="允許覆蓋" unCheckedChildren="僅補空白" />
+                </Form.Item>
+
+                <Space>
+                  <Button type="primary" htmlType="submit">
+                    儲存設定
+                  </Button>
+                  <Button onClick={() => settingsRequest.refresh()} icon={<SyncOutlined />}>
+                    重新讀取
+                  </Button>
+                </Space>
+              </Form>
+            </Space>
           </Card>
         </Col>
+
         <Col xs={24} xl={10}>
-          <Card title={<Space><SettingOutlined />系统配置</Space>} loading={configs.loading}>
-            <Table
-              size="small"
-              rowKey="id"
-              pagination={false}
-              dataSource={configs.data?.data?.list || []}
-              columns={[
-                { title: '配置键', dataIndex: 'configKey' },
-                {
-                  title: '配置值',
-                  dataIndex: 'configValue',
-                  render: (value: string) => <Text code>{value}</Text>,
-                },
-                { title: '说明', dataIndex: 'description' },
-              ]}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} xl={14}>
-          <Card title={<Space><AuditOutlined />审计日志</Space>} loading={auditLogs.loading}>
-            <Table
-              size="small"
-              rowKey="id"
-              pagination={false}
-              dataSource={auditLogs.data?.data?.list || []}
-              columns={[
-                { title: '模块 / 操作', dataIndex: 'operationTypeName' },
-                { title: '操作人', dataIndex: 'adminName', width: 100 },
-                { title: '说明', dataIndex: 'operationDesc' },
-                { title: '时间', dataIndex: 'createTime', width: 180 },
-              ]}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} xl={10}>
-          <Card title={<Space><GlobalOutlined />地图资源</Space>} loading={mapTiles.loading}>
-            <Space direction="vertical" style={{ width: '100%' }} size="middle">
-              {(mapTiles.data?.data?.list || []).map((item) => (
-                <Card key={item.id} size="small" variant="borderless" style={{ background: '#f7f8ff' }}>
-                  <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                    <Space style={{ justifyContent: 'space-between', width: '100%' }}>
-                      <Text strong>{item.mapId}</Text>
-                      <Tag color={item.status === 'active' ? 'success' : 'default'}>{item.status}</Tag>
-                    </Space>
-                    <Text type="secondary">样式：{item.style || 'cartoon'}</Text>
-                    <Text ellipsis={{ tooltip: item.cdnBase }}>CDN：{item.cdnBase}</Text>
-                    <Text type="secondary">缩放级别：{item.zoomLevels}</Text>
+          <Card title="橋接服務狀態" bordered={false}>
+            {settings ? (
+              <Descriptions column={1} size="small" bordered>
+                <Descriptions.Item label="翻譯橋接">
+                  {settings.bridgeEnabled ? <Tag color="success">已啟用</Tag> : <Tag color="default">未啟用</Tag>}
+                </Descriptions.Item>
+                <Descriptions.Item label="請求逾時">
+                  {settings.requestTimeoutMs} ms
+                </Descriptions.Item>
+                <Descriptions.Item label="單次最大字數">
+                  {settings.maxTextLength}
+                </Descriptions.Item>
+                <Descriptions.Item label="目前主欄位語言">
+                  {LOCALE_LABELS[settings.primaryAuthoringLocale]}
+                </Descriptions.Item>
+                <Descriptions.Item label="目前引擎順序">
+                  <Space wrap>
+                    {settings.enginePriority.map((engine) => (
+                      <Tag key={engine}>{engine}</Tag>
+                    ))}
                   </Space>
-                </Card>
-              ))}
+                </Descriptions.Item>
+                <Descriptions.Item label="Bridge Script">
+                  <Text code>{settings.bridgeScriptPath || '未公開'}</Text>
+                </Descriptions.Item>
+              </Descriptions>
+            ) : (
+              <Result status="info" title="尚未讀取到翻譯設定" />
+            )}
+
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginTop: 16 }}
+              message="安全說明"
+              description="這裡只顯示橋接健康資訊與可安全公開的執行參數，不會暴露任何第三方平台密鑰。詳細錯誤請到後端日誌查看。"
+            />
+          </Card>
+        </Col>
+
+        <Col span={24}>
+          <Card title="翻譯測試台" bordered={false}>
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              <Paragraph style={{ marginBottom: 0 }}>
+                在正式編輯內容之前，可以先用這個測試台驗證目前的主欄位語言與引擎優先序是否符合預期。
+              </Paragraph>
+
+              <Form
+                form={labForm}
+                layout="vertical"
+                onFinish={async (values: {
+                  sourceLocale: SupportedLocale;
+                  targetLocales: SupportedLocale[];
+                  text: string;
+                  overwriteFilledLocales?: boolean;
+                }) => {
+                  setLabSubmitting(true);
+                  try {
+                    const response = await translateAdminText({
+                      sourceLocale: values.sourceLocale,
+                      targetLocales: values.targetLocales,
+                      text: values.text,
+                      overwriteFilledLocales: values.overwriteFilledLocales,
+                    });
+                    if (!response.success || !response.data) {
+                      message.error(response.message || '翻譯測試失敗');
+                      setLabResults([]);
+                      return;
+                    }
+                    setLabResults(response.data.results || []);
+                    message.success('翻譯測試已完成');
+                  } finally {
+                    setLabSubmitting(false);
+                  }
+                }}
+              >
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} md={8}>
+                    <Form.Item
+                      name="sourceLocale"
+                      label="來源語言"
+                      rules={[{ required: true, message: '請選擇來源語言' }]}
+                    >
+                      <Select options={localeOptions} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={10}>
+                    <Form.Item
+                      name="targetLocales"
+                      label="目標語言"
+                      rules={[{ required: true, message: '請選擇至少一個目標語言' }]}
+                    >
+                      <Select mode="multiple" options={localeOptions} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={6}>
+                    <Form.Item
+                      name="overwriteFilledLocales"
+                      label="覆蓋策略"
+                      valuePropName="checked"
+                    >
+                      <Switch checkedChildren="覆蓋" unCheckedChildren="補空白" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Form.Item
+                  name="text"
+                  label="待翻譯內容"
+                  rules={[{ required: true, message: '請輸入測試內容' }]}
+                >
+                  <Input.TextArea rows={4} placeholder="請輸入要送往翻譯橋接服務的文字內容" />
+                </Form.Item>
+
+                <Space>
+                  <Button type="primary" htmlType="submit" icon={<TranslationOutlined />} loading={labSubmitting}>
+                    執行翻譯測試
+                  </Button>
+                  <Button onClick={() => { labForm.resetFields(); setLabResults([]); }}>
+                    清空結果
+                  </Button>
+                </Space>
+              </Form>
+
+              <List
+                bordered
+                locale={{ emptyText: '尚未執行翻譯測試' }}
+                dataSource={labResults}
+                renderItem={(result) => (
+                  <List.Item>
+                    <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                      <Space wrap>
+                        <Text strong>{LOCALE_LABELS[result.targetLocale]}</Text>
+                        {renderLabStatus(result)}
+                        {result.engine ? <Tag color="purple">{result.engine}</Tag> : null}
+                        {(result.attemptedEngines || []).map((engine) => (
+                          <Tag key={`${result.targetLocale}-${engine}`}>{engine}</Tag>
+                        ))}
+                      </Space>
+                      {result.translatedText ? (
+                        <Paragraph style={{ marginBottom: 0, whiteSpace: 'pre-wrap' }}>
+                          {result.translatedText}
+                        </Paragraph>
+                      ) : null}
+                      {result.message ? <Text type="secondary">{result.message}</Text> : null}
+                    </Space>
+                  </List.Item>
+                )}
+              />
             </Space>
           </Card>
         </Col>
       </Row>
-
-      <Drawer
-        open={rewardDrawerOpen}
-        title={rewardEditing ? '编辑奖励' : '新建奖励'}
-        width={520}
-        onClose={() => setRewardDrawerOpen(false)}
-        destroyOnClose
-      >
-        <Form
-          layout="vertical"
-          form={form}
-          onFinish={async (values) => {
-            setRewardSubmitting(true);
-            try {
-              const payload = {
-                ...values,
-                startTime: values.startTime ? values.startTime.format('YYYY-MM-DDTHH:mm:ss') : undefined,
-                endTime: values.endTime ? values.endTime.format('YYYY-MM-DDTHH:mm:ss') : undefined,
-              };
-              if (rewardEditing) {
-                await updateAdminReward(rewardEditing.id, payload);
-                message.success('奖励更新成功');
-              } else {
-                await createAdminReward(payload);
-                message.success('奖励创建成功');
-              }
-              setRewardDrawerOpen(false);
-              rewards.refresh();
-            } finally {
-              setRewardSubmitting(false);
-            }
-          }}
-        >
-          <Form.Item label="奖励名称" name="name" rules={[{ required: true, message: '请输入奖励名称' }]}><Input /></Form.Item>
-          <Form.Item label="奖励描述" name="description"><Input.TextArea rows={3} /></Form.Item>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="印章门槛" name="stampsRequired" style={{ width: '100%' }}><InputNumber min={0} style={{ width: '100%' }} /></Form.Item>
-            <Form.Item label="总库存" name="totalQuantity" style={{ width: '100%' }}><InputNumber min={0} style={{ width: '100%' }} /></Form.Item>
-            <Form.Item label="已兑换" name="redeemedCount" style={{ width: '100%' }}><InputNumber min={0} style={{ width: '100%' }} /></Form.Item>
-          </Space>
-          <Space style={{ width: '100%' }} align="start">
-            <Form.Item label="开始时间" name="startTime" style={{ width: '100%' }}><DatePicker showTime style={{ width: '100%' }} /></Form.Item>
-            <Form.Item label="结束时间" name="endTime" style={{ width: '100%' }}><DatePicker showTime style={{ width: '100%' }} /></Form.Item>
-          </Space>
-          <Form.Item label="状态" name="status"><Select options={[{ label: '启用', value: 'active' }, { label: '停用', value: 'inactive' }, { label: '结束', value: 'expired' }]} /></Form.Item>
-          <Space>
-            <Button type="primary" htmlType="submit" loading={rewardSubmitting}>保存</Button>
-            <Button onClick={() => setRewardDrawerOpen(false)}>取消</Button>
-          </Space>
-        </Form>
-      </Drawer>
     </PageContainer>
   );
 };

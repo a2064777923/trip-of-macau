@@ -1,8 +1,10 @@
 spring:
+  config:
+    import: optional:file:.env.local[.properties]
   datasource:
-    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/aoxiaoyou?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/aoxiaoyou?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&connectTimeout=3000&socketTimeout=10000&tcpKeepAlive=true}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
+    password: ${DB_PASSWORD:Abc123456}
   data:
     redis:
       host: ${REDIS_HOST:127.0.0.1}

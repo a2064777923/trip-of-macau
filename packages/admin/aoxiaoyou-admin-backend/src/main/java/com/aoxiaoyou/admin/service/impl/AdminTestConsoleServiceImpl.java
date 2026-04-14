@@ -10,12 +10,14 @@ import com.aoxiaoyou.admin.dto.request.TestAccountStampGrantRequest;
 import com.aoxiaoyou.admin.dto.response.AdminOperationLogResponse;
 import com.aoxiaoyou.admin.dto.response.AdminTestAccountListItemResponse;
 import com.aoxiaoyou.admin.dto.response.AdminTestStampSummaryResponse;
+import com.aoxiaoyou.admin.entity.Stamp;
 import com.aoxiaoyou.admin.entity.SysOperationLog;
 import com.aoxiaoyou.admin.entity.TestAccount;
-import com.aoxiaoyou.admin.entity.User;
+import com.aoxiaoyou.admin.entity.TravelerProfile;
+import com.aoxiaoyou.admin.mapper.StampMapper;
 import com.aoxiaoyou.admin.mapper.SysOperationLogMapper;
 import com.aoxiaoyou.admin.mapper.TestAccountMapper;
-import com.aoxiaoyou.admin.mapper.UserMapper;
+import com.aoxiaoyou.admin.mapper.TravelerProfileMapper;
 import com.aoxiaoyou.admin.service.AdminTestConsoleService;
 import com.aoxiaoyou.admin.util.LevelUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -29,10 +31,9 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class AdminTestConsoleServiceImpl implements AdminTestConsoleService {
 
-    private static final int MAX_STAMPS = 12;
-
     private final TestAccountMapper testAccountMapper;
-    private final UserMapper userMapper;
+    private final TravelerProfileMapper travelerProfileMapper;
+    private final StampMapper stampMapper;
     private final SysOperationLogMapper sysOperationLogMapper;
 
     @Override
@@ -63,14 +64,14 @@ public class AdminTestConsoleServiceImpl implements AdminTestConsoleService {
     @Override
     public AdminTestAccountListItemResponse adjustLevel(Long testAccountId, TestAccountLevelAdjustRequest request, Long operatorId, String operatorName, String ip) {
         TestAccount account = requireAccount(testAccountId);
-        User user = requireUser(account.getUserId());
+        TravelerProfile user = requireUser(account.getUserId());
         int targetExp = Math.max(request.getTargetExp(), 0);
         int targetLevel = Math.max(request.getTargetLevel(), 1);
-        userMapper.update(null, new LambdaUpdateWrapper<User>()
-                .eq(User::getId, user.getId())
-                .set(User::getLevel, targetLevel)
-                .set(User::getTotalStamps, targetExp)
-                .set(User::getTitle, LevelUtil.levelName(targetLevel)));
+        travelerProfileMapper.update(null, new LambdaUpdateWrapper<TravelerProfile>()
+                .eq(TravelerProfile::getId, user.getId())
+                .set(TravelerProfile::getLevel, targetLevel)
+                .set(TravelerProfile::getCurrentExp, targetExp)
+                .set(TravelerProfile::getNextLevelExp, nextLevelThreshold(targetLevel)));
         writeLog(operatorId, operatorName, "TEST_CONSOLE", "ADJUST_LEVEL", ip, request.getReason(), "/api/admin/v1/test-console/accounts/" + testAccountId + "/level");
         return toListItem(account);
     }
@@ -78,7 +79,7 @@ public class AdminTestConsoleServiceImpl implements AdminTestConsoleService {
     @Override
     public AdminTestAccountListItemResponse grantStamp(Long testAccountId, TestAccountStampGrantRequest request, Long operatorId, String operatorName, String ip) {
         TestAccount account = requireAccount(testAccountId);
-        User user = requireUser(account.getUserId());
+        TravelerProfile user = requireUser(account.getUserId());
         updateUserStampState(user, (user.getTotalStamps() == null ? 0 : user.getTotalStamps()) + 1);
         writeLog(operatorId, operatorName, "TEST_CONSOLE", "GRANT_STAMP", ip, request.getReason(), "/api/admin/v1/test-console/accounts/" + testAccountId + "/stamps/grant");
         return toListItem(account);
@@ -87,11 +88,11 @@ public class AdminTestConsoleServiceImpl implements AdminTestConsoleService {
     @Override
     public AdminTestAccountListItemResponse batchGrantStamp(Long testAccountId, TestAccountBatchStampGrantRequest request, Long operatorId, String operatorName, String ip) {
         TestAccount account = requireAccount(testAccountId);
-        User user = requireUser(account.getUserId());
+        TravelerProfile user = requireUser(account.getUserId());
         int current = user.getTotalStamps() == null ? 0 : user.getTotalStamps();
-        int target = Math.min(MAX_STAMPS, current + request.getCount());
+        int target = Math.min(maxStampCapacity(), current + request.getCount());
         updateUserStampState(user, target);
-        String reason = StringUtils.hasText(request.getReason()) ? request.getReason() : "批量发放印章 " + request.getCount() + " 个";
+        String reason = StringUtils.hasText(request.getReason()) ? request.getReason() : "Batch grant " + request.getCount() + " stamps";
         writeLog(operatorId, operatorName, "TEST_CONSOLE", "BATCH_GRANT_STAMP", ip, reason, "/api/admin/v1/test-console/accounts/" + testAccountId + "/stamps/batch-grant");
         return toListItem(account);
     }
@@ -99,9 +100,9 @@ public class AdminTestConsoleServiceImpl implements AdminTestConsoleService {
     @Override
     public AdminTestAccountListItemResponse clearStamps(Long testAccountId, Long operatorId, String operatorName, String ip, String reason) {
         TestAccount account = requireAccount(testAccountId);
-        User user = requireUser(account.getUserId());
+        TravelerProfile user = requireUser(account.getUserId());
         updateUserStampState(user, 0);
-        String finalReason = StringUtils.hasText(reason) ? reason : "清空测试账号印章";
+        String finalReason = StringUtils.hasText(reason) ? reason : "Clear traveler stamps";
         writeLog(operatorId, operatorName, "TEST_CONSOLE", "CLEAR_STAMPS", ip, finalReason, "/api/admin/v1/test-console/accounts/" + testAccountId + "/stamps/clear");
         return toListItem(account);
     }
@@ -109,42 +110,45 @@ public class AdminTestConsoleServiceImpl implements AdminTestConsoleService {
     @Override
     public AdminTestStampSummaryResponse stampSummary(Long testAccountId) {
         TestAccount account = requireAccount(testAccountId);
-        User user = requireUser(account.getUserId());
+        TravelerProfile user = requireUser(account.getUserId());
         int stampCount = user.getTotalStamps() == null ? 0 : user.getTotalStamps();
-        int level = user.getLevel() == null ? LevelUtil.normalizeLevel(stampCount) : user.getLevel();
-        int nextLevelTarget = LevelUtil.nextLevelExp(level);
+        int level = user.getLevel() == null ? 1 : user.getLevel();
+        int currentExp = user.getCurrentExp() == null ? 0 : user.getCurrentExp();
+        int nextLevelTarget = user.getNextLevelExp() == null ? nextLevelThreshold(level) : user.getNextLevelExp();
         return AdminTestStampSummaryResponse.builder()
                 .testAccountId(account.getId())
                 .userId(user.getId())
                 .stampCount(stampCount)
                 .currentLevel(level)
-                .levelName(LevelUtil.levelName(level))
+                .levelName(resolveLevelName(user))
                 .nextLevelTarget(nextLevelTarget)
-                .remainingToNextLevel(Math.max(0, nextLevelTarget - stampCount))
-                .maxStamps(MAX_STAMPS)
+                .remainingToNextLevel(Math.max(0, nextLevelTarget - currentExp))
+                .maxStamps(maxStampCapacity())
                 .build();
     }
 
     @Override
     public AdminTestAccountListItemResponse resetProgress(Long testAccountId, TestAccountProgressResetRequest request, Long operatorId, String operatorName, String ip) {
         TestAccount account = requireAccount(testAccountId);
-        User user = requireUser(account.getUserId());
+        TravelerProfile user = requireUser(account.getUserId());
         String resetType = request == null ? null : request.getResetType();
         if ("level".equalsIgnoreCase(resetType)) {
             int totalStamps = user.getTotalStamps() == null ? 0 : user.getTotalStamps();
-            userMapper.update(null, new LambdaUpdateWrapper<User>()
-                    .eq(User::getId, user.getId())
-                    .set(User::getLevel, 1)
-                    .set(User::getTitle, LevelUtil.levelName(1))
-                    .set(User::getTotalStamps, totalStamps));
+            travelerProfileMapper.update(null, new LambdaUpdateWrapper<TravelerProfile>()
+                    .eq(TravelerProfile::getId, user.getId())
+                    .set(TravelerProfile::getLevel, 1)
+                    .set(TravelerProfile::getCurrentExp, 0)
+                    .set(TravelerProfile::getNextLevelExp, nextLevelThreshold(1))
+                    .set(TravelerProfile::getTotalStamps, totalStamps));
         } else if ("stamps".equalsIgnoreCase(resetType) || "all".equalsIgnoreCase(resetType) || !StringUtils.hasText(resetType)) {
             updateUserStampState(user, 0);
         } else {
-            userMapper.update(null, new LambdaUpdateWrapper<User>()
-                    .eq(User::getId, user.getId())
-                    .set(User::getLevel, 1)
-                    .set(User::getTotalStamps, 0)
-                    .set(User::getTitle, LevelUtil.levelName(1)));
+            travelerProfileMapper.update(null, new LambdaUpdateWrapper<TravelerProfile>()
+                    .eq(TravelerProfile::getId, user.getId())
+                    .set(TravelerProfile::getLevel, 1)
+                    .set(TravelerProfile::getCurrentExp, 0)
+                    .set(TravelerProfile::getNextLevelExp, nextLevelThreshold(1))
+                    .set(TravelerProfile::getTotalStamps, 0));
         }
         writeLog(operatorId, operatorName, "TEST_CONSOLE", "RESET_PROGRESS", ip, request == null ? null : request.getReason(), "/api/admin/v1/test-console/accounts/" + testAccountId + "/progress/reset");
         return toListItem(account);
@@ -170,28 +174,25 @@ public class AdminTestConsoleServiceImpl implements AdminTestConsoleService {
         return PageResponse.of(responsePage);
     }
 
-    private void updateUserStampState(User user, int stampCount) {
+    private void updateUserStampState(TravelerProfile user, int stampCount) {
         int normalizedCount = Math.max(stampCount, 0);
-        int normalizedLevel = LevelUtil.normalizeLevel(normalizedCount);
-        userMapper.update(null, new LambdaUpdateWrapper<User>()
-                .eq(User::getId, user.getId())
-                .set(User::getTotalStamps, normalizedCount)
-                .set(User::getLevel, normalizedLevel)
-                .set(User::getTitle, LevelUtil.levelName(normalizedLevel)));
+        travelerProfileMapper.update(null, new LambdaUpdateWrapper<TravelerProfile>()
+                .eq(TravelerProfile::getId, user.getId())
+                .set(TravelerProfile::getTotalStamps, normalizedCount));
     }
 
     private TestAccount requireAccount(Long id) {
         TestAccount account = testAccountMapper.selectById(id);
         if (account == null) {
-            throw new BusinessException(4043, "测试账号不存在");
+            throw new BusinessException(4043, "Test account not found");
         }
         return account;
     }
 
-    private User requireUser(Long userId) {
-        User user = userMapper.selectById(userId);
+    private TravelerProfile requireUser(Long userId) {
+        TravelerProfile user = travelerProfileMapper.selectById(userId);
         if (user == null) {
-            throw new BusinessException(4040, "用户不存在");
+            throw new BusinessException(4040, "User not found");
         }
         return user;
     }
@@ -211,14 +212,14 @@ public class AdminTestConsoleServiceImpl implements AdminTestConsoleService {
     }
 
     private AdminTestAccountListItemResponse toListItem(TestAccount account) {
-        User user = userMapper.selectById(account.getUserId());
+        TravelerProfile user = travelerProfileMapper.selectById(account.getUserId());
         int totalStamps = user == null || user.getTotalStamps() == null ? 0 : user.getTotalStamps();
-        int level = user == null || user.getLevel() == null ? LevelUtil.normalizeLevel(totalStamps) : user.getLevel();
+        int level = user == null || user.getLevel() == null ? 1 : user.getLevel();
         return AdminTestAccountListItemResponse.builder()
                 .id(account.getId())
                 .userId(account.getUserId())
                 .openId(user == null ? null : user.getOpenId())
-                .nickname(user == null ? "未知用户" : user.getNickname())
+                .nickname(user == null ? "Unknown traveler" : user.getNickname())
                 .avatar(user == null ? null : user.getAvatarUrl())
                 .remark(account.getNotes())
                 .testGroup(account.getTestGroup())
@@ -230,10 +231,38 @@ public class AdminTestConsoleServiceImpl implements AdminTestConsoleService {
                 .isMockEnabled(Boolean.TRUE.equals(account.getMockEnabled()))
                 .stampCount(totalStamps)
                 .level(level)
-                .levelName(LevelUtil.levelName(level))
-                .experience(totalStamps)
+                .levelName(user == null ? LevelUtil.levelName(level) : resolveLevelName(user))
+                .experience(user == null || user.getCurrentExp() == null ? 0 : user.getCurrentExp())
                 .createTime(account.getCreatedAt())
                 .lastOperationTime(account.getUpdatedAt())
                 .build();
+    }
+
+    private int maxStampCapacity() {
+        Long count = stampMapper.selectCount(new LambdaQueryWrapper<Stamp>().eq(Stamp::getStatus, "published"));
+        return count == null || count < 1 ? 1 : count.intValue();
+    }
+
+    private int nextLevelThreshold(int level) {
+        return Math.max(120, level * 120);
+    }
+
+    private String resolveLevelName(TravelerProfile user) {
+        if (user == null) {
+            return LevelUtil.levelName(1);
+        }
+        if (StringUtils.hasText(user.getTitleZh())) {
+            return user.getTitleZh();
+        }
+        if (StringUtils.hasText(user.getTitleEn())) {
+            return user.getTitleEn();
+        }
+        if (StringUtils.hasText(user.getTitlePt())) {
+            return user.getTitlePt();
+        }
+        if (StringUtils.hasText(user.getTitleZht())) {
+            return user.getTitleZht();
+        }
+        return LevelUtil.levelName(user.getLevel());
     }
 }

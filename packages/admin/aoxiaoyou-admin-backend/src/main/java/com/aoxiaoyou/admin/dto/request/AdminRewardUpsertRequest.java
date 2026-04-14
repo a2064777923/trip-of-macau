@@ -7,21 +7,34 @@ public class AdminRewardUpsertRequest {
 
     @Data
     public static class Upsert {
-        @NotBlank(message = "奖励名称不能为空")
-        private String name;
+        @NotBlank(message = "code is required")
+        private String code;
 
-        private String description;
+        @NotBlank(message = "nameZh is required")
+        private String nameZh;
 
-        private Integer stampsRequired;
-
-        private Integer totalQuantity;
-
-        private Integer redeemedCount;
-
-        private String startTime;
-
-        private String endTime;
-
+        private String nameEn;
+        private String nameZht;
+        private String namePt;
+        private String subtitleZh;
+        private String subtitleEn;
+        private String subtitleZht;
+        private String subtitlePt;
+        private String descriptionZh;
+        private String descriptionEn;
+        private String descriptionZht;
+        private String descriptionPt;
+        private String highlightZh;
+        private String highlightEn;
+        private String highlightZht;
+        private String highlightPt;
+        private Integer stampCost;
+        private Integer inventoryTotal;
+        private Integer inventoryRedeemed;
+        private Long coverAssetId;
         private String status;
+        private Integer sortOrder;
+        private String publishStartAt;
+        private String publishEndAt;
     }
 }

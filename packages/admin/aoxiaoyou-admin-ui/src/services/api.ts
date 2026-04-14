@@ -1,25 +1,44 @@
 import request from '../utils/request';
 import type {
-  AdminAuthResponse,
-  PaginationResponse,
-  AdminUserListItem,
-  AdminUserDetail,
-  AdminPoiListItem,
-  AdminPoiDetail,
-  AdminStorylineListItem,
-  AdminStorylineDetail,
-  AdminTestAccountListItem,
-  AdminOperationLog,
-  DashboardStats,
   AdminActivityItem,
-  AdminRewardItem,
-  AdminSystemConfigItem,
+  AdminAssetUploadPayload,
+  AdminAuthResponse,
+  AdminContentAssetItem,
   AdminMapTileItem,
+  AdminNotificationItem,
+  AdminOperationLog,
+  AdminPoiDetail,
+  AdminPoiListItem,
+  AdminRewardItem,
+  AdminRuntimeSettingItem,
+  AdminStampItem,
   AdminStoryChapterItem,
+  AdminStorylineDetail,
+  AdminStorylineListItem,
+  AdminSystemConfigItem,
+  AdminTestAccountListItem,
   AdminTestStampSummary,
+  AdminTipArticleItem,
+  AdminTranslateRequestPayload,
+  AdminTranslateResponse,
+  AdminTranslationSettings,
+  AdminTranslationSettingsUpdatePayload,
+  AdminUserDetail,
+  AdminUserListItem,
+  AdminCityPayload,
+  AdminCoordinatePreviewPayload,
+  AdminCoordinatePreviewResult,
+  AdminPoiPayload,
+  AdminSpatialMetadataSuggestion,
+  AdminSpatialMetadataSuggestionPayload,
+  AdminSubMapItem,
+  AdminSubMapPayload,
+  DashboardStats,
+  PaginationResponse,
+  CityItem,
 } from '../types/admin';
 
-// ============ 后台认证 ============
+export type { CityItem, AdminSubMapItem };
 
 export const adminLogin = (data: { username: string; password: string }) => {
   return request.post<AdminAuthResponse>('/api/admin/v1/auth/login', data);
@@ -36,8 +55,6 @@ export const refreshAdminToken = (refreshToken: string) => {
 export const adminLogout = () => {
   return request.post<boolean>('/api/admin/v1/auth/logout');
 };
-
-// ============ 后台用户管理 ============
 
 export const getAdminUsers = (params?: {
   pageNum?: number;
@@ -59,12 +76,12 @@ export const updateAdminUserTestFlag = (
   return request.post<AdminUserListItem>(`/api/admin/v1/users/${userId}/test-flag`, data);
 };
 
-// ============ 后台 POI 管理 ============
-
 export const getAdminPois = (params?: {
   pageNum?: number;
   pageSize?: number;
   keyword?: string;
+  cityId?: number;
+  subMapId?: number;
   storylineId?: number;
 }) => {
   return request.get<PaginationResponse<AdminPoiListItem>>('/api/admin/v1/pois', { params });
@@ -74,19 +91,17 @@ export const getAdminPoiDetail = (poiId: number) => {
   return request.get<AdminPoiDetail>(`/api/admin/v1/pois/${poiId}`);
 };
 
-export const createAdminPoi = (data: any) => {
+export const createAdminPoi = (data: AdminPoiPayload) => {
   return request.post<AdminPoiDetail>('/api/admin/v1/pois', data);
 };
 
-export const updateAdminPoi = (poiId: number, data: any) => {
+export const updateAdminPoi = (poiId: number, data: AdminPoiPayload) => {
   return request.put<AdminPoiDetail>(`/api/admin/v1/pois/${poiId}`, data);
 };
 
 export const deleteAdminPoi = (poiId: number) => {
   return request.delete<boolean>(`/api/admin/v1/pois/${poiId}`);
 };
-
-// ============ 后台故事线管理 ============
 
 export const getAdminStorylines = (params?: {
   pageNum?: number;
@@ -128,8 +143,6 @@ export const updateStorylineChapter = (storylineId: number, chapterId: number, d
 export const deleteStorylineChapter = (storylineId: number, chapterId: number) => {
   return request.delete<boolean>(`/api/admin/v1/storylines/${storylineId}/chapters/${chapterId}`);
 };
-
-// ============ 测试控制台 ============
 
 export const getAdminTestAccounts = (params?: {
   pageNum?: number;
@@ -198,13 +211,9 @@ export const getTestAccountOperationLogs = (
   return request.get<PaginationResponse<AdminOperationLog>>(`/api/admin/v1/test-console/accounts/${testAccountId}/logs`, { params });
 };
 
-// ============ 仪表盘 ============
-
 export const getDashboardStats = () => {
   return request.get<DashboardStats>('/api/admin/v1/dashboard/stats');
 };
-
-// ============ 运营管理 ============
 
 export const getAdminActivities = (params?: {
   pageNum?: number;
@@ -214,8 +223,6 @@ export const getAdminActivities = (params?: {
 }) => {
   return request.get<PaginationResponse<AdminActivityItem>>('/api/admin/v1/operations/activities', { params });
 };
-
-// ============ 系统管理 ============
 
 export const getAdminRewards = (params?: {
   pageNum?: number;
@@ -253,6 +260,18 @@ export const getAdminSystemConfigs = (params?: {
   return request.get<PaginationResponse<AdminSystemConfigItem>>('/api/admin/v1/system/configs', { params });
 };
 
+export const getAdminTranslationSettings = () => {
+  return request.get<AdminTranslationSettings>('/api/admin/v1/system/translation-settings');
+};
+
+export const updateAdminTranslationSettings = (data: AdminTranslationSettingsUpdatePayload) => {
+  return request.put<AdminTranslationSettings>('/api/admin/v1/system/translation-settings', data);
+};
+
+export const translateAdminText = (data: AdminTranslateRequestPayload) => {
+  return request.post<AdminTranslateResponse>('/api/admin/v1/system/translate', data);
+};
+
 export const getAdminMapTiles = (params?: {
   pageNum?: number;
   pageSize?: number;
@@ -260,22 +279,130 @@ export const getAdminMapTiles = (params?: {
   return request.get<PaginationResponse<AdminMapTileItem>>('/api/admin/v1/system/map-tiles', { params });
 };
 
-// ============ 地图与空间管理 ============
+export const getAdminRuntimeSettings = (params?: {
+  pageNum?: number;
+  pageSize?: number;
+  settingGroup?: string;
+  status?: string;
+  keyword?: string;
+}) => {
+  return request.get<PaginationResponse<AdminRuntimeSettingItem>>('/api/admin/v1/content/runtime-settings', { params });
+};
 
-export interface CityItem {
-  id: number;
-  code: string;
-  nameZh: string;
-  nameEn: string;
-  countryCode: string;
-  centerLat: number | null;
-  centerLng: number | null;
-  defaultZoom: number | null;
-  unlockType: string;
-  coverImageUrl: string | null;
-  status: string;
-  sortOrder: number | null;
-}
+export const createAdminRuntimeSetting = (data: any) => {
+  return request.post<AdminRuntimeSettingItem>('/api/admin/v1/content/runtime-settings', data);
+};
+
+export const updateAdminRuntimeSetting = (id: number, data: any) => {
+  return request.put<AdminRuntimeSettingItem>(`/api/admin/v1/content/runtime-settings/${id}`, data);
+};
+
+export const deleteAdminRuntimeSetting = (id: number) => {
+  return request.delete<boolean>(`/api/admin/v1/content/runtime-settings/${id}`);
+};
+
+export const getAdminContentAssets = (params?: {
+  pageNum?: number;
+  pageSize?: number;
+  assetKind?: string;
+  status?: string;
+  keyword?: string;
+}) => {
+  return request.get<PaginationResponse<AdminContentAssetItem>>('/api/admin/v1/content/assets', { params });
+};
+
+export const createAdminContentAsset = (data: any) => {
+  return request.post<AdminContentAssetItem>('/api/admin/v1/content/assets', data);
+};
+
+export const uploadAdminContentAsset = (payload: AdminAssetUploadPayload) => {
+  const formData = new FormData();
+  formData.append('file', payload.file);
+  formData.append('assetKind', payload.assetKind);
+  if (payload.localeCode) {
+    formData.append('localeCode', payload.localeCode);
+  }
+  if (payload.status) {
+    formData.append('status', payload.status);
+  }
+  return request.post<AdminContentAssetItem>('/api/admin/v1/content/assets/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+export const updateAdminContentAsset = (id: number, data: any) => {
+  return request.put<AdminContentAssetItem>(`/api/admin/v1/content/assets/${id}`, data);
+};
+
+export const deleteAdminContentAsset = (id: number) => {
+  return request.delete<boolean>(`/api/admin/v1/content/assets/${id}`);
+};
+
+export const getAdminTipArticles = (params?: {
+  pageNum?: number;
+  pageSize?: number;
+  cityId?: number;
+  status?: string;
+  keyword?: string;
+}) => {
+  return request.get<PaginationResponse<AdminTipArticleItem>>('/api/admin/v1/content/tips', { params });
+};
+
+export const createAdminTipArticle = (data: any) => {
+  return request.post<AdminTipArticleItem>('/api/admin/v1/content/tips', data);
+};
+
+export const updateAdminTipArticle = (id: number, data: any) => {
+  return request.put<AdminTipArticleItem>(`/api/admin/v1/content/tips/${id}`, data);
+};
+
+export const deleteAdminTipArticle = (id: number) => {
+  return request.delete<boolean>(`/api/admin/v1/content/tips/${id}`);
+};
+
+export const getAdminNotifications = (params?: {
+  pageNum?: number;
+  pageSize?: number;
+  status?: string;
+  keyword?: string;
+}) => {
+  return request.get<PaginationResponse<AdminNotificationItem>>('/api/admin/v1/content/notifications', { params });
+};
+
+export const createAdminNotification = (data: any) => {
+  return request.post<AdminNotificationItem>('/api/admin/v1/content/notifications', data);
+};
+
+export const updateAdminNotification = (id: number, data: any) => {
+  return request.put<AdminNotificationItem>(`/api/admin/v1/content/notifications/${id}`, data);
+};
+
+export const deleteAdminNotification = (id: number) => {
+  return request.delete<boolean>(`/api/admin/v1/content/notifications/${id}`);
+};
+
+export const getAdminStamps = (params?: {
+  pageNum?: number;
+  pageSize?: number;
+  status?: string;
+  keyword?: string;
+}) => {
+  return request.get<PaginationResponse<AdminStampItem>>('/api/admin/v1/content/stamps', { params });
+};
+
+export const createAdminStamp = (data: any) => {
+  return request.post<AdminStampItem>('/api/admin/v1/content/stamps', data);
+};
+
+export const updateAdminStamp = (id: number, data: any) => {
+  return request.put<AdminStampItem>(`/api/admin/v1/content/stamps/${id}`, data);
+};
+
+export const deleteAdminStamp = (id: number) => {
+  return request.delete<boolean>(`/api/admin/v1/content/stamps/${id}`);
+};
 
 export const getCities = (params?: {
   pageNum?: number;
@@ -290,11 +417,11 @@ export const getCityDetail = (id: number) => {
   return request.get<CityItem>(`/api/admin/v1/map/cities/${id}`);
 };
 
-export const createCity = (data: any) => {
+export const createCity = (data: AdminCityPayload) => {
   return request.post<CityItem>('/api/admin/v1/map/cities', { upsert: data });
 };
 
-export const updateCity = (id: number, data: any) => {
+export const updateCity = (id: number, data: AdminCityPayload) => {
   return request.put<CityItem>(`/api/admin/v1/map/cities/${id}`, { upsert: data });
 };
 
@@ -302,7 +429,39 @@ export const publishCity = (id: number) => {
   return request.put<CityItem>(`/api/admin/v1/map/cities/${id}/publish`);
 };
 
-// ========== 室内建筑 =========
+export const getSubMaps = (params?: {
+  pageNum?: number;
+  pageSize?: number;
+  cityId?: number;
+  keyword?: string;
+  status?: string;
+}) => {
+  return request.get<PaginationResponse<AdminSubMapItem>>('/api/admin/v1/map/sub-maps', { params });
+};
+
+export const getSubMapDetail = (id: number) => {
+  return request.get<AdminSubMapItem>(`/api/admin/v1/map/sub-maps/${id}`);
+};
+
+export const createSubMap = (data: AdminSubMapPayload) => {
+  return request.post<AdminSubMapItem>('/api/admin/v1/map/sub-maps', data);
+};
+
+export const updateSubMap = (id: number, data: AdminSubMapPayload) => {
+  return request.put<AdminSubMapItem>(`/api/admin/v1/map/sub-maps/${id}`, data);
+};
+
+export const publishSubMap = (id: number) => {
+  return request.put<AdminSubMapItem>(`/api/admin/v1/map/sub-maps/${id}/publish`);
+};
+
+export const previewSpatialCoordinate = (data: AdminCoordinatePreviewPayload) => {
+  return request.post<AdminCoordinatePreviewResult>('/api/admin/v1/map/spatial/coordinate-preview', data);
+};
+
+export const suggestSpatialMetadata = (data: AdminSpatialMetadataSuggestionPayload) => {
+  return request.post<AdminSpatialMetadataSuggestion>('/api/admin/v1/map/spatial/metadata/suggest', data);
+};
 
 export interface BuildingItem {
   id: number;
@@ -328,8 +487,6 @@ export const createBuilding = (data: any) => {
 export const updateBuilding = (id: number, data: any) => {
   return request.put<BuildingItem>(`/api/admin/v1/map/indoor/buildings/${id}`, data);
 };
-
-// ============ 收集与激励管理 ===========
 
 export interface CollectibleItem {
   id: number;
@@ -378,8 +535,6 @@ export const getBadges = (params?: { pageNum?: number; pageSize?: number }) => {
 export const createBadge = (data: any) => {
   return request.post<BadgeItem>('/api/admin/v1/collectibles/badges', data);
 };
-
-// ============ RBAC 权限管理 ============
 
 export interface RoleItem {
   id: number;
@@ -438,8 +593,6 @@ export const getRolePermissions = (roleId: number) => {
 export const updateRolePermissions = (roleId: number, permissionIds: number[]) => {
   return request.put<void>(`/api/admin/v1/system/roles/${roleId}/permissions`, permissionIds);
 };
-
-// ============ AI 能力中心 ============
 
 export interface AiProviderItem {
   id: number;

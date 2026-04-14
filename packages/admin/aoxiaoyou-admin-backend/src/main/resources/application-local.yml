@@ -7,7 +7,20 @@ spring:
     password: ${DB_PASSWORD:Abc123456}
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://127.0.0.1:27017/aoxiaoyou_doc}
+      uri: ${MONGODB_URI:mongodb://root:root@127.0.0.1:27017/aoxiaoyou_doc?authSource=admin}
 
 app:
   runtime: local
+  cos:
+    enabled: ${APP_COS_ENABLED:false}
+    secret-id: ${APP_COS_SECRET_ID:}
+    secret-key: ${APP_COS_SECRET_KEY:}
+    bucket-name: ${APP_COS_BUCKET_NAME:tripofmacau-1301163924}
+    region: ${APP_COS_REGION:ap-hongkong}
+    public-base-url: ${APP_COS_PUBLIC_BASE_URL:https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com}
+    base-path: ${APP_COS_BASE_PATH:miniapp/assets}
+    connection-timeout-ms: ${APP_COS_CONNECTION_TIMEOUT_MS:10000}
+    socket-timeout-ms: ${APP_COS_SOCKET_TIMEOUT_MS:30000}
+  translation:
+    bridge-enabled: ${APP_TRANSLATION_BRIDGE_ENABLED:true}
+    bridge-script-path: ${APP_TRANSLATION_BRIDGE_SCRIPT_PATH:../../../scripts/local/translation/translators_bridge.py}

@@ -5,22 +5,20 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-@Schema(description = "用户登录请求")
+@Schema(description = "Public user login request")
 public class UserLoginRequest {
 
-    @NotBlank(message = "openId 不能为空")
-    @Schema(description = "微信 openId", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "openId must not be blank")
+    @Schema(description = "Stable mini-program user openId or devtools fallback id", requiredMode = Schema.RequiredMode.REQUIRED)
     private String openId;
 
-    @Schema(description = "昵称")
     private String nickname;
 
-    @Schema(description = "头像 URL")
     private String avatarUrl;
 
-    @Schema(description = "语言偏好", example = "zh_CN")
-    private String languagePreference;
+    private String localeCode;
 
-    @Schema(description = "界面模式", example = "standard")
     private String interfaceMode;
+
+    private UserBootstrapStateRequest bootstrapState;
 }

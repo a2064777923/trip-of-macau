@@ -25,23 +25,29 @@ const ModulePlaceholder: React.FC<ModulePlaceholderProps> = ({
         <Alert
           type="info"
           showIcon
-          message="该模块已纳入正式重构范围"
-          description="当前页面先作为信息架构占位与后续实施入口，后续会按数据库、API、权限与交互设计逐步补齐。"
+          message="此模組已納入正式改版規劃"
+          description="目前先提供獨立入口與資訊架構說明，後續會依照資料模型、API、權限與操作流程逐步補齊，避免再次導向錯頁或共用不相干的管理介面。"
         />
-        <Card>
+        <Card bordered={false}>
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Space wrap>
-              {tags.map((tag) => (
-                <Tag key={tag} color="blue">{tag}</Tag>
-              ))}
-            </Space>
+            {!!tags.length && (
+              <Space wrap>
+                {tags.map((tag) => (
+                  <Tag key={tag} color="blue">
+                    {tag}
+                  </Tag>
+                ))}
+              </Space>
+            )}
             <Paragraph style={{ marginBottom: 0 }}>{description}</Paragraph>
-            {todoItems.length > 0 && (
+            {!!todoItems.length && (
               <div>
-                <Text strong>后续建设项</Text>
-                <ul>
+                <Text strong>後續建設重點</Text>
+                <ul style={{ marginTop: 12, marginBottom: 0, paddingInlineStart: 20 }}>
                   {todoItems.map((item) => (
-                    <li key={item}>{item}</li>
+                    <li key={item} style={{ marginBottom: 8 }}>
+                      {item}
+                    </li>
                   ))}
                 </ul>
               </div>

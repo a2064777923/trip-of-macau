@@ -64,6 +64,12 @@ app:
     cooldown-seconds: ${TRIGGER_COOLDOWN_SECONDS:1800}
     debounce-millis: ${TRIGGER_DEBOUNCE_MILLIS:2000}
     manual-checkin-radius: ${MANUAL_CHECKIN_RADIUS:200}
+  wechat:
+    mini-app-id: ${WECHAT_MINI_APP_ID:}
+    mini-app-secret: ${WECHAT_MINI_APP_SECRET:}
+    code2session-url: ${WECHAT_CODE2SESSION_URL:https://api.weixin.qq.com/sns/jscode2session}
+    auth-timeout-ms: ${WECHAT_AUTH_TIMEOUT_MS:5000}
+    dev-bypass-enabled: ${WECHAT_DEV_BYPASS_ENABLED:false}
 
 jwt:
   secret: ${JWT_SECRET:please-change-this-secret-in-production}

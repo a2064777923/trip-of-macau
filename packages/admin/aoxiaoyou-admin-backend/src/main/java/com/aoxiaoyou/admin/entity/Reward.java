@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDateTime;
+
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("rewards")
@@ -15,25 +17,76 @@ public class Reward extends BaseEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    private String code;
+
     @TableField("name_zh")
     private String nameZh;
 
-    private String description;
+    @TableField("name_en")
+    private String nameEn;
 
-    @TableField("stamps_required")
-    private Integer stampsRequired;
+    @TableField("name_zht")
+    private String nameZht;
 
-    @TableField("total_quantity")
-    private Integer totalQuantity;
+    @TableField("name_pt")
+    private String namePt;
 
-    @TableField("redeemed_count")
-    private Integer redeemedCount;
+    @TableField("subtitle_zh")
+    private String subtitleZh;
 
-    @TableField("start_time")
-    private java.time.LocalDateTime startTime;
+    @TableField("subtitle_en")
+    private String subtitleEn;
 
-    @TableField("end_time")
-    private java.time.LocalDateTime endTime;
+    @TableField("subtitle_zht")
+    private String subtitleZht;
+
+    @TableField("subtitle_pt")
+    private String subtitlePt;
+
+    @TableField("description_zh")
+    private String descriptionZh;
+
+    @TableField("description_en")
+    private String descriptionEn;
+
+    @TableField("description_zht")
+    private String descriptionZht;
+
+    @TableField("description_pt")
+    private String descriptionPt;
+
+    @TableField("highlight_zh")
+    private String highlightZh;
+
+    @TableField("highlight_en")
+    private String highlightEn;
+
+    @TableField("highlight_zht")
+    private String highlightZht;
+
+    @TableField("highlight_pt")
+    private String highlightPt;
+
+    @TableField("stamp_cost")
+    private Integer stampCost;
+
+    @TableField("inventory_total")
+    private Integer inventoryTotal;
+
+    @TableField("inventory_redeemed")
+    private Integer inventoryRedeemed;
+
+    @TableField("cover_asset_id")
+    private Long coverAssetId;
 
     private String status;
+
+    @TableField("sort_order")
+    private Integer sortOrder;
+
+    @TableField("publish_start_at")
+    private LocalDateTime publishStartAt;
+
+    @TableField("publish_end_at")
+    private LocalDateTime publishEndAt;
 }

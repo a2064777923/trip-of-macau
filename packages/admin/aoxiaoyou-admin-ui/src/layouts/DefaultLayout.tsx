@@ -20,11 +20,26 @@ import {
   DatabaseOutlined,
   TrophyOutlined,
 } from '@ant-design/icons';
+import brandLogo from '@shared-client-assets/logo.png';
 import { clearAdminAuth } from '../utils/auth';
 import { useAuthStore } from '../stores/auth';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
+
+const roleLabelMap: Record<string, string> = {
+  SUPER_ADMIN: '超級管理員',
+  CONTENT_ADMIN: '內容管理員',
+  OPS_ADMIN: '營運管理員',
+  TEST_ADMIN: '測試管理員',
+};
+
+function formatRoles(roles?: string[]) {
+  if (!roles?.length) {
+    return '超級管理員';
+  }
+  return roles.map((role) => roleLabelMap[role] || role).join(' / ');
+}
 
 const DefaultLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -40,69 +55,69 @@ const DefaultLayout: React.FC = () => {
       {
         key: '/dashboard',
         icon: <DashboardOutlined />,
-        label: <Link to="/dashboard">仪表盘</Link>,
+        label: <Link to="/dashboard">總覽儀表板</Link>,
       },
       {
         key: 'space',
         icon: <GlobalOutlined />,
-        label: '地图与空间管理',
+        label: '地圖與空間管理',
         children: [
-          { key: '/space/cities', icon: <DeploymentUnitOutlined />, label: <Link to="/space/cities">城市管理</Link> },
-          { key: '/space/map-tiles', icon: <EnvironmentOutlined />, label: <Link to="/space/map-tiles">城市瓦片地图</Link> },
+          { key: '/space/cities', icon: <DeploymentUnitOutlined />, label: <Link to="/space/cities">城市與子地圖</Link> },
+          { key: '/space/map-tiles', icon: <EnvironmentOutlined />, label: <Link to="/space/map-tiles">瓦片地圖</Link> },
           { key: '/space/pois', icon: <ClusterOutlined />, label: <Link to="/space/pois">POI 管理</Link> },
-          { key: '/space/indoor-buildings', icon: <ApartmentOutlined />, label: <Link to="/space/indoor-buildings">室内建筑与楼层</Link> },
-          { key: '/space/ai-navigation', icon: <SafetyCertificateOutlined />, label: <Link to="/space/ai-navigation">AI 导航配置</Link> },
+          { key: '/space/indoor-buildings', icon: <ApartmentOutlined />, label: <Link to="/space/indoor-buildings">室內建築與小地圖</Link> },
+          { key: '/space/ai-navigation', icon: <SafetyCertificateOutlined />, label: <Link to="/space/ai-navigation">AI 能力中心</Link> },
         ],
       },
       {
         key: 'content',
         icon: <NotificationOutlined />,
-        label: '故事与内容管理',
+        label: '故事與內容管理',
         children: [
-          { key: '/content/storylines', icon: <ApartmentOutlined />, label: <Link to="/content/storylines">故事线</Link> },
-          { key: '/content/chapters', icon: <ClusterOutlined />, label: <Link to="/content/chapters">章节编排</Link> },
-          { key: '/content/campaigns', icon: <NotificationOutlined />, label: <Link to="/content/campaigns">任务与活动</Link> },
-          { key: '/content/media', icon: <DatabaseOutlined />, label: <Link to="/content/media">媒体资源</Link> },
+          { key: '/content/storylines', icon: <ApartmentOutlined />, label: <Link to="/content/storylines">故事線</Link> },
+          { key: '/content/chapters', icon: <ClusterOutlined />, label: <Link to="/content/chapters">章節編排</Link> },
+          { key: '/content/campaigns', icon: <NotificationOutlined />, label: <Link to="/content/campaigns">任務與活動</Link> },
+          { key: '/content/media', icon: <DatabaseOutlined />, label: <Link to="/content/media">媒體資源</Link> },
         ],
       },
       {
         key: 'collection',
         icon: <TrophyOutlined />,
-        label: '收集与激励管理',
+        label: '收集物與獎勵',
         children: [
-          { key: '/collection/rewards', icon: <TrophyOutlined />, label: <Link to="/collection/rewards">奖励配置</Link> },
-          { key: '/collection/collectibles', icon: <DatabaseOutlined />, label: <Link to="/collection/collectibles">收集物与系列</Link> },
-          { key: '/collection/badges', icon: <SafetyCertificateOutlined />, label: <Link to="/collection/badges">徽章与奖章</Link> },
+          { key: '/collection/rewards', icon: <TrophyOutlined />, label: <Link to="/collection/rewards">獎勵配置</Link> },
+          { key: '/collection/collectibles', icon: <DatabaseOutlined />, label: <Link to="/collection/collectibles">收集物管理</Link> },
+          { key: '/collection/badges', icon: <SafetyCertificateOutlined />, label: <Link to="/collection/badges">徽章與勳章</Link> },
         ],
       },
       {
         key: 'users',
         icon: <TeamOutlined />,
-        label: '用户与进度管理',
+        label: '用戶與進度管理',
         children: [
-          { key: '/users/progress', icon: <TeamOutlined />, label: <Link to="/users/progress">用户管理</Link> },
-          { key: '/users/story-progress', icon: <UserOutlined />, label: <Link to="/users/story-progress">用户进度与轨迹</Link> },
+          { key: '/users/progress', icon: <TeamOutlined />, label: <Link to="/users/progress">用戶管理</Link> },
+          { key: '/users/story-progress', icon: <UserOutlined />, label: <Link to="/users/story-progress">用戶進度與軌跡</Link> },
         ],
       },
       {
         key: 'ops',
         icon: <ToolOutlined />,
-        label: '测试与运营管理',
+        label: '測試與營運管理',
         children: [
-          { key: '/ops/test-console', icon: <ToolOutlined />, label: <Link to="/ops/test-console">测试控制台</Link> },
-          { key: '/ops/activities', icon: <NotificationOutlined />, label: <Link to="/ops/activities">运营活动</Link> },
-          { key: '/ops/sandbox', icon: <DatabaseOutlined />, label: <Link to="/ops/sandbox">测试数据与沙盒</Link> },
+          { key: '/ops/test-console', icon: <ToolOutlined />, label: <Link to="/ops/test-console">測試控制台</Link> },
+          { key: '/ops/activities', icon: <NotificationOutlined />, label: <Link to="/ops/activities">營運活動</Link> },
+          { key: '/ops/sandbox', icon: <DatabaseOutlined />, label: <Link to="/ops/sandbox">測試資料與沙盒</Link> },
         ],
       },
       {
         key: 'system',
         icon: <SettingOutlined />,
-        label: '系统与权限管理',
+        label: '系統與權限管理',
         children: [
-          { key: '/system/admins', icon: <UserOutlined />, label: <Link to="/system/admins">管理员账号</Link> },
-          { key: '/system/roles', icon: <SafetyCertificateOutlined />, label: <Link to="/system/roles">角色与权限</Link> },
-          { key: '/system/configs', icon: <SettingOutlined />, label: <Link to="/system/configs">系统配置</Link> },
-          { key: '/system/audit', icon: <DatabaseOutlined />, label: <Link to="/system/audit">审计与日志</Link> },
+          { key: '/system/admins', icon: <UserOutlined />, label: <Link to="/system/admins">管理員帳號</Link> },
+          { key: '/system/roles', icon: <SafetyCertificateOutlined />, label: <Link to="/system/roles">角色與權限</Link> },
+          { key: '/system/configs', icon: <SettingOutlined />, label: <Link to="/system/configs">系統配置</Link> },
+          { key: '/system/audit', icon: <DatabaseOutlined />, label: <Link to="/system/audit">審計與日誌</Link> },
         ],
       },
     ],
@@ -123,12 +138,12 @@ const DefaultLayout: React.FC = () => {
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: '个人设置',
+      label: '管理員帳號',
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: '系统设置',
+      label: '系統配置',
     },
     {
       type: 'divider' as const,
@@ -136,7 +151,7 @@ const DefaultLayout: React.FC = () => {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: '退出登录',
+      label: '登出',
       danger: true,
     },
   ];
@@ -146,6 +161,14 @@ const DefaultLayout: React.FC = () => {
       clearAdminAuth();
       setUser(null);
       navigate('/login');
+      return;
+    }
+    if (e.key === 'profile') {
+      navigate('/system/admins');
+      return;
+    }
+    if (e.key === 'settings') {
+      navigate('/system/configs');
     }
   };
 
@@ -174,28 +197,20 @@ const DefaultLayout: React.FC = () => {
             color: '#2b2f42',
             fontSize: collapsed ? 18 : 20,
             fontWeight: 700,
-            padding: collapsed ? '0 8px' : '18px 20px',
+            padding: collapsed ? '18px 8px' : '18px 20px',
             gap: 12,
           }}
         >
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              display: 'grid',
-              placeItems: 'center',
-              background: 'linear-gradient(135deg, #7c5cff, #56ccf2)',
-              color: '#fff',
-            }}
-          >
-            澳
-          </div>
+          <img
+            src={brandLogo}
+            alt="Trip of Macau"
+            style={{ width: 40, height: 40, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }}
+          />
           {!collapsed && (
             <div>
-              <div>澳小遊后台</div>
+              <div>澳小遊後台</div>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                多城市内容、空间、运营一体化平台
+                多城市內容、地圖與營運一體化管理
               </Text>
             </div>
           )}
@@ -230,10 +245,10 @@ const DefaultLayout: React.FC = () => {
             />
             <div>
               <Text strong style={{ display: 'block', fontSize: 16 }}>
-                澳小遊后台管理系统
+                澳小遊後台管理系統
               </Text>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                Trip of Macau Admin Platform
+                管理小程序內容、設定、媒體與營運資料
               </Text>
             </div>
           </Space>
@@ -246,10 +261,10 @@ const DefaultLayout: React.FC = () => {
             <Space style={{ cursor: 'pointer' }}>
               <Avatar style={{ backgroundColor: '#7c5cff' }} icon={<UserOutlined />} />
               <div style={{ lineHeight: 1.2 }}>
-                <Text strong>{user?.realName || user?.username || '管理员'}</Text>
+                <Text strong>{user?.realName || user?.username || '管理員'}</Text>
                 <br />
                 <Text type="secondary" style={{ fontSize: 12 }}>
-                  {(user?.roles || []).join(' / ') || 'SUPER_ADMIN'}
+                  {formatRoles(user?.roles)}
                 </Text>
               </div>
             </Space>

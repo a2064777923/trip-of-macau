@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { useState } from 'react'
 import { ScrollView, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import PageShell from '../../../components/PageShell'
-import { getNotifications, markNotificationsRead } from '../../../services/gameService'
+import { getNotifications, isAuthRequiredError, markNotificationsRead, refreshPublicContent } from '../../../services/gameService'
 import './index.scss'
 
 const typeLabelMap = {
@@ -12,18 +12,31 @@ const typeLabelMap = {
 } as const
 
 export default function TipNotificationsPage() {
+  const [notifications, setNotifications] = useState(() => getNotifications())
+
+  const refreshNotifications = async () => {
+    try {
+      await refreshPublicContent()
+      await markNotificationsRead()
+    } catch (error) {
+      if (!isAuthRequiredError(error)) {
+        console.warn('Failed to refresh notifications.', error)
+      }
+    }
+    setNotifications(getNotifications())
+  }
+
   useDidShow(() => {
-    markNotificationsRead()
+    void refreshNotifications()
   })
 
-  const notifications = useMemo(() => getNotifications(), [])
   const unreadCount = notifications.filter((item) => item.unread).length
 
   return (
     <PageShell className='tips-notification-page'>
       <View className='tips-notification-hero'>
         <View className='tips-notification-hero__nav' onClick={() => Taro.navigateBack()}>
-          <Text className='tips-notification-hero__back'>← 返回秘籍</Text>
+          <Text className='tips-notification-hero__back'>← 返回秘笈</Text>
         </View>
         <Text className='tips-notification-hero__eyebrow'>消息中心</Text>
         <Text className='tips-notification-hero__title'>旅途通知</Text>
@@ -32,11 +45,11 @@ export default function TipNotificationsPage() {
         <View className='tips-notification-hero__summary'>
           <View className='tips-notification-hero__summaryCard'>
             <Text className='tips-notification-hero__summaryNumber'>{notifications.length}</Text>
-            <Text className='tips-notification-hero__summaryLabel'>則全部消息</Text>
+            <Text className='tips-notification-hero__summaryLabel'>全部消息</Text>
           </View>
           <View className='tips-notification-hero__summaryCard'>
             <Text className='tips-notification-hero__summaryNumber'>{unreadCount}</Text>
-            <Text className='tips-notification-hero__summaryLabel'>則未讀</Text>
+            <Text className='tips-notification-hero__summaryLabel'>未讀</Text>
           </View>
         </View>
       </View>

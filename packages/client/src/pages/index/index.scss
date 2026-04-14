@@ -57,6 +57,19 @@
   display: block;
 }
 
+.title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .app-title {
   font-size: 58px;
   font-weight: 700;
@@ -121,77 +134,219 @@
   padding: 0 28px;
 }
 
-.assessment-card {
-  margin-top: -48px;
-  position: relative;
-  z-index: 2;
+.hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
 
-  &__header,
+.map-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+
+.map-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.map-name {
+  color: #fff;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* Modals */
+.assessment-modal,
+.map-selector-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  &__content {
+    position: relative;
+    width: 85%;
+    max-height: 80vh;
+    background: #fff;
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.assessment-modal {
+  &__scroll {
+    max-height: 80vh;
+    padding: 32px;
+  }
+
+  &__header {
+    margin-bottom: 24px;
+  }
+
+  &__title {
+    font-size: 40px;
+    font-weight: 700;
+    color: #3d4350;
+    margin-bottom: 12px;
+  }
+
+  &__desc {
+    font-size: 24px;
+    line-height: 1.6;
+    color: #7a8192;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  &__loader {
+    padding: 64px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+}
+
+.loader-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ff8ba7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loader-text {
+  font-size: 28px;
+  color: #3d4350;
+  font-weight: 500;
+}
+
+.map-selector-modal {
+  &__content {
+    padding: 32px;
+    background: linear-gradient(180deg, #fffcfd 0%, #ffffff 100%);
+  }
+
+  &__title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #3d4350;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  &__close {
+    margin-top: 24px;
+    height: 80px;
+    border-radius: 999px;
+    background: #f0f2f5;
+    color: #5f6677;
+    font-size: 28px;
+    border: none;
+  }
+}
+
+.map-selector-scroll {
+  width: 100%;
+}
+
+.map-list {
+  display: flex;
+  gap: 16px;
+  padding: 8px;
+}
+
+.map-item {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 24px;
+  background: #f8f9fa;
+  border: 2px solid transparent;
+  transition: all 0.3s;
+
+  &.active {
+    background: #fff0f4;
+    border-color: #ffb38a;
+  }
+
+  &.locked {
+    opacity: 0.6;
+    background: #f0f2f5;
+  }
+
+  &__image-placeholder {
+    width: 140px;
+    height: 140px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__lock {
+    font-size: 48px;
+  }
+
+  &__name {
+    font-size: 28px;
+    font-weight: 600;
+    color: #3d4350;
+  }
+
+  &__status {
+    font-size: 20px;
+    color: #8b92a2;
+  }
+}
+
+.assessment-card {
   &__section,
   &__location {
     background: rgba(255, 255, 255, 0.96);
     border-radius: 28px;
     box-shadow: 0 14px 30px rgba(84, 71, 95, 0.1);
-  }
-
-  &__header {
-    padding: 24px;
-    display: flex;
-    gap: 16px;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-
-  &__title {
-    font-size: 34px;
-    font-weight: 700;
-    color: #3d4350;
-  }
-
-  &__desc {
-    margin-top: 10px;
-    font-size: 22px;
-    line-height: 1.7;
-    color: #7a8192;
-  }
-
-  &__skip {
-    min-width: 160px;
-    height: 72px;
-    border: none;
-    border-radius: 999px;
-    background: rgba(176, 224, 230, 0.34);
-    color: #566275;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-  }
-
-  &__steps {
-    margin-top: 18px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  &__step {
-    padding: 18px 20px;
-    border-radius: 22px;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 10px 20px rgba(84, 71, 95, 0.06);
-  }
-
-  &__stepLabel {
-    font-size: 18px;
-    color: #8b92a2;
-  }
-
-  &__stepValue {
-    margin-top: 8px;
-    font-size: 24px;
-    font-weight: 700;
-    color: #434a58;
   }
 
   &__section,
@@ -241,28 +396,14 @@
     color: #5f6677;
   }
 
-  &__chip.active &__chipText,
-  &__chip.active .assessment-card__chipText {
+  &__chip.active &__chipText {
     color: #fff;
   }
 
-  &__locationTitle {
-    font-size: 24px;
-    font-weight: 700;
-    color: #434a58;
-  }
-
-  &__locationText {
-    margin-top: 8px;
-    font-size: 20px;
-    line-height: 1.7;
-    color: #7d8697;
-  }
-
-  &__locationBtn {
-    margin-top: 18px;
-    width: 100%;
-    height: 78px;
+  &__skip {
+    min-width: 160px;
+    flex: 1;
+    height: 72px;
     border: none;
     border-radius: 999px;
     background: rgba(176, 224, 230, 0.34);
@@ -270,39 +411,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-
-    &.active {
-      background: linear-gradient(135deg, #7cc4ff 0%, #8ee0c4 100%);
-      color: #fff;
-    }
+    font-size: 22px;
   }
 
-  &__actions {
-    margin-top: 18px;
-    display: flex;
-    gap: 14px;
-  }
-
-  &__secondary,
   &__submit {
-    flex: 1;
-    height: 82px;
+    flex: 2;
+    height: 72px;
     border: none;
     border-radius: 999px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
-  }
-
-  &__secondary {
-    background: rgba(255, 255, 255, 0.92);
-    color: #5f6677;
-    box-shadow: 0 10px 20px rgba(84, 71, 95, 0.08);
-  }
-
-  &__submit {
     background: linear-gradient(135deg, #ff8ba7 0%, #ffb38a 100%);
     color: #fff;
     box-shadow: 0 14px 24px rgba(255, 139, 167, 0.2);

@@ -9,59 +9,69 @@ import java.math.BigDecimal;
 @Data
 public class AdminPoiUpsertRequest {
 
-    @NotBlank(message = "中文名称不能为空")
+    @NotNull(message = "cityId is required")
+    private Long cityId;
+
+    private Long subMapId;
+
+    private Long storylineId;
+
+    @NotBlank(message = "code is required")
+    private String code;
+
+    @NotBlank(message = "nameZh is required")
     private String nameZh;
 
     private String nameEn;
-
     private String nameZht;
+    private String namePt;
+    private String subtitleZh;
+    private String subtitleEn;
+    private String subtitleZht;
+    private String subtitlePt;
 
-    private String subtitle;
+    private String sourceCoordinateSystem = "GCJ02";
 
-    private String regionCode;
+    private BigDecimal sourceLatitude;
 
-    private String poiType;
+    private BigDecimal sourceLongitude;
 
-    @NotNull(message = "纬度不能为空")
     private BigDecimal latitude;
 
-    @NotNull(message = "经度不能为空")
     private BigDecimal longitude;
 
-    private String address;
-
-    private Long categoryId;
-
+    private String addressZh;
+    private String addressEn;
+    private String addressZht;
+    private String addressPt;
     private Integer triggerRadius;
-
-    private String checkInMethod;
-
-    private String importance;
-
-    private Long storyLineId;
-
-    private String stampType;
-
-    private String description;
-
-    private String coverImageUrl;
-
-    private String imageUrls;
-
-    private String audioGuideUrl;
-
-    private String videoUrl;
-
-    private String arContentUrl;
-
-    private String tags;
-
+    private Integer manualCheckinRadius;
+    private Integer staySeconds;
+    private String categoryCode;
     private String difficulty;
-
-    private String openTime;
-
-    private Integer suggestedVisitMinutes;
-
+    private String districtZh;
+    private String districtEn;
+    private String districtZht;
+    private String districtPt;
+    private Long coverAssetId;
+    private Long mapIconAssetId;
+    private Long audioAssetId;
+    private String descriptionZh;
+    private String descriptionEn;
+    private String descriptionZht;
+    private String descriptionPt;
+    private String introTitleZh;
+    private String introTitleEn;
+    private String introTitleZht;
+    private String introTitlePt;
+    private String introSummaryZh;
+    private String introSummaryEn;
+    private String introSummaryZht;
+    private String introSummaryPt;
+    private String popupConfigJson;
+    private String displayConfigJson;
+    private java.util.List<AdminSpatialAssetLinkUpsertRequest> attachments = new java.util.ArrayList<>();
     private String status;
+    private Integer sortOrder;
+    private String publishedAt;
 }
-

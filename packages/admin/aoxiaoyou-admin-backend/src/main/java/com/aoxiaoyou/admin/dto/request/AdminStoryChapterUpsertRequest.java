@@ -9,34 +9,43 @@ public class AdminStoryChapterUpsertRequest {
 
     @Data
     public static class Upsert {
-        @NotNull(message = "故事线 ID 不能为空")
-        private Long storyLineId;
+        private Long storylineId;
 
-        @NotNull(message = "章节序号不能为空")
-        @Min(value = 1, message = "章节序号必须大于 0")
+        @NotNull(message = "chapterOrder is required")
+        @Min(value = 1, message = "chapterOrder must be greater than 0")
         private Integer chapterOrder;
 
-        @NotBlank(message = "章节标题不能为空")
+        @NotBlank(message = "titleZh is required")
         private String titleZh;
 
         private String titleEn;
-
         private String titleZht;
-
-        private String mediaType;
-
-        private String mediaUrl;
-
-        private String scriptZh;
-
-        private String scriptEn;
-
-        private String scriptZht;
-
+        private String titlePt;
+        private String summaryZh;
+        private String summaryEn;
+        private String summaryZht;
+        private String summaryPt;
+        private String detailZh;
+        private String detailEn;
+        private String detailZht;
+        private String detailPt;
+        private String achievementZh;
+        private String achievementEn;
+        private String achievementZht;
+        private String achievementPt;
+        private String collectibleZh;
+        private String collectibleEn;
+        private String collectibleZht;
+        private String collectiblePt;
+        private String locationNameZh;
+        private String locationNameEn;
+        private String locationNameZht;
+        private String locationNamePt;
+        private Long mediaAssetId;
         private String unlockType;
-
-        private String unlockParam;
-
-        private Integer duration;
+        private String unlockParamJson;
+        private String status;
+        private Integer sortOrder;
+        private String publishedAt;
     }
 }

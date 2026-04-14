@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lisboeta Indoor Tile Preview</title>
+  <style>
+    :root {
+      --ink: #5f422d;
+      --panel: rgba(255, 250, 242, 0.88);
+      --accent: #2f7d5b;
+      --accent-soft: #d9ecdd;
+      --marker: #d24d57;
+      --bubble: rgba(255, 251, 245, 0.96);
+      --shadow: rgba(70, 45, 25, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.55), transparent 42%),
+        linear-gradient(135deg, #f5eee3, #eadfcb 55%, #e3d5bf);
+    }
+
+    body {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+    }
+
+    .sidebar {
+      padding: 22px 18px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid rgba(95, 66, 45, 0.12);
+      box-shadow: 0 0 20px var(--shadow);
+      overflow: auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      color: rgba(95, 66, 45, 0.74);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .lang-switch,
+    .floor-switch {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .lang-switch {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .lang-btn,
+    .floor-btn {
+      border: 1px solid rgba(95, 66, 45, 0.12);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.58);
+      color: var(--ink);
+      padding: 10px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+
+    .floor-btn {
+      text-align: left;
+    }
+
+    .lang-btn.active,
+    .floor-btn.active {
+      background: var(--accent-soft);
+      border-color: rgba(47, 125, 91, 0.28);
+    }
+
+    .floor-btn.active {
+      transform: translateX(4px);
+    }
+
+    .stats,
+    .poi-list {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid rgba(95, 66, 45, 0.1);
+    }
+
+    .stats p {
+      margin: 6px 0;
+      font-size: 13px;
+    }
+
+    .poi-list {
+      max-height: calc(100vh - 340px);
+      overflow: auto;
+    }
+
+    .poi-item {
+      display: block;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+      padding: 9px 0;
+      border-bottom: 1px dashed rgba(95, 66, 45, 0.16);
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .poi-item:last-child {
+      border-bottom: 0;
+    }
+
+    .poi-item strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 14px;
+    }
+
+    .canvas-shell {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .viewport {
+      position: absolute;
+      inset: 0;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .viewport.dragging {
+      cursor: grabbing;
+    }
+
+    .world {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    .tiles,
+    .poi-layer {
+      position: absolute;
+      inset: 0;
+    }
+
+    .tile {
+      position: absolute;
+      width: 256px;
+      height: 256px;
+      image-rendering: auto;
+      box-shadow: 0 0 0 1px rgba(95, 66, 45, 0.06) inset;
+    }
+
+    .poi {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--marker);
+      box-shadow: 0 0 0 4px rgba(210, 77, 87, 0.18);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+    }
+
+    .poi::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #fff;
+      transform: translate(-50%, -50%);
+    }
+
+    .poi-bubble {
+      position: absolute;
+      display: none;
+      min-width: 140px;
+      max-width: 240px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--bubble);
+      border: 1px solid rgba(95, 66, 45, 0.12);
+      box-shadow: 0 12px 24px var(--shadow);
+      transform: translate(-50%, calc(-100% - 16px));
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .poi-bubble::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -8px;
+      width: 14px;
+      height: 14px;
+      background: var(--bubble);
+      border-right: 1px solid rgba(95, 66, 45, 0.12);
+      border-bottom: 1px solid rgba(95, 66, 45, 0.12);
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    .poi-bubble strong {
+      position: relative;
+      display: block;
+      margin-bottom: 3px;
+      z-index: 1;
+      font-size: 14px;
+    }
+
+    .poi-bubble span {
+      position: relative;
+      z-index: 1;
+      display: block;
+      font-size: 12px;
+      color: rgba(95, 66, 45, 0.76);
+    }
+
+    .hint {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 250, 242, 0.82);
+      border: 1px solid rgba(95, 66, 45, 0.08);
+      font-size: 12px;
+      color: rgba(95, 66, 45, 0.76);
+      box-shadow: 0 10px 20px var(--shadow);
+    }
+
+    @media (max-width: 900px) {
+      body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+
+      .sidebar {
+        max-height: 42vh;
+      }
+
+      .poi-list {
+        max-height: 24vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1 id="title">Lisboeta 手繪瓦片預覽</h1>
+    <p class="subtitle" id="subtitle"></p>
+    <div class="lang-switch" id="langSwitch"></div>
+    <div class="floor-switch" id="floorSwitch"></div>
+    <section class="stats" id="stats"></section>
+    <section class="poi-list" id="poiList"></section>
+  </aside>
+
+  <main class="canvas-shell">
+    <div class="viewport" id="viewport">
+      <div class="world" id="world">
+        <div class="tiles" id="tiles"></div>
+        <div class="poi-layer" id="poiLayer">
+          <div class="poi-bubble" id="poiBubble">
+            <strong id="bubbleName"></strong>
+            <span id="bubbleMeta"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hint" id="hint"></div>
+  </main>
+
+  <script src="../assets/manifest.js"></script>
+  <script>
+    const viewport = document.getElementById("viewport");
+    const world = document.getElementById("world");
+    const tilesEl = document.getElementById("tiles");
+    const poiLayerEl = document.getElementById("poiLayer");
+    const floorSwitchEl = document.getElementById("floorSwitch");
+    const statsEl = document.getElementById("stats");
+    const poiListEl = document.getElementById("poiList");
+    const langSwitchEl = document.getElementById("langSwitch");
+    const titleEl = document.getElementById("title");
+    const subtitleEl = document.getElementById("subtitle");
+    const hintEl = document.getElementById("hint");
+    const poiBubbleEl = document.getElementById("poiBubble");
+    const bubbleNameEl = document.getElementById("bubbleName");
+    const bubbleMetaEl = document.getElementById("bubbleMeta");
+
+    const LANGUAGES = ["tc", "sc", "en"];
+    const I18N = {
+      tc: {
+        title: "Lisboeta 手繪瓦片預覽",
+        subtitle: "保留同一套瓦片資料，支援繁中、簡中、英文切換。點擊紅色 POI 會在頂部彈出名稱氣泡。",
+        hint: "拖拽平移 · 滾輪縮放 · 點紅點顯示名稱",
+        currentFloor: "當前樓層",
+        size: "尺寸",
+        tiles: "瓦片",
+        poiCount: "POI 數量",
+        loadError: "預覽載入失敗：請重新執行生成腳本，或改用本地 HTTP 服務打開此頁。",
+        labels: { tc: "繁中", sc: "简中", en: "EN" },
+      },
+      sc: {
+        title: "Lisboeta 手绘瓦片预览",
+        subtitle: "保留同一套瓦片数据，支持繁中、简中、英文切换。点击红色 POI 会在顶部弹出名称气泡。",
+        hint: "拖拽平移 · 滚轮缩放 · 点红点显示名称",
+        currentFloor: "当前楼层",
+        size: "尺寸",
+        tiles: "瓦片",
+        poiCount: "POI 数量",
+        loadError: "预览加载失败：请重新执行生成脚本，或改用本地 HTTP 服务打开此页。",
+        labels: { tc: "繁中", sc: "简中", en: "EN" },
+      },
+      en: {
+        title: "Lisboeta Hand-Drawn Tile Preview",
+        subtitle: "The same tile set now supports Traditional Chinese, Simplified Chinese, and English labels. Click a red POI to show a name bubble.",
+        hint: "Drag to pan · Wheel to zoom · Click POI to show name",
+        currentFloor: "Current floor",
+        size: "Size",
+        tiles: "Tiles",
+        poiCount: "POI count",
+        loadError: "Preview failed to load. Re-run the generator script or open this page through a local HTTP server.",
+        labels: { tc: "繁中", sc: "简中", en: "EN" },
+      },
+    };
+
+    let manifest;
+    let activeFloor;
+    let activeLanguage = "tc";
+    let activePoi = null;
+    let scale = 0.82;
+    let offsetX = 30;
+    let offsetY = 30;
+    let dragState = null;
+
+    function t(key) {
+      return I18N[activeLanguage][key];
+    }
+
+    function getFloorLabel(floor) {
+      return floor.labels?.[activeLanguage] || floor.labels?.tc || floor.floor_id;
+    }
+
+    function getPoiName(poi) {
+      if (activeLanguage === "tc") return poi.name_tc || poi.name_en;
+      if (activeLanguage === "sc") return poi.name_sc || poi.name_tc || poi.name_en;
+      return poi.name_en || poi.name_tc || poi.name_sc;
+    }
+
+    function renderTransform() {
+      world.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+      renderBubble();
+    }
+
+    function centerFloor(floor) {
+      const vw = viewport.clientWidth;
+      const vh = viewport.clientHeight;
+      const fitScale = Math.min(vw / floor.width, vh / floor.height, 1);
+      scale = fitScale * 0.92;
+      offsetX = (vw - floor.width * scale) * 0.5;
+      offsetY = (vh - floor.height * scale) * 0.5;
+      renderTransform();
+    }
+
+    function floorPois(floorId) {
+      return manifest.pois.filter((poi) => poi.floor_id === floorId);
+    }
+
+    function hideBubble() {
+      activePoi = null;
+      poiBubbleEl.style.display = "none";
+    }
+
+    function renderBubble() {
+      if (!activePoi || activePoi.floor_id !== activeFloor.floor_id) {
+        poiBubbleEl.style.display = "none";
+        return;
+      }
+
+      poiBubbleEl.style.display = "block";
+      poiBubbleEl.style.left = `${activePoi.center_x}px`;
+      poiBubbleEl.style.top = `${activePoi.center_y}px`;
+      bubbleNameEl.textContent = getPoiName(activePoi);
+      bubbleMetaEl.textContent = `${activePoi.code} · ${getFloorLabel(activeFloor)}`;
+    }
+
+    function focusPoi(poi, showBubble = true) {
+      const targetScale = Math.max(scale, 1.35);
+      const vw = viewport.clientWidth;
+      const vh = viewport.clientHeight;
+      scale = targetScale;
+      offsetX = vw * 0.5 - poi.center_x * scale;
+      offsetY = vh * 0.5 - poi.center_y * scale;
+      activePoi = showBubble ? poi : null;
+      renderTransform();
+    }
+
+    function renderLanguageButtons() {
+      langSwitchEl.innerHTML = "";
+      LANGUAGES.forEach((lang) => {
+        const button = document.createElement("button");
+        button.className = `lang-btn${lang === activeLanguage ? " active" : ""}`;
+        button.textContent = I18N[activeLanguage].labels[lang];
+        button.addEventListener("click", () => {
+          activeLanguage = lang;
+          render();
+        });
+        langSwitchEl.appendChild(button);
+      });
+    }
+
+    function renderFloorButtons() {
+      floorSwitchEl.innerHTML = "";
+      manifest.floors.forEach((floor) => {
+        const button = document.createElement("button");
+        button.className = `floor-btn${floor.floor_id === activeFloor.floor_id ? " active" : ""}`;
+        button.textContent = getFloorLabel(floor);
+        button.addEventListener("click", () => {
+          activeFloor = floor;
+          hideBubble();
+          render();
+          centerFloor(activeFloor);
+        });
+        floorSwitchEl.appendChild(button);
+      });
+    }
+
+    function renderTiles() {
+      tilesEl.innerHTML = "";
+      poiLayerEl.querySelectorAll(".poi").forEach((node) => node.remove());
+      world.style.width = `${activeFloor.width}px`;
+      world.style.height = `${activeFloor.height}px`;
+
+      for (let row = 0; row < activeFloor.tile_rows; row += 1) {
+        for (let col = 0; col < activeFloor.tile_cols; col += 1) {
+          const tile = document.createElement("img");
+          tile.className = "tile";
+          tile.alt = `${activeFloor.floor_id}-${col}-${row}`;
+          tile.src = activeFloor.tile_path_template
+            .replace("{col}", col)
+            .replace("{row}", row);
+          tile.style.left = `${col * activeFloor.tile_size}px`;
+          tile.style.top = `${row * activeFloor.tile_size}px`;
+          tilesEl.appendChild(tile);
+        }
+      }
+
+      floorPois(activeFloor.floor_id).forEach((poi) => {
+        const marker = document.createElement("button");
+        marker.className = "poi";
+        marker.title = `${poi.code} · ${getPoiName(poi)}`;
+        marker.style.left = `${poi.center_x}px`;
+        marker.style.top = `${poi.center_y}px`;
+        marker.addEventListener("click", (event) => {
+          event.stopPropagation();
+          activePoi = poi;
+          focusPoi(poi, true);
+        });
+        poiLayerEl.appendChild(marker);
+      });
+
+      renderBubble();
+    }
+
+    function renderStats() {
+      const pois = floorPois(activeFloor.floor_id);
+      statsEl.innerHTML = `
+        <p><strong>${t("currentFloor")}</strong>：${getFloorLabel(activeFloor)}</p>
+        <p><strong>${t("size")}</strong>：${activeFloor.width} × ${activeFloor.height}</p>
+        <p><strong>${t("tiles")}</strong>：${activeFloor.tile_cols} × ${activeFloor.tile_rows}</p>
+        <p><strong>${t("poiCount")}</strong>：${pois.length}</p>
+      `;
+    }
+
+    function renderPoiList() {
+      poiListEl.innerHTML = "";
+      floorPois(activeFloor.floor_id).forEach((poi) => {
+        const button = document.createElement("button");
+        button.className = "poi-item";
+        button.innerHTML = `<strong>${getPoiName(poi)}</strong><span>${poi.code} · ${poi.tile_id}</span>`;
+        button.addEventListener("click", () => {
+          activePoi = poi;
+          focusPoi(poi, true);
+        });
+        poiListEl.appendChild(button);
+      });
+    }
+
+    function renderChrome() {
+      titleEl.textContent = t("title");
+      subtitleEl.textContent = t("subtitle");
+      hintEl.textContent = t("hint");
+    }
+
+    function render() {
+      renderChrome();
+      renderLanguageButtons();
+      renderFloorButtons();
+      renderTiles();
+      renderStats();
+      renderPoiList();
+      renderTransform();
+    }
+
+    viewport.addEventListener("pointerdown", (event) => {
+      dragState = { x: event.clientX, y: event.clientY, offsetX, offsetY };
+      viewport.classList.add("dragging");
+    });
+
+    window.addEventListener("pointermove", (event) => {
+      if (!dragState) return;
+      offsetX = dragState.offsetX + (event.clientX - dragState.x);
+      offsetY = dragState.offsetY + (event.clientY - dragState.y);
+      renderTransform();
+    });
+
+    window.addEventListener("pointerup", () => {
+      dragState = null;
+      viewport.classList.remove("dragging");
+    });
+
+    viewport.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const rect = viewport.getBoundingClientRect();
+      const pointerX = event.clientX - rect.left;
+      const pointerY = event.clientY - rect.top;
+      const worldX = (pointerX - offsetX) / scale;
+      const worldY = (pointerY - offsetY) / scale;
+      const nextScale = Math.min(3.2, Math.max(0.45, scale * (event.deltaY < 0 ? 1.12 : 0.89)));
+      scale = nextScale;
+      offsetX = pointerX - worldX * scale;
+      offsetY = pointerY - worldY * scale;
+      renderTransform();
+    }, { passive: false });
+
+    viewport.addEventListener("click", () => hideBubble());
+
+    function boot(data) {
+      manifest = data;
+      if (!manifest || !Array.isArray(manifest.floors) || manifest.floors.length === 0) {
+        throw new Error("Manifest missing floors.");
+      }
+      activeFloor = manifest.floors[0];
+      render();
+      centerFloor(activeFloor);
+    }
+
+    const embeddedManifest = window.__MAP_MANIFEST__;
+    if (embeddedManifest) {
+      boot(embeddedManifest);
+    } else {
+      fetch("../assets/manifest.json")
+        .then((response) => response.json())
+        .then((data) => boot(data))
+        .catch((error) => {
+          console.error(error);
+          statsEl.innerHTML = `<p><strong>${t("loadError")}</strong></p>`;
+        });
+    }
+  </script>
+</body>
+</html>

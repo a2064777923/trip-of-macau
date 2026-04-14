@@ -1,0 +1,27 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="100" y1="80" x2="1480" y2="820" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8F5DB"/>
+      <stop offset="0.42" stop-color="#9FD98B"/>
+      <stop offset="1" stop-color="#2A6C55"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="1260" cy="160" r="78" fill="#FFF8D7" fill-opacity="0.88"/>
+  <rect x="0" y="650" width="1600" height="250" fill="#244C3C"/>
+  <path d="M104 662C188 622 308 604 434 618C588 636 712 704 848 708C1002 713 1138 634 1276 622C1378 613 1480 623 1600 664V900H104V662Z" fill="#1B3E31"/>
+  <path d="M246 650L370 534L492 650V764H246V650Z" fill="#F5E3C2"/>
+  <rect x="296" y="594" width="44" height="170" fill="#D2B27D"/>
+  <rect x="398" y="594" width="44" height="170" fill="#D2B27D"/>
+  <rect x="274" y="682" width="188" height="18" fill="#C08C4E"/>
+  <path d="M654 624L786 502L918 624V770H654V624Z" fill="#F7EAD3"/>
+  <rect x="716" y="560" width="36" height="210" fill="#D6B98A"/>
+  <rect x="822" y="560" width="36" height="210" fill="#D6B98A"/>
+  <path d="M1048 638L1156 544L1260 638V756H1048V638Z" fill="#EDE1C8"/>
+  <path d="M1160 512L1188 468L1218 512H1160Z" fill="#A33D3D"/>
+  <rect x="1186" y="512" width="8" height="110" fill="#6E3A3A"/>
+  <path d="M1180 526H1198L1218 544V548H1160V544L1180 526Z" fill="#C15B5B"/>
+  <path d="M190 726C258 686 332 674 410 680C476 685 548 714 624 713C702 712 764 684 838 676C932 665 1014 687 1088 724" stroke="#D8EDC5" stroke-width="24" stroke-linecap="round"/>
+  <text x="124" y="138" fill="#103B2F" font-family="'Noto Serif TC', serif" font-size="68" font-weight="700">華東師範大學</text>
+  <text x="124" y="214" fill="#255947" font-family="'Noto Sans TC', sans-serif" font-size="32">校園地圖示例封面</text>
+</svg>

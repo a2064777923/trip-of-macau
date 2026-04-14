@@ -32,13 +32,8 @@ public class TestAccountServiceImpl implements TestAccountService {
         queryWrapper.orderByDesc(TestAccount::getCreatedAt);
         
         Page<TestAccount> page = testAccountMapper.selectPage(new Page<>(pageNum, pageSize), queryWrapper);
-        
-        return new PageResponse<>(
-                page.getRecords(),
-                page.getTotal(),
-                page.getCurrent(),
-                page.getSize()
-        );
+
+        return PageResponse.of(page);
     }
     
     @Override

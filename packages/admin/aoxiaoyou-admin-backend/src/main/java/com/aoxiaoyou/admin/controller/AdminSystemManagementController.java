@@ -3,11 +3,16 @@ package com.aoxiaoyou.admin.controller;
 import com.aoxiaoyou.admin.common.api.ApiResponse;
 import com.aoxiaoyou.admin.common.api.PageResponse;
 import com.aoxiaoyou.admin.dto.request.AdminRewardUpsertRequest;
+import com.aoxiaoyou.admin.dto.request.AdminTranslateRequest;
+import com.aoxiaoyou.admin.dto.request.AdminTranslationSettingsUpsertRequest;
 import com.aoxiaoyou.admin.dto.response.AdminMapTileResponse;
 import com.aoxiaoyou.admin.dto.response.AdminOperationLogResponse;
 import com.aoxiaoyou.admin.dto.response.AdminRewardResponse;
 import com.aoxiaoyou.admin.dto.response.AdminSystemConfigResponse;
+import com.aoxiaoyou.admin.dto.response.AdminTranslateResponse;
+import com.aoxiaoyou.admin.dto.response.AdminTranslationSettingsResponse;
 import com.aoxiaoyou.admin.service.AdminSystemManagementService;
+import com.aoxiaoyou.admin.service.AdminTranslationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -21,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminSystemManagementController {
 
     private final AdminSystemManagementService adminSystemManagementService;
+    private final AdminTranslationService adminTranslationService;
 
     @Operation(summary = "分页查询奖励配置")
     @GetMapping("/rewards")
@@ -66,6 +72,24 @@ public class AdminSystemManagementController {
             @RequestParam(defaultValue = "10") long pageSize,
             @RequestParam(required = false) String keyword) {
         return ApiResponse.success(adminSystemManagementService.pageConfigs(pageNum, pageSize, keyword));
+    }
+
+    @Operation(summary = "获取翻译设置")
+    @GetMapping("/translation-settings")
+    public ApiResponse<AdminTranslationSettingsResponse> getTranslationSettings() {
+        return ApiResponse.success(adminTranslationService.getSettings());
+    }
+
+    @Operation(summary = "更新翻译设置")
+    @PutMapping("/translation-settings")
+    public ApiResponse<AdminTranslationSettingsResponse> updateTranslationSettings(@RequestBody AdminTranslationSettingsUpsertRequest request) {
+        return ApiResponse.success(adminTranslationService.updateSettings(request));
+    }
+
+    @Operation(summary = "执行多语言翻译")
+    @PostMapping("/translate")
+    public ApiResponse<AdminTranslateResponse> translate(@RequestBody AdminTranslateRequest request) {
+        return ApiResponse.success(adminTranslationService.translate(request));
     }
 
     @Operation(summary = "分页查询地图瓦片配置")

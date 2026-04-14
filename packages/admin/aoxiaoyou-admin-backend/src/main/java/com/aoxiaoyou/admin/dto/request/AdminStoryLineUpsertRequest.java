@@ -7,37 +7,31 @@ public class AdminStoryLineUpsertRequest {
 
     @Data
     public static class Upsert {
-        @NotBlank(message = "故事线编码不能为空")
+        private Long cityId;
+
+        @NotBlank(message = "code is required")
         private String code;
 
-        @NotBlank(message = "中文名称不能为空")
+        @NotBlank(message = "nameZh is required")
         private String nameZh;
 
         private String nameEn;
-
-        private String description;
-
-        private String coverUrl;
-
-        private String bannerUrl;
-
-        private Integer totalChapters;
-
-        private String category;
-
+        private String nameZht;
+        private String namePt;
+        private String descriptionZh;
+        private String descriptionEn;
+        private String descriptionZht;
+        private String descriptionPt;
+        private Integer estimatedMinutes;
         private String difficulty;
-
-        private Integer estimatedDurationMinutes;
-
-        private String tags;
-
+        private Long coverAssetId;
+        private Long bannerAssetId;
+        private String rewardBadgeZh;
+        private String rewardBadgeEn;
+        private String rewardBadgeZht;
+        private String rewardBadgePt;
         private String status;
-
-        private String publishAt;
-
-        private String startAt;
-
-        private String endAt;
+        private Integer sortOrder;
+        private String publishedAt;
     }
 }
-

@@ -162,3 +162,41 @@ mvn spring-boot:run
 ## 許可證
 
 Private Project - All Rights Reserved
+
+## Local Backend Foundation (Phase 1)
+
+Use this flow when working on the live mini-program backend foundation.
+
+1. Start local datastores:
+
+```bash
+docker compose -f docker-compose.local.yml up -d mysql mongodb
+```
+
+2. Start the public backend in a separate terminal:
+
+```bash
+cmd /c scripts\local\start-public-backend.cmd
+```
+
+3. Start the admin backend in a separate terminal:
+
+```bash
+cmd /c scripts\local\start-admin-backend.cmd
+```
+
+4. Run the Phase 1 smoke harness:
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/local/smoke-phase-01-foundation.ps1
+```
+
+Notes:
+
+- Phase 1 does not require Redis for the local smoke path. The public backend local profile disables Redis health as a startup blocker.
+- Local Mongo authentication uses `root:root` with `authSource=admin`.
+- If port `3306` is already occupied by a local MySQL instance, the smoke script reuses that server as long as `root / Abc123456` can reach database `aoxiaoyou`.
+- The smoke script verifies these exact endpoints:
+  - `http://127.0.0.1:8080/api/v1/health`
+  - `http://127.0.0.1:8080/actuator/health`
+  - `http://127.0.0.1:8081/api/v1/health`

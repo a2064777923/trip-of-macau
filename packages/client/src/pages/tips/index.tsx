@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Input, ScrollView, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import PageShell from '../../components/PageShell'
-import { getTipArticles, getUnreadNotificationCount } from '../../services/gameService'
+import { getTipArticles, getUnreadNotificationCount, refreshPublicContent } from '../../services/gameService'
 import './index.scss'
 
 const categories = ['全部', '新手攻略', '慢遊推薦', '拍照秘籍']
@@ -13,17 +13,22 @@ export default function TipsPage() {
   const [articles, setArticles] = useState(() => getTipArticles())
   const [unreadCount, setUnreadCount] = useState(() => getUnreadNotificationCount())
 
-  const refreshPageState = () => {
+  const refreshPageState = async () => {
+    try {
+      await refreshPublicContent()
+    } catch (error) {
+      console.warn('Failed to refresh tips content.', error)
+    }
     setArticles(getTipArticles())
     setUnreadCount(getUnreadNotificationCount())
   }
 
   useEffect(() => {
-    refreshPageState()
+    void refreshPageState()
   }, [])
 
   useDidShow(() => {
-    refreshPageState()
+    void refreshPageState()
   })
 
   const filtered = useMemo(() => {
