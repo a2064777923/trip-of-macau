@@ -1,60 +1,47 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: 後台管理系統的改進與完善
-status: active
-stopped_at: roadmap created, ready for phase 7 planning
-last_updated: "2026-04-13T19:05:00+08:00"
-last_activity: 2026-04-13
+milestone: v2.1
+milestone_name: interaction-rules-and-ai-capability-platform
+status: Ready to execute
+stopped_at: Phase 17 planned, ready to execute
+last_updated: "2026-04-16T17:31:58.568Z"
+last_activity: 2026-04-16 -- Phase 17 planning complete
 progress:
-  total_phases: 7
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 5
+  completed_phases: 3
+  total_plans: 13
+  completed_plans: 10
+  percent: 77
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-13)
+See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Phase 7 roadmap kickoff for the admin shell and real-auth rebuild
+**Current focus:** Phase 17 is now planned and ready to execute, covering public indoor runtime evaluation and mini-program alignment on top of the completed authoring and governance phases.
 
 ## Current Position
 
-Phase: 7 - Admin Shell and Real Auth Alignment
-Plan: -
-Status: Roadmap created, ready for phase planning
-Last activity: 2026-04-13 - Milestone v2.0 roadmap created
+Phase: 17 - Indoor Runtime Evaluation and Mini-Program Alignment
+Plan: 01-03 Status: Ready to execute
+Last activity: 2026-04-16 -- Phase 17 planning complete
 
-Progress: [----------] 0%
+Progress: [########--] 77%
 
 ## Performance Metrics
 
-**Velocity:**
+**Completed milestones:**
 
-- Total plans completed: 19
-- Phase 1 has the only explicit per-plan timing data so far
-- The full six-phase backend cutover and hardening milestone completed in one execution day
+- `v1.0`: 6 phases, 19 plans, live backend cutover shipped on 2026-04-13
+- `v2.0`: 6 executed phases, 15 plans, archived with accepted gaps on 2026-04-15
 
-**By Phase:**
+**Recent trend:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 1 | 4/4 | 49 min | 12 min |
-| 2 | 3/3 | brownfield pass | n/a |
-| 3 | 3/3 | integration pass | n/a |
-| 4 | 3/3 | brownfield pass | n/a |
-| 5 | 3/3 | brownfield pass | n/a |
-| 6 | 3/3 | brownfield pass | n/a |
-
-**Recent Trend:**
-
-- Last 5 plans: 05-02, 05-03, 06-01, 06-02, 06-03
-- Trend: Completed the mock-to-live cutover with repeatable seed migration, operator health visibility, and full-stack smoke proof
+- The project has moved from the first control-plane reconstruction pass into explicit carryover closure plus platform-heavy authoring and runtime work.
+- Verification quality improved through smoke harnesses, but milestone closeout discipline must remain tighter in `v2.1` than it was in the archived `v2.0`.
 
 ## Accumulated Context
 
@@ -63,33 +50,39 @@ Progress: [----------] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Phase 0]: Use `packages/server` as the public API surface for the mini-program
-- [Phase 0]: Treat `/admin` as the authoritative control plane for mini-program content/settings
-- [Phase 0]: Use MySQL as the primary source of truth for the live backend cutover
-- [Phase 1]: Lock shared publish-state, locale, and asset semantics through mirrored public/admin enums and a canonical contract matrix
-- [Phase 1]: Keep Phase 1 runtime seed data deterministic and ASCII-safe until full localized content migration lands in Phase 6
-- [Phase 1]: Support host-managed MySQL on port `3306` in local smoke verification instead of assuming compose owns the port
-- [Phase 2]: Align local brownfield MySQL tables forward to the canonical schema instead of teaching new admin APIs to read legacy-only columns
-- [Phase 2]: Allow Mongo bootstrap to fail open during local admin startup so optional document-store drift does not block MySQL-backed control-plane verification
-- [Phase 5]: Keep COS uploads in the admin backend and reuse `content_assets.canonical_url` as the shared admin/public asset contract
-- [Phase 6]: Treat MySQL tables plus admin-managed runtime settings as the canonical replacement for former client mock content
-- [Phase 6]: Cut dashboard and traveler admin views over to `user_profiles`, `user_progress`, and `user_checkins` so admin sees real public writes
-- [Milestone v2.0]: Split the expansion into `v2.0` admin/control-plane reconstruction and `v2.1` platform-heavy interaction/AI work
-- [Milestone v2.0]: Treat Traditional Chinese-first admin UX, four-language authoring, and real-login alignment as first-class milestone scope
+- Use `packages/server` as the public API surface for the mini-program.
+- Keep `/admin` as the authoritative control plane for mini-program content, settings, media, and operator workflows.
+- Keep MySQL as the primary source of truth for live runtime content and admin/public integration.
+- Keep COS uploads in the admin backend and reuse canonical asset metadata across admin and public surfaces.
+- Split the post-cutover expansion into `v2.0` reconstruction and `v2.1` platformization.
+- Archive `v2.0` with explicit carryover instead of pretending full requirement closure where it did not happen.
+- Keep Phase 15 scoped to indoor rule authoring, persistence, and admin proof; runtime evaluation now follows in Phase 17 after the inserted workbench/governance phase.
+- Split the newly discovered indoor rule workbench/governance scope into its own phase instead of overloading Phase 15's authoring baseline.
+- Keep Phase 17 additive on the public side: use dedicated indoor runtime snapshot and interaction endpoints instead of mutating the existing static floor contract.
+- Use a dedicated `indoor_runtime_logs` audit model and deterministic Lisboa fixture promotion rather than overloading POI-oriented trigger logs.
 
 ### Pending Todos
 
-None yet.
+- Build indoor runtime evaluation and mini-program alignment in Phase 17.
+- Build the AI capability center with governance and overview support in Phase 18.
 
 ### Blockers/Concerns
 
-- No phase-blocking gaps remain from `v1.0`, but the new milestone dramatically expands admin/data-model complexity and will need careful scope control.
-- COS secrets must continue to remain outside tracked files during future environment rollout work.
-- Automated regression coverage is still lighter than the integration smoke harness, so future changes should keep rerunning the Phase 6 smoke until deeper tests land.
-- `v2.1` already has known deferred items (full indoor interaction rules and AI provider platformization); roadmap work must avoid silently pulling them back into `v2.0`.
+- `v2.0` was archived without a dedicated milestone audit; `v2.1` must not repeat that closure pattern.
+- The repository remains dirty, so milestone tagging and clean release commits were intentionally skipped.
+- COS secrets and any provider secrets must continue to stay outside tracked files.
+- `v2.1` requires real verification on the live local stack (`8081` admin, `8080` public, mini-program runtime), not plan-only completion.
+- Phase 17 execution must keep the Phase 15 and Phase 16 authored model canonical instead of inventing a second runtime write schema.
+- Phase 17 must leave behind repeatable proof through backend tests, a public-stack smoke script, and a mini-program build plus UAT path.
+
+### Roadmap Evolution
+
+- Phase 16 inserted after Phase 15: Indoor Rule Workbench and Governance Center (URGENT)
+- Former Phase 16 moved to Phase 17: Indoor Runtime Evaluation and Mini-Program Alignment
+- Former Phase 17 moved to Phase 18: AI Capability Center
 
 ## Session Continuity
 
-Last session: 2026-04-13 19:05
-Stopped at: roadmap created, ready for phase 7 planning
+Last session: 2026-04-15
+Stopped at: Phase 17 planned, ready to execute
 Resume file: None
