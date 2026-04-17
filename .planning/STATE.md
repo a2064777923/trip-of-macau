@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: Milestone complete
-stopped_at: Phase 17 planned, ready to execute
-last_updated: "2026-04-17T05:35:26.804Z"
-last_activity: 2026-04-17
+milestone: v2.1
+milestone_name: Interactive Rules Platform and AI Capability Center
+status: Phase 18 complete
+stopped_at: Phase 18 verified, milestone ready for closeout
+last_updated: "2026-04-17T05:45:00.000Z"
+last_activity: 2026-04-17 -- Phase 18 verified and completed
 progress:
   total_phases: 5
   completed_phases: 5
@@ -18,18 +18,18 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-16)
+See: .planning/PROJECT.md (updated 2026-04-17)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Phase 18 — AI Capability Center
+**Current focus:** Milestone closeout after Phase 18
 
 ## Current Position
 
-Phase: 18
-Plan: Not started
-Last activity: 2026-04-17
+Phase: 18 (AI Capability Center) - COMPLETE
+Plan: 4 of 4 complete
+Last activity: 2026-04-17 -- Phase 18 verified and completed
 
-Progress: [########--] 77%
+Progress: [##########] 100%
 
 ## Performance Metrics
 
@@ -41,7 +41,7 @@ Progress: [########--] 77%
 **Recent trend:**
 
 - The project has moved from the first control-plane reconstruction pass into explicit carryover closure plus platform-heavy authoring and runtime work.
-- Verification quality improved through smoke harnesses, but milestone closeout discipline must remain tighter in `v2.1` than it was in the archived `v2.0`.
+- Verification quality improved through smoke harnesses, and Phase 18 now adds browser-verified admin coverage on top of backend tests and smoke.
 
 ## Accumulated Context
 
@@ -60,29 +60,27 @@ Recent decisions affecting current work:
 - Split the newly discovered indoor rule workbench/governance scope into its own phase instead of overloading Phase 15's authoring baseline.
 - Keep Phase 17 additive on the public side: use dedicated indoor runtime snapshot and interaction endpoints instead of mutating the existing static floor contract.
 - Use a dedicated `indoor_runtime_logs` audit model and deterministic Lisboa fixture promotion rather than overloading POI-oriented trigger logs.
+- Keep suspicious-concurrency governance active through the real provider execution window in Phase 18 instead of releasing the lease before the downstream call.
 
 ### Pending Todos
 
-- Build indoor runtime evaluation and mini-program alignment in Phase 17.
-- Build the AI capability center with governance and overview support in Phase 18.
+- Run milestone closeout for `v2.1` when ready.
 
 ### Blockers/Concerns
 
-- `v2.0` was archived without a dedicated milestone audit; `v2.1` must not repeat that closure pattern.
+- `v2.0` was archived without a dedicated milestone audit; `v2.1` should still be closed with stricter milestone discipline.
 - The repository remains dirty, so milestone tagging and clean release commits were intentionally skipped.
-- COS secrets and any provider secrets must continue to stay outside tracked files.
-- `v2.1` requires real verification on the live local stack (`8081` admin, `8080` public, mini-program runtime), not plan-only completion.
-- Phase 17 execution must keep the Phase 15 and Phase 16 authored model canonical instead of inventing a second runtime write schema.
-- Phase 17 must leave behind repeatable proof through backend tests, a public-stack smoke script, and a mini-program build plus UAT path.
+- COS secrets and provider secrets must continue to stay outside tracked files.
+- Local Mongo still emits a warning in this workstation setup, though the admin HTTP stack remains healthy for verified Phase 18 flows.
 
 ### Roadmap Evolution
 
-- Phase 16 inserted after Phase 15: Indoor Rule Workbench and Governance Center (URGENT)
+- Phase 16 inserted after Phase 15: Indoor Rule Workbench and Governance Center (urgent)
 - Former Phase 16 moved to Phase 17: Indoor Runtime Evaluation and Mini-Program Alignment
 - Former Phase 17 moved to Phase 18: AI Capability Center
 
 ## Session Continuity
 
-Last session: 2026-04-15
-Stopped at: Phase 17 planned, ready to execute
+Last session: 2026-04-17
+Stopped at: Phase 18 complete, ready for milestone closeout
 Resume file: None

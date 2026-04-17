@@ -21,9 +21,9 @@
 
 ### AI Capability Platform
 
-- [ ] **AI-01**: Operator can manage an AI capability center with per-capability provider configuration across mainstream providers and custom endpoints.
-- [ ] **AI-02**: Operator can configure provider fallback, manual switching, quotas, suspicious-concurrency throttling, and usage governance without exposing API secrets.
-- [ ] **AI-03**: Operator can inspect cross-capability AI usage, health, and status from a central overview.
+- [x] **AI-01**: Operator can manage an AI capability center with per-capability provider configuration across mainstream providers and custom endpoints.
+- [x] **AI-02**: Operator can configure provider fallback, manual switching, quotas, suspicious-concurrency throttling, and usage governance without exposing API secrets.
+- [x] **AI-03**: Operator can inspect cross-capability AI usage, health, and status from a central overview.
 
 ## Out of Scope
 
@@ -46,9 +46,9 @@
 | RULE-04 | Phase 16 | Pending |
 | RULE-05 | Phase 16 | Pending |
 | RULE-03 | Phase 17 | Pending |
-| AI-01 | Phase 18 | Pending |
-| AI-02 | Phase 18 | Pending |
-| AI-03 | Phase 18 | Pending |
+| AI-01 | Phase 18 | Complete |
+| AI-02 | Phase 18 | Complete |
+| AI-03 | Phase 18 | Complete |
 
 **Coverage:**
 - v2.1 requirements: 11 total
@@ -57,4 +57,4 @@
 
 ---
 *Requirements defined: 2026-04-15*
-*Last updated: 2026-04-16 after inserting the dedicated rule-workbench/governance phase into v2.1*
+*Last updated: 2026-04-17 after Phase 18 verification*

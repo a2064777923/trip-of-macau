@@ -3,12 +3,12 @@
 ## Milestones
 
 - [x] **v1.0 Live Backend Cutover** - Phases 1-6 shipped on 2026-04-13. Archive: `.planning/milestones/v1.0-ROADMAP.md`
-- [x] **v2.0 後台管理系統的改進與完善** - Phases 7-12 executed and archived on 2026-04-15 with accepted gaps. Archive: `.planning/milestones/v2.0-ROADMAP.md`
-- [ ] **v2.1 互動規則與 AI 能力平台** - Phases 14-18 planned on 2026-04-16
+- [x] **v2.0 Admin Control-Plane Reconstruction** - Phases 7-12 executed and archived on 2026-04-15 with accepted gaps. Archive: `.planning/milestones/v2.0-ROADMAP.md`
+- [ ] **v2.1 Interactive Rules Platform and AI Capability Center** - Phases 14-18 executed by 2026-04-17; ready for milestone closeout
 
 ## Active Milestone
 
-**Milestone v2.1: 互動規則與 AI 能力平台**
+**Milestone v2.1: Interactive Rules Platform and AI Capability Center**
 
 **Goal:** Close the accepted `v2.0` control-plane gaps while delivering the indoor interaction-rules platform and the AI capability center on top of the existing live admin/public/runtime stack.
 
@@ -20,7 +20,7 @@
 | 15 | Indoor Interaction Rule Authoring | Add operator-facing appearance / trigger / effect rule authoring and path-based indoor behavior composition | `RULE-01`, `RULE-02` |
 | 16 | Indoor Rule Workbench and Governance Center | Rebuild complex indoor rule editing into a dedicated validated workbench and add cross-entity rule governance / conflict visibility | `RULE-04`, `RULE-05` |
 | 17 | Indoor Runtime Evaluation and Mini-Program Alignment | Evaluate authored indoor rules safely through public APIs and the mini-program runtime | `RULE-03` |
-| 18 | 4/4 | Complete    | 2026-04-17 |
+| 18 | AI Capability Center | Build the AI capability center for provider configuration, fallback, quotas/governance, and overview visibility | `AI-01`, `AI-02`, `AI-03` |
 
 ## Phase Details
 
@@ -94,7 +94,7 @@
 ## Archived Milestones
 
 <details>
-<summary>[x] v2.0 後台管理系統的改進與完善 (Phases 7-12 executed, archived 2026-04-15 with accepted gaps)</summary>
+<summary>[x] v2.0 Admin Control-Plane Reconstruction (Phases 7-12 executed, archived 2026-04-15 with accepted gaps)</summary>
 
 - [x] Phase 7: Admin Shell and Real Auth Alignment - Traditional Chinese shell cleanup and real-auth baseline alignment landed.
 - [x] Phase 8: Multilingual Authoring Foundation - Four-language field patterns and translation-settings groundwork landed.
@@ -107,7 +107,7 @@
 </details>
 
 <details>
-<summary>[x] v1.0 Live Backend Cutover (Phases 1-6) - SHIPPED 2026-04-13</summary>
+<summary>[x] v1.0 Live Backend Cutover (Phases 1-6) - shipped 2026-04-13</summary>
 
 - [x] Phase 1: Canonical Backend Foundation - Canonical contract, shared enums, schema foundation, and local smoke baseline completed.
 - [x] Phase 2: Admin Control Plane Completion - Admin CRUD and UI surfaces aligned to canonical MySQL-backed mini-program domains.
@@ -123,5 +123,5 @@
 | Milestone | Phase Range | Plans Complete | Status | Completed |
 |-----------|-------------|----------------|--------|-----------|
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
-| v2.0 後台管理系統的改進與完善 | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
-| v2.1 互動規則與 AI 能力平台 | 14-18 | 0/0 | Planned | - |
+| v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
+| v2.1 Interactive Rules Platform and AI Capability Center | 14-18 | 17/17 | Phase-complete, ready for milestone closeout | 2026-04-17 |

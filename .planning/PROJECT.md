@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Trip of Macau is a brownfield travel mini-program plus admin platform for story-driven city exploration, map discovery, check-ins, collectibles, tips, and operations tooling. The live backend cutover is complete, and the current project focus is now to evolve `/admin` into the real control plane for multilingual content, richer spatial/story composition, and authenticated traveler operations that drive the mini-program experience end-to-end.
+Trip of Macau is a brownfield travel mini-program plus admin platform for story-driven city exploration, map discovery, check-ins, collectibles, tips, indoor navigation, and operations tooling. The live backend cutover and the first admin control-plane reconstruction pass are complete. The current project focus is `v2.1`: close the accepted `v2.0` control-plane gaps while building the indoor interaction-rules platform and the AI capability center.
 
 ## Core Value
 
@@ -23,22 +23,29 @@ Admins can configure the live mini-program experience end-to-end, and the mini-p
 - `backend-managed COS media pipeline is live` - Phase 5 added authenticated admin uploads into Tencent COS, canonical `content_assets` persistence, admin upload UX, public canonical URL reuse, and live COS/MySQL/public verification on `8081` + `8080`.
 - `repeatable mock-data migration is live` - Phase 6 added `06-live-backend-mock-migration.sql` and `apply-phase-06-mock-seed.ps1` so the former client mock dataset can be restored into canonical MySQL tables and runtime settings on demand.
 - `end-to-end admin/public/client verification is live` - Phase 6 added `smoke-phase-06-live-cutover.ps1` and re-verified admin writes, COS upload, public reads/writes, MySQL persistence, and admin traveler inspection against the running local stack.
+- `Traditional Chinese-first admin shell and real-auth baseline landed` - `v2.0` Phase 7 aligned the shell, branding, and real-auth contract foundations across admin/public/client.
+- `four-language authoring and translation settings foundation landed` - `v2.0` Phase 8 added `zh-Hant` / `zh-Hans` / `en` / `pt` field patterns plus translation-engine settings groundwork.
+- `canonical spatial and media authoring rebuild landed` - `v2.0` Phases 9-10 rebuilt cities, sub-maps, POIs, coordinate normalization, and COS-backed media-library workflows.
+- `story, activity, collection, and indoor authoring foundations landed` - `v2.0` Phases 11-12 connected richer content authoring and indoor map basics to public APIs and the mini-program runtime.
+- `AI capability center platform surface landed` - `v2.1` Phase 18 delivered provider configuration, secret-safe governance, quota controls, overview visibility, and bounded creative-foundation history on the live admin stack.
 
 ### Active
 
-- [ ] `admin control plane is Traditional Chinese-first and structurally coherent` - `/admin` uses Traditional Chinese labels, mini-program branding assets, and a cleaner information architecture instead of the current mixed-language/operator-hostile surfaces.
-- [ ] `mini-program functionality requires real WeChat-authenticated sessions` - traveler-facing features stop relying on guest/mock behavior and enforce real login alignment across frontend, `packages/server`, and admin inspection flows.
-- [ ] `canonical four-language content authoring exists` - live UI copy and content fields support `zh-Hant`, `zh-Hans`, `en`, and `pt`, with admin-side multilingual editing plus configurable translation-engine-assisted autofill.
-- [ ] `map, POI, indoor, story, chapter, task, reward, and media models are rebuilt for richer orchestration` - the admin must be able to author the expanded spatial and narrative runtime the user described, not just edit the old cutover-era fields.
-- [ ] `operator visibility and runtime controls are materially stronger` - media search, user progress/exploration tracking, operations views, and system settings must become practical for real ongoing management.
+- [ ] `carryover v2.0 control-plane gaps are closed honestly` - collection/reward authoring, user progress, operations/testing alignment, and system settings must stop living as accepted gaps and be brought to a verifiable state.
+- [ ] `indoor interaction rules become a real authored platform` - operators need configurable appearance conditions, trigger chains, effects, and path-based behaviors for indoor markers and overlays.
+- [ ] `complex indoor rule editing gets its own workbench UX` - the densest rule-authoring flow should move into a dedicated validated editor with naming, apply/save control, and thumbnail-assisted point/path authoring instead of staying inline in the base form.
+- [ ] `rule governance is visible across entities, not only per marker` - operators need one place to filter, inspect, enable/disable, and detect overlap/conflict across points, interaction objects, rewards, and trigger chains.
+- [ ] `mini-program indoor runtime can evaluate authored rules safely` - public APIs and the mini-program must execute the configured indoor rules predictably without falling back to mock-only logic.
+- [ ] `milestone closeout verification becomes stricter than v2.0` - the next milestone needs explicit smoke/UAT/audit closure rather than archive-time assumptions.
 
 ### Out of Scope
 
 - Keeping mock data as the primary runtime source after the live backend cutover - mocks may remain as temporary fallback/test fixtures only.
 - Committing cloud secrets, COS credentials, or local-only integration files into the repository - secrets must stay in environment/configuration outside tracked docs and source control.
-- Adding unrelated product domains before the live backend cutover is complete - new feature scope that does not directly support backend integration, admin configurability, data migration, media handling, or verification is deferred.
-- Shipping the full indoor overlay trigger/effect rules engine in `v2.0` - advanced appearance conditions, chained triggers, animation paths, and event scripting are deferred to `v2.1` because they require a dedicated interaction-rules platform beyond this milestone's data-model/control-plane rebuild.
-- Shipping full AI provider platformization in `v2.0` - per-capability provider switching, quota orchestration, suspicious-concurrency throttling, and usage governance are deferred to `v2.1` so `v2.0` can focus on the admin/control-plane reconstruction first.
+- Reopening `v2.0` as the active milestone - accepted `v2.0` gaps are carried forward into `v2.1` instead of pretending the archived milestone is still in flight.
+- Replacing the current Taro / Spring Boot / MySQL brownfield stack - the current milestone is about platform completion, not stack migration.
+- Shipping every downstream AI feature page in the same milestone as the AI capability center - `v2.1` focuses on provider/governance infrastructure first, not every future AI experience.
+- Fully autonomous external content crawling without operator review - suggested defaults may help, but human-reviewed authoring remains the control-plane model.
 
 ## Context
 
@@ -48,9 +55,11 @@ The codebase map in `.planning/codebase/` found several issues that directly aff
 
 The user wants this work to be production-minded: highly configurable, extensible, high-performance, and actually runnable. That raises the bar beyond "expose some endpoints" to include schema quality, publish-state semantics, asset management, migration strategy, smoke checks, and end-to-end verification.
 
-The next milestone is driven by a large management-system redesign request. The center of gravity moves from "cut over mocks to live services" to "make the admin a genuinely usable control plane" for Traditional Chinese-first operators who must manage multilingual content, richer map/spatial structures, story/chapter orchestration, media policies, and live traveler progress. Although the emphasis is admin-side, every control-plane change must still stay aligned with mini-program frontend behavior and the public backend contract.
+The archived `v2.0` milestone handled the first practical control-plane reconstruction: Traditional Chinese-first admin shell cleanup, four-language authoring foundations, rebuilt spatial/media models, richer story/activity/collection flows, and indoor authoring basics. It also exposed the limits of that pass: some operator workflows still need deeper completion, and milestone closure without a dedicated audit left accepted gaps behind.
 
-The requested expansion is too large for a single honest roadmap, so the work is intentionally split. `v2.0` covers the admin/control-plane reconstruction, core data-model expansion, real-login alignment, and the first practical pass of user progress and operations visibility. A later `v2.1` is reserved for the heaviest platformization work such as the full indoor interaction rules engine and full AI provider orchestration.
+The new milestone therefore shifts from "rebuild the authoring surfaces" to "turn the authored model into a real platform". `v2.1` owns two platform-heavy tracks that were already deferred in principle: the indoor interaction-rules runtime and the AI capability center. It also absorbs the unfinished `v2.0` closeout work so the project does not carry ambiguous partial-delivery state forward.
+
+Recent operator feedback also showed that indoor rule authoring itself has split into two distinct jobs: the underlying rule model/persistence, and a much heavier workbench/governance experience needed to make those rules operable at scale. That discovery is now tracked as its own `v2.1` phase instead of being hidden inside the base authoring phase.
 
 ## Constraints
 
@@ -66,22 +75,22 @@ The requested expansion is too large for a single honest roadmap, so the work is
 ## Current State
 
 - `v1.0 Live Backend Cutover` shipped on 2026-04-13.
-- All six v1 phases are complete: canonical schema/contract foundation, admin control plane completion, public read/write cutover, COS media handling, mock-data migration, and full-stack hardening are implemented and verified locally.
-- The admin backend on `8081` now reports real database/public API/COS/seed status and supports authenticated COS uploads and delete cleanup; the public backend on `8080` serves the seeded live catalog/runtime and traveler write flows.
-- Phase 6 established a repeatable seed/import path for the former mock dataset and a repeatable smoke harness that proves the full chain locally: admin writes -> MySQL/COS -> public reads/writes -> mini-program runtime assumptions.
-- The project is now entering `v2.0`, where the main risk is not basic connectivity but whether the admin/control-plane model is expressive enough for the richer product the user wants to run.
+- `v2.0 後台管理系統的改進與完善` was archived on 2026-04-15 after 6 executed phases (`7-12`) and 15 completed plans.
+- `v2.0` was archived with accepted gaps: no dedicated milestone audit artifact, no standalone Phase 13 execution, and unresolved collection/reward plus operator-control-plane depth issues now carried into `v2.1`.
+- The admin backend on `8081` and public backend on `8080` remain the live local verification targets; COS-backed media and indoor authoring flows remain the integration base for the next milestone.
+- Phase execution history for the archived milestone now lives under `.planning/milestones/v2.0-phases/`.
+- Phase 18 completed on 2026-04-17 with backend tests, admin build, local smoke, and browser-driven admin verification for the AI capability center.
 
-## Current Milestone: v2.0 後台管理系統的改進與完善
+## Current Milestone: v2.1 互動規則與 AI 能力平台
 
-**Goal:** Turn `/admin` into a Traditional Chinese-first control plane that can author the live mini-program's multilingual content, spatial structures, media, and story/task orchestration end-to-end while aligning the mini-program and public backend with real authenticated behavior.
+**Goal:** Close the accepted `v2.0` control-plane gaps while turning indoor interaction rules and AI provider governance into real admin-managed platforms backed by the live public/runtime stack.
 
 **Target features:**
-- Admin UI language and branding cleanup, including Traditional Chinese labels, reuse of the mini-program icon, and corrected navigation/grouping in the management console.
-- Real WeChat login enforcement across the mini-program frontend, public backend, and admin-facing traveler visibility, with remaining guest/mock access paths removed from functional flows.
-- Four-language content modeling and editing for `zh-Hant`, `zh-Hans`, `en`, and `pt`, plus configurable translation engines, primary-language settings, and engine fallback behavior.
-- AMap-compatible coordinate handling and map-space rebuilding across cities, sub-maps, POIs, media attachments, and spatial metadata authoring.
-- Rebuilt authoring flows for storylines, chapters, tasks/activities, collectibles, badges/rewards, indoor building basics, media resources, and system settings so operators can compose richer narrative experiences.
-- Stronger operator tooling for media upload policy, media search, user progress and interaction logs, test/operations surfaces, and clearer system configuration management.
+- Finish the accepted `v2.0` carryover work around collections/rewards, user progress, operations/testing alignment, system settings, and milestone-grade verification.
+- Add indoor appearance / trigger / effect rule authoring so operators can configure richer interactive behaviors instead of only static markers and overlays.
+- Rebuild the densest rule-editing workflow into a dedicated indoor rule workbench plus a global governance center for cross-entity visibility, conflict checks, and lifecycle control.
+- Expose safe public/runtime evaluation of authored indoor rules in the public backend and mini-program runtime.
+- Build the AI capability center with provider configuration, fallback, quota/governance controls, usage visibility, and secret-safe storage patterns.
 
 ## Key Decisions
 
@@ -99,6 +108,8 @@ The requested expansion is too large for a single honest roadmap, so the work is
 | Make operator views read the same traveler data the mini-program writes | Live cutover is incomplete if `/admin` still inspects a legacy user table detached from public writes | Phase 6 cut dashboard/user-management/test-console traveler reads over to `user_profiles`, `user_progress`, and `user_checkins`. |
 | Split the post-cutover expansion into `v2.0` and `v2.1` | The user's requested redesign spans control-plane reconstruction plus two separate platform efforts (interaction rules and AI provider orchestration), which would make a single milestone roadmap dishonest and unbuildable | `v2.0` now targets the admin/control-plane rebuild and runtime alignment first; `v2.1` will absorb the heaviest platformization work. |
 | Treat Traditional Chinese-first admin UX, four-language authoring, and real WeChat-authenticated flows as milestone-level scope | These are not polish items; they change the shape of the admin data model, user gating logic, and operator workflows across the whole product | `v2.0` requirements and roadmap must map these as first-class workstreams, not optional follow-up fixes. |
+| Close `v2.0` with explicit carryover instead of pretending full completion | By archive time, the control-plane rebuild had real delivered value, but requirement-level closure and the planned Phase 13 work were not honestly finished | `v2.0` was archived with accepted gaps, and `v2.1` now starts with an explicit carryover phase instead of silently erasing those gaps. |
+| Split indoor rule platform work into base authoring and workbench/governance phases | Operator testing showed the interaction-rule workbench, rule naming, conflict visibility, and cross-entity governance are substantial enough to deserve explicit sequencing instead of being buried inside one broad authoring phase | `v2.1` now inserts a dedicated phase between rule authoring and runtime evaluation, and shifts later phases back accordingly. |
 
 ## Evolution
 
@@ -118,4 +129,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-13 after starting the v2.0 milestone*
+*Last updated: 2026-04-17 after Phase 18 completion*
