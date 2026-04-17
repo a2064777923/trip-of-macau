@@ -3,129 +3,108 @@
 ## Milestones
 
 - [x] **v1.0 Live Backend Cutover** - Phases 1-6 shipped on 2026-04-13. Archive: `.planning/milestones/v1.0-ROADMAP.md`
-- [ ] **v2.0 後台管理系統的改進與完善** - Phases 7-13 planned on 2026-04-13
+- [x] **v2.0 後台管理系統的改進與完善** - Phases 7-12 executed and archived on 2026-04-15 with accepted gaps. Archive: `.planning/milestones/v2.0-ROADMAP.md`
+- [ ] **v2.1 互動規則與 AI 能力平台** - Phases 14-18 planned on 2026-04-16
 
 ## Active Milestone
 
-**Milestone v2.0: 後台管理系統的改進與完善**
+**Milestone v2.1: 互動規則與 AI 能力平台**
 
-**Goal:** Turn `/admin` into a Traditional Chinese-first control plane that can author the live mini-program's multilingual content, spatial structures, media, and story/task orchestration end-to-end while aligning the mini-program and public backend with real authenticated behavior.
+**Goal:** Close the accepted `v2.0` control-plane gaps while delivering the indoor interaction-rules platform and the AI capability center on top of the existing live admin/public/runtime stack.
 
-**Coverage:** 7 phases, 32 requirements, 32 mapped, 0 unmapped
+**Coverage:** 5 phases, 11 requirements, 11 mapped, 0 unmapped
 
 | # | Phase | Goal | Requirements |
 |---|-------|------|--------------|
-| 7 | Admin Shell and Real Auth Alignment | Rebuild the admin shell/navigation baseline and replace guest-based traveler identity with real WeChat-authenticated session flow | `ADMIN-01`, `ADMIN-02`, `ADMIN-03`, `AUTH-01`, `AUTH-02`, `AUTH-03`, `AUTH-04` |
-| 8 | Multilingual Authoring Foundation | Establish the four-language content model, translation settings, and locale-aware read/write flow | `LOCL-01`, `LOCL-02`, `LOCL-03`, `LOCL-04` |
-| 9 | Spatial Model Rebuild | Rebuild cities, sub-maps, coordinate normalization, and POI authoring around the richer spatial hierarchy | `MAP-01`, `MAP-02`, `MAP-03`, `MAP-04` |
-| 10 | Media Asset Pipeline and Library | Deliver the richer COS-backed upload pipeline, upload-policy handling, and reusable media resource center | `MEDIA-01`, `MEDIA-02`, `MEDIA-03`, `MEDIA-04` |
-| 11 | Story, Activity, and Collection Composition | Rebuild storylines, chapters, tasks/activities, and collections around the new authoring model | `STORY-01`, `STORY-02`, `STORY-03`, `ACT-01`, `COLL-01` |
-| 12 | Indoor Map Authoring Basics | Deliver indoor building/floor/tile/marker authoring without pulling the full rules engine into v2.0 | `INDO-01`, `INDO-02`, `INDO-03`, `INDO-04` |
-| 13 | User Progress, Operations, and System Control Plane | Complete user-progress visibility, operations/testing alignment, system settings cleanup, and end-to-end v2.0 verification | `OPER-01`, `OPER-02`, `OPER-03`, `OPER-04` |
+| 14 | Carryover Control Plane Closure | Finish the accepted `v2.0` collection/reward, user-progress, operations, and system-control-plane gaps and close them with explicit verification | `CARRY-01`, `CARRY-02`, `CARRY-03` |
+| 15 | Indoor Interaction Rule Authoring | Add operator-facing appearance / trigger / effect rule authoring and path-based indoor behavior composition | `RULE-01`, `RULE-02` |
+| 16 | Indoor Rule Workbench and Governance Center | Rebuild complex indoor rule editing into a dedicated validated workbench and add cross-entity rule governance / conflict visibility | `RULE-04`, `RULE-05` |
+| 17 | Indoor Runtime Evaluation and Mini-Program Alignment | Evaluate authored indoor rules safely through public APIs and the mini-program runtime | `RULE-03` |
+| 18 | 4/4 | Complete    | 2026-04-17 |
 
 ## Phase Details
 
-### Phase 7: Admin Shell and Real Auth Alignment
+### Phase 14: Carryover Control Plane Closure
 
-**Goal:** Rebuild the admin shell/navigation baseline and replace guest-based traveler identity with real WeChat-authenticated session flow.
+**Goal:** Finish the accepted `v2.0` gaps around collections/rewards, user progress, operations/testing, system settings, and milestone-grade verification.
 
-**Requirements:** `ADMIN-01`, `ADMIN-02`, `ADMIN-03`, `AUTH-01`, `AUTH-02`, `AUTH-03`, `AUTH-04`
-
-**Success criteria:**
-1. Operators see milestone-covered admin routes, labels, actions, and validation messages in Traditional Chinese and the admin shell uses the mini-program icon/brand identity.
-2. Chapter, activity, media, collection, user, operations, and system entries each navigate to owned module surfaces instead of redirects or reused placeholder consoles.
-3. The mini-program establishes traveler identity through a real WeChat login exchange in `packages/server` instead of client-generated or client-submitted `openId`.
-4. Unauthenticated travelers are blocked from stateful/interactive flows and are prompted to log in consistently at the defined entry points.
-5. Admin traveler inspection surfaces read the same authenticated profile/progress records used by the public backend.
-
-**Depends on:** None
-
-### Phase 8: Multilingual Authoring Foundation
-
-**Goal:** Establish the four-language content model, translation settings, and locale-aware read/write flow.
-
-**Requirements:** `LOCL-01`, `LOCL-02`, `LOCL-03`, `LOCL-04`
+**Requirements:** `CARRY-01`, `CARRY-02`, `CARRY-03`
 
 **Success criteria:**
-1. Operators can edit four locale values (`zh-Hant`, `zh-Hans`, `en`, `pt`) through shared multilingual field patterns across milestone-covered domains.
-2. Operators can set the primary authoring language and translation-engine priority/fallback from system settings.
-3. One-click translation can populate remaining locales without making core content saves depend on third-party translator availability.
-4. Admin previews and public read APIs return locale-specific values from canonical storage for localized fields.
+1. Operators can author collectibles, badges, and rewards with richer bindings to maps, sub-maps, indoor maps, example content, and easier preset-driven configuration.
+2. Operators can inspect traveler progress, exploration recomputation, and live operations/testing surfaces without relying on legacy placeholder tooling.
+3. System settings clearly own translation defaults, upload policies, map/runtime defaults, and other control-plane settings left ambiguous in `v2.0`.
+4. Repeatable smoke/UAT coverage closes the archived `v2.0` carryover items explicitly instead of relying on archive-time assumptions.
 
-**Depends on:** Phase 7
+**Depends on:** Archived milestone `v2.0`
 
-### Phase 9: Spatial Model Rebuild
+### Phase 15: Indoor Interaction Rule Authoring
 
-**Goal:** Rebuild cities, sub-maps, coordinate normalization, and POI authoring around the richer spatial hierarchy.
+**Goal:** Add a real authoring model for indoor appearance conditions, trigger chains, effects, and animated path-based behaviors.
 
-**Requirements:** `MAP-01`, `MAP-02`, `MAP-03`, `MAP-04`
-
-**Success criteria:**
-1. Operators can create/edit switchable cities with localized metadata, cover image, editable country/center coordinates, and suggested defaults.
-2. Operators can create/edit sub-maps beneath cities with localized metadata, cover image, attachments, and popup/display settings.
-3. Coordinate entry stores raw coordinate-system metadata and normalized AMap-compatible values for downstream runtime use.
-4. POI authoring supports binding to city/sub-map, map icon assignment, multi-asset attachments, popup/display settings, and location metadata.
-
-**Depends on:** Phase 8
-
-### Phase 10: Media Asset Pipeline and Library
-
-**Goal:** Deliver the richer COS-backed upload pipeline, upload-policy handling, and reusable media resource center.
-
-**Requirements:** `MEDIA-01`, `MEDIA-02`, `MEDIA-03`, `MEDIA-04`
+**Requirements:** `RULE-01`, `RULE-02`
 
 **Success criteria:**
-1. Operators can upload supported assets through file picker, drag/drop, folder import, and clipboard paste in the admin.
-2. Upload processing respects per-admin lossless-upload permission and records which processing policy was applied before COS publication.
-3. Operators can search/filter/retrieve assets from a central media library with canonical metadata and status.
-4. Milestone-covered domains can attach and order multiple shared assets from the media library instead of relying on isolated raw URL fields only.
+1. Operators can define appearance and trigger conditions for indoor markers/overlays through structured admin forms instead of raw JSON only.
+2. Operators can compose multiple trigger/effect steps, including prerequisite chains and reusable presets where appropriate.
+3. Operators can author animated path-based movement/effect behaviors with persisted geometry and runtime-safe metadata.
 
-**Depends on:** Phase 8
+**Depends on:** Phase 14
 
-### Phase 11: Story, Activity, and Collection Composition
+### Phase 16: Indoor Rule Workbench and Governance Center
 
-**Goal:** Rebuild storylines, chapters, tasks/activities, and collections around the new authoring model.
+**Goal:** Move complex indoor rule editing into a dedicated validated workbench and provide a global governance center for rule-bearing entities, conflicts, and enable/disable control.
 
-**Requirements:** `STORY-01`, `STORY-02`, `STORY-03`, `ACT-01`, `COLL-01`
-
-**Success criteria:**
-1. Operators can create/edit storylines with localized cover/introduction/media content and bindings to multiple maps or sub-maps.
-2. Operators can create/edit chapters in a dedicated composition flow and bind them to supported anchor entities with basic prerequisite/completion/reward metadata.
-3. Operators can create/edit tasks or discovery activities with localized content, HTML-rich content, schedule windows, organizer/signup metadata, and pinning.
-4. Operators can create/edit collectibles, badges, and rewards with richer relationship metadata and icon/media assets tied to the new content graph.
-
-**Depends on:** Phases 9-10
-
-### Phase 12: Indoor Map Authoring Basics
-
-**Goal:** Deliver indoor building/floor/tile/marker authoring without pulling the full rules engine into v2.0.
-
-**Requirements:** `INDO-01`, `INDO-02`, `INDO-03`, `INDO-04`
+**Requirements:** `RULE-04`, `RULE-05`
 
 **Success criteria:**
-1. Operators can create/edit indoor buildings bound to city/sub-map or POI, with localized metadata, cover image, and media assets.
-2. Operators can create/edit floors with area, localized introduction, popup settings, zoom bounds, and media assets.
-3. Operators can import floor tiles from zip packages or by uploading a full floor image that the backend slices and stages correctly.
-4. Operators can add markers/overlays by CSV preview validation or direct editing with minimap-assisted coordinate picking.
+1. Operators edit interaction behaviors in a dedicated full-screen modal or drawer workbench with isolated validation and explicit apply/save semantics instead of a crowded inline section.
+2. Each behavior supports operator-defined naming, ordering, status control, and in-workbench thumbnail-based point/path authoring for indoor maps.
+3. A dedicated rule governance page lets operators filter rule-bearing entities, inspect trigger/appearance/effect overlaps, follow trigger chains, and enable or disable rules centrally.
+4. The authored workbench contract remains aligned with the indoor marker/building forms instead of duplicating or drifting from the canonical persistence model.
 
-**Depends on:** Phases 9-10
+**Depends on:** Phase 15
 
-### Phase 13: User Progress, Operations, and System Control Plane
+### Phase 17: Indoor Runtime Evaluation and Mini-Program Alignment
 
-**Goal:** Complete user-progress visibility, operations/testing alignment, system settings cleanup, and end-to-end v2.0 verification.
+**Goal:** Execute authored indoor interaction rules safely through the public backend and mini-program runtime.
 
-**Requirements:** `OPER-01`, `OPER-02`, `OPER-03`, `OPER-04`
+**Requirements:** `RULE-03`
 
 **Success criteria:**
-1. Operators can inspect detailed traveler profiles including collections, progression, and interaction logs through the admin.
-2. Operators can view sub-map and city exploration progress that recomputes from the correct managed content graph.
-3. Operations/testing pages align with the live runtime domains rather than legacy placeholder tooling.
-4. System configuration surfaces clearly control translation defaults, upload policies, map zoom defaults, and other milestone-owned runtime/admin settings.
-5. End-to-end verification proves the v2.0 chain across admin writes, MySQL/COS persistence, public reads, and mini-program behavior for milestone domains.
+1. Public indoor APIs return the authored rule payloads needed by the mini-program without exposing unsafe internal state.
+2. The mini-program indoor runtime evaluates supported appearance / trigger / effect rules predictably against real authored data.
+3. Verification covers rule evaluation, trigger ordering, and failure-safe behavior on the live local stack.
 
-**Depends on:** Phases 7-12
+**Depends on:** Phase 16
+
+### Phase 18: AI Capability Center
+
+**Goal:** Build the AI capability center for provider configuration, secret-safe governance, quotas, fallback, and operator overview.
+
+**Requirements:** `AI-01`, `AI-02`, `AI-03`
+
+**Success criteria:**
+1. Operators can configure multiple providers or custom endpoints per AI capability without leaking secrets in admin responses or stored config previews.
+2. Operators can define fallback/manual-switch rules, quotas, and suspicious-concurrency controls for the supported AI capabilities.
+3. The admin overview shows provider health, usage, and capability status in one coherent AI capability center.
+
+**Depends on:** Phase 14
 
 ## Archived Milestones
+
+<details>
+<summary>[x] v2.0 後台管理系統的改進與完善 (Phases 7-12 executed, archived 2026-04-15 with accepted gaps)</summary>
+
+- [x] Phase 7: Admin Shell and Real Auth Alignment - Traditional Chinese shell cleanup and real-auth baseline alignment landed.
+- [x] Phase 8: Multilingual Authoring Foundation - Four-language field patterns and translation-settings groundwork landed.
+- [x] Phase 9: Spatial Model Rebuild - Cities, sub-maps, POIs, and coordinate normalization were rebuilt.
+- [x] Phase 10: Media Asset Pipeline and Library - COS-backed upload handling and the central media library landed.
+- [x] Phase 11: Story, Activity, and Collection Composition - Story, chapter, activity, and collection/reward authoring foundations expanded.
+- [x] Phase 12: Indoor Map Authoring Basics - Indoor building/floor/tile/marker authoring basics and public runtime alignment landed.
+- [ ] Planned Phase 13: User Progress, Operations, and System Control Plane - not executed as its own phase; absorbed into `v2.1` Phase 14.
+
+</details>
 
 <details>
 <summary>[x] v1.0 Live Backend Cutover (Phases 1-6) - SHIPPED 2026-04-13</summary>
@@ -144,4 +123,5 @@
 | Milestone | Phase Range | Plans Complete | Status | Completed |
 |-----------|-------------|----------------|--------|-----------|
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
-| v2.0 後台管理系統的改進與完善 | 7-13 | 0/0 | Planned | - |
+| v2.0 後台管理系統的改進與完善 | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
+| v2.1 互動規則與 AI 能力平台 | 14-18 | 0/0 | Planned | - |
