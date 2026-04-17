@@ -2,6 +2,8 @@ package com.aoxiaoyou.admin.service.impl;
 
 import com.aoxiaoyou.admin.ai.config.AiCapabilityProperties;
 import com.aoxiaoyou.admin.ai.config.AiSecretCryptoService;
+import com.aoxiaoyou.admin.ai.provider.AiOutboundUrlGuard;
+import com.aoxiaoyou.admin.ai.provider.AiProviderTemplateRegistry;
 import com.aoxiaoyou.admin.ai.provider.DashScopeProviderGateway;
 import com.aoxiaoyou.admin.ai.routing.AiGovernanceService;
 import com.aoxiaoyou.admin.common.api.PageResponse;
@@ -37,14 +39,23 @@ import java.util.stream.Collectors;
 public class AdminAiServiceImpl implements AdminAiService {
 
     private static final String STATUS_ENABLED = "enabled";
+    private static final String STATUS_IDLE = "idle";
     private static final String JOB_STATUS_PENDING = "pending";
     private static final String JOB_STATUS_SUBMITTED = "submitted";
     private static final String JOB_STATUS_COMPLETED = "completed";
     private static final String JOB_STATUS_FAILED = "failed";
+    private static final String CONFIG_AI_INVENTORY_FRESHNESS_HOURS = "ai.platform.inventory-freshness-hours";
+    private static final String CONFIG_AI_SYNC_HISTORY_LIMIT = "ai.platform.sync-history-limit";
+    private static final String CONFIG_AI_DAILY_COST_ALERT_USD = "ai.platform.daily-cost-alert-usd";
+    private static final String CONFIG_AI_PROVIDER_FAILURE_RATE_WARNING = "ai.platform.provider-failure-rate-warning";
+    private static final String CONFIG_AI_RECENT_WINDOW_HOURS = "ai.platform.recent-window-hours";
+    private static final String CONFIG_AI_ALLOW_OPERATOR_GLOBAL_HISTORY = "ai.platform.allow-operator-global-history";
 
     private final ObjectMapper objectMapper;
     private final AiCapabilityProperties aiCapabilityProperties;
     private final AiSecretCryptoService aiSecretCryptoService;
+    private final AiOutboundUrlGuard aiOutboundUrlGuard;
+    private final AiProviderTemplateRegistry aiProviderTemplateRegistry;
     private final DashScopeProviderGateway dashScopeProviderGateway;
     private final AiGovernanceService aiGovernanceService;
     private final CosAssetStorageService cosAssetStorageService;
@@ -52,12 +63,15 @@ public class AdminAiServiceImpl implements AdminAiService {
     private final AiCapabilityPolicyMapper aiCapabilityPolicyMapper;
     private final AiPolicyProviderBindingMapper aiPolicyProviderBindingMapper;
     private final AiProviderConfigMapper aiProviderConfigMapper;
+    private final AiProviderInventoryMapper aiProviderInventoryMapper;
+    private final AiProviderSyncJobMapper aiProviderSyncJobMapper;
     private final AiQuotaRuleMapper aiQuotaRuleMapper;
     private final AiPromptTemplateMapper aiPromptTemplateMapper;
     private final AiGenerationJobMapper aiGenerationJobMapper;
     private final AiGenerationCandidateMapper aiGenerationCandidateMapper;
     private final AiRequestLogMapper aiRequestLogMapper;
     private final ContentAssetMapper contentAssetMapper;
+    private final SysConfigMapper sysConfigMapper;
 
     @Override
     public AdminAiOverviewResponse getOverview(Long currentAdminId, List<String> roles) {
@@ -69,13 +83,16 @@ public class AdminAiServiceImpl implements AdminAiService {
         List<AiProviderConfig> providers = aiProviderConfigMapper.selectList(
                 new LambdaQueryWrapper<AiProviderConfig>().orderByAsc(AiProviderConfig::getId)
         );
-        LocalDateTime since = LocalDateTime.now().minusHours(24);
+        int recentWindowHours = readIntegerConfig(CONFIG_AI_RECENT_WINDOW_HOURS, 24);
+        int inventoryFreshnessHours = readIntegerConfig(CONFIG_AI_INVENTORY_FRESHNESS_HOURS, 24);
+        LocalDateTime since = LocalDateTime.now().minusHours(recentWindowHours);
         List<AiRequestLog> recentLogs = aiRequestLogMapper.selectList(
                 new LambdaQueryWrapper<AiRequestLog>()
                         .ge(AiRequestLog::getCreatedAt, since)
                         .orderByDesc(AiRequestLog::getCreatedAt)
                         .orderByDesc(AiRequestLog::getId)
         );
+        List<AiProviderInventory> inventories = aiProviderInventoryMapper.selectList(null);
         Map<String, List<AiRequestLog>> logsByCapability = recentLogs.stream()
                 .filter(item -> StringUtils.hasText(item.getCapabilityCode()))
                 .collect(Collectors.groupingBy(AiRequestLog::getCapabilityCode));
@@ -118,6 +135,9 @@ public class AdminAiServiceImpl implements AdminAiService {
                             .endpointStyle(provider.getEndpointStyle())
                             .providerType(provider.getProviderType())
                             .status(provider.getStatus())
+                            .lastInventorySyncStatus(provider.getLastInventorySyncStatus())
+                            .lastInventorySyncedAt(provider.getLastInventorySyncedAt())
+                            .inventoryRecordCount(provider.getInventoryRecordCount())
                             .requestCount24h((long) providerLogs.size())
                             .failureCount24h(failures)
                             .averageLatencyMs(avgLatency)
@@ -127,15 +147,25 @@ public class AdminAiServiceImpl implements AdminAiService {
 
         Map<Long, AiCapabilityPolicy> policyMap = aiCapabilityPolicyMapper.selectList(null).stream()
                 .collect(Collectors.toMap(AiCapabilityPolicy::getId, item -> item, (left, right) -> left));
+        long staleProviders = providers.stream()
+                .filter(item -> !Objects.equals(item.getStatus(), 0))
+                .filter(item -> item.getLastInventorySyncedAt() == null || item.getLastInventorySyncedAt().isBefore(LocalDateTime.now().minusHours(inventoryFreshnessHours)))
+                .count();
         return AdminAiOverviewResponse.builder()
                 .summary(AdminAiOverviewResponse.Summary.builder()
                         .totalCapabilities(capabilities.size())
                         .enabledCapabilities((int) capabilities.stream().filter(item -> STATUS_ENABLED.equalsIgnoreCase(item.getStatus())).count())
                         .enabledProviders((int) providers.stream().filter(item -> Objects.equals(item.getStatus(), 1)).count())
                         .healthyProviders((int) providers.stream().filter(item -> "healthy".equalsIgnoreCase(item.getHealthStatus())).count())
+                        .inventoryRecords(inventories.size())
+                        .staleProviders((int) staleProviders)
                         .requests24h((long) recentLogs.size())
                         .failures24h(recentLogs.stream().filter(item -> !Objects.equals(item.getSuccess(), 1)).count())
                         .fallbacks24h(recentLogs.stream().filter(item -> Objects.equals(item.getFallbackTriggered(), 1)).count())
+                        .estimatedCost24h(recentLogs.stream()
+                                .map(AiRequestLog::getCostUsd)
+                                .filter(Objects::nonNull)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add))
                         .activeJobs(activeJobs)
                         .build())
                 .capabilities(capabilityResponses)
@@ -161,6 +191,27 @@ public class AdminAiServiceImpl implements AdminAiService {
                                 .orderByAsc(AiCapability::getId)
                 ).stream()
                 .map(item -> mapCapability(item, logsByCapability.getOrDefault(item.getCapabilityCode(), Collections.emptyList())))
+                .toList();
+    }
+
+    @Override
+    public List<AdminAiProviderTemplateResponse> listProviderTemplates() {
+        return aiProviderTemplateRegistry.list().stream()
+                .map(template -> AdminAiProviderTemplateResponse.builder()
+                        .platformCode(template.getPlatformCode())
+                        .platformLabel(template.getPlatformLabel())
+                        .description(template.getDescription())
+                        .providerType(template.getProviderType())
+                        .endpointStyle(template.getEndpointStyle())
+                        .defaultBaseUrl(template.getDefaultBaseUrl())
+                        .docsUrl(template.getDocsUrl())
+                        .authScheme(template.getAuthScheme())
+                        .syncStrategy(template.getSyncStrategy())
+                        .inventorySemantics(template.getInventorySemantics())
+                        .defaultModelName(template.getDefaultModelName())
+                        .supportedModalities(template.getSupportedModalities())
+                        .credentialFields(template.getCredentialFields())
+                        .build())
                 .toList();
     }
 
@@ -295,20 +346,164 @@ public class AdminAiServiceImpl implements AdminAiService {
     }
 
     @Override
+    @Transactional
+    public AdminAiProviderSyncJobResponse syncProviderInventory(Long id, Long currentAdminId, String currentAdminName) {
+        AiProviderConfig provider = requireProvider(id);
+        AiProviderSyncJob job = new AiProviderSyncJob();
+        job.setProviderId(provider.getId());
+        job.setPlatformCode(defaultString(provider.getPlatformCode(), "custom"));
+        job.setSyncStrategy(defaultString(provider.getSyncStrategy(), "manual"));
+        job.setJobStatus(JOB_STATUS_PENDING);
+        job.setMessage("等待開始同步");
+        job.setStartedAt(LocalDateTime.now());
+        aiProviderSyncJobMapper.insert(job);
+
+        provider.setLastInventorySyncStatus("running");
+        provider.setLastInventorySyncMessage("正在同步模型庫");
+        aiProviderConfigMapper.updateById(provider);
+
+        try {
+            InventorySyncResult result = synchronizeInventory(provider);
+            job.setJobStatus(JOB_STATUS_COMPLETED);
+            job.setMessage(result.message());
+            job.setDiscoveredCount(result.discoveredCount());
+            job.setCreatedCount(result.createdCount());
+            job.setUpdatedCount(result.updatedCount());
+            job.setStaleCount(result.staleCount());
+            job.setRawPayloadJson(result.rawPayloadJson());
+            job.setFinishedAt(LocalDateTime.now());
+            aiProviderSyncJobMapper.updateById(job);
+
+            provider.setLastInventorySyncStatus("completed");
+            provider.setLastInventorySyncMessage(trimTo(result.message(), 255));
+            provider.setLastInventorySyncedAt(LocalDateTime.now());
+            provider.setInventoryRecordCount(countProviderAvailableInventory(provider.getId()));
+            aiProviderConfigMapper.updateById(provider);
+            return mapSyncJob(job, provider);
+        } catch (BusinessException ex) {
+            job.setJobStatus(JOB_STATUS_FAILED);
+            job.setMessage(trimTo(ex.getMessage(), 255));
+            job.setErrorDetail(ex.getMessage());
+            job.setFinishedAt(LocalDateTime.now());
+            aiProviderSyncJobMapper.updateById(job);
+
+            provider.setLastInventorySyncStatus("failed");
+            provider.setLastInventorySyncMessage(trimTo(ex.getMessage(), 255));
+            aiProviderConfigMapper.updateById(provider);
+            throw ex;
+        }
+    }
+
+    @Override
+    public List<AdminAiProviderSyncJobResponse> listProviderSyncJobs(Long providerId) {
+        AiProviderConfig provider = requireProvider(providerId);
+        return aiProviderSyncJobMapper.selectList(
+                        new LambdaQueryWrapper<AiProviderSyncJob>()
+                                .eq(AiProviderSyncJob::getProviderId, providerId)
+                                .orderByDesc(AiProviderSyncJob::getCreatedAt)
+                                .orderByDesc(AiProviderSyncJob::getId)
+                                .last("LIMIT " + readIntegerConfig(CONFIG_AI_SYNC_HISTORY_LIMIT, 12))
+                ).stream()
+                .map(item -> mapSyncJob(item, provider))
+                .toList();
+    }
+
+    @Override
+    public List<AdminAiInventoryResponse> listInventory(Long providerId, String capabilityCode, String sourceType) {
+        Map<Long, AiProviderConfig> providerMap = aiProviderConfigMapper.selectList(null).stream()
+                .collect(Collectors.toMap(AiProviderConfig::getId, item -> item, (left, right) -> left));
+        String normalizedCapabilityCode = StringUtils.hasText(capabilityCode) ? capabilityCode.trim() : null;
+        return aiProviderInventoryMapper.selectList(
+                        new LambdaQueryWrapper<AiProviderInventory>()
+                                .eq(providerId != null, AiProviderInventory::getProviderId, providerId)
+                                .eq(StringUtils.hasText(sourceType), AiProviderInventory::getSourceType, sourceType)
+                                .orderByAsc(AiProviderInventory::getProviderId)
+                                .orderByAsc(AiProviderInventory::getSortOrder)
+                                .orderByAsc(AiProviderInventory::getId)
+                ).stream()
+                .filter(item -> !StringUtils.hasText(normalizedCapabilityCode)
+                        || parseStringList(readJsonList(item.getCapabilityCodesJson())).contains(normalizedCapabilityCode))
+                .map(item -> mapInventory(item, providerMap.get(item.getProviderId())))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public AdminAiInventoryResponse createInventory(AdminAiInventoryUpsertRequest request) {
+        AiProviderConfig provider = requireProvider(request.getProviderId());
+        AiProviderInventory duplicate = aiProviderInventoryMapper.selectOne(
+                new LambdaQueryWrapper<AiProviderInventory>()
+                        .eq(AiProviderInventory::getProviderId, provider.getId())
+                        .eq(AiProviderInventory::getInventoryCode, request.getInventoryCode().trim())
+        );
+        if (duplicate != null) {
+            throw new BusinessException(4093, "AI 模型庫代碼已存在");
+        }
+        AiProviderInventory inventory = new AiProviderInventory();
+        fillInventory(inventory, request);
+        inventory.setSyncedAt(LocalDateTime.now());
+        inventory.setLastSeenAt(LocalDateTime.now());
+        aiProviderInventoryMapper.insert(inventory);
+        refreshProviderInventoryCount(provider.getId());
+        return mapInventory(inventory, provider);
+    }
+
+    @Override
+    @Transactional
+    public AdminAiInventoryResponse updateInventory(Long id, AdminAiInventoryUpsertRequest request) {
+        AiProviderInventory inventory = requireInventory(id);
+        AiProviderConfig provider = requireProvider(request.getProviderId());
+        AiProviderInventory duplicate = aiProviderInventoryMapper.selectOne(
+                new LambdaQueryWrapper<AiProviderInventory>()
+                        .eq(AiProviderInventory::getProviderId, provider.getId())
+                        .eq(AiProviderInventory::getInventoryCode, request.getInventoryCode().trim())
+                        .ne(AiProviderInventory::getId, id)
+        );
+        if (duplicate != null) {
+            throw new BusinessException(4093, "AI 模型庫代碼已存在");
+        }
+        fillInventory(inventory, request);
+        inventory.setSyncedAt(LocalDateTime.now());
+        aiProviderInventoryMapper.updateById(inventory);
+        refreshProviderInventoryCount(provider.getId());
+        return mapInventory(inventory, provider);
+    }
+
+    @Override
+    @Transactional
+    public void deleteInventory(Long id) {
+        AiProviderInventory inventory = requireInventory(id);
+        long bindings = aiPolicyProviderBindingMapper.selectCount(
+                new LambdaQueryWrapper<AiPolicyProviderBinding>().eq(AiPolicyProviderBinding::getInventoryId, id)
+        );
+        long jobs = aiGenerationJobMapper.selectCount(
+                new LambdaQueryWrapper<AiGenerationJob>().eq(AiGenerationJob::getInventoryId, id)
+        );
+        if (bindings > 0 || jobs > 0) {
+            throw new BusinessException(4094, "仍有能力路由或生成任務引用此模型庫項目，無法刪除");
+        }
+        aiProviderInventoryMapper.deleteById(id);
+        refreshProviderInventoryCount(inventory.getProviderId());
+    }
+
+    @Override
     public List<AdminAiPolicyResponse> listPolicies(String capabilityCode) {
+        Long capabilityId = StringUtils.hasText(capabilityCode) ? resolveCapability(capabilityCode.trim()).getId() : null;
         Map<Long, AiCapability> capabilityMap = aiCapabilityMapper.selectList(null).stream()
                 .collect(Collectors.toMap(AiCapability::getId, item -> item, (left, right) -> left));
         Map<Long, AiProviderConfig> providerMap = aiProviderConfigMapper.selectList(null).stream()
                 .collect(Collectors.toMap(AiProviderConfig::getId, item -> item, (left, right) -> left));
+        Map<Long, AiProviderInventory> inventoryMap = aiProviderInventoryMapper.selectList(null).stream()
+                .collect(Collectors.toMap(AiProviderInventory::getId, item -> item, (left, right) -> left));
         Map<Long, List<AiPolicyProviderBinding>> bindings = aiPolicyProviderBindingMapper.selectList(null).stream()
                 .collect(Collectors.groupingBy(AiPolicyProviderBinding::getPolicyId));
         return aiCapabilityPolicyMapper.selectList(
                         new LambdaQueryWrapper<AiCapabilityPolicy>()
-                                .eq(StringUtils.hasText(capabilityCode), AiCapabilityPolicy::getCapabilityId, resolveCapability(capabilityCode).getId())
+                                .eq(capabilityId != null, AiCapabilityPolicy::getCapabilityId, capabilityId)
                                 .orderByAsc(AiCapabilityPolicy::getSortOrder)
                                 .orderByAsc(AiCapabilityPolicy::getId)
                 ).stream()
-                .map(item -> mapPolicy(item, capabilityMap, providerMap, bindings.getOrDefault(item.getId(), Collections.emptyList())))
+                .map(item -> mapPolicy(item, capabilityMap, providerMap, inventoryMap, bindings.getOrDefault(item.getId(), Collections.emptyList())))
                 .toList();
     }
 
@@ -372,11 +567,12 @@ public class AdminAiServiceImpl implements AdminAiService {
 
     @Override
     public List<AdminAiQuotaRuleResponse> listQuotaRules(String capabilityCode) {
+        Long capabilityId = StringUtils.hasText(capabilityCode) ? resolveCapability(capabilityCode.trim()).getId() : null;
         Map<Long, AiCapability> capabilityMap = aiCapabilityMapper.selectList(null).stream()
                 .collect(Collectors.toMap(AiCapability::getId, item -> item, (left, right) -> left));
         return aiQuotaRuleMapper.selectList(
                         new LambdaQueryWrapper<AiQuotaRule>()
-                                .eq(StringUtils.hasText(capabilityCode), AiQuotaRule::getCapabilityId, resolveCapability(capabilityCode).getId())
+                                .eq(capabilityId != null, AiQuotaRule::getCapabilityId, capabilityId)
                                 .orderByAsc(AiQuotaRule::getId)
                 ).stream()
                 .map(item -> mapQuotaRule(item, capabilityMap))
@@ -430,6 +626,7 @@ public class AdminAiServiceImpl implements AdminAiService {
 
     @Override
     public List<AdminAiPromptTemplateResponse> listPromptTemplates(String capabilityCode, String templateType) {
+        Long capabilityId = StringUtils.hasText(capabilityCode) ? resolveCapability(capabilityCode.trim()).getId() : null;
         Map<Long, AiCapability> capabilityMap = aiCapabilityMapper.selectList(null).stream()
                 .collect(Collectors.toMap(AiCapability::getId, item -> item, (left, right) -> left));
         Map<Long, AiProviderConfig> providerMap = aiProviderConfigMapper.selectList(null).stream()
@@ -438,7 +635,7 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .collect(Collectors.toMap(AiCapabilityPolicy::getId, item -> item, (left, right) -> left));
         return aiPromptTemplateMapper.selectList(
                         new LambdaQueryWrapper<AiPromptTemplate>()
-                                .eq(StringUtils.hasText(capabilityCode), AiPromptTemplate::getCapabilityId, resolveCapability(capabilityCode).getId())
+                                .eq(capabilityId != null, AiPromptTemplate::getCapabilityId, capabilityId)
                                 .eq(StringUtils.hasText(templateType), AiPromptTemplate::getTemplateType, templateType)
                                 .orderByAsc(AiPromptTemplate::getSortOrder)
                                 .orderByAsc(AiPromptTemplate::getId)
@@ -522,7 +719,7 @@ public class AdminAiServiceImpl implements AdminAiService {
     public AdminAiGenerationJobResponse getGenerationJob(Long jobId, Long currentAdminId, List<String> roles) {
         AiGenerationJob job = requireJob(jobId);
         if (!canAccessJob(job, currentAdminId, roles)) {
-            throw new BusinessException(4030, "無權查看該 AI 生成任務");
+            throw new BusinessException(4030, "沒有查看 AI 生成任務的權限");
         }
         return toJobResponses(List.of(job), currentAdminId, roles).stream().findFirst()
                 .orElseThrow(() -> new BusinessException(4044, "AI 生成任務不存在"));
@@ -555,6 +752,7 @@ public class AdminAiServiceImpl implements AdminAiService {
             job.setPolicyId(policy == null ? null : policy.getId());
             job.setPromptTemplateId(promptTemplate == null ? null : promptTemplate.getId());
             job.setProviderId(resolvedProvider.provider().getId());
+            job.setInventoryId(resolvedProvider.inventory() == null ? null : resolvedProvider.inventory().getId());
             job.setProviderBindingId(resolvedProvider.binding() == null ? null : resolvedProvider.binding().getId());
             job.setOwnerAdminId(currentAdminId);
             job.setOwnerAdminName(StringUtils.hasText(currentAdminName) ? currentAdminName : "admin");
@@ -586,7 +784,7 @@ public class AdminAiServiceImpl implements AdminAiService {
     public AdminAiGenerationJobResponse refreshGenerationJob(Long jobId, Long currentAdminId, List<String> roles) {
         AiGenerationJob job = requireJob(jobId);
         if (!canAccessJob(job, currentAdminId, roles)) {
-            throw new BusinessException(4030, "無權刷新該 AI 生成任務");
+            throw new BusinessException(4030, "沒有刷新 AI 生成任務的權限");
         }
         if (!"image".equalsIgnoreCase(job.getGenerationType()) || !StringUtils.hasText(job.getProviderRequestId())) {
             return getGenerationJob(jobId, currentAdminId, roles);
@@ -607,7 +805,7 @@ public class AdminAiServiceImpl implements AdminAiService {
         AiGenerationCandidate candidate = requireCandidate(candidateId);
         AiGenerationJob job = requireJob(candidate.getJobId());
         if (!canAccessJob(job, currentAdminId, roles)) {
-            throw new BusinessException(4030, "無權定稿該 AI 候選資源");
+            throw new BusinessException(4030, "沒有確認 AI 候選資源的權限");
         }
 
         if (candidate.getFinalizedAssetId() == null) {
@@ -630,7 +828,7 @@ public class AdminAiServiceImpl implements AdminAiService {
             asset.setProcessingPolicyCode("ai-generated");
             asset.setProcessingProfileJson(candidate.getMetadataJson());
             asset.setProcessingStatus("stored");
-            asset.setProcessingNote("Finalized from AI generation candidate");
+            asset.setProcessingNote("由 AI 生成候選結果轉為正式資源");
             asset.setStatus(defaultString(request.getStatus(), "draft"));
             asset.setPublishedAt("published".equalsIgnoreCase(asset.getStatus()) ? LocalDateTime.now() : null);
             contentAssetMapper.insert(asset);
@@ -654,7 +852,7 @@ public class AdminAiServiceImpl implements AdminAiService {
         AiGenerationCandidate candidate = requireCandidate(candidateId);
         AiGenerationJob job = requireJob(candidate.getJobId());
         if (!canAccessJob(job, currentAdminId, roles)) {
-            throw new BusinessException(4030, "無權切換該 AI 候選版本");
+            throw new BusinessException(4030, "沒有切換 AI 候選版本的權限");
         }
         clearSelectedCandidates(job.getId());
         candidate.setIsSelected(1);
@@ -663,6 +861,38 @@ public class AdminAiServiceImpl implements AdminAiService {
         job.setResultSummary(defaultString(candidate.getPreviewText(), candidate.getStorageUrl()));
         aiGenerationJobMapper.updateById(job);
         return getGenerationJob(job.getId(), currentAdminId, roles);
+    }
+
+    @Override
+    public AdminAiPlatformSettingsResponse getPlatformSettings() {
+        return AdminAiPlatformSettingsResponse.builder()
+                .inventoryFreshnessHours(readIntegerConfig(CONFIG_AI_INVENTORY_FRESHNESS_HOURS, 24))
+                .syncHistoryLimit(readIntegerConfig(CONFIG_AI_SYNC_HISTORY_LIMIT, 12))
+                .dailyCostAlertUsd(readDecimalConfig(CONFIG_AI_DAILY_COST_ALERT_USD, "80"))
+                .providerFailureRateWarning(readDecimalConfig(CONFIG_AI_PROVIDER_FAILURE_RATE_WARNING, "0.20"))
+                .recentWindowHours(readIntegerConfig(CONFIG_AI_RECENT_WINDOW_HOURS, 24))
+                .allowOperatorGlobalHistory(readIntegerConfig(CONFIG_AI_ALLOW_OPERATOR_GLOBAL_HISTORY, 0))
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public AdminAiPlatformSettingsResponse updatePlatformSettings(AdminAiPlatformSettingsUpsertRequest request) {
+        AdminAiPlatformSettingsResponse current = getPlatformSettings();
+        int inventoryFreshnessHours = normalizePositiveInteger(request.getInventoryFreshnessHours(), current.getInventoryFreshnessHours());
+        int syncHistoryLimit = normalizePositiveInteger(request.getSyncHistoryLimit(), current.getSyncHistoryLimit());
+        int recentWindowHours = normalizePositiveInteger(request.getRecentWindowHours(), current.getRecentWindowHours());
+        BigDecimal dailyCostAlertUsd = normalizePositiveDecimal(request.getDailyCostAlertUsd(), current.getDailyCostAlertUsd());
+        BigDecimal providerFailureRateWarning = normalizeDecimalInRange(request.getProviderFailureRateWarning(), current.getProviderFailureRateWarning(), BigDecimal.ZERO, BigDecimal.ONE);
+        int allowOperatorGlobalHistory = normalizeBooleanInt(request.getAllowOperatorGlobalHistory(), current.getAllowOperatorGlobalHistory());
+
+        upsertConfig(CONFIG_AI_INVENTORY_FRESHNESS_HOURS, String.valueOf(inventoryFreshnessHours), "number", "AI inventory freshness warning threshold in hours");
+        upsertConfig(CONFIG_AI_SYNC_HISTORY_LIMIT, String.valueOf(syncHistoryLimit), "number", "AI provider sync history retention count");
+        upsertConfig(CONFIG_AI_DAILY_COST_ALERT_USD, dailyCostAlertUsd.stripTrailingZeros().toPlainString(), "number", "AI daily estimated cost alert threshold in USD");
+        upsertConfig(CONFIG_AI_PROVIDER_FAILURE_RATE_WARNING, providerFailureRateWarning.stripTrailingZeros().toPlainString(), "number", "AI provider failure-rate warning threshold");
+        upsertConfig(CONFIG_AI_RECENT_WINDOW_HOURS, String.valueOf(recentWindowHours), "number", "AI overview rolling recent window in hours");
+        upsertConfig(CONFIG_AI_ALLOW_OPERATOR_GLOBAL_HISTORY, String.valueOf(allowOperatorGlobalHistory), "number", "Whether non-super admins can view global AI history");
+        return getPlatformSettings();
     }
 
     private List<AdminAiOverviewResponse.Alert> buildOverviewAlerts(List<AiCapability> capabilities,
@@ -681,7 +911,7 @@ public class AdminAiServiceImpl implements AdminAiService {
         }
         if (recentLogs.stream().filter(item -> !Objects.equals(item.getSuccess(), 1)).count() >= 5) {
             alerts.add(AdminAiOverviewResponse.Alert.builder().level("warning").title("近期失敗請求偏多")
-                    .message("建議檢查策略、配額與上游供應商狀態。").build());
+                    .message("建議檢查策略、配置與上游供應商狀態。").build());
         }
         if (capabilities.stream().noneMatch(item -> STATUS_ENABLED.equalsIgnoreCase(item.getStatus()))) {
             alerts.add(AdminAiOverviewResponse.Alert.builder().level("error").title("AI 能力全部停用")
@@ -719,13 +949,20 @@ public class AdminAiServiceImpl implements AdminAiService {
         return AdminAiProviderResponse.builder()
                 .id(provider.getId())
                 .providerName(provider.getProviderName())
+                .platformCode(provider.getPlatformCode())
                 .displayName(provider.getDisplayName())
+                .platformLabel(provider.getPlatformLabel())
                 .providerType(provider.getProviderType())
                 .endpointStyle(provider.getEndpointStyle())
+                .syncStrategy(provider.getSyncStrategy())
+                .authScheme(provider.getAuthScheme())
                 .apiBaseUrl(provider.getApiBaseUrl())
+                .docsUrl(provider.getDocsUrl())
                 .modelName(provider.getModelName())
                 .capabilityCodes(parseCapabilityCodes(provider.getCapabilities()))
                 .featureFlagsJson(provider.getFeatureFlagsJson())
+                .credentialSchemaJson(provider.getCredentialSchemaJson())
+                .providerSettingsJson(provider.getProviderSettingsJson())
                 .hasApiKey(StringUtils.hasText(provider.getApiKeyEncrypted()) ? 1 : 0)
                 .hasApiSecret(StringUtils.hasText(provider.getApiSecretEncrypted()) ? 1 : 0)
                 .apiKeyMasked(provider.getApiKeyMasked())
@@ -737,6 +974,10 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .status(provider.getStatus())
                 .healthStatus(provider.getHealthStatus())
                 .healthMessage(provider.getHealthMessage())
+                .lastInventorySyncStatus(provider.getLastInventorySyncStatus())
+                .lastInventorySyncMessage(provider.getLastInventorySyncMessage())
+                .lastInventorySyncedAt(provider.getLastInventorySyncedAt())
+                .inventoryRecordCount(provider.getInventoryRecordCount())
                 .lastHealthCheckedAt(provider.getLastHealthCheckedAt())
                 .lastSuccessAt(provider.getLastSuccessAt())
                 .lastFailureAt(provider.getLastFailureAt())
@@ -745,7 +986,9 @@ public class AdminAiServiceImpl implements AdminAiService {
     }
 
     private AdminAiPolicyResponse mapPolicy(AiCapabilityPolicy policy, Map<Long, AiCapability> capabilityMap,
-                                            Map<Long, AiProviderConfig> providerMap, List<AiPolicyProviderBinding> bindings) {
+                                            Map<Long, AiProviderConfig> providerMap,
+                                            Map<Long, AiProviderInventory> inventoryMap,
+                                            List<AiPolicyProviderBinding> bindings) {
         AiCapability capability = capabilityMap.get(policy.getCapabilityId());
         return AdminAiPolicyResponse.builder()
                 .id(policy.getId())
@@ -757,6 +1000,7 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .policyType(policy.getPolicyType())
                 .executionMode(policy.getExecutionMode())
                 .responseMode(policy.getResponseMode())
+                .scenePresetCode(policy.getScenePresetCode())
                 .manualSwitchProviderId(policy.getManualSwitchProviderId())
                 .manualSwitchProviderName(policy.getManualSwitchProviderId() == null ? null : providerMap.get(policy.getManualSwitchProviderId()) == null ? null : providerMap.get(policy.getManualSwitchProviderId()).getDisplayName())
                 .defaultModel(policy.getDefaultModel())
@@ -767,6 +1011,8 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .maxTokens(policy.getMaxTokens())
                 .responseSchemaJson(policy.getResponseSchemaJson())
                 .postProcessRulesJson(policy.getPostProcessRulesJson())
+                .parameterConfigJson(policy.getParameterConfigJson())
+                .expertOverrideJson(policy.getExpertOverrideJson())
                 .status(policy.getStatus())
                 .sortOrder(policy.getSortOrder())
                 .notes(policy.getNotes())
@@ -775,13 +1021,20 @@ public class AdminAiServiceImpl implements AdminAiService {
                         .map(item -> AdminAiProviderBindingResponse.builder()
                                 .id(item.getId())
                                 .providerId(item.getProviderId())
+                                .inventoryId(item.getInventoryId())
+                                .inventoryCode(item.getInventoryId() == null ? null : inventoryMap.get(item.getInventoryId()) == null ? null : inventoryMap.get(item.getInventoryId()).getInventoryCode())
+                                .inventoryDisplayName(item.getInventoryId() == null ? null : inventoryMap.get(item.getInventoryId()) == null ? null : inventoryMap.get(item.getInventoryId()).getDisplayName())
                                 .providerName(providerMap.get(item.getProviderId()) == null ? null : providerMap.get(item.getProviderId()).getProviderName())
                                 .providerDisplayName(providerMap.get(item.getProviderId()) == null ? null : providerMap.get(item.getProviderId()).getDisplayName())
                                 .bindingRole(item.getBindingRole())
+                                .routeMode(item.getRouteMode())
                                 .sortOrder(item.getSortOrder())
                                 .enabled(item.getEnabled())
                                 .modelOverride(item.getModelOverride())
                                 .weightPercent(item.getWeightPercent())
+                                .timeoutMsOverride(item.getTimeoutMsOverride())
+                                .retryCountOverride(item.getRetryCountOverride())
+                                .parameterOverrideJson(item.getParameterOverrideJson())
                                 .notes(item.getNotes())
                                 .build())
                         .toList())
@@ -838,18 +1091,33 @@ public class AdminAiServiceImpl implements AdminAiService {
     private void fillProvider(AiProviderConfig provider, AdminAiProviderUpsertRequest request, boolean creating) {
         provider.setProviderName(request.getProviderName().trim());
         provider.setDisplayName(request.getDisplayName().trim());
-        provider.setProviderType(defaultString(request.getProviderType(), "dashscope"));
-        provider.setEndpointStyle(defaultString(request.getEndpointStyle(), "openai_compatible"));
-        provider.setApiBaseUrl(request.getApiBaseUrl().trim());
-        provider.setModelName(request.getModelName().trim());
+        AiProviderTemplateRegistry.AiProviderTemplateDefinition template = resolveProviderTemplate(request.getPlatformCode());
+        String platformCode = defaultString(request.getPlatformCode(), template == null ? "custom" : template.getPlatformCode());
+        provider.setPlatformCode(platformCode);
+        provider.setPlatformLabel(defaultString(request.getPlatformLabel(), template == null ? request.getDisplayName() : template.getPlatformLabel()));
+        provider.setProviderType(defaultString(request.getProviderType(), template == null ? "custom" : template.getProviderType()));
+        provider.setEndpointStyle(defaultString(request.getEndpointStyle(), template == null ? "openai_compatible" : template.getEndpointStyle()));
+        provider.setSyncStrategy(defaultString(request.getSyncStrategy(), template == null ? "manual" : template.getSyncStrategy()));
+        provider.setAuthScheme(defaultString(request.getAuthScheme(), template == null ? "bearer_key" : template.getAuthScheme()));
+        provider.setApiBaseUrl(aiOutboundUrlGuard.normalizeConfiguredBaseUrl(
+                platformCode,
+                defaultString(request.getApiBaseUrl(), template == null ? "" : template.getDefaultBaseUrl())
+        ));
+        provider.setDocsUrl(defaultString(request.getDocsUrl(), template == null ? "" : template.getDocsUrl()));
+        provider.setModelName(defaultString(request.getModelName(), template == null ? "" : template.getDefaultModelName()));
         provider.setCapabilities(writeJson(parseStringList(request.getCapabilityCodes())));
         provider.setFeatureFlagsJson(normalizeJson(request.getFeatureFlagsJson()));
+        provider.setCredentialSchemaJson(normalizeJson(defaultString(request.getCredentialSchemaJson(),
+                template == null ? null : writeJson(template.getCredentialFields()))));
+        provider.setProviderSettingsJson(normalizeJson(request.getProviderSettingsJson()));
         provider.setRequestTimeoutMs(request.getRequestTimeoutMs() == null ? aiCapabilityProperties.getRequestTimeoutMs() : request.getRequestTimeoutMs());
         provider.setMaxRetries(request.getMaxRetries() == null ? 1 : request.getMaxRetries());
         provider.setQuotaDaily(request.getQuotaDaily());
         provider.setCostPer1kTokens(request.getCostPer1kTokens());
         provider.setStatus(request.getStatus() == null ? 1 : request.getStatus());
         provider.setHealthStatus(defaultString(provider.getHealthStatus(), "unknown"));
+        provider.setLastInventorySyncStatus(defaultString(provider.getLastInventorySyncStatus(), STATUS_IDLE));
+        provider.setInventoryRecordCount(provider.getInventoryRecordCount() == null ? 0 : provider.getInventoryRecordCount());
 
         boolean replaceApiKey = creating || Boolean.TRUE.equals(request.getReplaceApiKey()) || StringUtils.hasText(request.getApiKey());
         if (replaceApiKey) {
@@ -872,11 +1140,14 @@ public class AdminAiServiceImpl implements AdminAiService {
         policy.setPolicyType(defaultString(request.getPolicyType(), "default"));
         policy.setExecutionMode(defaultString(request.getExecutionMode(), "auto"));
         policy.setResponseMode(defaultString(request.getResponseMode(), "structured"));
+        policy.setScenePresetCode(request.getScenePresetCode());
         policy.setDefaultModel(request.getDefaultModel());
         policy.setSystemPrompt(request.getSystemPrompt());
         policy.setPromptTemplate(request.getPromptTemplate());
         policy.setResponseSchemaJson(normalizeJson(request.getResponseSchemaJson()));
         policy.setPostProcessRulesJson(normalizeJson(request.getPostProcessRulesJson()));
+        policy.setParameterConfigJson(normalizeJson(request.getParameterConfigJson()));
+        policy.setExpertOverrideJson(normalizeJson(request.getExpertOverrideJson()));
         policy.setManualSwitchProviderId(request.getManualSwitchProviderId());
         policy.setMultimodalEnabled(request.getMultimodalEnabled() == null ? 0 : request.getMultimodalEnabled());
         policy.setVoiceEnabled(request.getVoiceEnabled() == null ? 0 : request.getVoiceEnabled());
@@ -919,6 +1190,455 @@ public class AdminAiServiceImpl implements AdminAiService {
         template.setSortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder());
     }
 
+    private AdminAiProviderSyncJobResponse mapSyncJob(AiProviderSyncJob job, AiProviderConfig provider) {
+        return AdminAiProviderSyncJobResponse.builder()
+                .id(job.getId())
+                .providerId(job.getProviderId())
+                .providerName(provider == null ? null : provider.getDisplayName())
+                .platformCode(job.getPlatformCode())
+                .syncStrategy(job.getSyncStrategy())
+                .jobStatus(job.getJobStatus())
+                .message(job.getMessage())
+                .errorDetail(job.getErrorDetail())
+                .discoveredCount(job.getDiscoveredCount())
+                .createdCount(job.getCreatedCount())
+                .updatedCount(job.getUpdatedCount())
+                .staleCount(job.getStaleCount())
+                .rawPayloadJson(job.getRawPayloadJson())
+                .startedAt(job.getStartedAt())
+                .finishedAt(job.getFinishedAt())
+                .createdAt(job.getCreatedAt())
+                .updatedAt(job.getUpdatedAt())
+                .build();
+    }
+
+    private AdminAiInventoryResponse mapInventory(AiProviderInventory inventory, AiProviderConfig provider) {
+        return AdminAiInventoryResponse.builder()
+                .id(inventory.getId())
+                .providerId(inventory.getProviderId())
+                .providerName(provider == null ? null : provider.getProviderName())
+                .providerDisplayName(provider == null ? null : provider.getDisplayName())
+                .providerPlatformCode(provider == null ? null : provider.getPlatformCode())
+                .inventoryCode(inventory.getInventoryCode())
+                .externalId(inventory.getExternalId())
+                .displayName(inventory.getDisplayName())
+                .inventoryType(inventory.getInventoryType())
+                .modalityCodes(readJsonList(inventory.getModalityCodesJson()))
+                .capabilityCodes(readJsonList(inventory.getCapabilityCodesJson()))
+                .syncStrategy(inventory.getSyncStrategy())
+                .sourceType(inventory.getSourceType())
+                .availabilityStatus(inventory.getAvailabilityStatus())
+                .endpointPath(inventory.getEndpointPath())
+                .contextWindowTokens(inventory.getContextWindowTokens())
+                .inputPricePer1k(inventory.getInputPricePer1k())
+                .outputPricePer1k(inventory.getOutputPricePer1k())
+                .imagePricePerCall(inventory.getImagePricePerCall())
+                .audioPricePerMinute(inventory.getAudioPricePerMinute())
+                .featureFlagsJson(inventory.getFeatureFlagsJson())
+                .rawPayloadJson(inventory.getRawPayloadJson())
+                .isDefault(inventory.getIsDefault())
+                .sortOrder(inventory.getSortOrder())
+                .lastSeenAt(inventory.getLastSeenAt())
+                .syncedAt(inventory.getSyncedAt())
+                .createdAt(inventory.getCreatedAt())
+                .updatedAt(inventory.getUpdatedAt())
+                .build();
+    }
+
+    private void fillInventory(AiProviderInventory inventory, AdminAiInventoryUpsertRequest request) {
+        inventory.setProviderId(request.getProviderId());
+        inventory.setInventoryCode(request.getInventoryCode().trim());
+        inventory.setExternalId(request.getExternalId().trim());
+        inventory.setDisplayName(request.getDisplayName().trim());
+        inventory.setInventoryType(defaultString(request.getInventoryType(), "model"));
+        inventory.setModalityCodesJson(writeJson(parseStringList(request.getModalityCodes())));
+        inventory.setCapabilityCodesJson(writeJson(parseStringList(request.getCapabilityCodes())));
+        inventory.setSyncStrategy(defaultString(request.getSyncStrategy(), "manual"));
+        inventory.setSourceType(defaultString(request.getSourceType(), "manual"));
+        inventory.setAvailabilityStatus(defaultString(request.getAvailabilityStatus(), "available"));
+        inventory.setEndpointPath(request.getEndpointPath());
+        inventory.setContextWindowTokens(request.getContextWindowTokens());
+        inventory.setInputPricePer1k(request.getInputPricePer1k());
+        inventory.setOutputPricePer1k(request.getOutputPricePer1k());
+        inventory.setImagePricePerCall(request.getImagePricePerCall());
+        inventory.setAudioPricePerMinute(request.getAudioPricePerMinute());
+        inventory.setFeatureFlagsJson(normalizeJson(request.getFeatureFlagsJson()));
+        inventory.setRawPayloadJson(normalizeJson(request.getRawPayloadJson()));
+        inventory.setIsDefault(request.getIsDefault() == null ? 0 : request.getIsDefault());
+        inventory.setSortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder());
+    }
+
+    private InventorySyncResult synchronizeInventory(AiProviderConfig provider) {
+        AiProviderTemplateRegistry.AiProviderTemplateDefinition template = resolveProviderTemplate(provider.getPlatformCode());
+        List<DiscoveredInventoryRecord> discovered = filterDiscoveredInventoryRecords(
+                provider,
+                discoverInventoryRecords(provider, template)
+        );
+        LocalDateTime syncedAt = LocalDateTime.now();
+        List<AiProviderInventory> existing = aiProviderInventoryMapper.selectList(
+                new LambdaQueryWrapper<AiProviderInventory>()
+                        .eq(AiProviderInventory::getProviderId, provider.getId())
+                        .orderByAsc(AiProviderInventory::getSortOrder)
+                        .orderByAsc(AiProviderInventory::getId)
+        );
+        Map<String, AiProviderInventory> existingByCode = existing.stream()
+                .collect(Collectors.toMap(AiProviderInventory::getInventoryCode, item -> item, (left, right) -> left));
+        Set<String> activeCodes = new HashSet<>();
+        int createdCount = 0;
+        int updatedCount = 0;
+
+        for (DiscoveredInventoryRecord item : discovered) {
+            activeCodes.add(item.inventoryCode());
+            AiProviderInventory inventory = existingByCode.get(item.inventoryCode());
+            boolean creating = inventory == null;
+            if (creating) {
+                inventory = new AiProviderInventory();
+                inventory.setProviderId(provider.getId());
+            }
+            inventory.setInventoryCode(item.inventoryCode());
+            inventory.setExternalId(item.externalId());
+            inventory.setDisplayName(item.displayName());
+            inventory.setInventoryType(item.inventoryType());
+            inventory.setModalityCodesJson(writeJson(item.modalityCodes()));
+            inventory.setCapabilityCodesJson(writeJson(item.capabilityCodes()));
+            inventory.setSyncStrategy(defaultString(provider.getSyncStrategy(), "manual"));
+            inventory.setSourceType(item.sourceType());
+            inventory.setAvailabilityStatus("available");
+            inventory.setEndpointPath(item.endpointPath());
+            inventory.setContextWindowTokens(item.contextWindowTokens());
+            inventory.setInputPricePer1k(item.inputPricePer1k());
+            inventory.setOutputPricePer1k(item.outputPricePer1k());
+            inventory.setImagePricePerCall(item.imagePricePerCall());
+            inventory.setAudioPricePerMinute(item.audioPricePerMinute());
+            inventory.setFeatureFlagsJson(item.featureFlagsJson());
+            inventory.setRawPayloadJson(item.rawPayloadJson());
+            inventory.setIsDefault(item.isDefault());
+            inventory.setSortOrder(item.sortOrder());
+            inventory.setLastSeenAt(syncedAt);
+            inventory.setSyncedAt(syncedAt);
+            if (creating) {
+                aiProviderInventoryMapper.insert(inventory);
+                createdCount++;
+            } else {
+                aiProviderInventoryMapper.updateById(inventory);
+                updatedCount++;
+            }
+        }
+
+        int staleCount = 0;
+        for (AiProviderInventory item : existing) {
+            if (!activeCodes.contains(item.getInventoryCode())) {
+                item.setAvailabilityStatus("stale");
+                item.setIsDefault(0);
+                item.setSyncedAt(syncedAt);
+                aiProviderInventoryMapper.updateById(item);
+                staleCount++;
+            }
+        }
+
+        normalizeProviderInventoryDefaults(provider);
+        refreshProviderInventoryCount(provider.getId());
+        int totalRecords = countProviderAvailableInventory(provider.getId());
+        String message = discovered.isEmpty()
+                ? "未同步到可用模型，已保留現有模型庫。"
+                : "模型庫同步完成，共整理 " + totalRecords + " 個可用項目";
+        return new InventorySyncResult(
+                discovered.size(),
+                createdCount,
+                updatedCount,
+                staleCount,
+                totalRecords,
+                message,
+                writeJson(discovered.stream().map(DiscoveredInventoryRecord::inventoryCode).toList())
+        );
+    }
+
+    private List<DiscoveredInventoryRecord> discoverInventoryRecords(AiProviderConfig provider,
+                                                                     AiProviderTemplateRegistry.AiProviderTemplateDefinition template) {
+        String strategy = defaultString(provider.getSyncStrategy(), template == null ? "manual" : template.getSyncStrategy());
+        if ("list_api".equalsIgnoreCase(strategy)) {
+            return discoverViaModelList(provider);
+        }
+        if ("hybrid_list_or_catalog".equalsIgnoreCase(strategy)) {
+            try {
+                List<DiscoveredInventoryRecord> records = discoverViaModelList(provider);
+                if (!records.isEmpty()) {
+                    return records;
+                }
+            } catch (BusinessException ignored) {
+                // fall through to catalog
+            }
+            return discoverViaTemplateCatalog(provider, template);
+        }
+        if ("documented_catalog".equalsIgnoreCase(strategy) || "endpoint_discovery".equalsIgnoreCase(strategy)) {
+            return discoverViaTemplateCatalog(provider, template);
+        }
+        if ("manual".equalsIgnoreCase(strategy)) {
+            return aiProviderInventoryMapper.selectList(
+                            new LambdaQueryWrapper<AiProviderInventory>()
+                                    .eq(AiProviderInventory::getProviderId, provider.getId())
+                                    .orderByAsc(AiProviderInventory::getSortOrder)
+                                    .orderByAsc(AiProviderInventory::getId)
+                    ).stream()
+                    .map(item -> new DiscoveredInventoryRecord(
+                            item.getInventoryCode(),
+                            item.getExternalId(),
+                            item.getDisplayName(),
+                            item.getInventoryType(),
+                            readJsonList(item.getModalityCodesJson()),
+                            readJsonList(item.getCapabilityCodesJson()),
+                            defaultString(item.getSourceType(), "manual"),
+                            item.getEndpointPath(),
+                            item.getContextWindowTokens(),
+                            item.getInputPricePer1k(),
+                            item.getOutputPricePer1k(),
+                            item.getImagePricePerCall(),
+                            item.getAudioPricePerMinute(),
+                            item.getFeatureFlagsJson(),
+                            item.getRawPayloadJson(),
+                            item.getIsDefault() == null ? 0 : item.getIsDefault(),
+                            item.getSortOrder() == null ? 0 : item.getSortOrder()
+                    ))
+                    .toList();
+        }
+        return discoverViaTemplateCatalog(provider, template);
+    }
+
+    private List<DiscoveredInventoryRecord> discoverViaModelList(AiProviderConfig provider) {
+        String apiKey = decryptRequiredApiKey(provider);
+        return dashScopeProviderGateway.listModels(provider, apiKey, provider.getRequestTimeoutMs()).stream()
+                .map(item -> new DiscoveredInventoryRecord(
+                        sanitizeInventoryCode(item.id()),
+                        item.id(),
+                        defaultString(item.displayName(), item.id()),
+                        "model",
+                        inferModalities(item.id()),
+                        inferCapabilities(item.id(), inferModalities(item.id())),
+                        "api",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        item.rawPayloadJson(),
+                        0,
+                        0
+                ))
+                .toList();
+    }
+
+    private List<DiscoveredInventoryRecord> discoverViaTemplateCatalog(AiProviderConfig provider,
+                                                                       AiProviderTemplateRegistry.AiProviderTemplateDefinition template) {
+        if (template == null || template.getInventorySeeds() == null) {
+            return List.of();
+        }
+        return template.getInventorySeeds().stream()
+                .map(item -> new DiscoveredInventoryRecord(
+                        sanitizeInventoryCode(item.getInventoryCode()),
+                        item.getExternalId(),
+                        item.getDisplayName(),
+                        item.getInventoryType(),
+                        item.getModalityCodes(),
+                        item.getCapabilityCodes(),
+                        defaultString(item.getSourceType(), "documentation"),
+                        resolveEndpointPath(provider, item),
+                        item.getContextWindowTokens(),
+                        item.getInputPricePer1k(),
+                        item.getOutputPricePer1k(),
+                        item.getImagePricePerCall(),
+                        item.getAudioPricePerMinute(),
+                        null,
+                        writeJson(Map.of("platformCode", provider.getPlatformCode(), "templateInventoryCode", item.getInventoryCode())),
+                        item.getIsDefault() == null ? 0 : item.getIsDefault(),
+                        item.getSortOrder() == null ? 0 : item.getSortOrder()
+                ))
+                .toList();
+    }
+
+    private List<DiscoveredInventoryRecord> filterDiscoveredInventoryRecords(AiProviderConfig provider,
+                                                                             List<DiscoveredInventoryRecord> discovered) {
+        List<String> providerCapabilities = parseCapabilityCodes(provider.getCapabilities());
+        Set<String> providerModalities = resolveProviderModalities(provider, providerCapabilities);
+        if (providerCapabilities.isEmpty() && providerModalities.isEmpty()) {
+            return discovered;
+        }
+        return discovered.stream()
+                .filter(item -> providerCapabilities.isEmpty()
+                        || item.capabilityCodes() == null
+                        || item.capabilityCodes().isEmpty()
+                        || item.capabilityCodes().stream().anyMatch(providerCapabilities::contains))
+                .filter(item -> providerModalities.isEmpty()
+                        || item.modalityCodes() == null
+                        || item.modalityCodes().isEmpty()
+                        || item.modalityCodes().stream().anyMatch(providerModalities::contains))
+                .toList();
+    }
+
+    private Set<String> resolveProviderModalities(AiProviderConfig provider, List<String> providerCapabilities) {
+        String endpointStyle = defaultString(provider.getEndpointStyle(), "").toLowerCase(Locale.ROOT);
+        if ("dashscope_image".equals(endpointStyle)) {
+            return Set.of("image");
+        }
+        if ("dashscope_tts".equals(endpointStyle)) {
+            return Set.of("audio");
+        }
+        if (providerCapabilities == null || providerCapabilities.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Set<String> modalities = new LinkedHashSet<>();
+        for (String capabilityCode : providerCapabilities) {
+            switch (defaultString(capabilityCode, "")) {
+                case "admin_image_generation" -> modalities.add("image");
+                case "admin_tts_generation" -> modalities.add("audio");
+                case "photo_positioning" -> {
+                    modalities.add("text");
+                    modalities.add("vision");
+                }
+                default -> modalities.add("text");
+            }
+        }
+        return modalities;
+    }
+
+    private String resolveEndpointPath(AiProviderConfig provider, AiProviderTemplateRegistry.AiInventorySeed item) {
+        if (!"endpoint".equalsIgnoreCase(item.getInventoryType())) {
+            return null;
+        }
+        String base = defaultString(provider.getApiBaseUrl(), "");
+        return StringUtils.hasText(base) ? base.replaceAll("/+$", "") + "/deployments/" + item.getExternalId() : item.getExternalId();
+    }
+
+    private AiProviderInventory resolvePreferredInventory(Long providerId, String capabilityCode, String assetSlotCode) {
+        return resolvePreferredInventory(providerId, capabilityCode, assetSlotCode, null);
+    }
+
+    private AiProviderInventory resolvePreferredInventory(Long providerId,
+                                                          String capabilityCode,
+                                                          String assetSlotCode,
+                                                          String preferredModel) {
+        List<AiProviderInventory> inventories = aiProviderInventoryMapper.selectList(
+                new LambdaQueryWrapper<AiProviderInventory>()
+                        .eq(AiProviderInventory::getProviderId, providerId)
+                        .eq(AiProviderInventory::getAvailabilityStatus, "available")
+                        .orderByDesc(AiProviderInventory::getIsDefault)
+                        .orderByAsc(AiProviderInventory::getSortOrder)
+                        .orderByAsc(AiProviderInventory::getId)
+        );
+        if (inventories.isEmpty()) {
+            return null;
+        }
+        String desiredModality = resolveAssetSlotModality(assetSlotCode);
+        List<AiProviderInventory> filtered = inventories.stream()
+                .filter(item -> capabilityCode == null || readJsonList(item.getCapabilityCodesJson()).isEmpty()
+                        || readJsonList(item.getCapabilityCodesJson()).contains(capabilityCode))
+                .filter(item -> desiredModality == null || readJsonList(item.getModalityCodesJson()).isEmpty()
+                        || readJsonList(item.getModalityCodesJson()).contains(desiredModality))
+                .toList();
+        if (filtered.isEmpty()) {
+            filtered = inventories;
+        }
+        String resolvedPreferredModel = StringUtils.hasText(preferredModel)
+                ? preferredModel.trim()
+                : resolveProviderModelName(providerId);
+        AiProviderInventory preferred = findInventoryByModel(filtered, resolvedPreferredModel);
+        return preferred != null ? preferred : filtered.get(0);
+    }
+
+    private String resolveInventoryCode(Long inventoryId) {
+        if (inventoryId == null) {
+            return null;
+        }
+        AiProviderInventory inventory = aiProviderInventoryMapper.selectById(inventoryId);
+        return inventory == null ? null : inventory.getInventoryCode();
+    }
+
+    private int countProviderAvailableInventory(Long providerId) {
+        return Math.toIntExact(aiProviderInventoryMapper.selectCount(
+                new LambdaQueryWrapper<AiProviderInventory>()
+                        .eq(AiProviderInventory::getProviderId, providerId)
+                        .eq(AiProviderInventory::getAvailabilityStatus, "available")
+        ));
+    }
+
+    private void normalizeProviderInventoryDefaults(AiProviderConfig provider) {
+        if (provider == null || provider.getId() == null) {
+            return;
+        }
+        List<AiProviderInventory> availableInventories = aiProviderInventoryMapper.selectList(
+                new LambdaQueryWrapper<AiProviderInventory>()
+                        .eq(AiProviderInventory::getProviderId, provider.getId())
+                        .eq(AiProviderInventory::getAvailabilityStatus, "available")
+                        .orderByDesc(AiProviderInventory::getIsDefault)
+                        .orderByAsc(AiProviderInventory::getSortOrder)
+                        .orderByAsc(AiProviderInventory::getId)
+        );
+        if (availableInventories.isEmpty()) {
+            return;
+        }
+        AiProviderInventory preferred = findInventoryByModel(availableInventories, provider.getModelName());
+        if (preferred == null) {
+            preferred = availableInventories.stream()
+                    .filter(item -> Objects.equals(item.getIsDefault(), 1))
+                    .findFirst()
+                    .orElse(availableInventories.get(0));
+        }
+        Long preferredId = preferred.getId();
+        for (AiProviderInventory item : availableInventories) {
+            int nextDefault = Objects.equals(item.getId(), preferredId) ? 1 : 0;
+            if (!Objects.equals(item.getIsDefault(), nextDefault)) {
+                item.setIsDefault(nextDefault);
+                aiProviderInventoryMapper.updateById(item);
+            }
+        }
+    }
+
+    private String resolveProviderModelName(Long providerId) {
+        AiProviderConfig provider = aiProviderConfigMapper.selectById(providerId);
+        return provider == null ? null : provider.getModelName();
+    }
+
+    private AiProviderInventory findInventoryByModel(List<AiProviderInventory> inventories, String modelReference) {
+        if (inventories == null || inventories.isEmpty() || !StringUtils.hasText(modelReference)) {
+            return null;
+        }
+        return inventories.stream()
+                .filter(item -> matchesInventoryModel(item, modelReference))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private boolean matchesInventoryModel(AiProviderInventory inventory, String modelReference) {
+        if (inventory == null || !StringUtils.hasText(modelReference)) {
+            return false;
+        }
+        String normalized = modelReference.trim();
+        return normalized.equalsIgnoreCase(defaultString(inventory.getInventoryCode(), ""))
+                || normalized.equalsIgnoreCase(defaultString(inventory.getExternalId(), ""));
+    }
+
+    private AiProviderTemplateRegistry.AiProviderTemplateDefinition resolveProviderTemplate(String platformCode) {
+        return aiProviderTemplateRegistry.find(defaultString(platformCode, "custom")).orElse(null);
+    }
+
+    private AiProviderInventory requireInventory(Long id) {
+        AiProviderInventory inventory = aiProviderInventoryMapper.selectById(id);
+        if (inventory == null) {
+            throw new BusinessException(4044, "AI 模型庫項目不存在");
+        }
+        return inventory;
+    }
+
+    private void refreshProviderInventoryCount(Long providerId) {
+        AiProviderConfig provider = aiProviderConfigMapper.selectById(providerId);
+        if (provider == null) {
+            return;
+        }
+        provider.setInventoryRecordCount(countProviderAvailableInventory(providerId));
+        aiProviderConfigMapper.updateById(provider);
+    }
+
     private List<AdminAiGenerationJobResponse> toJobResponses(List<AiGenerationJob> jobs, Long currentAdminId, List<String> roles) {
         if (jobs == null || jobs.isEmpty()) {
             return Collections.emptyList();
@@ -931,6 +1651,8 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .collect(Collectors.toMap(AiPromptTemplate::getId, item -> item, (left, right) -> left));
         Map<Long, AiProviderConfig> providerMap = aiProviderConfigMapper.selectList(null).stream()
                 .collect(Collectors.toMap(AiProviderConfig::getId, item -> item, (left, right) -> left));
+        Map<Long, AiProviderInventory> inventoryMap = aiProviderInventoryMapper.selectList(null).stream()
+                .collect(Collectors.toMap(AiProviderInventory::getId, item -> item, (left, right) -> left));
         Map<Long, List<AiGenerationCandidate>> candidateMap = aiGenerationCandidateMapper.selectList(
                         new LambdaQueryWrapper<AiGenerationCandidate>().in(AiGenerationCandidate::getJobId, jobs.stream().map(AiGenerationJob::getId).toList())
                 ).stream()
@@ -939,17 +1661,20 @@ public class AdminAiServiceImpl implements AdminAiService {
 
         return jobs.stream()
                 .filter(job -> canAccessJob(job, currentAdminId, roles))
-                .map(job -> mapJob(job, capabilityMap, policyMap, templateMap, providerMap, candidateMap.getOrDefault(job.getId(), Collections.emptyList())))
+                .map(job -> mapJob(job, capabilityMap, policyMap, templateMap, providerMap, inventoryMap, candidateMap.getOrDefault(job.getId(), Collections.emptyList())))
                 .toList();
     }
 
     private AdminAiGenerationJobResponse mapJob(AiGenerationJob job, Map<Long, AiCapability> capabilityMap,
                                                 Map<Long, AiCapabilityPolicy> policyMap, Map<Long, AiPromptTemplate> templateMap,
-                                                Map<Long, AiProviderConfig> providerMap, List<AiGenerationCandidate> candidates) {
+                                                Map<Long, AiProviderConfig> providerMap,
+                                                Map<Long, AiProviderInventory> inventoryMap,
+                                                List<AiGenerationCandidate> candidates) {
         AiCapability capability = capabilityMap.get(job.getCapabilityId());
         AiCapabilityPolicy policy = policyMap.get(job.getPolicyId());
         AiPromptTemplate promptTemplate = templateMap.get(job.getPromptTemplateId());
         AiProviderConfig provider = providerMap.get(job.getProviderId());
+        AiProviderInventory inventory = inventoryMap.get(job.getInventoryId());
         return AdminAiGenerationJobResponse.builder()
                 .id(job.getId())
                 .capabilityId(job.getCapabilityId())
@@ -961,6 +1686,9 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .promptTemplateName(promptTemplate == null ? null : promptTemplate.getTemplateName())
                 .providerId(job.getProviderId())
                 .providerName(provider == null ? null : provider.getDisplayName())
+                .inventoryId(job.getInventoryId())
+                .inventoryCode(inventory == null ? null : inventory.getInventoryCode())
+                .inventoryDisplayName(inventory == null ? null : inventory.getDisplayName())
                 .ownerAdminId(job.getOwnerAdminId())
                 .ownerAdminName(job.getOwnerAdminName())
                 .generationType(job.getGenerationType())
@@ -1010,6 +1738,8 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .id(log.getId())
                 .providerId(log.getProviderId())
                 .providerName(log.getProviderId() == null ? null : providerMap.get(log.getProviderId()) == null ? null : providerMap.get(log.getProviderId()).getDisplayName())
+                .inventoryId(log.getInventoryId())
+                .inventoryCode(log.getInventoryCode())
                 .policyId(log.getPolicyId())
                 .policyName(policy == null ? null : policy.getPolicyName())
                 .capabilityCode(log.getCapabilityCode())
@@ -1045,14 +1775,22 @@ public class AdminAiServiceImpl implements AdminAiService {
                 continue;
             }
             requireProvider(item.getProviderId());
+            if (item.getInventoryId() != null) {
+                requireInventory(item.getInventoryId());
+            }
             AiPolicyProviderBinding binding = new AiPolicyProviderBinding();
             binding.setPolicyId(policyId);
             binding.setProviderId(item.getProviderId());
+            binding.setInventoryId(item.getInventoryId());
             binding.setBindingRole(defaultString(item.getBindingRole(), "primary"));
+            binding.setRouteMode(defaultString(item.getRouteMode(), "primary"));
             binding.setSortOrder(item.getSortOrder() == null ? 0 : item.getSortOrder());
             binding.setEnabled(item.getEnabled() == null ? 1 : item.getEnabled());
             binding.setModelOverride(item.getModelOverride());
             binding.setWeightPercent(item.getWeightPercent());
+            binding.setTimeoutMsOverride(item.getTimeoutMsOverride());
+            binding.setRetryCountOverride(item.getRetryCountOverride());
+            binding.setParameterOverrideJson(normalizeJson(item.getParameterOverrideJson()));
             binding.setNotes(item.getNotes());
             aiPolicyProviderBindingMapper.insert(binding);
         }
@@ -1171,13 +1909,19 @@ public class AdminAiServiceImpl implements AdminAiService {
 
     private ResolvedProvider resolveProvider(AiCapability capability, AiCapabilityPolicy policy, AiPromptTemplate template, Long providerId) {
         if (providerId != null) {
-            return new ResolvedProvider(requireProvider(providerId), null, null);
+            AiProviderConfig provider = requireProvider(providerId);
+            AiProviderInventory inventory = resolvePreferredInventory(provider.getId(), capability.getCapabilityCode(), template == null ? null : template.getAssetSlotCode());
+            return new ResolvedProvider(provider, inventory, null, inventory == null ? null : inventory.getExternalId());
         }
         if (template != null && template.getDefaultProviderId() != null) {
-            return new ResolvedProvider(requireProvider(template.getDefaultProviderId()), null, null);
+            AiProviderConfig provider = requireProvider(template.getDefaultProviderId());
+            AiProviderInventory inventory = resolvePreferredInventory(provider.getId(), capability.getCapabilityCode(), template.getAssetSlotCode());
+            return new ResolvedProvider(provider, inventory, null, inventory == null ? null : inventory.getExternalId());
         }
         if (policy != null && policy.getManualSwitchProviderId() != null) {
-            return new ResolvedProvider(requireProvider(policy.getManualSwitchProviderId()), null, null);
+            AiProviderConfig provider = requireProvider(policy.getManualSwitchProviderId());
+            AiProviderInventory inventory = resolvePreferredInventory(provider.getId(), capability.getCapabilityCode(), null);
+            return new ResolvedProvider(provider, inventory, null, inventory == null ? null : inventory.getExternalId());
         }
         if (policy != null) {
             List<AiPolicyProviderBinding> bindings = aiPolicyProviderBindingMapper.selectList(
@@ -1189,7 +1933,16 @@ public class AdminAiServiceImpl implements AdminAiService {
             );
             if (!bindings.isEmpty()) {
                 AiPolicyProviderBinding binding = bindings.get(0);
-                return new ResolvedProvider(requireProvider(binding.getProviderId()), binding, binding.getModelOverride());
+                AiProviderConfig provider = requireProvider(binding.getProviderId());
+                AiProviderInventory inventory = binding.getInventoryId() == null
+                        ? resolvePreferredInventory(provider.getId(), capability.getCapabilityCode(), null, binding.getModelOverride())
+                        : requireInventory(binding.getInventoryId());
+                return new ResolvedProvider(
+                        provider,
+                        inventory,
+                        binding,
+                        StringUtils.hasText(binding.getModelOverride()) ? binding.getModelOverride() : inventory == null ? null : inventory.getExternalId()
+                );
             }
         }
         AiProviderConfig provider = aiProviderConfigMapper.selectList(
@@ -1200,7 +1953,8 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .filter(item -> parseCapabilityCodes(item.getCapabilities()).contains(capability.getCapabilityCode()))
                 .findFirst()
                 .orElseThrow(() -> new BusinessException(4044, "未找到可用的 AI 供應商"));
-        return new ResolvedProvider(provider, null, null);
+        AiProviderInventory inventory = resolvePreferredInventory(provider.getId(), capability.getCapabilityCode(), null);
+        return new ResolvedProvider(provider, inventory, null, inventory == null ? null : inventory.getExternalId());
     }
 
     private List<AiQuotaRule> loadQuotaRules(Long capabilityId, Long policyId) {
@@ -1270,6 +2024,8 @@ public class AdminAiServiceImpl implements AdminAiService {
             job.setResultSummary(result.taskStatus());
             aiGenerationJobMapper.updateById(job);
             insertLog(provider.getId(), policy == null ? null : policy.getId(), capability.getCapabilityCode(),
+                    resolvedProvider.inventory() == null ? null : resolvedProvider.inventory().getId(),
+                    resolvedProvider.inventory() == null ? null : resolvedProvider.inventory().getInventoryCode(),
                     job.getOwnerAdminId(), job.getOwnerAdminName(), "image_generation", hash(job.getPromptText()),
                     result.taskStatus(), (int) (System.currentTimeMillis() - startedAt), estimateTokens(job.getPromptText()),
                     BigDecimal.ZERO, 1, 0, null, null, traceId);
@@ -1280,7 +2036,7 @@ public class AdminAiServiceImpl implements AdminAiService {
             DashScopeProviderGateway.TtsResult result = dashScopeProviderGateway.synthesizeSpeech(
                     provider, apiKey, job.getPromptText(), modelOverride, job.getRequestPayloadJson()
             );
-            byte[] bytes = dashScopeProviderGateway.downloadBinary(result.assetUrl(), provider.getRequestTimeoutMs());
+            byte[] bytes = dashScopeProviderGateway.downloadBinary(provider, result.assetUrl(), provider.getRequestTimeoutMs());
             AiGenerationCandidate candidate = persistBinaryCandidate(job, "audio", result.assetUrl(), bytes, "job-" + job.getId() + ".mp3",
                     "audio/mpeg", result.metadataJson(), trimTo(job.getPromptText(), 255), null);
             job.setLatestCandidateId(candidate.getId());
@@ -1288,6 +2044,8 @@ public class AdminAiServiceImpl implements AdminAiService {
             job.setJobStatus(JOB_STATUS_COMPLETED);
             aiGenerationJobMapper.updateById(job);
             insertLog(provider.getId(), policy == null ? null : policy.getId(), capability.getCapabilityCode(),
+                    resolvedProvider.inventory() == null ? null : resolvedProvider.inventory().getId(),
+                    resolvedProvider.inventory() == null ? null : resolvedProvider.inventory().getInventoryCode(),
                     job.getOwnerAdminId(), job.getOwnerAdminName(), "tts_generation", hash(job.getPromptText()),
                     candidate.getStorageUrl(), (int) result.latencyMs(), estimateTokens(job.getPromptText()),
                     BigDecimal.ZERO, 1, 0, null, null, traceId);
@@ -1312,6 +2070,8 @@ public class AdminAiServiceImpl implements AdminAiService {
         job.setJobStatus(JOB_STATUS_COMPLETED);
         aiGenerationJobMapper.updateById(job);
         insertLog(provider.getId(), policy == null ? null : policy.getId(), capability.getCapabilityCode(),
+                resolvedProvider.inventory() == null ? null : resolvedProvider.inventory().getId(),
+                resolvedProvider.inventory() == null ? null : resolvedProvider.inventory().getInventoryCode(),
                 job.getOwnerAdminId(), job.getOwnerAdminName(), "text_generation", hash(job.getPromptText()),
                 trimTo(result.previewText(), 255), (int) result.latencyMs(), estimateTokens(job.getPromptText()),
                 BigDecimal.ZERO, 1, 0, null, null, traceId);
@@ -1330,7 +2090,7 @@ public class AdminAiServiceImpl implements AdminAiService {
         }
         clearSelectedCandidates(job.getId());
         for (String url : result.urls()) {
-            byte[] bytes = dashScopeProviderGateway.downloadBinary(url, provider.getRequestTimeoutMs());
+            byte[] bytes = dashScopeProviderGateway.downloadBinary(provider, url, provider.getRequestTimeoutMs());
             AiGenerationCandidate candidate = persistBinaryCandidate(job, "image", url, bytes, "job-" + job.getId() + ".png",
                     "image/png", result.metadataJson(), result.taskStatus(), null);
             job.setLatestCandidateId(candidate.getId());
@@ -1339,6 +2099,7 @@ public class AdminAiServiceImpl implements AdminAiService {
         job.setResultSummary(result.taskStatus());
         aiGenerationJobMapper.updateById(job);
         insertLog(job.getProviderId(), job.getPolicyId(), requireCapability(job.getCapabilityId()).getCapabilityCode(),
+                job.getInventoryId(), resolveInventoryCode(job.getInventoryId()),
                 job.getOwnerAdminId(), job.getOwnerAdminName(), "image_poll", hash(job.getPromptText()),
                 result.taskStatus(), null, estimateTokens(job.getPromptText()), BigDecimal.ZERO, 1, 0, null, null, traceId);
     }
@@ -1422,7 +2183,10 @@ public class AdminAiServiceImpl implements AdminAiService {
         return dotIndex >= 0 ? filename.substring(dotIndex + 1).toLowerCase(Locale.ROOT) : "";
     }
 
-    private record ResolvedProvider(AiProviderConfig provider, AiPolicyProviderBinding binding, String modelOverride) {
+    private record ResolvedProvider(AiProviderConfig provider,
+                                    AiProviderInventory inventory,
+                                    AiPolicyProviderBinding binding,
+                                    String modelOverride) {
     }
 
     private boolean isSuperAdmin(List<String> roles) {
@@ -1504,6 +2268,146 @@ public class AdminAiServiceImpl implements AdminAiService {
         }
     }
 
+    private List<String> readJsonList(String raw) {
+        if (!StringUtils.hasText(raw)) {
+            return Collections.emptyList();
+        }
+        try {
+            return parseStringList(objectMapper.readValue(raw, new TypeReference<>() {}));
+        } catch (Exception ignored) {
+            return Arrays.stream(raw.split(",")).map(String::trim).filter(StringUtils::hasText).toList();
+        }
+    }
+
+    private Integer readIntegerConfig(String key, Integer fallback) {
+        SysConfig config = sysConfigMapper.selectOne(new LambdaQueryWrapper<SysConfig>()
+                .eq(SysConfig::getConfigKey, key)
+                .last("LIMIT 1"));
+        if (config == null || !StringUtils.hasText(config.getConfigValue())) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(config.getConfigValue().trim());
+        } catch (NumberFormatException ignored) {
+            return fallback;
+        }
+    }
+
+    private BigDecimal readDecimalConfig(String key, String fallback) {
+        SysConfig config = sysConfigMapper.selectOne(new LambdaQueryWrapper<SysConfig>()
+                .eq(SysConfig::getConfigKey, key)
+                .last("LIMIT 1"));
+        if (config == null || !StringUtils.hasText(config.getConfigValue())) {
+            return new BigDecimal(fallback);
+        }
+        try {
+            return new BigDecimal(config.getConfigValue().trim());
+        } catch (NumberFormatException ignored) {
+            return new BigDecimal(fallback);
+        }
+    }
+
+    private void upsertConfig(String key, String value, String type, String description) {
+        SysConfig config = sysConfigMapper.selectOne(new LambdaQueryWrapper<SysConfig>()
+                .eq(SysConfig::getConfigKey, key)
+                .last("LIMIT 1"));
+        if (config == null) {
+            config = new SysConfig();
+            config.setConfigKey(key);
+            config.setConfigValue(value);
+            config.setConfigType(type);
+            config.setDescription(description);
+            sysConfigMapper.insert(config);
+            return;
+        }
+        config.setConfigValue(value);
+        config.setConfigType(type);
+        config.setDescription(description);
+        sysConfigMapper.updateById(config);
+    }
+
+    private Integer normalizePositiveInteger(Integer value, Integer fallback) {
+        int resolved = value == null ? fallback : value;
+        if (resolved <= 0) {
+            throw new BusinessException(4001, "設定值必須大於 0");
+        }
+        return resolved;
+    }
+
+    private BigDecimal normalizePositiveDecimal(BigDecimal value, BigDecimal fallback) {
+        BigDecimal resolved = value == null ? fallback : value;
+        if (resolved.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException(4001, "設定值必須大於 0");
+        }
+        return resolved;
+    }
+
+    private BigDecimal normalizeDecimalInRange(BigDecimal value, BigDecimal fallback, BigDecimal minInclusive, BigDecimal maxInclusive) {
+        BigDecimal resolved = value == null ? fallback : value;
+        if (resolved.compareTo(minInclusive) < 0 || resolved.compareTo(maxInclusive) > 0) {
+            throw new BusinessException(4001, "設定值超出允許範圍");
+        }
+        return resolved;
+    }
+
+    private Integer normalizeBooleanInt(Integer value, Integer fallback) {
+        int resolved = value == null ? fallback : value;
+        return resolved == 1 ? 1 : 0;
+    }
+
+    private String sanitizeInventoryCode(String value) {
+        if (!StringUtils.hasText(value)) {
+            return "inventory-" + UUID.randomUUID().toString().substring(0, 8);
+        }
+        return value.trim()
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9._-]+", "-")
+                .replaceAll("-{2,}", "-")
+                .replaceAll("^-|-$", "");
+    }
+
+    private String resolveAssetSlotModality(String assetSlotCode) {
+        if (!StringUtils.hasText(assetSlotCode)) {
+            return null;
+        }
+        String normalized = assetSlotCode.trim().toLowerCase(Locale.ROOT);
+        if (normalized.contains("audio") || normalized.contains("voice") || normalized.contains("tts")) {
+            return "audio";
+        }
+        if (normalized.contains("image") || normalized.contains("cover") || normalized.contains("banner") || normalized.contains("icon") || normalized.contains("overlay")) {
+            return "image";
+        }
+        return "text";
+    }
+
+    private List<String> inferModalities(String modelCode) {
+        String normalized = defaultString(modelCode, "").toLowerCase(Locale.ROOT);
+        if (normalized.contains("image") || normalized.contains("wan")) {
+            return List.of("image");
+        }
+        if (normalized.contains("tts") || normalized.contains("voice") || normalized.contains("audio")) {
+            return List.of("audio");
+        }
+        if (normalized.contains("vision")) {
+            return List.of("text", "vision");
+        }
+        return List.of("text");
+    }
+
+    private List<String> inferCapabilities(String modelCode, List<String> modalities) {
+        if (modalities.contains("image")) {
+            return List.of("admin_image_generation");
+        }
+        if (modalities.contains("audio")) {
+            return List.of("admin_tts_generation", "npc_voice_dialogue");
+        }
+        String normalized = defaultString(modelCode, "").toLowerCase(Locale.ROOT);
+        if (normalized.contains("planner") || normalized.contains("reason")) {
+            return List.of("itinerary_planning", "travel_qa", "navigation_assist");
+        }
+        return List.of("admin_prompt_drafting", "itinerary_planning", "travel_qa", "navigation_assist");
+    }
+
     private Map<String, Object> readJsonMap(String raw) {
         if (!StringUtils.hasText(raw)) {
             return Collections.emptyMap();
@@ -1526,14 +2430,17 @@ public class AdminAiServiceImpl implements AdminAiService {
         return rendered;
     }
 
-    private void insertLog(Long providerId, Long policyId, String capabilityCode, Long adminOwnerId, String adminOwnerName,
-                           String requestType, String inputHash, String outputSummary, Integer latencyMs, Integer tokensUsed,
-                           BigDecimal costUsd, Integer success, Integer fallbackTriggered, String blockedReason,
-                           String errorMessage, String traceId) {
+    private void insertLog(Long providerId, Long policyId, String capabilityCode, Long inventoryId, String inventoryCode,
+                           Long adminOwnerId, String adminOwnerName, String requestType, String inputHash,
+                           String outputSummary, Integer latencyMs, Integer tokensUsed, BigDecimal costUsd,
+                           Integer success, Integer fallbackTriggered, String blockedReason, String errorMessage,
+                           String traceId) {
         AiRequestLog log = new AiRequestLog();
         log.setProviderId(providerId);
+        log.setInventoryId(inventoryId);
         log.setPolicyId(policyId);
         log.setCapabilityCode(capabilityCode);
+        log.setInventoryCode(inventoryCode);
         log.setAdminOwnerId(adminOwnerId);
         log.setAdminOwnerName(adminOwnerName);
         log.setRequestType(requestType);
@@ -1550,4 +2457,41 @@ public class AdminAiServiceImpl implements AdminAiService {
         log.setCreatedAt(LocalDateTime.now());
         aiRequestLogMapper.insert(log);
     }
+
+    private void insertLog(Long providerId, Long policyId, String capabilityCode, Long adminOwnerId, String adminOwnerName,
+                           String requestType, String inputHash, String outputSummary, Integer latencyMs, Integer tokensUsed,
+                           BigDecimal costUsd, Integer success, Integer fallbackTriggered, String blockedReason,
+                           String errorMessage, String traceId) {
+        insertLog(providerId, policyId, capabilityCode, null, null, adminOwnerId, adminOwnerName, requestType, inputHash,
+                outputSummary, latencyMs, tokensUsed, costUsd, success, fallbackTriggered, blockedReason, errorMessage, traceId);
+    }
+
+    private record DiscoveredInventoryRecord(String inventoryCode,
+                                             String externalId,
+                                             String displayName,
+                                             String inventoryType,
+                                             List<String> modalityCodes,
+                                             List<String> capabilityCodes,
+                                             String sourceType,
+                                             String endpointPath,
+                                             Integer contextWindowTokens,
+                                             BigDecimal inputPricePer1k,
+                                             BigDecimal outputPricePer1k,
+                                             BigDecimal imagePricePerCall,
+                                             BigDecimal audioPricePerMinute,
+                                             String featureFlagsJson,
+                                             String rawPayloadJson,
+                                             Integer isDefault,
+                                             Integer sortOrder) {
+    }
+
+    private record InventorySyncResult(int discoveredCount,
+                                       int createdCount,
+                                       int updatedCount,
+                                       int staleCount,
+                                       int totalRecords,
+                                       String message,
+                                       String rawPayloadJson) {
+    }
 }
+

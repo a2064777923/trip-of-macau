@@ -19,11 +19,26 @@ public class AiRequestLog {
     @TableField("provider_id")
     private Long providerId;
 
+    @TableField("inventory_id")
+    private Long inventoryId;
+
     @TableField("policy_id")
     private Long policyId;
 
+    @TableField("capability_code")
+    private String capabilityCode;
+
+    @TableField("inventory_code")
+    private String inventoryCode;
+
     @TableField("user_openid")
     private String userOpenid;
+
+    @TableField("admin_owner_id")
+    private Long adminOwnerId;
+
+    @TableField("admin_owner_name")
+    private String adminOwnerName;
 
     @TableField("request_type")
     private String requestType;
@@ -44,6 +59,15 @@ public class AiRequestLog {
     private BigDecimal costUsd;
 
     private Integer success;
+
+    @TableField("fallback_triggered")
+    private Integer fallbackTriggered;
+
+    @TableField("blocked_reason")
+    private String blockedReason;
+
+    @TableField("trace_id")
+    private String traceId;
 
     @TableField("error_message")
     private String errorMessage;

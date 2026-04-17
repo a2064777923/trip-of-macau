@@ -1,48 +1,62 @@
-package com.aoxiaoyou.admin.dto.response;
+package com.aoxiaoyou.admin.dto.request;
 
-import lombok.Builder;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@Builder
-public class AdminAiProviderResponse {
-    private Long id;
+public class AdminAiProviderUpsertRequest {
+
+    @NotBlank
     private String providerName;
+
     private String platformCode;
+
+    @NotBlank
     private String displayName;
+
     private String platformLabel;
+
     private String providerType;
+
     private String endpointStyle;
+
     private String syncStrategy;
+
     private String authScheme;
+
+    @NotBlank
     private String apiBaseUrl;
+
     private String docsUrl;
+
     private String modelName;
+
     private List<String> capabilityCodes;
+
     private String featureFlagsJson;
+
     private String credentialSchemaJson;
+
     private String providerSettingsJson;
-    private Integer hasApiKey;
-    private Integer hasApiSecret;
-    private String apiKeyMasked;
-    private String apiSecretMasked;
+
     private Integer requestTimeoutMs;
+
     private Integer maxRetries;
+
     private Integer quotaDaily;
+
     private BigDecimal costPer1kTokens;
+
     private Integer status;
-    private String healthStatus;
-    private String healthMessage;
-    private String lastInventorySyncStatus;
-    private String lastInventorySyncMessage;
-    private LocalDateTime lastInventorySyncedAt;
-    private Integer inventoryRecordCount;
-    private LocalDateTime lastHealthCheckedAt;
-    private LocalDateTime lastSuccessAt;
-    private LocalDateTime lastFailureAt;
-    private LocalDateTime secretUpdatedAt;
+
+    private String apiKey;
+
+    private Boolean replaceApiKey;
+
+    private String apiSecret;
+
+    private Boolean replaceApiSecret;
 }
