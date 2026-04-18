@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v2.1
-milestone_name: Interactive Rules Platform and AI Capability Center
-status: Phase 18 complete
-stopped_at: Phase 18 verified, milestone ready for closeout
-last_updated: "2026-04-17T05:45:00.000Z"
-last_activity: 2026-04-17 -- Phase 18 verified and completed
+milestone_name: interactive-rules-platform-and-ai-capability-center
+status: Phase 20 context gathered
+stopped_at: Phase 20 context gathered
+last_updated: "2026-04-18T10:14:34.7433920+08:00"
+last_activity: 2026-04-18 -- Phase 20 context gathered
 progress:
-  total_phases: 5
-  completed_phases: 5
+  total_phases: 9
+  completed_phases: 6
   total_plans: 17
   completed_plans: 17
-  percent: 100
+  percent: 67
 ---
 
 # Project State
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-17)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Milestone closeout after Phase 18
+**Current focus:** Phase 20 - Carryover Verification and Stability Closure
 
 ## Current Position
 
-Phase: 18 (AI Capability Center) - COMPLETE
-Plan: 4 of 4 complete
-Last activity: 2026-04-17 -- Phase 18 verified and completed
+Phase: 20 (Carryover Verification and Stability Closure) - DISCUSS COMPLETE
+Plan: context gathered, planning not started
+Last activity: 2026-04-18 -- Phase 20 context gathered
 
-Progress: [##########] 100%
+Progress: [######----] 67%
 
 ## Performance Metrics
 
@@ -37,11 +37,13 @@ Progress: [##########] 100%
 
 - `v1.0`: 6 phases, 19 plans, live backend cutover shipped on 2026-04-13
 - `v2.0`: 6 executed phases, 15 plans, archived with accepted gaps on 2026-04-15
+- `v2.1`: phases 14-19 executed and audited on 2026-04-18; gap-closure phases 20-22 opened
 
 **Recent trend:**
 
-- The project has moved from the first control-plane reconstruction pass into explicit carryover closure plus platform-heavy authoring and runtime work.
-- Verification quality improved through smoke harnesses, and Phase 18 now adds browser-verified admin coverage on top of backend tests and smoke.
+- The project has moved from feature delivery into milestone-close proof for the accepted `v2.0` carryover gaps and the partially verified `v2.1` platform phases.
+- The `v2.1` milestone audit identified the strongest immediate blocker as honest closure of the carryover verification trail from Phase 14.
+- Phase 20 therefore focuses on regression-proof evidence, refreshed smoke coverage, and formal verification artifacts rather than new carryover product scope.
 
 ## Accumulated Context
 
@@ -61,26 +63,32 @@ Recent decisions affecting current work:
 - Keep Phase 17 additive on the public side: use dedicated indoor runtime snapshot and interaction endpoints instead of mutating the existing static floor contract.
 - Use a dedicated `indoor_runtime_logs` audit model and deterministic Lisboa fixture promotion rather than overloading POI-oriented trigger logs.
 - Keep suspicious-concurrency governance active through the real provider execution window in Phase 18 instead of releasing the lease before the downstream call.
+- Treat Phase 20 as a gap-closure phase that must backfill the missing Phase 14 verification chain instead of merely appending a new summary.
+- Use fresh live evidence on admin `8081` and public `8080` to retire or fix the old carryover authoring freeze; route-render sanity alone is not enough.
 
 ### Pending Todos
 
-- Run milestone closeout for `v2.1` when ready.
+- Plan and execute Phase 20 carryover verification closure.
+- Re-audit the milestone after Phases 20-22 close their verification gaps.
 
 ### Blockers/Concerns
 
-- `v2.0` was archived without a dedicated milestone audit; `v2.1` should still be closed with stricter milestone discipline.
-- The repository remains dirty, so milestone tagging and clean release commits were intentionally skipped.
+- `v2.1` cannot close until the Phase 14 carryover regression trail receives a real verification artifact and the stale pending checkpoints are refreshed.
+- The repository remains dirty, so milestone tagging and clean release commits are intentionally skipped.
 - COS secrets and provider secrets must continue to stay outside tracked files.
-- Local Mongo still emits a warning in this workstation setup, though the admin HTTP stack remains healthy for verified Phase 18 flows.
+- Local Mongo still emits a warning in this workstation setup, though the admin HTTP stack remains healthy for verified admin flows.
+- Carryover closure needs evidence that survives audit, which means backfilling or superseding stale and partially garbled Phase 14 verification text instead of relying on memory.
 
 ### Roadmap Evolution
 
 - Phase 16 inserted after Phase 15: Indoor Rule Workbench and Governance Center (urgent)
 - Former Phase 16 moved to Phase 17: Indoor Runtime Evaluation and Mini-Program Alignment
 - Former Phase 17 moved to Phase 18: AI Capability Center
+- Phase 19 added: AI Capability Platform Redesign and Provider Model Orchestration
+- Milestone audit on 2026-04-18 opened Phase 20, Phase 21, and Phase 22 as formal gap-closure phases
 
 ## Session Continuity
 
-Last session: 2026-04-17
-Stopped at: Phase 18 complete, ready for milestone closeout
-Resume file: None
+Last session: 2026-04-18
+Stopped at: Phase 20 context gathered
+Resume file: .planning/phases/20-carryover-verification-and-stability-closure/20-CONTEXT.md
