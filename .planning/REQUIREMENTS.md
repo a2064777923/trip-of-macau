@@ -25,6 +25,14 @@
 - [x] **AI-02**: Operator can configure provider fallback, manual switching, quotas, suspicious-concurrency throttling, and usage governance without exposing API secrets.
 - [x] **AI-03**: Operator can inspect cross-capability AI usage, health, and status from a central overview.
 
+### AI Capability Platform Redesign
+
+- [ ] **AI-04**: The admin shell must expose AI Capability Center as a top-level control-plane workspace with dedicated sub-pages for overview, provider registry, model inventory, capability routing, observability, creative tooling, and settings rather than one overloaded CRUD page.
+- [ ] **AI-05**: Operators can onboard OpenAI, Bailian, Hunyuan, MiniMax, Volcengine, and custom providers through provider templates, encrypted credential storage, base URL overrides, connectivity tests, and provider-specific model or endpoint inventory sync.
+- [ ] **AI-06**: Operators can configure primary models, fallback models, scenario presets, and advanced parameters for each AI capability through structured forms first, with expert JSON available only as an optional advanced mode.
+- [ ] **AI-07**: Operators can inspect provider health, sync status, usage, latency, and estimated cost at provider, model, and capability levels using normalized backend metrics rather than raw request logs alone.
+- [ ] **AI-08**: Content editors can launch an AI creative workbench from authoring forms, generate candidate copy or media, keep COS-backed history, restore earlier versions, and finalize selected outputs back into the target asset field.
+
 ## Out of Scope
 
 | Feature | Reason |
@@ -38,23 +46,28 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CARRY-01 | Phase 14 | Pending |
-| CARRY-02 | Phase 14 | Pending |
-| CARRY-03 | Phase 14 | Pending |
-| RULE-01 | Phase 15 | Pending |
-| RULE-02 | Phase 15 | Pending |
-| RULE-04 | Phase 16 | Pending |
-| RULE-05 | Phase 16 | Pending |
-| RULE-03 | Phase 17 | Pending |
+| CARRY-01 | Phase 20 | Pending |
+| CARRY-02 | Phase 20 | Pending |
+| CARRY-03 | Phase 20 | Pending |
+| RULE-01 | Phase 21 | Pending |
+| RULE-02 | Phase 21 | Pending |
+| RULE-04 | Phase 21 | Pending |
+| RULE-05 | Phase 21 | Pending |
+| RULE-03 | Phase 21 | Pending |
 | AI-01 | Phase 18 | Complete |
 | AI-02 | Phase 18 | Complete |
 | AI-03 | Phase 18 | Complete |
+| AI-04 | Phase 22 | Pending |
+| AI-05 | Phase 22 | Pending |
+| AI-06 | Phase 22 | Pending |
+| AI-07 | Phase 22 | Pending |
+| AI-08 | Phase 22 | Pending |
 
 **Coverage:**
-- v2.1 requirements: 11 total
-- Mapped to phases: 11
+- v2.1 requirements: 16 total
+- Mapped to phases: 16
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-15*
-*Last updated: 2026-04-17 after Phase 18 verification*
+*Last updated: 2026-04-18 after v2.1 milestone audit gap closure planning*

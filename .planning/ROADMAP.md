@@ -4,7 +4,7 @@
 
 - [x] **v1.0 Live Backend Cutover** - Phases 1-6 shipped on 2026-04-13. Archive: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **v2.0 Admin Control-Plane Reconstruction** - Phases 7-12 executed and archived on 2026-04-15 with accepted gaps. Archive: `.planning/milestones/v2.0-ROADMAP.md`
-- [ ] **v2.1 Interactive Rules Platform and AI Capability Center** - Phases 14-18 executed by 2026-04-17; ready for milestone closeout
+- [ ] **v2.1 Interactive Rules Platform and AI Capability Center** - Phases 14-19 executed by 2026-04-17; milestone audit on 2026-04-18 opened Phases 20-22 for gap closure
 
 ## Active Milestone
 
@@ -12,7 +12,7 @@
 
 **Goal:** Close the accepted `v2.0` control-plane gaps while delivering the indoor interaction-rules platform and the AI capability center on top of the existing live admin/public/runtime stack.
 
-**Coverage:** 5 phases, 11 requirements, 11 mapped, 0 unmapped
+**Coverage:** 9 phases, 16 requirements, 16 mapped, 0 unmapped
 
 | # | Phase | Goal | Requirements |
 |---|-------|------|--------------|
@@ -21,6 +21,10 @@
 | 16 | Indoor Rule Workbench and Governance Center | Rebuild complex indoor rule editing into a dedicated validated workbench and add cross-entity rule governance / conflict visibility | `RULE-04`, `RULE-05` |
 | 17 | Indoor Runtime Evaluation and Mini-Program Alignment | Evaluate authored indoor rules safely through public APIs and the mini-program runtime | `RULE-03` |
 | 18 | AI Capability Center | Build the AI capability center for provider configuration, fallback, quotas/governance, and overview visibility | `AI-01`, `AI-02`, `AI-03` |
+| 19 | AI Capability Platform Redesign and Provider Model Orchestration | Redesign the AI capability center into a real platform workspace with provider onboarding, model inventory, structured routing, cost observability, and creative-workbench flows | `AI-04`, `AI-05`, `AI-06`, `AI-07`, `AI-08` |
+| 20 | Carryover Verification and Stability Closure | Close the remaining carryover verification gaps, stabilize collection/reward authoring under live admin usage, and finish milestone-grade verification for the carryover control plane | `CARRY-01`, `CARRY-02`, `CARRY-03` |
+| 21 | Indoor Rule Acceptance and Verification Closure | Finish milestone-grade verification for the indoor authoring, governance, and runtime chain, including WeChat DevTools acceptance and verification artifacts | `RULE-01`, `RULE-02`, `RULE-03`, `RULE-04`, `RULE-05` |
+| 22 | AI Platform Verification and Provider Default Closure | Close the Phase 19 verification gap, normalize live multimodal provider defaults, and verify creative-workbench finalize flows back into authoring surfaces | `AI-04`, `AI-05`, `AI-06`, `AI-07`, `AI-08` |
 
 ## Phase Details
 
@@ -91,6 +95,66 @@
 
 **Depends on:** Phase 14
 
+### Phase 19: AI Capability Platform Redesign and Provider Model Orchestration
+
+**Goal:** Turn the Phase 18 foundation into an operator-grade AI platform workspace with dedicated sub-sections, provider-aware model orchestration, structured capability routing, observability, and creative authoring integration.
+
+**Requirements:** `AI-04`, `AI-05`, `AI-06`, `AI-07`, `AI-08`
+
+**Success criteria:**
+1. The admin shell exposes AI Capability Center as a major control-plane section with dedicated overview, provider, model, capability, observability, and settings surfaces instead of one overloaded CRUD page.
+2. Operators can onboard OpenAI, Bailian, Hunyuan, MiniMax, Volcengine, and custom providers through provider templates, encrypted credentials, connectivity tests, and provider-specific model or endpoint inventory sync flows.
+3. Operators can bind primary and fallback models to each AI capability through structured forms first, with expert JSON reserved for advanced overrides instead of being the default path.
+4. The platform shows provider health, sync status, usage, latency, and estimated cost at provider, model, and capability levels using normalized backend metrics.
+5. Content editors can open a reusable AI creative workbench from authoring forms, generate candidate assets or copy, keep COS-backed version history, and finalize selected outputs back into the target form field.
+
+**Depends on:** Phase 18
+
+### Phase 20: Carryover Verification and Stability Closure
+
+**Goal:** Close the remaining carryover regression risk and finish milestone-grade verification for collection/reward authoring, traveler progress, and carryover system settings.
+
+**Requirements:** `CARRY-01`, `CARRY-02`, `CARRY-03`
+
+**Gap Closure:** Opens from `v2.1` milestone audit findings around missing verification and the unresolved Phase 14 carryover authoring regression trail.
+
+**Success criteria:**
+1. Current collectible, badge, and reward authoring stays responsive under live admin navigation and save flows, with the earlier freeze regression either reproduced and fixed or explicitly retired through fresh evidence.
+2. Traveler progress, operations/testing, and carryover system settings receive a fresh verification pass against the current live stack rather than relying on stale UAT state.
+3. Phase 14 receives a formal verification artifact that supersedes the earlier incomplete UAT.
+
+**Depends on:** Phase 14
+
+### Phase 21: Indoor Rule Acceptance and Verification Closure
+
+**Goal:** Close the indoor milestone chain by finishing operator/runtime acceptance across authoring, governance, public runtime, and mini-program execution.
+
+**Requirements:** `RULE-01`, `RULE-02`, `RULE-03`, `RULE-04`, `RULE-05`
+
+**Gap Closure:** Opens from `v2.1` milestone audit findings around missing verification artifacts and pending WeChat DevTools acceptance for the indoor runtime.
+
+**Success criteria:**
+1. The indoor rule authoring surfaces from Phases 15 and 16 are re-verified on the current admin UI with explicit pass/fail evidence.
+2. The mini-program indoor runtime is exercised in WeChat DevTools against live authored data, including auth-gated and supported-behavior flows.
+3. The indoor chain receives a formal verification artifact that closes the remaining milestone audit gap for `RULE-01` through `RULE-05`.
+
+**Depends on:** Phase 17
+
+### Phase 22: AI Platform Verification and Provider Default Closure
+
+**Goal:** Finish milestone-grade closure for the redesigned AI platform by proving live provider onboarding, multimodal defaults, observability, and creative-workbench finalization on the current stack.
+
+**Requirements:** `AI-04`, `AI-05`, `AI-06`, `AI-07`, `AI-08`
+
+**Gap Closure:** Opens from `v2.1` milestone audit findings around the missing Phase 19 verification artifact and incomplete live validation for multimodal provider defaults.
+
+**Success criteria:**
+1. The AI workspace has a dedicated verification artifact that covers overview, provider registry, model inventory, routing, observability, settings, and creative workbench.
+2. Live provider onboarding evidence covers the currently supported provider templates with deterministic outcomes, including cleanup of seeded image/TTS defaults that currently fail real tests.
+3. Creative-workbench launch and finalize flows are verified from real authoring surfaces instead of the standalone workspace only.
+
+**Depends on:** Phase 19
+
 ## Archived Milestones
 
 <details>
@@ -124,4 +188,4 @@
 |-----------|-------------|----------------|--------|-----------|
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
-| v2.1 Interactive Rules Platform and AI Capability Center | 14-18 | 17/17 | Phase-complete, ready for milestone closeout | 2026-04-17 |
+| v2.1 Interactive Rules Platform and AI Capability Center | 14-22 | 17/17 executed before audit; gap-closure phases 20-22 pending | Open - audit gaps routed to Phase 20 | - |
