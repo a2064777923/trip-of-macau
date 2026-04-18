@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: interactive-rules-platform-and-ai-capability-center
-status: Phase 20 context gathered
-stopped_at: Phase 20 context gathered
-last_updated: "2026-04-18T10:14:34.7433920+08:00"
-last_activity: 2026-04-18 -- Phase 20 context gathered
+status: Planning Phase 20 complete
+stopped_at: Phase 20 planning complete
+last_updated: "2026-04-18T10:27:07.4574413+08:00"
+last_activity: 2026-04-18 -- Phase 20 planning complete
 progress:
   total_phases: 9
   completed_phases: 6
-  total_plans: 17
+  total_plans: 20
   completed_plans: 17
   percent: 67
 ---
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-04-17)
 
 ## Current Position
 
-Phase: 20 (Carryover Verification and Stability Closure) - DISCUSS COMPLETE
-Plan: context gathered, planning not started
-Last activity: 2026-04-18 -- Phase 20 context gathered
+Phase: 20 (Carryover Verification and Stability Closure) - PLANNED
+Plan: 3 execute plans prepared
+Last activity: 2026-04-18 -- Phase 20 planning complete
 
 Progress: [######----] 67%
 
@@ -44,6 +44,7 @@ Progress: [######----] 67%
 - The project has moved from feature delivery into milestone-close proof for the accepted `v2.0` carryover gaps and the partially verified `v2.1` platform phases.
 - The `v2.1` milestone audit identified the strongest immediate blocker as honest closure of the carryover verification trail from Phase 14.
 - Phase 20 therefore focuses on regression-proof evidence, refreshed smoke coverage, and formal verification artifacts rather than new carryover product scope.
+- Phase 20 now has three executable plans: carryover authoring stability, progress/settings retest, and formal verification backfill.
 
 ## Accumulated Context
 
@@ -68,7 +69,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-- Plan and execute Phase 20 carryover verification closure.
+- Execute Phase 20 carryover verification closure.
 - Re-audit the milestone after Phases 20-22 close their verification gaps.
 
 ### Blockers/Concerns
@@ -90,5 +91,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-04-18
-Stopped at: Phase 20 context gathered
-Resume file: .planning/phases/20-carryover-verification-and-stability-closure/20-CONTEXT.md
+Stopped at: Phase 20 planning complete
+Resume file: .planning/phases/20-carryover-verification-and-stability-closure/20-01-PLAN.md
