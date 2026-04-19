@@ -4,15 +4,15 @@
 
 - [x] **v1.0 Live Backend Cutover** - Phases 1-6 shipped on 2026-04-13. Archive: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **v2.0 Admin Control-Plane Reconstruction** - Phases 7-12 executed and archived on 2026-04-15 with accepted gaps. Archive: `.planning/milestones/v2.0-ROADMAP.md`
-- [ ] **v2.1 Interactive Rules Platform and AI Capability Center** - Phases 14-19 executed by 2026-04-17; milestone audit on 2026-04-18 opened Phases 20-22 for gap closure
+- [ ] **v2.1 Interactive Rules Platform and AI Capability Center** - Phases 14-24 delivered or closed through 2026-04-19; milestone-gap closure phases 25-27 are now planned for reward synchronization, AI verification consolidation, and final traceability reconciliation
 
-## Active Milestone
+## Active Milestone v2.1: Interactive Rules Platform and AI Capability Center
 
 **Milestone v2.1: Interactive Rules Platform and AI Capability Center**
 
 **Goal:** Close the accepted `v2.0` control-plane gaps while delivering the indoor interaction-rules platform and the AI capability center on top of the existing live admin/public/runtime stack.
 
-**Coverage:** 9 phases, 16 requirements, 16 mapped, 0 unmapped
+**Coverage:** 14 phases, 21 requirements, 21 mapped, 0 unmapped
 
 | # | Phase | Goal | Requirements |
 |---|-------|------|--------------|
@@ -25,6 +25,11 @@
 | 20 | Carryover Verification and Stability Closure | Close the remaining carryover verification gaps, stabilize collection/reward authoring under live admin usage, and finish milestone-grade verification for the carryover control plane | `CARRY-01`, `CARRY-02`, `CARRY-03` |
 | 21 | Indoor Rule Acceptance and Verification Closure | Finish milestone-grade verification for the indoor authoring, governance, and runtime chain, including WeChat DevTools acceptance and verification artifacts | `RULE-01`, `RULE-02`, `RULE-03`, `RULE-04`, `RULE-05` |
 | 22 | AI Platform Verification and Provider Default Closure | Close the Phase 19 verification gap, normalize live multimodal provider defaults, and verify creative-workbench finalize flows back into authoring surfaces | `AI-04`, `AI-05`, `AI-06`, `AI-07`, `AI-08` |
+| 23 | Reward Domain Split and Acquisition Presentation System | Rebuild the reward control plane into distinct redeemable-prize and in-game-reward domains, backed by a shared rule engine and configurable acquisition presentation flows | `REWARD-01`, `REWARD-02`, `REWARD-03`, `REWARD-04`, `REWARD-05` |
+| 24 | AI TTS Voice Library and Voice Cloning | Add a real TTS voice library, structured language control, preview/playback, and custom voice cloning to the AI capability center and creative workbench | `AI-07`, `AI-08` |
+| 25 | Reward Domain Synchronization and Verification Closure | Close the Phase 23 milestone gaps with shared reward-trigger synchronization and a formal end-to-end verification closeout | `REWARD-01`, `REWARD-02`, `REWARD-03`, `REWARD-04`, `REWARD-05` |
+| 26 | AI Platform Verification Consolidation | Consolidate Phases 19, 22, and 24 into one milestone-grade AI verification and traceability closure chain | `AI-04`, `AI-05`, `AI-06`, `AI-07`, `AI-08` |
+| 27 | Milestone Traceability and Carryover Reconciliation | Resolve the remaining `RULE-03` carryover decision and refresh milestone closure artifacts for honest archival | `RULE-03` |
 
 ## Phase Details
 
@@ -138,6 +143,10 @@
 2. The mini-program indoor runtime is exercised in WeChat DevTools against live authored data, including auth-gated and supported-behavior flows.
 3. The indoor chain receives a formal verification artifact that closes the remaining milestone audit gap for `RULE-01` through `RULE-05`.
 
+**Accepted carryover note (2026-04-19):**
+- The user explicitly deferred the mini-program frontend DevTools acceptance slice to a later milestone.
+- Phase 21 therefore closes the admin/public/runtime verification chain for current `v2.1` sequencing while carrying the remaining mini-program experiential acceptance work forward.
+
 **Depends on:** Phase 17
 
 ### Phase 22: AI Platform Verification and Provider Default Closure
@@ -154,6 +163,79 @@
 3. Creative-workbench launch and finalize flows are verified from real authoring surfaces instead of the standalone workspace only.
 
 **Depends on:** Phase 19
+
+### Phase 23: Reward Domain Split and Acquisition Presentation System
+
+**Goal:** Rebuild the reward control plane into distinct redeemable-prize and in-game-reward domains, backed by a shared rule engine and configurable acquisition presentation flows.
+
+**Requirements:** `REWARD-01`, `REWARD-02`, `REWARD-03`, `REWARD-04`, `REWARD-05`
+
+**Success criteria:**
+1. The admin IA cleanly separates `兌換獎勵物品管理`, `遊戲內獎勵配置`, and a shared `獎勵規則與演出中心`, without overloading the current reward CRUD surface.
+2. Operators can configure redeemable prizes with composite redemption conditions, fulfillment modes, stock limits, and city/map/indoor scope using guided forms instead of ad hoc JSON.
+3. Operators can define in-game rewards such as badges, titles, city currencies, fragments, voice packs, unlock passes, and similar assets through one canonical reward model with clear type-specific fields.
+4. Reward conditions remain synchronized with interaction behaviors through shared rule references, so editing or deleting a reward-trigger rule updates both the reward view and the interaction-authoring view.
+5. Reward acquisition supports configurable presentation flows including toast, modal, full-screen animation, full-screen video, SFX, and voice-over, with playback and interruption controls aligned to public and mini-program runtime needs.
+
+**Depends on:** Phases 16, 17, 20
+
+### Phase 24: AI TTS Voice Library and Voice Cloning
+
+**Goal:** Add a real TTS voice library, structured language control, preview/playback, and custom voice cloning to the AI capability center and creative workbench.
+
+**Requirements:** `AI-07`, `AI-08`
+
+**Success criteria:**
+1. Operators can sync system voices, preview voices by model and language, and manage custom cloned voices through dedicated AI workspace surfaces instead of hand-maintained voice lists.
+2. The AI creative workbench exposes structured TTS controls instead of raw JSON and can finalize preview/generated audio back into canonical asset flows.
+3. Voice preview, clone, refresh, and delete flows are verified on the live admin stack with secret-safe source URL handling.
+
+**Depends on:** Phase 22
+
+### Phase 25: Reward Domain Synchronization and Verification Closure
+
+**Goal:** Close the Phase 23 reward-domain milestone gaps by implementing shared reward-trigger references across reward management and interaction authoring, then re-verifying the repaired reward domain end to end.
+
+**Requirements:** `REWARD-01`, `REWARD-02`, `REWARD-03`, `REWARD-04`, `REWARD-05`
+
+**Gap Closure:** Opens from the refreshed `v2.1` milestone audit findings around the still-open shared reward-trigger rule contract and the missing final verification artifact for the split reward domain.
+
+**Success criteria:**
+1. Reward-trigger rules are shared references across reward management and interaction-behavior authoring, so create/update/delete stays synchronized instead of duplicating JSON.
+2. The split redeemable-prize, in-game-reward, and reward-presentation flows are re-verified on live admin `8081` and public `8080`, and the old diagnosed `23-UAT.md` trail is superseded by a formal `23-VERIFICATION.md`.
+3. `REQUIREMENTS.md` can honestly mark `REWARD-01` through `REWARD-05` closed for the milestone without relying on stale partial states.
+
+**Depends on:** Phases 21, 23, 24
+
+### Phase 26: AI Platform Verification Consolidation
+
+**Goal:** Consolidate the fragmented AI platform closure across Phases 19, 22, and 24 into one final verification chain with refreshed traceability for `AI-04` through `AI-08`.
+
+**Requirements:** `AI-04`, `AI-05`, `AI-06`, `AI-07`, `AI-08`
+
+**Gap Closure:** Opens from the refreshed `v2.1` milestone audit findings around partial AI requirement closure, missing Phase 19/24 verification ownership, and the fragmented late-phase AI evidence chain.
+
+**Success criteria:**
+1. The AI workspace, provider onboarding, routing, observability, creative workbench, and TTS voice workbench all have coherent milestone-grade verification evidence across Phases 19, 22, and 24.
+2. Final AI verification artifacts exist for the missing closure points, and provider truth states remain honest about template-only, credential-missing, and access-denied cases.
+3. `REQUIREMENTS.md` and milestone evidence can honestly mark `AI-04` through `AI-08` closed or explicitly scoped with no hidden partial states.
+
+**Depends on:** Phases 19, 22, 24
+
+### Phase 27: Milestone Traceability and Carryover Reconciliation
+
+**Goal:** Reconcile the remaining accepted carryover and planning-state drift so `v2.1` can be re-audited and archived honestly.
+
+**Requirements:** `RULE-03`
+
+**Gap Closure:** Opens from the refreshed `v2.1` milestone audit findings around the still-partial `RULE-03` carryover decision and the stale milestone closure state across roadmap, requirements, and verification references.
+
+**Success criteria:**
+1. The deferred mini-program DevTools slice for `RULE-03` is either formally completed or explicitly moved out of `v2.1` with no ambiguous partial state left in milestone artifacts.
+2. `ROADMAP.md`, `REQUIREMENTS.md`, `STATE.md`, and milestone verification references reflect the real late-phase ownership and the full `v2.1` outcome.
+3. A rerun of `/gsd-audit-milestone` can evaluate `v2.1` against current artifacts instead of stale planning state.
+
+**Depends on:** Phases 21, 25, 26
 
 ## Archived Milestones
 
@@ -188,4 +270,4 @@
 |-----------|-------------|----------------|--------|-----------|
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
-| v2.1 Interactive Rules Platform and AI Capability Center | 14-22 | 17/17 executed before audit; gap-closure phases 20-22 pending | Open - audit gaps routed to Phase 20 | - |
+| v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 35/35 executed through Phase 24; gap-closure phases 25-27 planned | Open - reward synchronization, AI verification consolidation, and milestone traceability reconciliation remain before archival | - |
