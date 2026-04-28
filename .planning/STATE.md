@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Admin Core Domain Completion and Control-Plane Linkage
-current_phase: 28
-current_plan: 1
-status: executing
-stopped_at: Completed 28-01-PLAN.md
-last_updated: "2026-04-28T15:51:16.734Z"
+current_phase: 29
+current_plan: "Not started"
+status: ready
+stopped_at: Completed Phase 28
+last_updated: "2026-04-28T17:20:12.950Z"
 last_activity: 2026-04-28
 progress:
-  total_phases: 5
-  completed_phases: 0
+  total_phases: 7
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 2
-  percent: 50
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -23,21 +23,21 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-19)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Phase 28 — story-and-content-control-plane-completion
+**Current focus:** Phase 29 — poi-default-experience-workbench
 
 ## Current Position
 
-Phase: 28 (story-and-content-control-plane-completion) — EXECUTING
-Plan: 3 of 4
+Phase: 29 (poi-default-experience-workbench) — READY TO PLAN
+Plan: Not started
 Milestone: `v3.0`
-Current Phase: 28
-Total Phases Planned: 5
-Status: Ready to execute
-Current Plan: 1
+Current Phase: 29
+Total Phases Planned: 7
+Status: Ready to plan Phase 29
+Current Plan: Not started
 Last activity: 2026-04-28
-Last Activity Description: Phase 28 execution started
+Last Activity Description: Phase 28 complete, transitioned to Phase 29
 
-Progress: [----------] 0% of v3.0 complete; ready for `/gsd-plan-phase 28`
+Progress: [#---------] 14% of v3.0 complete; ready for `/gsd-plan-phase 29`
 
 ## Performance Metrics
 
@@ -60,8 +60,9 @@ Progress: [----------] 0% of v3.0 complete; ready for `/gsd-plan-phase 28`
 
 ### Pending Todos
 
-- Run `/gsd-plan-phase 28`.
-- Complete the story and content management domain.
+- Run `/gsd-plan-phase 29`.
+- Complete the POI default experience workbench on top of the Phase 28 foundation.
+- Complete the story and chapter override workbench.
 - Complete the user and progress management domain.
 - Complete the testing and operations management domain.
 - Finish cross-domain linkage and milestone-grade verification for `v3.0`.
@@ -76,5 +77,5 @@ Progress: [----------] 0% of v3.0 complete; ready for `/gsd-plan-phase 28`
 ## Session Continuity
 
 Last session: 2026-04-28T15:31:03.294Z
-Stopped at: Completed 28-01-PLAN.md
+Stopped at: Completed Phase 28; ready to plan Phase 29
 Resume file: None

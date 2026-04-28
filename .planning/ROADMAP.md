@@ -17,7 +17,7 @@
 
 | # | Phase | Goal | Requirements |
 |---|-------|------|--------------|
-| 28 | Story Experience Orchestration Foundation | Deliver the shared experience orchestration foundation and runnable admin/public baseline | `STORY-01`, `STORY-02`, `STORY-03`, `STORY-04`, `LINK-01`, `LINK-02` |
+| 28 | Story Experience Orchestration Foundation | Complete on 2026-04-28 (4/4 plans); shared experience orchestration foundation and runnable admin/public baseline delivered | `STORY-01`, `STORY-02`, `STORY-03`, `STORY-04`, `LINK-01`, `LINK-02` |
 | 29 | POI Default Experience Workbench | Build the dedicated POI/default-location experience workbench on top of the Phase 28 foundation | `STORY-01`, `LINK-01` |
 | 30 | Storyline Mode and Chapter Override Workbench | Build storyline mode, route arrangement, chapter anchor inheritance, and chapter-level override authoring | `STORY-02`, `STORY-04`, `LINK-02` |
 | 31 | Interaction/Task Template Library and Governance Center | Build reusable interaction/task/game templates plus conflict and usage governance across story, POI, indoor, and reward domains | `OPS-01`, `OPS-03`, `LINK-01` |
@@ -166,4 +166,4 @@
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
-| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-34 | 3/4 phase-28 plans | Active | In progress |
+| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-34 | Phase 28 complete (4/4 plans); 1/7 phases complete | Active | In progress |

@@ -19,10 +19,11 @@ Admins can configure the live mini-program experience end-to-end, and the mini-p
 - `AI capability platform exists` - `v2.1` closed the AI capability center, provider/model orchestration, creative workbench, TTS voice tooling, and verification ownership.
 - `reward-domain platform exists` - `v2.1` closed the reward-domain split, shared-rule synchronization, and acquisition-presentation verification path.
 - `milestone traceability reconciliation exists` - `v2.1` reconciled the remaining planning-state drift and closed with one explicit accepted future slice.
+- `story experience orchestration foundation exists` - Phase 28 of `v3.0` delivered the shared experience templates, flows, bindings, overrides, Lottie-aware content/media substrate, public runtime DTO baseline, seed data, smoke verification, and Phase 29-34 handoff boundaries.
 
 ### Active
 
-- `v3.0` must complete the unfinished story and content management domain so storylines, chapters, unlock logic, content blocks, and narrative bindings are no longer partial or placeholder-driven.
+- `v3.0` must complete the remaining story-experience authoring layers on top of Phase 28: POI default experience workbench, storyline mode and chapter override workbench, reusable interaction/task governance, flagship story material package, and public runtime consumption baseline.
 - `v3.0` must complete the unfinished user and progress management domain so traveler profile, progress, logs, and recomputation become first-class operational surfaces.
 - `v3.0` must complete the unfinished testing and operations management domain so publish windows, lifecycle actions, operational dashboards, and smoke tooling are operator-usable instead of scattered or missing.
 - `v3.0` must align the completed admin domains with the existing map, POI, indoor, reward, media, AI, and public-backend contracts so the control plane behaves as one linked system instead of isolated CRUD screens.
@@ -64,14 +65,15 @@ This project began from an existing codebase, not a greenfield build. `v1.0` con
 - `v2.0 Admin Control-Plane Reconstruction` was archived on 2026-04-15 with accepted gaps that were later carried into `v2.1`.
 - `v2.1 Interactive Rules Platform and AI Capability Center` was archived on 2026-04-19 after phases `14-27` closed with milestone-grade verification and one accepted future slice.
 - `v3.0` is now the active milestone.
-- The next truthful workflow step is `/gsd-plan-phase 28`.
+- Phase 28 is complete with 4/4 plans verified on the local admin/public stack.
+- The next truthful workflow step is `/gsd-plan-phase 29`.
 
 ## Current Milestone: v3.0 Admin Core Domain Completion and Control-Plane Linkage
 
-**Goal:** Complete the still-unfinished admin core domains and link them cleanly with the existing map, POI, indoor, reward, AI, media, and public-backend contracts.
+**Goal:** Complete the still-unfinished admin core domains and link them cleanly with the existing map, POI, indoor, reward, AI, media, and public-backend contracts. Phase 28 has established the shared story-experience orchestration foundation; Phases 29-34 build the dedicated operator workbenches, progress intelligence, content package, and mini-program consumption baseline on that foundation.
 
 **Target features:**
-- complete story and content management with narrative composition, unlock logic, multimedia content blocks, and linked bindings
+- complete POI default experience authoring, storyline mode, chapter overrides, reusable interaction/task governance, narrative content packages, and linked bindings
 - complete user and progress management with profile drill-down, progress recomputation, journey logs, and operational visibility
 - complete testing and operations management with lifecycle control, publish scheduling, health views, and smoke tooling
 - complete cross-domain linkage so story, user, ops, and existing authored entities share canonical bindings and runtime contracts
