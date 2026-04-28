@@ -9,89 +9,121 @@
 
 ## Active Milestone v3.0: Admin Core Domain Completion and Control-Plane Linkage
 
-**Goal:** Complete the unfinished admin core domains around story/content, user/progress, testing/operations, and cross-domain linkage, then verify them on the live local admin/public stack.
+**Goal:** Complete the unfinished admin core domains around story/content, user/progress, testing/operations, and cross-domain linkage, starting with the user-approved story experience orchestration foundation and then extending it through POI workbenches, story-mode overrides, reusable interaction governance, dynamic exploration, seeded flagship content, and public runtime alignment.
 
 **Scope note:** The mini-program WeChat DevTools and broader frontend experiential acceptance slice remains intentionally deferred beyond `v3.0`.
 
-**Coverage:** 5 phases, 17 requirements, 17 mapped, 0 unmapped
+**Coverage:** 7 phases, 17 requirements, 17 mapped, 0 unmapped
 
 | # | Phase | Goal | Requirements |
 |---|-------|------|--------------|
-| 28 | 2/4 | In Progress|  |
-| 29 | User Progress and Journey Intelligence | Build the missing traveler profile, progress, recomputation, and timeline surfaces needed for real operations | `USER-01`, `USER-02`, `USER-03`, `USER-04` |
-| 30 | Testing, Operations, and Lifecycle Control | Build operator-grade health, smoke, lifecycle, and dashboard tooling across the live control plane | `OPS-01`, `OPS-02`, `OPS-03`, `OPS-04` |
-| 31 | Cross-domain Linkage and Runtime Contract Alignment | Link the completed domains to maps, POIs, indoor, rewards, media, AI, and public contracts so the system behaves canonically | `LINK-01`, `LINK-02`, `LINK-03` |
-| 32 | Seeded Verification and Milestone Closure | Seed meaningful examples and close the milestone with live local verification and truthful acceptance boundaries | `VER-01`, `VER-02` |
+| 28 | Story Experience Orchestration Foundation | Deliver the shared experience orchestration foundation and runnable admin/public baseline | `STORY-01`, `STORY-02`, `STORY-03`, `STORY-04`, `LINK-01`, `LINK-02` |
+| 29 | POI Default Experience Workbench | Build the dedicated POI/default-location experience workbench on top of the Phase 28 foundation | `STORY-01`, `LINK-01` |
+| 30 | Storyline Mode and Chapter Override Workbench | Build storyline mode, route arrangement, chapter anchor inheritance, and chapter-level override authoring | `STORY-02`, `STORY-04`, `LINK-02` |
+| 31 | Interaction/Task Template Library and Governance Center | Build reusable interaction/task/game templates plus conflict and usage governance across story, POI, indoor, and reward domains | `OPS-01`, `OPS-03`, `LINK-01` |
+| 32 | Dynamic Exploration and User Progress Model | Build dynamic exploration, traveler progress inspection, recomputation, and user timeline surfaces | `USER-01`, `USER-02`, `USER-03`, `USER-04`, `LINK-03` |
+| 33 | Complete Flagship Story Content/Material Package | Produce and seed the complete "東西方文明的戰火與共生" content, media, Lottie, audio, pickups, challenges, rewards, and titles | `STORY-03`, `VER-02` |
+| 34 | Public Runtime and Mini-program Consumption Baseline | Align public compiled runtime DTOs and mini-program story consumption baseline with the admin-authored experience model | `OPS-02`, `OPS-04`, `LINK-02`, `VER-01` |
 
 ## Phase Details
 
-### Phase 28: Story and Content Control-Plane Completion
+### Phase 28: Story Experience Orchestration Foundation
 
-**Goal:** Finish dedicated storyline, chapter, and content-block authoring so the narrative domain is no longer partial or placeholder-driven.
+**Goal:** Deliver the shared experience orchestration foundation: default POI/spatial flows, story chapter inheritance and overrides, reusable template vocabulary, Lottie-aware media/content blocks, dynamic exploration elements, admin APIs, public compiled runtime DTOs, seed data, and smoke verification.
 
-**Requirements:** `STORY-01`, `STORY-02`, `STORY-03`, `STORY-04`
+**Requirements:** `STORY-01`, `STORY-02`, `STORY-03`, `STORY-04`, `LINK-01`, `LINK-02`
 
 **Success criteria:**
-1. Operators can author storylines against multiple maps, sub-maps, POIs, indoor entities, rewards, and interaction rules from dedicated admin surfaces.
-2. Operators can compose ordered chapters with prerequisite logic, completion logic, and effects without falling back to raw placeholder pages or reused modules.
-3. Reusable content blocks and asset-driven story sections can be previewed in assembled form before publish.
-4. Story-domain persistence and admin screens align to the live backend model instead of ad hoc local forms.
+1. Backend schema and DTOs establish `experience_templates`, `experience_flows`, `experience_flow_steps`, `experience_bindings`, `experience_overrides`, exploration elements, user exploration events, and public compiled runtime responses.
+2. Admin foundation surfaces expose templates, flows, bindings, overrides, exploration elements, governance, content blocks, and media without placeholder routing.
+3. Local seeds and smoke checks prove the A-Ma Temple default flow, first flagship-story override, Lottie/media content blocks, `client_event_id` idempotency, and dynamic exploration calculation.
+4. Planning artifacts clearly separate shipped foundation work from Phase 29-34 implementation ownership.
 
 **Depends on:** Archived milestones `v2.0` and `v2.1`
 
-### Phase 29: User Progress and Journey Intelligence
+### Phase 29: POI Default Experience Workbench
 
-**Goal:** Build the missing traveler profile, progress, recomputation, and timeline surfaces needed for real operations.
+**Goal:** Build the dedicated POI default experience workbench.
 
-**Requirements:** `USER-01`, `USER-02`, `USER-03`, `USER-04`
+**Requirements:** `STORY-01`, `LINK-01`
 
 **Success criteria:**
-1. Operators can inspect traveler profiles, preferences, linked content scope, and recent activity from one coherent page set.
-2. Operators can drill into progress by city, sub-map, POI, indoor map, story, chapter, task, collectible, and reward domain.
-3. Operators can inspect interaction history, movement or route traces, and acquisition events as one traveler timeline.
-4. Manual recompute or repair actions are explicit, safe, and audited.
+1. Operators can configure a POI natural walk-in and tap-to-explore flow using a timeline, condition cards, effect cards, media cards, and reward cards.
+2. The A-Ma Temple default experience can be authored without raw JSON for intro modal, route guidance, proximity media, check-in task release, pickups, hidden dwell achievement, and reward/title grant.
+3. POI experience steps can save reusable templates for later story, indoor, reward, and activity use.
+4. POI default experience bindings remain aligned with the Phase 28 public runtime contract.
 
 **Depends on:** Phase 28
 
-### Phase 30: Testing, Operations, and Lifecycle Control
+### Phase 30: Storyline Mode and Chapter Override Workbench
 
-**Goal:** Build operator-grade health, smoke, lifecycle, and dashboard tooling across the live control plane.
+**Goal:** Build storyline mode and chapter override authoring.
 
-**Requirements:** `OPS-01`, `OPS-02`, `OPS-03`, `OPS-04`
+**Requirements:** `STORY-02`, `STORY-04`, `LINK-02`
 
 **Success criteria:**
-1. Operators can run key smoke and inspection actions from testing and operations surfaces without relying on legacy placeholder consoles.
-2. Operators can schedule publish, unpublish, and remove actions with dependency awareness and impact visibility.
-3. Operators can inspect operational dashboards for content, activity, media, AI, and failure state across the relevant domains.
-4. Domain status lifecycles are consistent across maps, POIs, indoor, story, chapter, and reward-bearing entities.
+1. Operators can configure storyline overview, route sequence, chapter anchors, chapter inherited flows, and per-step disable/replace/append overrides.
+2. Chapter editors can add story-specific media, overlays, pickups, hidden challenges, reward/title grants, and completion effects without raw JSON as the primary path.
+3. Story mode map strategy can hide unrelated content, reveal nearby content, highlight current chapter routes, mute inactive routes, and clear temporary story-session progress on exit.
+4. Admin-authored overrides compile into public storyline runtime DTOs.
 
 **Depends on:** Phases 28 and 29
 
-### Phase 31: Cross-domain Linkage and Runtime Contract Alignment
+### Phase 31: Interaction/Task Template Library and Governance Center
 
-**Goal:** Link the completed domains to maps, POIs, indoor, rewards, media, AI, and public contracts so the system behaves canonically.
+**Goal:** Build the reusable interaction/task template library and governance center.
 
-**Requirements:** `LINK-01`, `LINK-02`, `LINK-03`
+**Requirements:** `OPS-01`, `OPS-03`, `LINK-01`
 
 **Success criteria:**
-1. Shared selectors, bindings, and reference models exist across the completed admin domains instead of duplicated local-only selectors.
-2. Admin-backend and public-backend contracts are aligned where story, lifecycle, or traveler-progress data needs runtime consumption.
-3. Derived availability and progress update consistently when source content changes.
+1. Operators can author and reuse display, appearance-condition, trigger-condition, trigger-effect, task-gameplay, and reward-presentation templates.
+2. Governance center shows all template and instance usage across city, sub-map, POI, indoor building, storyline, chapter, reward, and activity scopes.
+3. Conflict checks flag overlapping full-screen effects, duplicate reward grants, invalid story overrides, and shared pickup/reward conflicts.
+4. Existing indoor rule governance and reward rule centers are aggregated rather than replaced by a parallel model.
 
 **Depends on:** Phases 28, 29, and 30
 
-### Phase 32: Seeded Verification and Milestone Closure
+### Phase 32: Dynamic Exploration and User Progress Model
 
-**Goal:** Seed meaningful examples and close the milestone with live local verification and truthful acceptance boundaries.
+**Goal:** Build the dynamic exploration and user progress model.
 
-**Requirements:** `VER-01`, `VER-02`
+**Requirements:** `USER-01`, `USER-02`, `USER-03`, `USER-04`, `LINK-03`
 
 **Success criteria:**
-1. The completed `v3.0` domains are exercised on the live local admin/public stack with milestone-grade evidence.
-2. Seeded examples cover story content, traveler progress, and operations usage so the new control-plane surfaces do not land empty.
-3. Milestone artifacts stay honest about the explicitly deferred mini-program acceptance slice and any bounded follow-on work.
+1. Operators can inspect profiles, preferences, linked city/map/story scope, permanent exploration events, and story sessions.
+2. Progress by city, sub-map, POI, indoor map, storyline, chapter, task, collectible, reward, and media completion is calculated from published exploration elements and semantic weights.
+3. Manual recompute or repair actions are explicit, safe, and audited.
+4. Content additions or lifecycle changes update percentages predictably without deleting completed user events.
 
 **Depends on:** Phases 28, 29, 30, and 31
+
+### Phase 33: Complete Flagship Story Content/Material Package
+
+**Goal:** Produce and seed the complete "東西方文明的戰火與共生" content and material package.
+
+**Requirements:** `STORY-03`, `VER-02`
+
+**Success criteria:**
+1. The five-chapter flagship story contains the approved chapters, mainline interactions, side pickups, hidden challenges, rewards, honor titles, and final challenge.
+2. Generated or prepared images, Lottie JSON, audio, video, pickup icons, badges, and fallback assets are tracked through a manifest with local path, COS key, content asset id, prompt/script provenance, and usage target.
+3. Historical basis and literary dramatization fields remain distinguishable in the admin content package.
+4. The material package is reusable by the admin media/content/experience workbenches.
+
+**Depends on:** Phases 28, 29, 30, and 31
+
+### Phase 34: Public Runtime and Mini-program Consumption Baseline
+
+**Goal:** Align public runtime contracts and the mini-program story consumption baseline with the admin-authored experience model.
+
+**Requirements:** `OPS-02`, `OPS-04`, `LINK-02`, `VER-01`
+
+**Success criteria:**
+1. Public APIs expose compiled POI and storyline runtime flows rather than raw admin payloads.
+2. Mini-program story consumption can render the storyline introduction, chapter list, content blocks, Lottie, audio, video, current chapter route state, and basic event reporting.
+3. Unsupported complex gameplay degrades clearly instead of blank-screening.
+4. The local stack can verify the admin/public/mini-program baseline while keeping full WeChat experiential acceptance as future scope when explicitly deferred.
+
+**Depends on:** Phases 28, 29, 30, 31, 32, and 33
 
 ## Archived Milestones
 
@@ -134,4 +166,4 @@
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
-| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-32 | 0/0 | Active | In progress |
+| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-34 | 3/4 phase-28 plans | Active | In progress |

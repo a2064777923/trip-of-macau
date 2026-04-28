@@ -7,10 +7,10 @@
 
 ### Story and Content Orchestration
 
-- [x] **STORY-01**: Operators can create and edit storylines that bind to one or more maps, sub-maps, POIs, indoor entities, rewards, and interaction rules with schedule and unlock metadata.
-- [x] **STORY-02**: Operators can compose chapters against POI, task, marker, or overlay anchors with ordered progression, prerequisite conditions, completion conditions, and completion effects.
-- [x] **STORY-03**: Operators can manage reusable story content blocks made of text, images, audio, video, and attached assets, then preview the assembled narrative before publishing.
-- [x] **STORY-04**: Story and chapter management no longer routes to placeholder or reused pages; it exposes dedicated admin-owned surfaces aligned to the live persistence model.
+- [x] **STORY-01**: Operators have a canonical foundation for storylines and location experiences that bind maps, sub-maps, POIs, indoor entities, rewards, and interaction rules through shared selectors, relation links, and default experience flows. Phase 29 completes the dedicated POI default experience workbench.
+- [x] **STORY-02**: Operators have a canonical foundation for chapters that bind POI, task, marker, overlay, indoor, or manual anchors and inherit, disable, replace, or append target experience flows through structured versioned payloads. Phase 30 completes the storyline mode and chapter override workbench.
+- [x] **STORY-03**: Operators can manage reusable story content blocks and Lottie-aware media assets as the shared content substrate; Phase 33 completes the full flagship story content/material package.
+- [x] **STORY-04**: Phase 28-owned story, experience, content-block, and media surfaces no longer route to placeholders or reused pages; Phase 29 through Phase 31 split the specialized workbenches.
 
 ### User and Progress Intelligence
 
@@ -42,6 +42,7 @@
 - The deferred mini-program WeChat DevTools indoor-runtime acceptance and broader frontend experiential linkage work remain future milestone scope.
 - Any publish-approval workflow beyond simple lifecycle controls remains future scope unless it becomes necessary to close a `v3.0` dependency.
 - Deep end-user AI feature-page planning remains future scope beyond the existing control-plane AI capability center.
+- `.lottie` packages, sprite sheets, sequence-frame animation systems, and complex AR/speech/puzzle gameplay implementations remain future scope unless a later phase explicitly pulls them in.
 
 ## Out of Scope
 
@@ -56,23 +57,23 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STORY-01 | Phase 28 | Planned |
-| STORY-02 | Phase 28 | Planned |
-| STORY-03 | Phase 28 | Planned |
-| STORY-04 | Phase 28 | Planned |
-| USER-01 | Phase 29 | Planned |
-| USER-02 | Phase 29 | Planned |
-| USER-03 | Phase 29 | Planned |
-| USER-04 | Phase 29 | Planned |
-| OPS-01 | Phase 30 | Planned |
-| OPS-02 | Phase 30 | Planned |
-| OPS-03 | Phase 30 | Planned |
-| OPS-04 | Phase 30 | Planned |
-| LINK-01 | Phase 31 | Planned |
-| LINK-02 | Phase 31 | Planned |
-| LINK-03 | Phase 31 | Planned |
-| VER-01 | Phase 32 | Planned |
-| VER-02 | Phase 32 | Planned |
+| STORY-01 | Phase 28 foundation; Phase 29 completion | Planned |
+| STORY-02 | Phase 28 foundation; Phase 30 completion | Planned |
+| STORY-03 | Phase 28 foundation; Phase 33 completion | Planned |
+| STORY-04 | Phase 28 foundation; Phases 29-31 completion | Planned |
+| USER-01 | Phase 32 | Planned |
+| USER-02 | Phase 32 | Planned |
+| USER-03 | Phase 32 | Planned |
+| USER-04 | Phase 32 | Planned |
+| OPS-01 | Phase 31 | Planned |
+| OPS-02 | Phase 34 | Planned |
+| OPS-03 | Phase 31 | Planned |
+| OPS-04 | Phase 34 | Planned |
+| LINK-01 | Phase 28 foundation; Phase 31 governance | Planned |
+| LINK-02 | Phase 28 foundation; Phase 34 runtime baseline | Planned |
+| LINK-03 | Phase 32 | Planned |
+| VER-01 | Phase 34 | Planned |
+| VER-02 | Phase 33 | Planned |
 
 **Coverage:**
 - v3.0 requirements: 17 total
@@ -81,4 +82,4 @@
 
 ---
 *Requirements defined: 2026-04-19*
-*Last updated: 2026-04-19 after creating the v3.0 roadmap*
+*Last updated: 2026-04-28 after reconciling Phase 28 to the experience orchestration foundation and Phase 29-34 boundaries*
