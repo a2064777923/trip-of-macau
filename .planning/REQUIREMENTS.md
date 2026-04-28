@@ -10,7 +10,7 @@
 - [x] **STORY-01**: Operators can create and edit storylines that bind to one or more maps, sub-maps, POIs, indoor entities, rewards, and interaction rules with schedule and unlock metadata.
 - [x] **STORY-02**: Operators can compose chapters against POI, task, marker, or overlay anchors with ordered progression, prerequisite conditions, completion conditions, and completion effects.
 - [x] **STORY-03**: Operators can manage reusable story content blocks made of text, images, audio, video, and attached assets, then preview the assembled narrative before publishing.
-- [ ] **STORY-04**: Story and chapter management no longer routes to placeholder or reused pages; it exposes dedicated admin-owned surfaces aligned to the live persistence model.
+- [x] **STORY-04**: Story and chapter management no longer routes to placeholder or reused pages; it exposes dedicated admin-owned surfaces aligned to the live persistence model.
 
 ### User and Progress Intelligence
 
