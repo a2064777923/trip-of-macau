@@ -4,6 +4,10 @@
 -- Canonical override modes: inherit | disable | replace | append
 -- Canonical exploration weight levels: tiny | small | medium | large | core
 
+USE `aoxiaoyou`;
+
+SET NAMES utf8mb4;
+
 CREATE TABLE IF NOT EXISTS `experience_templates` (
   `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
   `code` VARCHAR(96) NOT NULL,
@@ -128,8 +132,36 @@ CREATE TABLE IF NOT EXISTS `experience_overrides` (
   KEY `idx_experience_overrides_owner` (`owner_type`, `owner_id`, `status`),
   KEY `idx_experience_overrides_target` (`target_owner_type`, `target_owner_id`, `target_step_code`),
   KEY `idx_experience_overrides_replacement` (`replacement_step_id`),
+  UNIQUE KEY `uk_experience_overrides_owner_target` (`owner_type`, `owner_id`, `target_owner_type`, `target_owner_id`, `target_step_code`, `override_mode`, `deleted`),
   CONSTRAINT `fk_experience_overrides_replacement` FOREIGN KEY (`replacement_step_id`) REFERENCES `experience_flow_steps` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Story chapter or owner-level overrides for inherited experience steps with inherit|disable|replace|append semantics';
+
+DELETE eo1 FROM `experience_overrides` eo1
+JOIN `experience_overrides` eo2
+  ON eo1.`owner_type` = eo2.`owner_type`
+  AND eo1.`owner_id` = eo2.`owner_id`
+  AND COALESCE(eo1.`target_owner_type`, '') = COALESCE(eo2.`target_owner_type`, '')
+  AND COALESCE(eo1.`target_owner_id`, -1) = COALESCE(eo2.`target_owner_id`, -1)
+  AND COALESCE(eo1.`target_step_code`, '') = COALESCE(eo2.`target_step_code`, '')
+  AND COALESCE(eo1.`override_mode`, '') = COALESCE(eo2.`override_mode`, '')
+  AND eo1.`deleted` = eo2.`deleted`
+  AND eo1.`id` > eo2.`id`;
+
+SET @index_exists = (
+  SELECT COUNT(*)
+  FROM `information_schema`.`statistics`
+  WHERE `table_schema` = DATABASE()
+    AND `table_name` = 'experience_overrides'
+    AND `index_name` = 'uk_experience_overrides_owner_target'
+);
+SET @ddl = IF(
+  @index_exists = 0,
+  'ALTER TABLE `experience_overrides` ADD UNIQUE KEY `uk_experience_overrides_owner_target` (`owner_type`, `owner_id`, `target_owner_type`, `target_owner_id`, `target_step_code`, `override_mode`, `deleted`)',
+  'SELECT 1'
+);
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 CREATE TABLE IF NOT EXISTS `exploration_elements` (
   `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -429,6 +461,13 @@ ON DUPLICATE KEY UPDATE
   `deleted` = 0;
 
 SET @disable_step_id = (SELECT `id` FROM `experience_flow_steps` WHERE `flow_id` = @flow_chapter_1_id AND `step_code` = 'disable_default_arrival_media' LIMIT 1);
+DELETE FROM `experience_overrides`
+WHERE `owner_type` = 'story_chapter'
+  AND `owner_id` = @chapter_ama_id
+  AND `target_owner_type` = 'poi'
+  AND `target_owner_id` = @poi_ama_id
+  AND `target_step_code` = 'arrival_intro_media'
+  AND `override_mode` = 'disable';
 INSERT INTO `experience_overrides` (
   `owner_type`, `owner_id`, `target_owner_type`, `target_owner_id`, `target_step_code`,
   `override_mode`, `replacement_step_id`, `override_config_json`, `status`, `sort_order`

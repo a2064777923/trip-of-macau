@@ -1122,7 +1122,7 @@ public class AdminExperienceOrchestrationServiceImpl implements AdminExperienceO
     }
 
     private String normalizeCode(String value) {
-        return value.trim().toLowerCase(Locale.ROOT);
+        return StringUtils.hasText(value) ? value.trim().toLowerCase(Locale.ROOT) : "";
     }
 
     private String defaultText(String value, String fallback) {
