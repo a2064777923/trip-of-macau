@@ -7,9 +7,9 @@
 
 ### Story and Content Orchestration
 
-- [ ] **STORY-01**: Operators can create and edit storylines that bind to one or more maps, sub-maps, POIs, indoor entities, rewards, and interaction rules with schedule and unlock metadata.
-- [ ] **STORY-02**: Operators can compose chapters against POI, task, marker, or overlay anchors with ordered progression, prerequisite conditions, completion conditions, and completion effects.
-- [ ] **STORY-03**: Operators can manage reusable story content blocks made of text, images, audio, video, and attached assets, then preview the assembled narrative before publishing.
+- [x] **STORY-01**: Operators can create and edit storylines that bind to one or more maps, sub-maps, POIs, indoor entities, rewards, and interaction rules with schedule and unlock metadata.
+- [x] **STORY-02**: Operators can compose chapters against POI, task, marker, or overlay anchors with ordered progression, prerequisite conditions, completion conditions, and completion effects.
+- [x] **STORY-03**: Operators can manage reusable story content blocks made of text, images, audio, video, and attached assets, then preview the assembled narrative before publishing.
 - [ ] **STORY-04**: Story and chapter management no longer routes to placeholder or reused pages; it exposes dedicated admin-owned surfaces aligned to the live persistence model.
 
 ### User and Progress Intelligence
@@ -28,8 +28,8 @@
 
 ### Cross-domain Linkage and Runtime Alignment
 
-- [ ] **LINK-01**: Story, user, operations, map, POI, indoor, reward, media, and AI domains share canonical bindings and selectors instead of duplicated local-only models.
-- [ ] **LINK-02**: The admin backend and public backend expose aligned contracts for story, progress, and lifecycle data where live runtime consumption depends on those domains.
+- [x] **LINK-01**: Story, user, operations, map, POI, indoor, reward, media, and AI domains share canonical bindings and selectors instead of duplicated local-only models.
+- [x] **LINK-02**: The admin backend and public backend expose aligned contracts for story, progress, and lifecycle data where live runtime consumption depends on those domains.
 - [ ] **LINK-03**: Derived availability and traveler progress update predictably when source content changes, without hidden manual patching or stale counters.
 
 ### Verification and Seeded Acceptance

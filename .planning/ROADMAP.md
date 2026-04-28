@@ -17,7 +17,7 @@
 
 | # | Phase | Goal | Requirements |
 |---|-------|------|--------------|
-| 28 | Story and Content Control-Plane Completion | Finish dedicated storyline, chapter, and content-block authoring so the narrative domain is no longer partial or placeholder-driven | `STORY-01`, `STORY-02`, `STORY-03`, `STORY-04` |
+| 28 | 1/4 | In Progress|  |
 | 29 | User Progress and Journey Intelligence | Build the missing traveler profile, progress, recomputation, and timeline surfaces needed for real operations | `USER-01`, `USER-02`, `USER-03`, `USER-04` |
 | 30 | Testing, Operations, and Lifecycle Control | Build operator-grade health, smoke, lifecycle, and dashboard tooling across the live control plane | `OPS-01`, `OPS-02`, `OPS-03`, `OPS-04` |
 | 31 | Cross-domain Linkage and Runtime Contract Alignment | Link the completed domains to maps, POIs, indoor, rewards, media, AI, and public contracts so the system behaves canonically | `LINK-01`, `LINK-02`, `LINK-03` |
