@@ -11,15 +11,31 @@ import UserManagement from './pages/UserManagement';
 import StorylineManagement from './pages/StorylineManagement';
 import OperationsManagement from './pages/OperationsManagement';
 import ModulePlaceholder from './pages/ModulePlaceholder';
+import MediaLibraryManagement from './pages/Content/MediaLibraryManagement';
+import StoryChapterWorkbench from './pages/Content/StoryChapterWorkbench';
+import StoryContentBlockManagement from './pages/Content/StoryContentBlockManagement';
+import ExperienceOrchestrationWorkbench from './pages/Experience/ExperienceOrchestrationWorkbench';
 import CityManagement from './pages/MapSpace/CityManagement';
 import IndoorBuildingManagement from './pages/MapSpace/IndoorBuildingManagement';
-import MapTileManagement from './pages/MapSpace/MapTileManagement';
-import AiCapabilityCenter from './pages/MapSpace/AiCapabilityCenter';
+import IndoorRuleCenter from './pages/MapSpace/IndoorRuleCenter';
 import CollectibleManagement from './pages/Collectibles/CollectibleManagement';
-import BadgeManagement from './pages/Collectibles/BadgeManagement';
+import RedeemablePrizeManagement from './pages/Collectibles/RedeemablePrizeManagement';
+import GameRewardManagement from './pages/Collectibles/GameRewardManagement';
+import HonorManagement from './pages/Collectibles/HonorManagement';
+import RewardRuleCenter from './pages/Collectibles/RewardRuleCenter';
 import AdminUsersManagement from './pages/System/AdminUsersManagement';
 import RolePermissionManagement from './pages/System/RolePermissionManagement';
 import SystemManagement from './pages/SystemManagement';
+import AiWorkspaceLayout from './pages/AiCapabilityCenter/AiWorkspaceLayout';
+import OverviewPage from './pages/AiCapabilityCenter/OverviewPage';
+import ProvidersPage from './pages/AiCapabilityCenter/ProvidersPage';
+import ModelsPage from './pages/AiCapabilityCenter/ModelsPage';
+import CapabilitiesPage from './pages/AiCapabilityCenter/CapabilitiesPage';
+import CapabilityDetailPage from './pages/AiCapabilityCenter/CapabilityDetailPage';
+import CreativeStudioPage from './pages/AiCapabilityCenter/CreativeStudioPage';
+import ObservabilityPage from './pages/AiCapabilityCenter/ObservabilityPage';
+import SettingsPage from './pages/AiCapabilityCenter/SettingsPage';
+import VoiceWorkbenchPage from './pages/AiCapabilityCenter/VoiceWorkbenchPage';
 import './App.css';
 import { getCurrentAdmin } from './services/api';
 import {
@@ -45,7 +61,8 @@ const Loading = () => (
       justifyContent: 'center',
       alignItems: 'center',
       height: '100vh',
-      background: 'linear-gradient(135deg, #eef2ff 0%, #f7f8ff 100%)',
+      background:
+        'radial-gradient(circle at top left, rgba(124, 92, 255, 0.18), transparent 28%), linear-gradient(135deg, #eef2ff 0%, #f7f8ff 100%)',
     }}
   >
     <Space direction="vertical" size="middle" align="center">
@@ -55,7 +72,7 @@ const Loading = () => (
         style={{ width: 72, height: 72, borderRadius: 20, objectFit: 'cover' }}
       />
       <Spin size="large" />
-      <Text type="secondary">正在載入 Trip of Macau 後台工作台...</Text>
+      <Text type="secondary">正在載入澳小遊管理工作台...</Text>
     </Space>
   </div>
 );
@@ -72,9 +89,11 @@ const ProtectedRoute: React.FC = () => {
         setChecking(false);
         return;
       }
+
       if (cachedUser) {
         setUser(cachedUser);
       }
+
       try {
         const response = await getCurrentAdmin();
         if (response.success && response.data) {
@@ -84,6 +103,9 @@ const ProtectedRoute: React.FC = () => {
           }
           setAdminUser(response.data.user);
           setUser(response.data.user);
+        } else {
+          clearAdminAuth();
+          setUser(null);
         }
       } catch {
         clearAdminAuth();
@@ -92,6 +114,7 @@ const ProtectedRoute: React.FC = () => {
         setChecking(false);
       }
     };
+
     void bootstrap();
   }, [setUser]);
 
@@ -116,70 +139,78 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
 
           <Route path="space/cities" element={<CityManagement />} />
-          <Route path="space/map-tiles" element={<MapTileManagement />} />
-          <Route path="space/pois" element={<POIManagement />} />
-          <Route path="space/indoor-buildings" element={<IndoorBuildingManagement />} />
-          <Route path="space/ai-navigation" element={<AiCapabilityCenter />} />
-
-          <Route path="content/storylines" element={<StorylineManagement />} />
+          <Route path="space/indoor-rules" element={<IndoorRuleCenter />} />
           <Route
-            path="content/chapters"
+            path="space/map-tiles"
             element={placeholder({
-              title: '章節編排',
-              subTitle: '選定既有故事線後，進一步編排章節、互動條件與完成效果。',
-              tags: ['故事線', '章節', '互動編排'],
+              title: '瓦片地圖',
+              subTitle: '此分欄預留給未來大地圖瓦片覆蓋圖層管理，與室內建築與小地圖工具分開。',
+              tags: ['大地圖', '瓦片覆蓋', '預留模組'],
               description:
-                '這一頁保留獨立入口承接故事線的章節設計，不再錯誤導回故事線列表。後續將補上 POI、任務點、標記物與疊加物的完整綁定能力。',
-              todoItems: ['選取故事線並建立章節骨架', '設定前置條件與完成效果', '管理章節媒體與互動資源'],
+                '後續會在這裡管理城市級或子地圖級的瓦片覆蓋層、切片版本、發布路徑與展示策略。現階段室內建築、樓層圖資、標記與 CSV 匯入仍集中在「室內建築與小地圖」。',
+              todoItems: ['大地圖瓦片圖層資料模型', '覆蓋層發布與版本管理', '前端地圖疊層渲染對接'],
             })}
           />
+          <Route path="space/pois" element={<POIManagement />} />
+          <Route path="space/indoor-buildings" element={<IndoorBuildingManagement />} />
+          <Route path="space/ai-navigation" element={<Navigate to="/ai" replace />} />
+
+          <Route path="ai" element={<AiWorkspaceLayout />}>
+            <Route index element={<OverviewPage />} />
+            <Route path="providers" element={<ProvidersPage />} />
+            <Route path="models" element={<ModelsPage />} />
+            <Route path="voices" element={<VoiceWorkbenchPage />} />
+            <Route path="capabilities" element={<CapabilitiesPage />} />
+            <Route path="capabilities/:capabilityCode" element={<CapabilityDetailPage />} />
+            <Route path="creative-studio" element={<CreativeStudioPage />} />
+            <Route path="observability" element={<ObservabilityPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
+
+          <Route path="content/storylines" element={<StorylineManagement />} />
+          <Route path="content/chapters" element={<StoryChapterWorkbench />} />
+          <Route path="content/chapters/workbench" element={<StoryChapterWorkbench />} />
+          <Route path="content/blocks" element={<StoryContentBlockManagement />} />
+          <Route path="content/experience" element={<ExperienceOrchestrationWorkbench initialTab="flows" />} />
+          <Route path="content/experience/templates" element={<ExperienceOrchestrationWorkbench initialTab="templates" />} />
+          <Route path="content/experience/bindings" element={<ExperienceOrchestrationWorkbench initialTab="bindings" />} />
+          <Route path="content/experience/overrides" element={<ExperienceOrchestrationWorkbench initialTab="overrides" />} />
+          <Route path="content/experience/exploration" element={<ExperienceOrchestrationWorkbench initialTab="exploration" />} />
+          <Route path="content/experience/governance" element={<ExperienceOrchestrationWorkbench initialTab="governance" />} />
           <Route
             path="content/campaigns"
             element={placeholder({
               title: '任務與活動',
-              subTitle: '管理全域任務、官方活動與發現頁活動卡片。',
+              subTitle: '集中管理全局任務、官方活動與發現頁活動卡片。',
               tags: ['任務', '活動', '發現頁'],
               description:
-                '此入口預留給任務與活動的正式管理頁，將支援名額、報名費、主辦方、地址、圖片、HTML 圖文，以及定時上下線與置頂設定。',
-              todoItems: ['活動主資料與報名欄位', '定時上線與下線規則', '資源顯示勾選與置頂控制'],
+                '後續會在此承接活動主資料、報名欄位、圖文內容、媒體配置、上線下線節奏與置頂策略，不再混用其他控制台頁面。',
+              todoItems: ['活動主資料與報名欄位', 'HTML 圖文與媒體編排', '定時上線下線與置頂策略'],
             })}
           />
-          <Route
-            path="content/media"
-            element={placeholder({
-              title: '媒體資源',
-              subTitle: '統一檢索所有已上傳到後台與 COS 的媒體資源。',
-              tags: ['媒體庫', 'COS', '檢索'],
-              description:
-                '這一頁會成為全域媒體資源中心，支援搜尋、篩選與跨模組引用回查，避免各模組各自維護碎片化附件列表。',
-              todoItems: ['媒體列表與搜尋', '依模組與資源類型篩選', '查看引用來源與上傳資訊'],
-            })}
-          />
+          <Route path="content/media" element={<MediaLibraryManagement />} />
 
           <Route
             path="collection/rewards"
-            element={placeholder({
-              title: '獎勵配置',
-              subTitle: '規劃可兌換獎勵、庫存與展示資訊。',
-              tags: ['獎勵', '兌換', '營運'],
-              description:
-                '獎勵配置頁將獨立承接獎品內容、兌換條件、展示圖示與投放策略，不再借用其他控制台或臨時入口。',
-              todoItems: ['獎勵清單與庫存管理', '綁定故事線與地圖範圍', '展示圖示與兌換限制'],
-            })}
+            element={<Navigate to="/collection/redeemable-prizes" replace />}
           />
+          <Route path="collection/redeemable-prizes" element={<RedeemablePrizeManagement />} />
+          <Route path="collection/game-rewards" element={<GameRewardManagement />} />
+          <Route path="collection/honors" element={<HonorManagement />} />
+          <Route path="collection/rule-center" element={<RewardRuleCenter />} />
           <Route path="collection/collectibles" element={<CollectibleManagement />} />
-          <Route path="collection/badges" element={<BadgeManagement />} />
+          <Route path="collection/badges" element={<Navigate to="/collection/honors" replace />} />
 
           <Route path="users/progress" element={<UserManagement />} />
           <Route
             path="users/story-progress"
             element={placeholder({
               title: '用戶進度與軌跡',
-              subTitle: '追蹤探索進度、互動日誌與故事完成情況。',
-              tags: ['用戶進度', '軌跡', '探索度'],
+              subTitle: '追蹤探索進度、互動日誌、故事完成情況與內容消費軌跡。',
+              tags: ['用戶進度', '操作軌跡', '探索度'],
               description:
-                '後續會補齊地圖與子地圖探索度、故事完成進度、收集物與任務進度、互動日誌與回放檢視能力。',
-              todoItems: ['地圖與子地圖探索度計算', '故事與章節完成進度', '互動日誌與操作軌跡'],
+                '後續會補齊地圖與子地圖探索度、故事線與章節完成度、收集物與任務進度、互動日誌與回放視圖，作為精細化運營入口。',
+              todoItems: ['地圖與子地圖探索度計算', '故事與章節完成進度', '互動日誌與操作軌跡回放'],
             })}
           />
 
@@ -188,12 +219,12 @@ function App() {
           <Route
             path="ops/sandbox"
             element={placeholder({
-              title: '測試資料與沙盒',
+              title: '測試資源與沙盒',
               subTitle: '集中管理批量測試資料、沙盒快照與資料匯出。',
               tags: ['測試資料', '沙盒', '批量工具'],
               description:
-                '這個模組保留給後續測試與營運工具，包括批量匯入匯出、沙盒快照與資料校驗，不再重用錯誤的英文佔位頁。',
-              todoItems: ['批量匯入測試資料', '沙盒快照與回復', '資料匯出與檢查工具'],
+                '此模組保留給後續測試與營運工具，包含批量匯入匯出、沙盒快照與資料校驗，不再使用錯置的英文 placeholder。',
+              todoItems: ['批量匯入測試資料', '沙盒快照與回滾', '資料匯出與校驗工具'],
             })}
           />
 
@@ -204,11 +235,11 @@ function App() {
             path="system/audit"
             element={placeholder({
               title: '審計與日誌',
-              subTitle: '查看管理操作、內容變更與安全事件。',
+              subTitle: '查看管理操作、內容異動、登入安全與系統事件。',
               tags: ['審計', '日誌', '追蹤'],
               description:
-                '審計模組會獨立承接操作日誌、內容版本變更、匯入匯出記錄與安全事件追蹤，作為後台營運與排障的重要入口。',
-              todoItems: ['管理操作審計索引', '內容版本與變更追蹤', '安全事件與異常檢索'],
+                '後續會把操作日誌、內容版本、登入與安全事件整理成獨立審計中心，支援檢索、對比與告警視圖。',
+              todoItems: ['管理操作審計索引', '內容版本差異對比', '登入安全事件追蹤'],
             })}
           />
         </Route>
