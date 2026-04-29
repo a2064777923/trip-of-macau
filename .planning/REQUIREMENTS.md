@@ -9,7 +9,7 @@
 
 - [x] **STORY-01**: Operators have a canonical foundation for storylines and location experiences that bind maps, sub-maps, POIs, indoor entities, rewards, and interaction rules through shared selectors, relation links, and default experience flows. Phase 29 completes the dedicated POI default experience workbench.
 - [x] **STORY-02**: Operators have a canonical foundation for chapters that bind POI, task, marker, overlay, indoor, or manual anchors and inherit, disable, replace, or append target experience flows through structured versioned payloads. Phase 30 completes the storyline mode and chapter override workbench.
-- [ ] **STORY-03**: Operators can manage reusable story content blocks and Lottie-aware media assets as the shared content substrate; Phase 33 completes the full flagship story content/material package.
+- [x] **STORY-03**: Operators can manage reusable story content blocks and Lottie-aware media assets as the shared content substrate; Phase 33 completes the full flagship story content/material package.
 - [ ] **STORY-04**: Phase 28-owned story, experience, content-block, and media surfaces no longer route to placeholders or reused pages; Phase 29 through Phase 31 split the specialized workbenches.
 
 ### User and Progress Intelligence
@@ -35,7 +35,7 @@
 ### Verification and Seeded Acceptance
 
 - [ ] **VER-01**: `v3.0` domains are verified end to end on the live local admin/public stack with milestone-grade evidence, excluding the explicitly deferred mini-program frontend acceptance slice.
-- [ ] **VER-02**: The completed `v3.0` domains ship with meaningful seeded examples so operators can validate real story, user-progress, and operations flows without blank states.
+- [x] **VER-02**: The completed `v3.0` domains ship with meaningful seeded examples so operators can validate real story, user-progress, and operations flows without blank states.
 
 ## Future Requirements
 

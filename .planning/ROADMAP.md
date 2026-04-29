@@ -22,7 +22,7 @@
 | 30 | Storyline Mode and Chapter Override Workbench | Complete on 2026-04-29 (4/4 plans); storyline mode, route strategy, chapter anchor inheritance, override workbench, seed, and admin/public smoke verification delivered | `STORY-02`, `STORY-04`, `LINK-02` |
 | 31 | Interaction/Task Template Library and Governance Center | Complete on 2026-04-29 (4/4 plans); reusable interaction/task templates, governance filters, usage tracing, and conflict checks delivered | `OPS-01`, `OPS-03`, `LINK-01` |
 | 32 | Dynamic Exploration and User Progress Model | Complete on 2026-04-29 (6/6 plans); weighted exploration engine, durable story sessions, repair/audit core, admin workbench, and live smoke verification delivered | `USER-01`, `USER-02`, `USER-03`, `USER-04`, `LINK-03` |
-| 33 | Complete Flagship Story Content/Material Package | Produce and seed the complete "東西方文明的戰火與共生" content, media, Lottie, audio, pickups, challenges, rewards, and titles | `STORY-03`, `VER-02` |
+| 33 | Complete Flagship Story Content/Material Package | In Progress (1/4 plans); material package schema and admin API delivered | `STORY-03`, `VER-02` |
 | 34 | Public Runtime and Mini-program Consumption Baseline | Align public compiled runtime DTOs and mini-program story consumption baseline with the admin-authored experience model | `OPS-02`, `OPS-04`, `LINK-02`, `VER-01` |
 
 ## Phase Details
