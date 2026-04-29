@@ -419,6 +419,161 @@ export const getAdminStorylineRuntimePreview = (storylineId: number) => {
   );
 };
 
+export interface StoryMaterialPackageCounters {
+  materialCount?: number;
+  assetCount?: number;
+  storyObjectCount?: number;
+}
+
+export interface StoryMaterialPackageSummary {
+  id: number;
+  code: string;
+  storylineId?: number | null;
+  titleZh?: string;
+  titleZht?: string;
+  titleEn?: string;
+  titlePt?: string;
+  summaryZh?: string;
+  summaryZht?: string;
+  packageStatus?: string;
+  counters?: StoryMaterialPackageCounters;
+  localRoot?: string;
+  cosPrefix?: string;
+  manifestPath?: string;
+  createdByAdminId?: number | null;
+  createdByAdminName?: string;
+  publishedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface StoryMaterialPackageItem {
+  id: number;
+  packageId: number;
+  itemKey: string;
+  itemType?: string;
+  assetKind?: string;
+  targetType?: string;
+  targetId?: number | null;
+  targetCode?: string;
+  assetId?: number | null;
+  localPath?: string;
+  cosObjectKey?: string;
+  canonicalUrl?: string;
+  usageTarget?: string;
+  chapterCode?: string;
+  provenanceType?: string;
+  promptText?: string;
+  scriptText?: string;
+  historicalBasisZh?: string;
+  historicalBasisZht?: string;
+  literaryDramatizationZh?: string;
+  literaryDramatizationZht?: string;
+  fallbackItemKey?: string;
+  status?: string;
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface StoryMaterialPackageDetail extends StoryMaterialPackageSummary {
+  historicalBasisZh?: string;
+  historicalBasisZht?: string;
+  literaryDramatizationZh?: string;
+  literaryDramatizationZht?: string;
+  manifestJson?: string;
+  items?: StoryMaterialPackageItem[];
+}
+
+export interface StoryMaterialPackagePayload {
+  code: string;
+  storylineId?: number | null;
+  titleZh?: string;
+  titleZht?: string;
+  titleEn?: string;
+  titlePt?: string;
+  summaryZh?: string;
+  summaryZht?: string;
+  historicalBasisZh?: string;
+  historicalBasisZht?: string;
+  literaryDramatizationZh?: string;
+  literaryDramatizationZht?: string;
+  localRoot?: string;
+  cosPrefix?: string;
+  manifestPath?: string;
+  manifestJson?: string;
+  packageStatus?: string;
+}
+
+export interface StoryMaterialPackageItemPayload {
+  itemKey: string;
+  itemType: string;
+  assetKind?: string;
+  targetType?: string;
+  targetId?: number | null;
+  targetCode?: string;
+  assetId?: number | null;
+  localPath?: string;
+  cosObjectKey?: string;
+  canonicalUrl?: string;
+  usageTarget?: string;
+  chapterCode?: string;
+  provenanceType?: string;
+  promptText?: string;
+  scriptText?: string;
+  historicalBasisZh?: string;
+  historicalBasisZht?: string;
+  literaryDramatizationZh?: string;
+  literaryDramatizationZht?: string;
+  fallbackItemKey?: string;
+  status?: string;
+  sortOrder?: number;
+}
+
+export const getStoryMaterialPackages = (params?: {
+  pageNum?: number;
+  pageSize?: number;
+  keyword?: string;
+  packageStatus?: string;
+  storylineId?: number;
+}) => {
+  return request.get<PaginationResponse<StoryMaterialPackageSummary>>(
+    '/api/admin/v1/content/material-packages',
+    { params },
+  );
+};
+
+export const getStoryMaterialPackage = (packageId: number) => {
+  return request.get<StoryMaterialPackageDetail>(`/api/admin/v1/content/material-packages/${packageId}`);
+};
+
+export const createStoryMaterialPackage = (data: StoryMaterialPackagePayload) => {
+  return request.post<StoryMaterialPackageDetail>('/api/admin/v1/content/material-packages', data);
+};
+
+export const updateStoryMaterialPackage = (packageId: number, data: StoryMaterialPackagePayload) => {
+  return request.put<StoryMaterialPackageDetail>(`/api/admin/v1/content/material-packages/${packageId}`, data);
+};
+
+export const addStoryMaterialPackageItem = (packageId: number, data: StoryMaterialPackageItemPayload) => {
+  return request.post<StoryMaterialPackageItem>(`/api/admin/v1/content/material-packages/${packageId}/items`, data);
+};
+
+export const updateStoryMaterialPackageItem = (
+  packageId: number,
+  itemId: number,
+  data: StoryMaterialPackageItemPayload,
+) => {
+  return request.put<StoryMaterialPackageItem>(
+    `/api/admin/v1/content/material-packages/${packageId}/items/${itemId}`,
+    data,
+  );
+};
+
+export const deleteStoryMaterialPackageItem = (packageId: number, itemId: number) => {
+  return request.delete<boolean>(`/api/admin/v1/content/material-packages/${packageId}/items/${itemId}`);
+};
+
 export const getAdminStoryContentBlocks = (params?: {
   pageNum?: number;
   pageSize?: number;
