@@ -13,6 +13,15 @@ function pickAssetUrl(asset?: StoryMediaAssetItem | null) {
   return asset?.url || asset?.fallbackUrl || asset?.posterUrl || ''
 }
 
+function MissingMedia({ label }: { label?: string }) {
+  return (
+    <View className='story-block__missingMedia'>
+      <Text className='story-block__missingMediaTitle'>媒體資源暫時未能載入</Text>
+      {label ? <Text className='story-block__missingMediaHint'>{label}</Text> : null}
+    </View>
+  )
+}
+
 function AudioAssetCard({
   asset,
   title,
@@ -130,22 +139,32 @@ export default function StoryContentBlockRenderer({ blocks }: { blocks?: StoryCo
               </View>
             ) : null}
 
-            {block.blockType === 'gallery' ? (
-              <View className='story-block__gallery'>
-                {[asset, ...attachmentAssets]
-                  .filter((item): item is StoryMediaAssetItem => !!item)
-                  .map((galleryAsset) => (
-                    <Image
-                      className='story-block__galleryImage'
-                      key={galleryAsset.id}
-                      src={pickAssetUrl(galleryAsset)}
-                      mode='widthFix'
-                    />
-                  ))}
-              </View>
+            {block.blockType === 'image' && !assetUrl ? (
+              <MissingMedia label={block.title || '圖片資源未配置可用連結。'} />
             ) : null}
 
-            {block.blockType === 'audio' ? <AudioAssetCard asset={asset} title={block.title} /> : null}
+            {block.blockType === 'gallery' ? (
+              [asset, ...attachmentAssets].some((item) => pickAssetUrl(item))
+                ? (
+                    <View className='story-block__gallery'>
+                      {[asset, ...attachmentAssets]
+                        .filter((item): item is StoryMediaAssetItem => !!item && !!pickAssetUrl(item))
+                        .map((galleryAsset) => (
+                          <Image
+                            className='story-block__galleryImage'
+                            key={galleryAsset.id}
+                            src={pickAssetUrl(galleryAsset)}
+                            mode='widthFix'
+                          />
+                        ))}
+                    </View>
+                  )
+                : <MissingMedia label={block.title || '圖集暫未配置可用圖片。'} />
+            ) : null}
+
+            {block.blockType === 'audio' ? (
+              asset?.url ? <AudioAssetCard asset={asset} title={block.title} /> : <MissingMedia label={block.title || '音頻資源未配置可用連結。'} />
+            ) : null}
 
             {block.blockType === 'video' && assetUrl ? (
               <Video
@@ -157,14 +176,24 @@ export default function StoryContentBlockRenderer({ blocks }: { blocks?: StoryCo
               />
             ) : null}
 
+            {block.blockType === 'video' && !assetUrl ? (
+              <MissingMedia label={block.title || '視頻資源未配置可用連結。'} />
+            ) : null}
+
             {block.blockType === 'lottie' ? (
-              <View className='story-block__media'>
-                <LottieAssetPlayer asset={asset} />
-              </View>
+              asset ? (
+                <View className='story-block__media'>
+                  <LottieAssetPlayer asset={asset} />
+                </View>
+              ) : <MissingMedia label={block.title || 'Lottie 動畫資源未配置。'} />
             ) : null}
 
             {block.blockType === 'attachment_list' && attachmentAssets.length ? (
               <AttachmentList assets={attachmentAssets} />
+            ) : null}
+
+            {block.blockType === 'attachment_list' && !attachmentAssets.length ? (
+              <MissingMedia label={block.title || '附件列表暫無可顯示資源。'} />
             ) : null}
 
             {!['image', 'gallery', 'audio', 'video', 'lottie', 'attachment_list', 'quote'].includes(block.blockType || '') && assetUrl ? (

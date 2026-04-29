@@ -15,7 +15,9 @@
 .story-block__summary,
 .story-block__body,
 .story-block__attachmentText,
-.story-block__mediaCaption {
+.story-block__mediaCaption,
+.story-block__missingMediaTitle,
+.story-block__missingMediaHint {
   display: block;
 }
 
@@ -138,4 +140,25 @@
   margin-top: 16px;
   border-radius: 20px;
   overflow: hidden;
+}
+
+.story-block__missingMedia {
+  margin-top: 16px;
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(248, 246, 240, 0.96) 0%, rgba(255, 248, 238, 0.94) 100%);
+  border: 1px dashed rgba(169, 132, 96, 0.32);
+}
+
+.story-block__missingMediaTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #8b6e54;
+}
+
+.story-block__missingMediaHint {
+  margin-top: 8px;
+  font-size: 20px;
+  line-height: 1.6;
+  color: #9a8d80;
 }

@@ -1,10 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Image, ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import LottieAssetPlayer from '../../components/LottieAssetPlayer'
 import PageShell from '../../components/PageShell'
 import StoryContentBlockRenderer from '../../components/StoryContentBlockRenderer'
-import { getStorylines, refreshPublicContent } from '../../services/gameService'
-import type { StoryChapterItem, StorylineItem } from '../../types/game'
+import {
+  getStorylines,
+  recordStoryRuntimeEvent,
+  refreshPublicContent,
+  refreshStorylineRuntime,
+} from '../../services/gameService'
+import type { StoryChapterItem, StorylineItem, StoryRuntimeStepItem } from '../../types/game'
 import './index.scss'
 
 function describeRule(rule?: StoryChapterItem['unlock']) {
@@ -99,6 +105,106 @@ function renderStoryTabs(
   )
 }
 
+function pickStepMediaUrl(step: StoryRuntimeStepItem) {
+  return step.mediaAsset?.url || step.mediaAsset?.fallbackUrl || step.mediaAsset?.posterUrl || ''
+}
+
+function renderRuntimeStepMedia(step: StoryRuntimeStepItem) {
+  const asset = step.mediaAsset
+  const assetUrl = pickStepMediaUrl(step)
+  if (!asset) {
+    return null
+  }
+
+  if (asset.assetKind === 'lottie') {
+    return (
+      <View className='story-runtime-step__media'>
+        <LottieAssetPlayer asset={asset} />
+      </View>
+    )
+  }
+
+  if (assetUrl && (asset.assetKind === 'image' || asset.assetKind === 'icon')) {
+    return (
+      <View className='story-runtime-step__media'>
+        <Image className='story-runtime-step__image' src={assetUrl} mode='widthFix' />
+      </View>
+    )
+  }
+
+  return (
+    <Text className='story-runtime-step__mediaText'>
+      已掛載媒體：{asset.originalFilename || assetUrl || `資源 #${asset.id}`}
+    </Text>
+  )
+}
+
+function getRuntimeSteps(chapter: StoryChapterItem) {
+  return (chapter.runtimeSteps || chapter.runtime?.runtimeSteps || [])
+    .slice()
+    .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
+}
+
+function renderRuntimeFlow(
+  chapter: StoryChapterItem,
+  onUnsupportedStepView: (step: StoryRuntimeStepItem) => void,
+) {
+  const steps = getRuntimeSteps(chapter)
+  return (
+    <View className='story-runtime-flow'>
+      <Text className='story-runtime-flow__title'>故事互動流程</Text>
+      {steps.length ? (
+        steps.map((step, stepIndex) => (
+          <View
+            key={step.id || step.stepCode || stepIndex}
+            className={`story-runtime-step ${step.unsupported ? 'story-runtime-step--unsupported' : ''}`}
+            onClick={() => {
+              if (step.unsupported) {
+                onUnsupportedStepView(step)
+              }
+            }}
+          >
+            <View className='story-runtime-step__top'>
+              <Text className='story-runtime-step__badge'>
+                {step.displayCategoryLabel || step.displayCategory || '互動步驟'}
+              </Text>
+              {step.requiredForCompletion ? (
+                <Text className='story-runtime-step__badge story-runtime-step__badge--required'>主線必做</Text>
+              ) : null}
+              {step.explorationWeightLevel ? (
+                <Text className='story-runtime-step__badge story-runtime-step__badge--weight'>
+                  探索權重：{step.explorationWeightLevel}
+                </Text>
+              ) : null}
+              {step.unsupported ? (
+                <Text className='story-runtime-step__badge story-runtime-step__badge--pending'>稍後開放</Text>
+              ) : null}
+            </View>
+            <Text className='story-runtime-step__name'>{step.name || `互動 ${stepIndex + 1}`}</Text>
+            {step.description ? <Text className='story-runtime-step__desc'>{step.description}</Text> : null}
+            {step.travelerActionLabel ? (
+              <Text className='story-runtime-step__action'>{step.travelerActionLabel}</Text>
+            ) : null}
+            {renderRuntimeStepMedia(step)}
+            {step.unsupported ? (
+              <View className='story-runtime-step__unsupportedCopy'>
+                <Text className='story-runtime-step__unsupportedText'>
+                  這個互動玩法已由後台配置，將在後續小程序玩法版本中開放。
+                </Text>
+                <Text className='story-runtime-step__debug'>
+                  玩法類型：{step.stepType || step.template?.templateType || '未指定'}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        ))
+      ) : (
+        <Text className='story-runtime-flow__empty'>此章節暫未配置互動流程。</Text>
+      )}
+    </View>
+  )
+}
+
 export default function StoryPage() {
   const router = Taro.getCurrentInstance().router
   const initialStoryId = router?.params?.storyId ? Number(router.params.storyId) : undefined
@@ -106,6 +212,10 @@ export default function StoryPage() {
   const [stories, setStories] = useState(() => getStorylines())
   const [expandedStoryId, setExpandedStoryId] = useState<number | undefined>(initialStoryId)
   const [expandedChapterId, setExpandedChapterId] = useState<number | null>(initialChapterId || null)
+  const [runtimeLoading, setRuntimeLoading] = useState(false)
+  const [runtimeAlert, setRuntimeAlert] = useState('')
+  const reportedContentEventsRef = useRef<Set<string>>(new Set())
+  const reportedUnsupportedEventsRef = useRef<Set<string>>(new Set())
 
   const unlockedStories = useMemo(() => stories.filter((story) => !story.locked), [stories])
   const lockedStories = useMemo(() => stories.filter((story) => story.locked), [stories])
@@ -141,6 +251,47 @@ export default function StoryPage() {
   }, [])
 
   useEffect(() => {
+    if (!activeStory?.id || activeStory.locked) {
+      return
+    }
+
+    let cancelled = false
+
+    const syncRuntime = async () => {
+      setRuntimeLoading(true)
+      setRuntimeAlert('')
+      try {
+        const syncedStory = await refreshStorylineRuntime(activeStory.id)
+        if (cancelled) {
+          return
+        }
+        const nextStories = getStorylines()
+        setStories(nextStories)
+        const nextStory = syncedStory || nextStories.find((story) => story.id === activeStory.id)
+        if (nextStory?.runtimeSource === 'fallback') {
+          setRuntimeAlert('故事資料暫時未能同步，已顯示本機快取內容。')
+        }
+      } catch (error) {
+        console.warn('Failed to synchronize story runtime.', error)
+        if (!cancelled) {
+          setStories(getStorylines())
+          setRuntimeAlert('故事資料暫時未能同步，已顯示本機快取內容。')
+        }
+      } finally {
+        if (!cancelled) {
+          setRuntimeLoading(false)
+        }
+      }
+    }
+
+    void syncRuntime()
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeStory?.id, activeStory?.locked])
+
+  useEffect(() => {
     if (!activeStory) {
       return
     }
@@ -156,11 +307,85 @@ export default function StoryPage() {
     }
   }, [activeStory, expandedChapterId])
 
+  const reportStoryEvent = (input: {
+    eventType: string
+    chapterId?: number
+    stepId?: number
+    blockId?: number
+    elementCode?: string
+    elementId?: number
+    payload?: Record<string, unknown>
+  }) => {
+    if (!activeStory?.id) {
+      return
+    }
+    void recordStoryRuntimeEvent({
+      storylineId: activeStory.id,
+      ...input,
+    }).catch((error) => {
+      console.warn('Failed to report story runtime event.', error)
+    })
+  }
+
+  useEffect(() => {
+    if (!activeStory?.id || !expandedChapterId) {
+      return
+    }
+    const chapter = activeStory.chapters?.find((item) => item.id === expandedChapterId)
+    if (!chapter || chapter.locked) {
+      return
+    }
+
+    ;(chapter.contentBlocks || []).forEach((block) => {
+      const key = `${activeStory.id}:${chapter.id}:block:${block.id}:content_read`
+      if (reportedContentEventsRef.current.has(key)) {
+        return
+      }
+      reportedContentEventsRef.current.add(key)
+      reportStoryEvent({
+        eventType: 'content_read',
+        chapterId: chapter.id,
+        blockId: block.id,
+        elementCode: block.code || `story_block_${block.id}`,
+        elementId: block.id,
+      })
+    })
+
+    getRuntimeSteps(chapter)
+      .filter((step) => step.unsupported)
+      .forEach((step) => {
+        const key = `${activeStory.id}:${chapter.id}:step:${step.id || step.stepCode}:unsupported_interaction_view`
+        if (reportedUnsupportedEventsRef.current.has(key)) {
+          return
+        }
+        reportedUnsupportedEventsRef.current.add(key)
+        reportStoryEvent({
+          eventType: 'unsupported_interaction_view',
+          chapterId: chapter.id,
+          stepId: step.id,
+          elementCode: step.elementCode || step.stepCode,
+          elementId: step.elementId,
+          payload: {
+            stepType: step.stepType,
+            templateType: step.template?.templateType,
+          },
+        })
+      })
+  }, [activeStory, expandedChapterId])
+
   const handleStorySelect = (story: StorylineItem) => {
     if (story.locked) {
       Taro.showToast({ title: story.unlockHint || '此故事線仍未解鎖', icon: 'none' })
       return
     }
+    void recordStoryRuntimeEvent({
+      storylineId: story.id,
+      eventType: 'story_open',
+      elementCode: `storyline_${story.id}`,
+      elementId: story.id,
+    }).catch((error) => {
+      console.warn('Failed to report story selection.', error)
+    })
     setExpandedStoryId(story.id)
     const nextChapter = story.chapters?.find((chapter) => !chapter.locked) || story.chapters?.[0]
     setExpandedChapterId(nextChapter?.id || null)
@@ -171,8 +396,24 @@ export default function StoryPage() {
       Taro.showToast({ title: '請先完成前置章節或條件', icon: 'none' })
       return
     }
+    const willExpand = expandedChapterId !== chapter.id
     setExpandedChapterId((prev) => (prev === chapter.id ? null : chapter.id))
+    if (willExpand) {
+      reportStoryEvent({
+        eventType: 'chapter_open',
+        chapterId: chapter.id,
+        elementCode: chapter.anchorTargetCode || `story_chapter_${chapter.id}`,
+        elementId: chapter.anchorTargetId || chapter.id,
+      })
+    }
   }
+
+  const runtimeStatusText = runtimeLoading
+    ? '故事資料同步中...'
+    : activeStory?.runtimeStatusText || (activeStory?.runtimeSource === 'live' ? '即時故事資料已同步' : '使用本機快取')
+  const runtimeStatusClass = !runtimeLoading && activeStory?.runtimeSource === 'live'
+    ? 'story-runtime-status--live'
+    : 'story-runtime-status--fallback'
 
   return (
     <PageShell className='story-page'>
@@ -212,6 +453,12 @@ export default function StoryPage() {
 
             <View className='story-focus-card__body'>
               <Text className='story-focus-card__desc'>{activeStory.description}</Text>
+              <View className='story-runtime-summary'>
+                <Text className={`story-runtime-status ${runtimeStatusClass}`}>
+                  {runtimeStatusText}
+                </Text>
+                {runtimeAlert ? <Text className='story-runtime-alert'>{runtimeAlert}</Text> : null}
+              </View>
 
               {!!activeStory.moodTags?.length ? (
                 <View className='story-tags'>
@@ -316,6 +563,21 @@ export default function StoryPage() {
                               {chapter.completion ? <Text className='chapter-rule-chip'>完成：{describeRule(chapter.completion)}</Text> : null}
                               {chapter.effect ? <Text className='chapter-rule-chip'>效果：{describeRule(chapter.effect)}</Text> : null}
                             </View>
+
+                            {renderRuntimeFlow(chapter, (step) => {
+                              reportStoryEvent({
+                                eventType: 'unsupported_interaction_view',
+                                chapterId: chapter.id,
+                                stepId: step.id,
+                                elementCode: step.elementCode || step.stepCode,
+                                elementId: step.elementId,
+                                payload: {
+                                  stepType: step.stepType,
+                                  templateType: step.template?.templateType,
+                                  triggerType: step.triggerType,
+                                },
+                              })
+                            })}
 
                             <StoryContentBlockRenderer blocks={chapter.contentBlocks} />
 
