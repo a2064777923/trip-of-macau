@@ -20,8 +20,8 @@
 | 28 | Story Experience Orchestration Foundation | Complete on 2026-04-28 (4/4 plans); shared experience orchestration foundation and runnable admin/public baseline delivered | `STORY-01`, `STORY-02`, `STORY-03`, `STORY-04`, `LINK-01`, `LINK-02` |
 | 29 | POI Default Experience Workbench | Complete on 2026-04-29 (3/3 plans); dedicated POI 地點體驗工作台, A-Ma Temple seed, and admin/public smoke verification delivered | `STORY-01`, `LINK-01` |
 | 30 | Storyline Mode and Chapter Override Workbench | Complete on 2026-04-29 (4/4 plans); storyline mode, route strategy, chapter anchor inheritance, override workbench, seed, and admin/public smoke verification delivered | `STORY-02`, `STORY-04`, `LINK-02` |
-| 31 | 4/4 | Complete    | 2026-04-29 |
-| 32 | Dynamic Exploration and User Progress Model | Build dynamic exploration, traveler progress inspection, recomputation, and user timeline surfaces | `USER-01`, `USER-02`, `USER-03`, `USER-04`, `LINK-03` |
+| 31 | Interaction/Task Template Library and Governance Center | Complete on 2026-04-29 (4/4 plans); reusable interaction/task templates, governance filters, usage tracing, and conflict checks delivered | `OPS-01`, `OPS-03`, `LINK-01` |
+| 32 | Dynamic Exploration and User Progress Model | Complete on 2026-04-29 (6/6 plans); weighted exploration engine, durable story sessions, repair/audit core, admin workbench, and live smoke verification delivered | `USER-01`, `USER-02`, `USER-03`, `USER-04`, `LINK-03` |
 | 33 | Complete Flagship Story Content/Material Package | Produce and seed the complete "東西方文明的戰火與共生" content, media, Lottie, audio, pickups, challenges, rewards, and titles | `STORY-03`, `VER-02` |
 | 34 | Public Runtime and Mini-program Consumption Baseline | Align public compiled runtime DTOs and mini-program story consumption baseline with the admin-authored experience model | `OPS-02`, `OPS-04`, `LINK-02`, `VER-01` |
 
@@ -85,7 +85,7 @@
 
 ### Phase 32: Dynamic Exploration and User Progress Model
 
-**Goal:** Build the dynamic exploration and user progress model.
+**Goal:** Complete on 2026-04-29 (6/6 plans); weighted exploration engine, durable story sessions, repair/audit core, admin workbench, and live smoke verification delivered.
 
 **Requirements:** `USER-01`, `USER-02`, `USER-03`, `USER-04`, `LINK-03`
 
@@ -98,12 +98,12 @@
 **Plans:** 6 plans
 
 Plans:
-- [ ] `32-01-PLAN.md` — Canonical weighted progress engine and admin/public scope parity
-- [ ] `32-02-PLAN.md` — Durable storyline session persistence for the public runtime
-- [ ] `32-03-PLAN.md` — Preview-first recompute/repair core rebuild and audit persistence
-- [ ] `32-04-PLAN.md` — Traditional Chinese workbench UI, seeded traveler fixtures, and end-to-end smoke
-- [ ] `32-05-PLAN.md` — Traveler workbench read model and paginated timeline
-- [ ] `32-06-PLAN.md` — Admin progress-ops API surface and audit response contracts
+- [x] `32-01-PLAN.md` — Canonical weighted progress engine and admin/public scope parity
+- [x] `32-02-PLAN.md` — Durable storyline session persistence for the public runtime
+- [x] `32-03-PLAN.md` — Preview-first recompute/repair core rebuild and audit persistence
+- [x] `32-04-PLAN.md` — Traditional Chinese workbench UI, seeded traveler fixtures, and end-to-end smoke
+- [x] `32-05-PLAN.md` — Traveler workbench read model and paginated timeline
+- [x] `32-06-PLAN.md` — Admin progress-ops API surface and audit response contracts
 
 **Depends on:** Phases 28, 29, 30, and 31
 
@@ -176,4 +176,4 @@ Plans:
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
-| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-34 | Phases 28-30 complete (11/11 executed plans); 3/7 phases complete | Active | In progress |
+| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-34 | Phases 28-32 complete (21/21 executed plans); 5/7 phases complete | Active | In progress |

@@ -9,15 +9,15 @@
 
 - [x] **STORY-01**: Operators have a canonical foundation for storylines and location experiences that bind maps, sub-maps, POIs, indoor entities, rewards, and interaction rules through shared selectors, relation links, and default experience flows. Phase 29 completes the dedicated POI default experience workbench.
 - [x] **STORY-02**: Operators have a canonical foundation for chapters that bind POI, task, marker, overlay, indoor, or manual anchors and inherit, disable, replace, or append target experience flows through structured versioned payloads. Phase 30 completes the storyline mode and chapter override workbench.
-- [x] **STORY-03**: Operators can manage reusable story content blocks and Lottie-aware media assets as the shared content substrate; Phase 33 completes the full flagship story content/material package.
-- [x] **STORY-04**: Phase 28-owned story, experience, content-block, and media surfaces no longer route to placeholders or reused pages; Phase 29 through Phase 31 split the specialized workbenches.
+- [ ] **STORY-03**: Operators can manage reusable story content blocks and Lottie-aware media assets as the shared content substrate; Phase 33 completes the full flagship story content/material package.
+- [ ] **STORY-04**: Phase 28-owned story, experience, content-block, and media surfaces no longer route to placeholders or reused pages; Phase 29 through Phase 31 split the specialized workbenches.
 
 ### User and Progress Intelligence
 
-- [ ] **USER-01**: Operators can inspect a traveler profile with identity basics, locale and interface preferences, linked cities and maps, and recent activity context.
-- [ ] **USER-02**: Operators can inspect exploration and completion progress by city, sub-map, POI, indoor map, storyline, chapter, task, collectible, and reward domain with drill-down detail.
-- [ ] **USER-03**: Operators can inspect traveler interaction logs, movement or route traces, acquisition history, and major state changes through one coherent timeline.
-- [ ] **USER-04**: Operators can trigger safe recomputation or repair actions for derived traveler progress and keep an audit trail of those manual operations.
+- [x] **USER-01**: Operators can inspect a traveler profile with identity basics, locale and interface preferences, linked cities and maps, and recent activity context.
+- [x] **USER-02**: Operators can inspect exploration and completion progress by city, sub-map, POI, indoor map, storyline, chapter, task, collectible, and reward domain with drill-down detail.
+- [x] **USER-03**: Operators can inspect traveler interaction logs, movement or route traces, acquisition history, and major state changes through one coherent timeline.
+- [x] **USER-04**: Operators can trigger safe recomputation or repair actions for derived traveler progress and keep an audit trail of those manual operations.
 
 ### Testing, Operations, and Lifecycle Control
 
@@ -28,9 +28,9 @@
 
 ### Cross-domain Linkage and Runtime Alignment
 
-- [x] **LINK-01**: Story, user, operations, map, POI, indoor, reward, media, and AI domains share canonical bindings and selectors instead of duplicated local-only models.
-- [x] **LINK-02**: The admin backend and public backend expose aligned contracts for story, progress, and lifecycle data where live runtime consumption depends on those domains.
-- [ ] **LINK-03**: Derived availability and traveler progress update predictably when source content changes, without hidden manual patching or stale counters.
+- [ ] **LINK-01**: Story, user, operations, map, POI, indoor, reward, media, and AI domains share canonical bindings and selectors instead of duplicated local-only models.
+- [ ] **LINK-02**: The admin backend and public backend expose aligned contracts for story, progress, and lifecycle data where live runtime consumption depends on those domains.
+- [x] **LINK-03**: Derived availability and traveler progress update predictably when source content changes, without hidden manual patching or stale counters.
 
 ### Verification and Seeded Acceptance
 
@@ -57,21 +57,21 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STORY-01 | Phase 28 foundation; Phase 29 completion | Planned |
-| STORY-02 | Phase 28 foundation; Phase 30 completion | Planned |
+| STORY-01 | Phase 28 foundation; Phase 29 completion | Complete |
+| STORY-02 | Phase 28 foundation; Phase 30 completion | Complete |
 | STORY-03 | Phase 28 foundation; Phase 33 completion | Planned |
-| STORY-04 | Phase 28 foundation; Phases 29-31 completion | Planned |
-| USER-01 | Phase 32 | Planned |
-| USER-02 | Phase 32 | Planned |
-| USER-03 | Phase 32 | Planned |
-| USER-04 | Phase 32 | Planned |
+| STORY-04 | Phase 28 foundation; Phase 29-30 workbenches; Phase 31 specialized governance | In progress |
+| USER-01 | Phase 32 | Complete |
+| USER-02 | Phase 32 | Complete |
+| USER-03 | Phase 32 | Complete |
+| USER-04 | Phase 32 | Complete |
 | OPS-01 | Phase 31 | Planned |
 | OPS-02 | Phase 34 | Planned |
 | OPS-03 | Phase 31 | Planned |
 | OPS-04 | Phase 34 | Planned |
-| LINK-01 | Phase 28 foundation; Phase 31 governance | Planned |
-| LINK-02 | Phase 28 foundation; Phase 34 runtime baseline | Planned |
-| LINK-03 | Phase 32 | Planned |
+| LINK-01 | Phase 28 foundation; Phase 29 POI integration; Phase 31 governance | In progress |
+| LINK-02 | Phase 28 foundation; Phase 30 story runtime contract; Phase 34 runtime baseline | In progress |
+| LINK-03 | Phase 32 | Complete |
 | VER-01 | Phase 34 | Planned |
 | VER-02 | Phase 33 | Planned |
 
@@ -82,4 +82,4 @@
 
 ---
 *Requirements defined: 2026-04-19*
-*Last updated: 2026-04-28 after reconciling Phase 28 to the experience orchestration foundation and Phase 29-34 boundaries*
+*Last updated: 2026-04-29 after completing Phase 32 dynamic exploration and user progress model*
