@@ -82,6 +82,9 @@ export interface StoryChapterItem {
   completionJson?: string
   rewardJson?: string
   locked: boolean
+  runtime?: StoryChapterRuntimeItem
+  runtimeSteps?: StoryRuntimeStepItem[]
+  runtimeStatus?: StoryRuntimeStatus
 }
 
 export interface StorylineItem {
@@ -108,6 +111,10 @@ export interface StorylineItem {
   moodTags?: string[]
   cityBindingCodes?: string[]
   subMapBindingCodes?: string[]
+  runtime?: StorylineRuntimeItem
+  runtimeSyncedAt?: string
+  runtimeSource?: 'live' | 'fallback'
+  runtimeStatusText?: string
 }
 
 export interface StoryMediaAssetItem {
@@ -146,6 +153,80 @@ export interface StoryRulePayload {
   type?: string
   config?: Record<string, unknown>
   rawJson?: string
+}
+
+export type StoryRuntimeStatus = 'live' | 'fallback' | 'pending' | 'unsupported' | string
+
+export interface StoryRuntimeTemplateItem {
+  id?: number
+  code?: string
+  templateType?: string
+  category?: string
+  name?: string
+  summary?: string
+  riskLevel?: string
+}
+
+export interface StoryRuntimeStepItem {
+  id?: number
+  flowId?: number
+  stepCode?: string
+  stepType?: string
+  displayCategory?: string
+  displayCategoryLabel?: string
+  unsupported?: boolean
+  unsupportedReason?: string
+  travelerActionLabel?: string
+  eventType?: string
+  elementCode?: string
+  elementId?: number
+  name?: string
+  description?: string
+  triggerType?: string
+  mediaAssetId?: number
+  mediaAsset?: StoryMediaAssetItem
+  explorationWeightLevel?: string
+  explorationWeightValue?: number
+  requiredForCompletion?: boolean
+  inheritKey?: string
+  template?: StoryRuntimeTemplateItem
+  sortOrder?: number
+}
+
+export interface StoryChapterRuntimeItem {
+  chapterId: number
+  chapterOrder?: number
+  runtimeStatus?: StoryRuntimeStatus
+  runtimeStatusLabel?: string
+  compiledStepCount?: number
+  unsupportedStepCount?: number
+  anchorType?: string
+  anchorTargetId?: number
+  anchorTargetCode?: string
+  storyModeConfig?: Record<string, unknown>
+  runtimeSteps?: StoryRuntimeStepItem[]
+}
+
+export interface StorylineRuntimeItem {
+  runtimeVersion?: string
+  source?: string
+  generatedAt?: string
+  publishedChapterCount?: number
+  unsupportedStepCount?: number
+  storyModeConfig?: Record<string, unknown>
+  chapters?: StoryChapterRuntimeItem[]
+}
+
+export interface StorySessionItem {
+  storylineId: number
+  sessionId: string
+  currentChapterId?: number
+  status?: string
+  startedAt?: string
+  lastEventAt?: string
+  exitedAt?: string
+  eventCount?: number
+  exitClearedTemporaryState?: boolean
 }
 
 export interface StampItem {

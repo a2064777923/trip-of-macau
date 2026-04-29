@@ -11,8 +11,12 @@ import {
   RewardItem,
   StampItem,
   StoryContentBlockItem,
+  StoryChapterRuntimeItem,
   StoryMediaAssetItem,
+  StoryRuntimeStepItem,
+  StorySessionItem,
   StoryRulePayload,
+  StorylineRuntimeItem,
   StorylineItem,
   SubMapProgressItem,
   TipArticleItem,
@@ -35,10 +39,14 @@ import {
   PublicStoryChapterDto,
   PublicStoryChapterConditionDto,
   PublicStoryChapterEffectDto,
+  PublicStoryChapterRuntimeDto,
   PublicStoryChapterUnlockDto,
   PublicStoryContentBlockDto,
+  PublicStorylineRuntimeDto,
   PublicStoryMediaAssetDto,
+  PublicStorylineSessionDto,
   PublicStorylineDto,
+  PublicExperienceRuntimeStepDto,
   PublicSubMapDto,
   PublicTipArticleDto,
   PublicLocaleCode,
@@ -988,6 +996,84 @@ function mapStoryChapter(
   }
 }
 
+function mapRuntimeStep(step: PublicExperienceRuntimeStepDto): StoryRuntimeStepItem {
+  return {
+    id: step.id,
+    flowId: step.flowId,
+    stepCode: step.stepCode,
+    stepType: step.stepType,
+    displayCategory: step.displayCategory,
+    displayCategoryLabel: step.displayCategoryLabel,
+    unsupported: !!step.unsupported,
+    unsupportedReason: step.unsupportedReason,
+    travelerActionLabel: step.travelerActionLabel,
+    eventType: step.eventType,
+    elementCode: step.elementCode,
+    elementId: step.elementId,
+    name: pickReadableText(step.name, step.template?.name, humanizeCode(step.stepCode), humanizeCode(step.stepType), '故事互動'),
+    description: pickReadableText(step.description, step.template?.summary, '依照後台配置完成這一步互動。'),
+    triggerType: step.triggerType,
+    mediaAssetId: step.mediaAssetId,
+    mediaAsset: mapStoryMediaAsset(step.mediaAsset),
+    explorationWeightLevel: step.explorationWeightLevel,
+    explorationWeightValue: step.explorationWeightValue,
+    requiredForCompletion: !!step.requiredForCompletion,
+    inheritKey: step.inheritKey,
+    template: step.template
+      ? {
+          id: step.template.id,
+          code: step.template.code,
+          templateType: step.template.templateType,
+          category: step.template.category,
+          name: step.template.name,
+          summary: step.template.summary,
+          riskLevel: step.template.riskLevel,
+        }
+      : undefined,
+    sortOrder: step.sortOrder,
+  }
+}
+
+function mapChapterRuntime(runtime: PublicStoryChapterRuntimeDto): StoryChapterRuntimeItem {
+  const runtimeSteps = Array.isArray(runtime.compiledSteps)
+    ? runtime.compiledSteps
+      .slice()
+      .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
+      .map((step) => mapRuntimeStep(step))
+    : []
+
+  return {
+    chapterId: runtime.chapterId,
+    chapterOrder: runtime.chapterOrder,
+    runtimeStatus: runtime.runtimeStatus,
+    runtimeStatusLabel: runtime.runtimeStatusLabel,
+    compiledStepCount: runtime.compiledStepCount,
+    unsupportedStepCount: runtime.unsupportedStepCount,
+    anchorType: runtime.anchorType,
+    anchorTargetId: runtime.anchorTargetId,
+    anchorTargetCode: runtime.anchorTargetCode,
+    storyModeConfig: runtime.storyModeConfig as Record<string, unknown> | undefined,
+    runtimeSteps,
+  }
+}
+
+function mapStorylineRuntime(runtime: PublicStorylineRuntimeDto): StorylineRuntimeItem {
+  return {
+    runtimeVersion: runtime.runtimeVersion,
+    source: runtime.source,
+    generatedAt: runtime.generatedAt,
+    publishedChapterCount: runtime.publishedChapterCount,
+    unsupportedStepCount: runtime.unsupportedStepCount,
+    storyModeConfig: runtime.storyModeConfig as Record<string, unknown> | undefined,
+    chapters: Array.isArray(runtime.chapters)
+      ? runtime.chapters
+        .slice()
+        .sort((left, right) => (left.chapterOrder || 0) - (right.chapterOrder || 0))
+        .map((chapter) => mapChapterRuntime(chapter))
+      : [],
+  }
+}
+
 function mapStoryMediaAsset(asset?: PublicStoryMediaAssetDto | null): StoryMediaAssetItem | undefined {
   if (!asset) {
     return undefined
@@ -1124,6 +1210,19 @@ function getStoryCatalog(state = loadGameState()) {
       const completedChapters = chapters.filter((chapter) => state.completedChapterIds.includes(chapter.id)).length
       const totalChapters = story.totalChapters || chapters.length || 1
       const mappedChapters = chapters.map((chapter, index) => mapStoryChapter(chapter, index, storyUnlocked, completedChapters))
+      const runtime = story.runtime ? mapStorylineRuntime(story.runtime) : undefined
+      const runtimeChaptersById = new Map((runtime?.chapters || []).map((chapter) => [chapter.chapterId, chapter]))
+      const runtimeAwareChapters = mappedChapters.map((chapter) => {
+        const chapterRuntime = runtimeChaptersById.get(chapter.id)
+        return chapterRuntime
+          ? {
+              ...chapter,
+              runtime: chapterRuntime,
+              runtimeSteps: chapterRuntime.runtimeSteps,
+              runtimeStatus: chapterRuntime.runtimeStatus,
+            }
+          : chapter
+      })
       return {
         id: story.id,
         name: pickReadableText(story.name, story.nameEn, humanizeCode(story.code), `Story ${story.id}`),
@@ -1141,14 +1240,18 @@ function getStoryCatalog(state = loadGameState()) {
         estimatedTime: formatMinutes(story.estimatedMinutes),
         difficulty: sanitizeDifficulty(story.difficulty),
         poiIds: storyPoiIds,
-        chapterTitles: mappedChapters.map((chapter) => chapter.title),
+        chapterTitles: runtimeAwareChapters.map((chapter) => chapter.title),
         progress: Math.round((completedChapters / totalChapters) * 100),
         rewardBadge: pickReadableText(story.rewardBadge, `${pickReadableText(story.name, story.nameEn, 'Story')} badge`),
         locked: !storyUnlocked,
         unlockHint: storyUnlocked ? '' : `Explore ${humanizeCode(primaryCityCode)} to unlock this storyline.`,
-        chapters: mappedChapters,
+        chapters: runtimeAwareChapters,
         cityBindingCodes,
         subMapBindingCodes,
+        runtime,
+        runtimeSyncedAt: story.runtimeSyncedAt,
+        runtimeSource: story.runtimeSource,
+        runtimeStatusText: story.runtimeStatusText,
         moodTags: [
           sanitizeDifficulty(story.difficulty),
           humanizeCode(primaryCityCode),
@@ -1304,6 +1407,52 @@ function getTravelRecommendationProfiles() {
     : []
 }
 
+function mergeStorylineRuntimeIntoCache(
+  storylineId: number,
+  runtime: PublicStorylineRuntimeDto | undefined,
+  source: 'live' | 'fallback',
+) {
+  const existing = loadPublicContent()
+  const statusText = source === 'live' ? '即時故事資料已同步' : '使用本機快取'
+  const syncedAt = new Date().toISOString()
+  const runtimeStoryline = runtime?.storyline
+  const hasExistingStoryline = existing.storylines.some((story) => story.id === storylineId)
+  const nextStorylines = hasExistingStoryline
+    ? existing.storylines.map((story) => {
+        if (story.id !== storylineId) {
+          return story
+        }
+        return {
+          ...story,
+          ...(runtimeStoryline || {}),
+          chapters: runtimeStoryline?.chapters || story.chapters,
+          runtime,
+          runtimeSyncedAt: syncedAt,
+          runtimeSource: source,
+          runtimeStatusText: statusText,
+        }
+      })
+    : runtimeStoryline
+      ? [
+          ...existing.storylines,
+          {
+            ...runtimeStoryline,
+            runtime,
+            runtimeSyncedAt: syncedAt,
+            runtimeSource: source,
+            runtimeStatusText: statusText,
+          },
+        ]
+      : existing.storylines
+
+  savePublicContent({
+    ...existing,
+    storylines: nextStorylines,
+  })
+
+  return getStoryById(storylineId)
+}
+
 export async function refreshPublicContent(locale: PublicLocaleCode = (loadGameState().user.localeCode as PublicLocaleCode) || DEFAULT_PUBLIC_LOCALE) {
   if (USE_MOCK) {
     return loadPublicContent()
@@ -1368,6 +1517,120 @@ export async function refreshPublicContent(locale: PublicLocaleCode = (loadGameS
       travel: travelRuntime,
     },
   })
+}
+
+export async function refreshStorylineRuntime(
+  storylineId: number,
+  locale: PublicLocaleCode = (loadGameState().user.localeCode as PublicLocaleCode) || DEFAULT_PUBLIC_LOCALE,
+): Promise<StorylineItem | undefined> {
+  if (USE_MOCK) {
+    return getStoryById(storylineId)
+  }
+
+  try {
+    const runtime = await api.public.getPublicStorylineRuntime(storylineId, locale)
+    return mergeStorylineRuntimeIntoCache(storylineId, runtime, 'live')
+  } catch (error) {
+    console.warn('Failed to refresh storyline runtime, using cached story.', error)
+    return mergeStorylineRuntimeIntoCache(storylineId, undefined, 'fallback')
+  }
+}
+
+export function getStorylineRuntime(storylineId: number): StorylineRuntimeItem | undefined {
+  return getStoryById(storylineId)?.runtime
+}
+
+function mapStorylineSession(session: PublicStorylineSessionDto): StorySessionItem {
+  return {
+    storylineId: session.storylineId,
+    sessionId: session.sessionId,
+    currentChapterId: session.currentChapterId,
+    status: session.status,
+    startedAt: session.startedAt,
+    lastEventAt: session.lastEventAt,
+    exitedAt: session.exitedAt,
+    eventCount: session.eventCount,
+    exitClearedTemporaryState: session.exitClearedTemporaryState,
+  }
+}
+
+export async function startStorylineRuntimeSession(storylineId: number): Promise<StorySessionItem | undefined> {
+  if (USE_MOCK || !hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous') {
+    return undefined
+  }
+  const session = await api.public.startPublicStorylineSession(storylineId)
+  return mapStorylineSession(session)
+}
+
+export async function exitStorylineRuntimeSession(storylineId: number, sessionId: string): Promise<StorySessionItem | undefined> {
+  if (USE_MOCK || !hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous') {
+    return undefined
+  }
+  const session = await api.public.exitPublicStorylineSession(storylineId, sessionId)
+  return mapStorylineSession(session)
+}
+
+function buildStoryRuntimeClientEventId(input: {
+  storylineId: number
+  chapterId?: number
+  stepId?: number
+  blockId?: number
+  eventType: string
+}) {
+  return [
+    `storyline-${input.storylineId}`,
+    `chapter-${input.chapterId ?? 'none'}`,
+    `step-${input.stepId ?? 'none'}`,
+    `block-${input.blockId ?? 'none'}`,
+    `event-${input.eventType}`,
+  ].join(':')
+}
+
+export async function recordStoryRuntimeEvent(input: {
+  storylineId: number
+  sessionId?: string
+  chapterId?: number
+  stepId?: number
+  blockId?: number
+  eventType: string
+  elementCode?: string
+  elementId?: number
+  payload?: Record<string, unknown>
+}): Promise<void> {
+  if (USE_MOCK || !hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous') {
+    return
+  }
+
+  const clientEventId = buildStoryRuntimeClientEventId(input)
+  const payloadJson = input.payload
+    ? JSON.stringify({
+        ...input.payload,
+        storylineId: input.storylineId,
+        chapterId: input.chapterId,
+        stepId: input.stepId,
+        blockId: input.blockId,
+      })
+    : undefined
+
+  try {
+    const request = {
+      elementId: input.elementId,
+      elementCode: input.elementCode,
+      eventType: input.eventType,
+      eventSource: 'mini_program_story',
+      storylineSessionId: input.sessionId,
+      clientEventId,
+      payloadJson,
+      occurredAt: new Date().toISOString(),
+    }
+    if (input.sessionId) {
+      await api.public.recordPublicStorylineSessionEvent(input.storylineId, input.sessionId, request)
+      return
+    }
+    await api.public.recordPublicExperienceEvent(request)
+  } catch (error) {
+    console.warn('Failed to record story runtime event.', error)
+  }
 }
 
 export function loadGameState(): GameStateSnapshot {

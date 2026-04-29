@@ -484,6 +484,7 @@ export interface PublicStoryChapterDto {
   completionJson?: string
   rewardJson?: string
   sortOrder?: number
+  status?: string
 }
 
 export interface PublicStoryMediaAssetDto {
@@ -557,6 +558,184 @@ export interface PublicStorylineDto {
   totalChapters?: number
   sortOrder?: number
   chapters?: PublicStoryChapterDto[]
+  status?: string
+  runtime?: PublicStorylineRuntimeDto
+  runtimeSyncedAt?: string
+  runtimeSource?: 'live' | 'fallback'
+  runtimeStatusText?: string
+}
+
+export interface PublicExperienceRuntimeTemplateDto {
+  id?: number
+  code?: string
+  templateType?: string
+  category?: string
+  name?: string
+  summary?: string
+  config?: Record<string, unknown> | null
+  riskLevel?: string
+}
+
+export interface PublicStoryModeConfigDto {
+  schemaVersion?: number
+  hideUnrelatedContent?: boolean
+  nearbyRevealEnabled?: boolean
+  nearbyRevealRadiusMeters?: number
+  nearbyRevealMeters?: number
+  currentRouteHighlight?: string
+  currentRouteStyle?: string
+  inactiveRouteStyle?: string
+  clearTemporaryProgressOnExit?: boolean
+  exitResetsSessionProgress?: boolean
+  preservePermanentEvents?: boolean
+  branchSourceType?: string
+  branchInsertPosition?: string
+  branchSkippable?: boolean
+  branchAffectsStoryProgress?: boolean
+  manualBranchPoiIds?: number[]
+  extra?: Record<string, unknown> | null
+}
+
+export interface PublicExperienceRuntimeStepDto {
+  id?: number
+  flowId?: number
+  stepCode?: string
+  stepType?: string
+  displayCategory?: string
+  displayCategoryLabel?: string
+  unsupported?: boolean
+  unsupportedReason?: string
+  travelerActionLabel?: string
+  eventType?: string
+  elementCode?: string
+  elementId?: number
+  name?: string
+  description?: string
+  triggerType?: string
+  triggerConfig?: Record<string, unknown> | null
+  conditionConfig?: Record<string, unknown> | null
+  effectConfig?: Record<string, unknown> | null
+  mediaAssetId?: number
+  mediaAsset?: PublicStoryMediaAssetDto
+  rewardRuleIds?: unknown
+  explorationWeightLevel?: string
+  explorationWeightValue?: number
+  requiredForCompletion?: boolean
+  inheritKey?: string
+  template?: PublicExperienceRuntimeTemplateDto
+  sortOrder?: number
+}
+
+export interface PublicExperienceRuntimeFlowDto {
+  id?: number
+  code?: string
+  flowType?: string
+  mode?: string
+  name?: string
+  description?: string
+  mapPolicy?: Record<string, unknown> | null
+  advancedConfig?: Record<string, unknown> | null
+  steps?: PublicExperienceRuntimeStepDto[]
+}
+
+export interface PublicExperienceRuntimeOverrideDto {
+  id?: number
+  ownerType?: string
+  ownerId?: number
+  targetOwnerType?: string
+  targetOwnerId?: number
+  targetStepCode?: string
+  overrideMode?: string
+  replacementStepId?: number
+  overrideConfig?: Record<string, unknown> | null
+}
+
+export interface PublicStoryChapterRuntimeDto {
+  chapterId: number
+  chapterOrder?: number
+  runtimeStatus?: string
+  runtimeStatusLabel?: string
+  compiledStepCount?: number
+  unsupportedStepCount?: number
+  anchorType?: string
+  anchorTargetId?: number
+  anchorTargetCode?: string
+  overridePolicy?: Record<string, unknown> | null
+  storyModeConfig?: PublicStoryModeConfigDto
+  chapter?: PublicStoryChapterDto
+  inheritedFlow?: PublicExperienceRuntimeFlowDto
+  chapterFlow?: PublicExperienceRuntimeFlowDto
+  overrides?: PublicExperienceRuntimeOverrideDto[]
+  compiledSteps?: PublicExperienceRuntimeStepDto[]
+}
+
+export interface PublicStorylineRuntimeDto {
+  runtimeVersion?: string
+  source?: string
+  generatedAt?: string
+  publishedChapterCount?: number
+  unsupportedStepCount?: number
+  storyline?: PublicStorylineDto
+  storyModeConfig?: PublicStoryModeConfigDto
+  chapters?: PublicStoryChapterRuntimeDto[]
+}
+
+export interface PublicExperienceEventRequestDto {
+  elementId?: number
+  elementCode?: string
+  eventType: string
+  eventSource?: string
+  storylineSessionId?: string
+  clientEventId?: string
+  payloadJson?: string
+  occurredAt?: string
+}
+
+export interface PublicExperienceEventResponseDto {
+  accepted?: boolean
+  eventId?: number
+  userId?: number
+  elementId?: number
+  elementCode?: string
+  eventType?: string
+  storylineSessionId?: string
+}
+
+export interface PublicStorylineSessionDto {
+  storylineId: number
+  sessionId: string
+  currentChapterId?: number
+  status?: string
+  startedAt?: string
+  lastEventAt?: string
+  exitedAt?: string
+  eventCount?: number
+  exitClearedTemporaryState?: boolean
+}
+
+export interface PublicUserExplorationElementDto {
+  elementId?: number
+  elementCode?: string
+  elementType?: string
+  title?: string
+  weightLevel?: string
+  weightValue?: number
+  completed?: boolean
+  includedInCurrentPercentage?: boolean
+  sourceEventId?: number
+  eventOccurredAt?: string
+}
+
+export interface PublicUserExplorationDto {
+  userId?: number
+  scopeType?: string
+  scopeId?: number
+  completedWeight?: number
+  availableWeight?: number
+  completedElementCount?: number
+  availableElementCount?: number
+  progressPercent?: number
+  elements?: PublicUserExplorationElementDto[]
 }
 
 export interface PublicTipArticleDto {
@@ -934,6 +1113,68 @@ async function getPublicStorylines(locale: PublicLocaleCode = DEFAULT_PUBLIC_LOC
   })
 }
 
+async function getPublicStorylineRuntime(storylineId: number, locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE) {
+  return request<PublicStorylineRuntimeDto>({
+    url: `/storylines/${storylineId}/runtime`,
+    query: { locale },
+    loading: false,
+  })
+}
+
+async function startPublicStorylineSession(storylineId: number) {
+  return request<PublicStorylineSessionDto>({
+    url: `/storylines/${storylineId}/sessions/start`,
+    method: 'POST',
+    loading: false,
+  })
+}
+
+async function recordPublicExperienceEvent(data: PublicExperienceEventRequestDto) {
+  return request<PublicExperienceEventResponseDto>({
+    url: '/experience/events',
+    method: 'POST',
+    data,
+    loading: false,
+  })
+}
+
+async function recordPublicStorylineSessionEvent(
+  storylineId: number,
+  sessionId: string,
+  data: PublicExperienceEventRequestDto,
+) {
+  return request<PublicExperienceEventResponseDto>({
+    url: `/storylines/${storylineId}/sessions/${sessionId}/events`,
+    method: 'POST',
+    data,
+    loading: false,
+  })
+}
+
+async function exitPublicStorylineSession(storylineId: number, sessionId: string) {
+  return request<PublicStorylineSessionDto>({
+    url: `/storylines/${storylineId}/sessions/${sessionId}/exit`,
+    method: 'POST',
+    loading: false,
+  })
+}
+
+async function getPublicUserExploration(params?: {
+  locale?: PublicLocaleCode
+  scopeType?: string
+  scopeId?: number
+}) {
+  return request<PublicUserExplorationDto>({
+    url: '/users/me/exploration',
+    query: {
+      locale: params?.locale || DEFAULT_PUBLIC_LOCALE,
+      scopeType: params?.scopeType,
+      scopeId: params?.scopeId,
+    },
+    loading: false,
+  })
+}
+
 async function getPublicTips(locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE) {
   return request<PublicTipArticleDto[]>({
     url: '/tips',
@@ -1229,6 +1470,12 @@ export const api = {
     getPublicSubMaps,
     getPublicPois,
     getPublicStorylines,
+    getPublicStorylineRuntime,
+    startPublicStorylineSession,
+    recordPublicExperienceEvent,
+    recordPublicStorylineSessionEvent,
+    exitPublicStorylineSession,
+    getPublicUserExploration,
     getPublicTips,
     getPublicRewards,
     getPublicRedeemablePrizes,
