@@ -5,6 +5,7 @@ import type { MenuProps } from 'antd';
 import {
   ApartmentOutlined,
   AuditOutlined,
+  BranchesOutlined,
   ClusterOutlined,
   DashboardOutlined,
   DatabaseOutlined,
@@ -46,11 +47,19 @@ function formatRoles(roles?: string[]) {
 }
 
 function resolveSelectedKey(pathname: string) {
+  if (/^\/space\/pois\/[^/]+\/experience/.test(pathname)) {
+    return '/space/poi-experience';
+  }
+  if (/^\/content\/storylines\/[^/]+\/mode/.test(pathname)) {
+    return '/content/storyline-mode';
+  }
+
   const routeKeys = [
     '/dashboard',
     '/space/cities',
     '/space/map-tiles',
     '/space/pois',
+    '/space/poi-experience',
     '/space/indoor-buildings',
     '/space/indoor-rules',
     '/ai',
@@ -62,6 +71,7 @@ function resolveSelectedKey(pathname: string) {
     '/ai/observability',
     '/ai/settings',
     '/content/storylines',
+    '/content/storyline-mode',
     '/content/chapters',
     '/content/chapters/workbench',
     '/content/blocks',
@@ -132,6 +142,11 @@ const DefaultLayout: React.FC = () => {
             label: <Link to="/space/pois">POI 管理</Link>,
           },
           {
+            key: '/space/poi-experience',
+            icon: <RocketOutlined />,
+            label: <Link to="/space/poi-experience">POI 地點體驗工作台</Link>,
+          },
+          {
             key: '/space/indoor-buildings',
             icon: <ApartmentOutlined />,
             label: <Link to="/space/indoor-buildings">室內建築與小地圖</Link>,
@@ -139,7 +154,7 @@ const DefaultLayout: React.FC = () => {
           {
             key: '/space/indoor-rules',
             icon: <AuditOutlined />,
-            label: <Link to="/space/indoor-rules">互動規則治理中心</Link>,
+            label: <Link to="/space/indoor-rules">室內互動治理中心</Link>,
           },
         ],
       },
@@ -195,6 +210,11 @@ const DefaultLayout: React.FC = () => {
             key: '/content/storylines',
             icon: <ApartmentOutlined />,
             label: <Link to="/content/storylines">故事線管理</Link>,
+          },
+          {
+            key: '/content/storyline-mode',
+            icon: <BranchesOutlined />,
+            label: <Link to="/content/storyline-mode">故事路線與章節覆寫</Link>,
           },
           {
             key: '/content/chapters',
@@ -278,12 +298,7 @@ const DefaultLayout: React.FC = () => {
           {
             key: '/users/progress',
             icon: <TeamOutlined />,
-            label: <Link to="/users/progress">用戶管理</Link>,
-          },
-          {
-            key: '/users/story-progress',
-            icon: <UserOutlined />,
-            label: <Link to="/users/story-progress">用戶進度與軌跡</Link>,
+            label: <Link to="/users/progress">用戶與進度工作台</Link>,
           },
         ],
       },
@@ -369,15 +384,7 @@ const DefaultLayout: React.FC = () => {
   const [openKeys, setOpenKeys] = useState<string[]>(routeOpenKeys);
 
   useEffect(() => {
-    setOpenKeys((previous) => {
-      const next = previous.filter((key) => rootMenuKeys.includes(key as (typeof rootMenuKeys)[number]));
-      for (const routeKey of routeOpenKeys) {
-        if (!next.includes(routeKey)) {
-          next.unshift(routeKey);
-        }
-      }
-      return next;
-    });
+    setOpenKeys(routeOpenKeys);
   }, [routeOpenKeys]);
 
   const userMenuItems: MenuProps['items'] = [
@@ -469,9 +476,11 @@ const DefaultLayout: React.FC = () => {
           mode="inline"
           selectedKeys={[selectedKey]}
           openKeys={openKeys}
-          onOpenChange={(keys) =>
-            setOpenKeys(keys.filter((key) => rootMenuKeys.includes(key as (typeof rootMenuKeys)[number])))
-          }
+          onOpenChange={(keys) => {
+            const rootKeys = keys.filter((key) => rootMenuKeys.includes(key as (typeof rootMenuKeys)[number]));
+            const latest = rootKeys.find((key) => !openKeys.includes(key));
+            setOpenKeys(latest ? [latest] : rootKeys.slice(-1));
+          }}
           items={menuItems}
           style={{ borderInlineEnd: 'none', padding: '8px 12px 16px' }}
         />

@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,11 +48,14 @@ public class TranslatorsPythonBridgeAdapter implements TranslationEngineAdapter 
                 translationProperties.getPythonCommand(),
                 scriptPath.toString()
         );
+        processBuilder.environment().put("PYTHONIOENCODING", StandardCharsets.UTF_8.name());
+        processBuilder.environment().put("PYTHONUTF8", "1");
 
         try {
             Process process = processBuilder.start();
-            try (var writer = process.outputWriter()) {
+            try (OutputStreamWriter writer = new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8)) {
                 writer.write(objectMapper.writeValueAsString(payload));
+                writer.flush();
             }
 
             boolean finished = process.waitFor(command.getTimeoutMs(), TimeUnit.MILLISECONDS);
@@ -59,8 +64,8 @@ public class TranslatorsPythonBridgeAdapter implements TranslationEngineAdapter 
                 return failed(command.getEngine(), "translation bridge timed out");
             }
 
-            String stdout = new String(process.getInputStream().readAllBytes());
-            String stderr = new String(process.getErrorStream().readAllBytes());
+            String stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
             Map<String, Object> response = parseResponse(stdout);
             boolean ok = Boolean.TRUE.equals(response.get("ok"));
             String text = valueOf(response.get("text"));

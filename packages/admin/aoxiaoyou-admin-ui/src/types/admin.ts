@@ -1213,6 +1213,7 @@ export interface CityItem {
 }
 
 export interface AdminPoiListItem {
+  id?: number;
   poiId: number;
   cityId: number;
   cityName?: string;
@@ -1555,6 +1556,51 @@ export interface AdminExperienceTemplatePayload {
   sortOrder?: number;
 }
 
+export interface AdminExperienceTemplatePreset {
+  presetCode: string;
+  templateType: string;
+  category?: string;
+  nameZh: string;
+  nameZht?: string;
+  summaryZh?: string;
+  summaryZht?: string;
+  riskLevel?: string;
+  configJson?: string;
+  schemaJson?: string;
+  recommendedTriggerTypes?: string[];
+  recommendedEffectFamilies?: string[];
+}
+
+export interface AdminExperienceTemplateClonePayload {
+  code: string;
+  nameZh: string;
+  nameZht?: string;
+  summaryZh?: string;
+  summaryZht?: string;
+  status?: string;
+}
+
+export interface AdminExperienceTemplateUsageRef {
+  flowId: number;
+  flowCode?: string;
+  flowNameZh?: string;
+  flowType?: string;
+  stepId: number;
+  stepCode?: string;
+  stepNameZh?: string;
+  stepType?: string;
+  triggerType?: string;
+  status?: string;
+}
+
+export interface AdminExperienceTemplateUsage {
+  templateId: number;
+  templateCode?: string;
+  templateNameZh?: string;
+  usageCount: number;
+  flowStepRefs: AdminExperienceTemplateUsageRef[];
+}
+
 export interface AdminExperienceStepItem {
   id: number;
   flowId: number;
@@ -1711,6 +1757,304 @@ export interface AdminExperienceFlowPayload {
   publishedAt?: string | null;
 }
 
+export interface AdminPoiExperienceValidationFinding {
+  severity: string;
+  findingType: string;
+  title: string;
+  description?: string;
+  stepId?: number | null;
+  stepCode?: string | null;
+}
+
+export interface AdminPoiExperienceFlowDraft {
+  code?: string;
+  nameZh?: string;
+  nameEn?: string;
+  nameZht?: string;
+  namePt?: string;
+  descriptionZh?: string;
+  descriptionEn?: string;
+  descriptionZht?: string;
+  descriptionPt?: string;
+  mapPolicyJson?: string;
+  advancedConfigJson?: string;
+  status?: string;
+  sortOrder?: number;
+  publishedAt?: string | null;
+}
+
+export interface AdminPoiExperienceStep extends AdminExperienceStepItem {
+  stepNameZht?: string;
+  descriptionZht?: string;
+}
+
+export interface AdminPoiExperienceStructuredStepPayload {
+  stepCode?: string;
+  stepType?: string;
+  templateId?: number | null;
+  stepNameZh?: string;
+  stepNameZht?: string;
+  stepNameEn?: string;
+  stepNamePt?: string;
+  descriptionZh?: string;
+  descriptionZht?: string;
+  descriptionEn?: string;
+  descriptionPt?: string;
+  triggerType?: string;
+  mediaAssetId?: number | null;
+  explorationWeightLevel?: string;
+  requiredForCompletion?: boolean;
+  status?: string;
+  sortOrder?: number;
+  triggerPreset?: string;
+  triggerRadiusMeters?: number | null;
+  dwellSeconds?: number | null;
+  tapActionCode?: string;
+  afterStepCode?: string;
+  conditionPreset?: string;
+  oncePerUser?: boolean;
+  timeWindowStart?: string;
+  timeWindowEnd?: string;
+  requiredItemCodes?: string[];
+  requiredBadgeCodes?: string[];
+  effectPreset?: string;
+  modalTitle?: string;
+  modalBody?: string;
+  primaryActionLabel?: string;
+  routeCardTypes?: string[];
+  taskCodes?: string[];
+  pickupCodes?: string[];
+  rewardRuleIds?: number[];
+  rewardSummary?: string;
+  fullScreenMediaAssetId?: number | null;
+  audioAssetId?: number | null;
+  advancedJsonEnabled?: boolean;
+  advancedTriggerConfigJson?: string;
+  advancedConditionConfigJson?: string;
+  advancedEffectConfigJson?: string;
+}
+
+export interface AdminPoiExperienceSaveTemplatePayload {
+  code?: string;
+  templateType?: string;
+  category?: string;
+  nameZh?: string;
+  nameZht?: string;
+  nameEn?: string;
+  namePt?: string;
+  summaryZh?: string;
+  summaryZht?: string;
+  summaryEn?: string;
+  summaryPt?: string;
+  riskLevel?: string;
+  status?: string;
+  sortOrder?: number;
+}
+
+export interface AdminPoiExperienceSnapshot {
+  poi: AdminPoiDetail;
+  flow: AdminExperienceFlowItem;
+  binding: AdminExperienceBindingItem;
+  steps: AdminPoiExperienceStep[];
+  templates: AdminExperienceTemplateItem[];
+  validationFindings: AdminPoiExperienceValidationFinding[];
+  publicRuntimePath: string;
+}
+
+export interface AdminStorylineModeRouteStrategy {
+  schemaVersion?: number;
+  hideUnrelatedContent?: boolean;
+  nearbyRevealEnabled?: boolean;
+  nearbyRevealRadiusMeters?: number;
+  nearbyRevealMeters?: number;
+  currentRouteHighlight?: string;
+  currentRouteStyle?: string;
+  inactiveRouteStyle?: string;
+  clearTemporaryProgressOnExit?: boolean;
+  exitResetsSessionProgress?: boolean;
+  preservePermanentEvents?: boolean;
+  branchSourceType?: string;
+  branchInsertPosition?: string;
+  branchSkippable?: boolean;
+  branchAffectsStoryProgress?: boolean;
+  manualBranchPoiIds?: number[];
+  extra?: Record<string, unknown>;
+}
+
+export interface AdminStorylineModeStepSummary {
+  id?: number | null;
+  flowId?: number | null;
+  stepCode?: string;
+  stepType?: string;
+  stepNameZh?: string;
+  stepNameZht?: string;
+  triggerType?: string;
+  mediaAssetId?: number | null;
+  rewardRuleIdsJson?: string;
+  explorationWeightLevel?: string;
+  requiredForCompletion?: boolean;
+  inheritKey?: string;
+  status?: string;
+  sortOrder?: number;
+  overrideMode?: string;
+}
+
+export interface AdminStorylineModeFlowSummary {
+  id?: number | null;
+  code?: string;
+  flowType?: string;
+  mode?: string;
+  nameZh?: string;
+  nameZht?: string;
+  descriptionZh?: string;
+  descriptionZht?: string;
+  status?: string;
+  sortOrder?: number;
+  publishedAt?: string | null;
+  steps?: AdminStorylineModeStepSummary[];
+}
+
+export interface AdminStorylineModeAnchor {
+  anchorType?: string;
+  anchorTargetId?: number | null;
+  anchorTargetCode?: string;
+  anchorLabel?: string;
+  routeOrder?: number;
+  routeSegmentStyle?: string;
+}
+
+export interface AdminStorylineModeOverrideRule {
+  id: number;
+  ownerType?: string;
+  ownerId?: number;
+  targetOwnerType?: string;
+  targetOwnerId?: number | null;
+  targetStepCode?: string;
+  overrideMode?: string;
+  replacementStepId?: number | null;
+  replacementStep?: AdminStorylineModeStepSummary | null;
+  overrideConfigJson?: string;
+  status?: string;
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AdminStorylineModeValidationFinding {
+  severity: string;
+  findingType?: string;
+  title: string;
+  description?: string;
+  chapterId?: number | null;
+  stepId?: number | null;
+  stepCode?: string | null;
+}
+
+export interface AdminStorylineModeChapterRuntime {
+  chapter: AdminStoryChapterItem;
+  anchor?: AdminStorylineModeAnchor | null;
+  inheritedFlow?: AdminStorylineModeFlowSummary | null;
+  chapterFlow?: AdminStorylineModeFlowSummary | null;
+  overrides?: AdminStorylineModeOverrideRule[];
+  compiledStepPreview?: AdminStorylineModeStepSummary[];
+  validationFindings?: AdminStorylineModeValidationFinding[];
+}
+
+export interface AdminStorylineModeSnapshot {
+  storyline: AdminStorylineDetail;
+  chapters: AdminStoryChapterItem[];
+  routeStrategy: AdminStorylineModeRouteStrategy;
+  chapterRuntimes: AdminStorylineModeChapterRuntime[];
+  availableAnchorTypes: string[];
+  availableOverrideModes: string[];
+  validationFindings: AdminStorylineModeValidationFinding[];
+  publicRuntimePath: string;
+}
+
+export interface AdminStorylineModeConfigPayload {
+  hideUnrelatedContent?: boolean;
+  nearbyRevealEnabled?: boolean;
+  nearbyRevealRadiusMeters?: number;
+  currentRouteHighlight?: string;
+  inactiveRouteStyle?: string;
+  clearTemporaryProgressOnExit?: boolean;
+  preservePermanentEvents?: boolean;
+  branchSourceType?: string;
+  branchInsertPosition?: string;
+  branchSkippable?: boolean;
+  branchAffectsStoryProgress?: boolean;
+  manualBranchPoiIds?: number[];
+  advancedJsonEnabled?: boolean;
+  advancedStoryModeConfigJson?: string;
+}
+
+export interface AdminStorylineModeAnchorPayload {
+  anchorType?: string;
+  anchorTargetId?: number | null;
+  anchorTargetCode?: string;
+  anchorLabelOverride?: string;
+  routeOrder?: number;
+  routeSegmentStyle?: string;
+}
+
+export interface AdminStorylineModeOverridePolicyPayload {
+  inheritDefaultFlow?: boolean;
+  disableDefaultArrivalMedia?: boolean;
+  appendStorySpecificRewards?: boolean;
+  advancedJsonEnabled?: boolean;
+  advancedOverridePolicyJson?: string;
+}
+
+export interface AdminStorylineModeReplacementStepDraftPayload {
+  stepId?: number | null;
+  stepCode?: string;
+  stepType?: string;
+  stepNameZh?: string;
+  stepNameZht?: string;
+  stepNameEn?: string;
+  stepNamePt?: string;
+  descriptionZh?: string;
+  descriptionZht?: string;
+  descriptionEn?: string;
+  descriptionPt?: string;
+  triggerType?: string;
+  triggerConfigJson?: string;
+  conditionConfigJson?: string;
+  effectConfigJson?: string;
+  mediaAssetId?: number | null;
+  rewardRuleIds?: number[];
+  explorationWeightLevel?: string;
+  requiredForCompletion?: boolean;
+  inheritKey?: string;
+  status?: string;
+  sortOrder?: number;
+}
+
+export interface AdminStorylineModeOverrideStepPayload {
+  targetStepCode?: string;
+  overrideMode?: string;
+  replacementStepId?: number | null;
+  replacementStepDraft?: AdminStorylineModeReplacementStepDraftPayload;
+  effectPreset?: string;
+  mediaAssetId?: number | null;
+  rewardRuleIds?: number[];
+  pickupCodes?: string[];
+  challengeCode?: string;
+  explorationWeightLevel?: string;
+  sortOrder?: number;
+  status?: string;
+  advancedJsonEnabled?: boolean;
+  advancedOverrideConfigJson?: string;
+}
+
+export interface AdminStorylineModeRuntimePreview {
+  storylineId: number;
+  publicRuntimePath: string;
+  storyModeConfig?: AdminStorylineModeRouteStrategy;
+  chapters?: AdminStorylineModeChapterRuntime[];
+  validationFindings?: AdminStorylineModeValidationFinding[];
+}
+
 export interface AdminExplorationElementItem {
   id: number;
   elementCode: string;
@@ -1763,10 +2107,85 @@ export interface AdminExperienceGovernanceFinding {
   findingType: string;
   title: string;
   description?: string;
+  sourceDomain?: string;
   ownerType?: string;
   ownerId?: number | null;
   flowId?: number | null;
   stepId?: number | null;
+  templateId?: number | null;
+  rewardRuleId?: number | null;
+  itemKey?: string;
+}
+
+export interface AdminExperienceGovernanceQuery {
+  pageNum?: number;
+  pageSize?: number;
+  keyword?: string;
+  cityId?: number;
+  subMapId?: number;
+  poiId?: number;
+  indoorBuildingId?: number;
+  storylineId?: number;
+  storyChapterId?: number;
+  ownerType?: string;
+  templateType?: string;
+  triggerType?: string;
+  effectFamily?: string;
+  rewardType?: string;
+  status?: string;
+  storyOverrideOnly?: boolean;
+  highRiskOnly?: boolean;
+  conflictOnly?: boolean;
+}
+
+export interface AdminExperienceGovernanceItem {
+  itemKey: string;
+  sourceDomain?: string;
+  ownerType?: string;
+  ownerId?: number | null;
+  ownerCode?: string;
+  ownerName?: string;
+  cityId?: number | null;
+  subMapId?: number | null;
+  poiId?: number | null;
+  indoorBuildingId?: number | null;
+  storylineId?: number | null;
+  storyChapterId?: number | null;
+  templateId?: number | null;
+  templateCode?: string;
+  templateNameZh?: string;
+  templateType?: string;
+  flowId?: number | null;
+  flowCode?: string;
+  stepId?: number | null;
+  stepCode?: string;
+  triggerType?: string;
+  effectFamily?: string;
+  rewardType?: string;
+  status?: string;
+  riskLevel?: string;
+  storyOverride?: boolean;
+  conflictCount?: number;
+}
+
+export interface AdminExperienceGovernanceUsageRef {
+  sourceDomain?: string;
+  relationType?: string;
+  ownerType?: string;
+  ownerId?: number | null;
+  ownerName?: string;
+  flowId?: number | null;
+  stepId?: number | null;
+  rewardRuleId?: number | null;
+  indoorNodeId?: number | null;
+  description?: string;
+}
+
+export interface AdminExperienceGovernanceDetail {
+  item: AdminExperienceGovernanceItem;
+  usageRefs: AdminExperienceGovernanceUsageRef[];
+  conflicts: AdminExperienceGovernanceFinding[];
+  rawSummary?: string;
 }
 
 export interface AdminExperienceGovernanceOverview {

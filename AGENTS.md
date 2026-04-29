@@ -15,6 +15,7 @@ Trip of Macau is a brownfield travel mini-program plus admin platform for story-
 - **Database**: MySQL is the primary operational data store for this cutover because the user explicitly wants seeded mock data and fully connected admin/public behavior around the local MySQL setup.
 - **Media**: File/image uploads must go through backend APIs into Tencent COS, with automatic key generation and metadata persistence.
 - **Security**: Secrets must be consumed from local environment or runtime configuration, never hardcoded into tracked files or planning docs.
+- **Text encoding**: All multilingual content, SQL seed data, CSV imports, JSON payloads, and scripted admin/public writes must use UTF-8/utf8mb4 end-to-end. Do not push Chinese text through inline PowerShell literals when a UTF-8 file-based request or SQL import can be used instead.
 - **Verification**: Interfaces must be runnable and actually tested locally against real services before the work is considered complete.
 - **Quality attributes**: High availability, ease of use, extensibility, and performance are first-class constraints, not afterthoughts.
 <!-- GSD:project-end -->

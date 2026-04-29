@@ -10,4 +10,5 @@ public interface AdminSubMapService {
     AdminSubMapResponse createSubMap(AdminSubMapUpsertRequest request);
     AdminSubMapResponse updateSubMap(Long id, AdminSubMapUpsertRequest request);
     AdminSubMapResponse publishSubMap(Long id);
+    AdminSubMapResponse updateSubMapStatus(Long id, String status);
 }

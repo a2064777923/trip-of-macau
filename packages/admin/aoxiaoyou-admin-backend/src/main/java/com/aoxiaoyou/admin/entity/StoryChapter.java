@@ -98,11 +98,38 @@ public class StoryChapter extends BaseEntity {
     @TableField("media_asset_id")
     private Long mediaAssetId;
 
+    @TableField("experience_flow_id")
+    private Long experienceFlowId;
+
+    @TableField("override_policy_json")
+    private String overridePolicyJson;
+
+    @TableField("story_mode_config_json")
+    private String storyModeConfigJson;
+
+    @TableField("anchor_type")
+    private String anchorType;
+
+    @TableField("anchor_target_id")
+    private Long anchorTargetId;
+
+    @TableField("anchor_target_code")
+    private String anchorTargetCode;
+
     @TableField("unlock_type")
     private String unlockType;
 
     @TableField("unlock_param_json")
     private String unlockParamJson;
+
+    @TableField("prerequisite_json")
+    private String prerequisiteJson;
+
+    @TableField("completion_json")
+    private String completionJson;
+
+    @TableField("reward_json")
+    private String rewardJson;
 
     private String status;
 

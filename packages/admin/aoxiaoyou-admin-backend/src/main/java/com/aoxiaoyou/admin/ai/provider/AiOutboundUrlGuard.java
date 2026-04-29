@@ -73,6 +73,18 @@ public class AiOutboundUrlGuard {
         return uri.toString();
     }
 
+    public String validatePublicSourceUrl(String rawUrl, String label) {
+        String effectiveLabel = StringUtils.hasText(label) ? label.trim() : "Public source URL";
+        URI uri = parseUri(rawUrl, effectiveLabel);
+        validateHttpsScheme(uri, effectiveLabel);
+        validatePublicSourceUrlShape(uri, effectiveLabel);
+        String host = normalizeHost(uri, effectiveLabel);
+        validateSpecialUseHostname(host, effectiveLabel);
+        validateLiteralAddressIfPresent(host, effectiveLabel);
+        validateResolvedAddresses(host, effectiveLabel);
+        return uri.toString();
+    }
+
     private URI parseUri(String rawUrl, String label) {
         if (!StringUtils.hasText(rawUrl)) {
             throw new BusinessException(4055, label + "不能為空");
@@ -91,6 +103,12 @@ public class AiOutboundUrlGuard {
     private void validateBaseUrlShape(URI uri) {
         if (StringUtils.hasText(uri.getRawQuery()) || StringUtils.hasText(uri.getRawFragment()) || StringUtils.hasText(uri.getRawUserInfo())) {
             throw new BusinessException(4055, "AI 供應商 Base URL 不能包含查詢參數、片段或帳密資訊");
+        }
+    }
+
+    private void validatePublicSourceUrlShape(URI uri, String label) {
+        if (StringUtils.hasText(uri.getRawFragment()) || StringUtils.hasText(uri.getRawUserInfo())) {
+            throw new BusinessException(4055, label + " cannot include fragments or embedded credentials");
         }
     }
 

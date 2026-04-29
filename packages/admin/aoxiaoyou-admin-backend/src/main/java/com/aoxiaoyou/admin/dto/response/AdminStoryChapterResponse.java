@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -36,11 +37,22 @@ public class AdminStoryChapterResponse {
     private String locationNameZht;
     private String locationNamePt;
     private Long mediaAssetId;
+    private Long experienceFlowId;
+    private String overridePolicyJson;
+    private String storyModeConfigJson;
+    private String anchorType;
+    private Long anchorTargetId;
+    private String anchorTargetCode;
+    private String anchorTargetLabel;
     private String unlockType;
     private String unlockParamJson;
+    private String prerequisiteJson;
+    private String completionJson;
+    private String rewardJson;
     private String status;
     private Integer sortOrder;
     private LocalDateTime publishedAt;
     private String createdAt;
     private String updatedAt;
+    private List<AdminStoryChapterContentBlockLinkResponse> contentBlocks;
 }

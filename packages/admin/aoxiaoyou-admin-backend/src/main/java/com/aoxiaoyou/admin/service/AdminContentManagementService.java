@@ -1,13 +1,16 @@
 package com.aoxiaoyou.admin.service;
 
 import com.aoxiaoyou.admin.common.api.PageResponse;
+import com.aoxiaoyou.admin.dto.request.AdminContentAssetBatchUploadRequest;
 import com.aoxiaoyou.admin.dto.request.AdminContentAssetUploadRequest;
 import com.aoxiaoyou.admin.dto.request.AdminContentAssetUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminNotificationUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminRuntimeSettingUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminStampUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminTipArticleUpsertRequest;
+import com.aoxiaoyou.admin.dto.response.AdminContentAssetBatchUploadResponse;
 import com.aoxiaoyou.admin.dto.response.AdminContentAssetResponse;
+import com.aoxiaoyou.admin.dto.response.AdminContentAssetUsageSummaryResponse;
 import com.aoxiaoyou.admin.dto.response.AdminNotificationResponse;
 import com.aoxiaoyou.admin.dto.response.AdminRuntimeSettingResponse;
 import com.aoxiaoyou.admin.dto.response.AdminStampResponse;
@@ -23,13 +26,25 @@ public interface AdminContentManagementService {
 
     void deleteRuntimeSetting(Long id);
 
-    PageResponse<AdminContentAssetResponse> pageAssets(long pageNum, long pageSize, String assetKind, String status, String keyword);
+    PageResponse<AdminContentAssetResponse> pageAssets(
+            long pageNum,
+            long pageSize,
+            String assetKind,
+            String status,
+            String uploadSource,
+            String processingPolicyCode,
+            String processingStatus,
+            String keyword);
 
-    AdminContentAssetResponse uploadAsset(AdminContentAssetUploadRequest request);
+    AdminContentAssetResponse uploadAsset(AdminContentAssetUploadRequest request, Long adminUserId, String adminUsername);
+
+    AdminContentAssetBatchUploadResponse batchUploadAssets(AdminContentAssetBatchUploadRequest request, Long adminUserId, String adminUsername);
 
     AdminContentAssetResponse createAsset(AdminContentAssetUpsertRequest request);
 
     AdminContentAssetResponse updateAsset(Long id, AdminContentAssetUpsertRequest request);
+
+    AdminContentAssetUsageSummaryResponse getAssetUsages(Long id);
 
     void deleteAsset(Long id);
 

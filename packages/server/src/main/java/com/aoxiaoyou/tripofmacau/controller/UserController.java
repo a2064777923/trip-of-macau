@@ -16,6 +16,7 @@ import com.aoxiaoyou.tripofmacau.dto.response.UserRewardRedemptionResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.UserSessionResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.UserStampProgressResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.UserStateResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.TestModeResponse;
 import com.aoxiaoyou.tripofmacau.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -131,5 +132,11 @@ public class UserController {
             @RequestParam(required = false) String locale
     ) {
         return ApiResponse.success(userService.redeemReward(PublicAuthContext.requireUserId(request), rewardId, locale));
+    }
+
+    @Operation(summary = "Get test mode status for the authenticated user")
+    @GetMapping("/test-mode")
+    public ApiResponse<TestModeResponse> testMode(HttpServletRequest request) {
+        return ApiResponse.success(userService.getTestMode(PublicAuthContext.requireUserId(request)));
     }
 }

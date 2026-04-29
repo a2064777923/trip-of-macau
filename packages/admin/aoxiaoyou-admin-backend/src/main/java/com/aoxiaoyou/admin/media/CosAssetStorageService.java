@@ -46,7 +46,25 @@ public class CosAssetStorageService {
     private final ObjectProvider<COSClient> cosClientProvider;
 
     public StoredAssetMetadata storeAsset(MultipartFile file, String assetKind, String localeCode) {
-        if (file == null || file.isEmpty()) {
+        try {
+            return storeAsset(StoredAssetPayload.builder()
+                    .bytes(file == null ? null : file.getBytes())
+                    .originalFilename(file == null ? null : file.getOriginalFilename())
+                    .contentType(file == null ? null : file.getContentType())
+                    .assetKind(assetKind)
+                    .localeCode(localeCode)
+                    .build());
+        } catch (IOException ex) {
+            throw new BusinessException(5054, "Asset upload payload could not be read");
+        }
+    }
+
+    public StoredAssetMetadata storeAsset(StoredAssetPayload payload) {
+        return storeAsset(payload, null);
+    }
+
+    public StoredAssetMetadata storeAsset(StoredAssetPayload payload, String forcedObjectKey) {
+        if (payload == null || payload.getBytes() == null || payload.getBytes().length == 0) {
             throw new BusinessException(4055, "Asset file is required");
         }
         if (!cosProperties.isEnabled()) {
@@ -59,18 +77,20 @@ public class CosAssetStorageService {
         }
 
         try {
-            byte[] bytes = file.getBytes();
-            String normalizedLocale = StringUtils.hasText(localeCode) ? localeCode.trim() : "";
-            String mimeType = resolveMimeType(file);
-            String objectKey = buildObjectKey(file.getOriginalFilename(), assetKind, normalizedLocale, mimeType);
+            byte[] bytes = payload.getBytes();
+            String normalizedLocale = StringUtils.hasText(payload.getLocaleCode()) ? payload.getLocaleCode().trim() : "";
+            String mimeType = resolveMimeType(payload);
+            String objectKey = StringUtils.hasText(forcedObjectKey)
+                    ? sanitizeObjectKey(forcedObjectKey)
+                    : buildObjectKey(payload.getOriginalFilename(), payload.getAssetKind(), normalizedLocale, mimeType);
             String checksum = sha256(bytes);
             ImageDimensions imageDimensions = extractImageDimensions(bytes);
 
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentLength(bytes.length);
             objectMetadata.setContentType(mimeType);
-            if (StringUtils.hasText(file.getOriginalFilename())) {
-                objectMetadata.setContentDisposition("inline; filename=\"" + sanitizeHeaderFilename(file.getOriginalFilename()) + "\"");
+            if (StringUtils.hasText(payload.getOriginalFilename())) {
+                objectMetadata.setContentDisposition("inline; filename=\"" + sanitizeHeaderFilename(payload.getOriginalFilename()) + "\"");
             }
 
             PutObjectRequest putObjectRequest = new PutObjectRequest(
@@ -96,8 +116,6 @@ public class CosAssetStorageService {
                     .build();
         } catch (CosClientException ex) {
             throw new BusinessException(5053, "COS upload failed: " + ex.getMessage());
-        } catch (IOException ex) {
-            throw new BusinessException(5054, "Asset upload payload could not be read");
         }
     }
 
@@ -159,11 +177,19 @@ public class CosAssetStorageService {
         return pathBuilder.toString();
     }
 
-    private String resolveMimeType(MultipartFile file) {
-        if (StringUtils.hasText(file.getContentType())) {
-            return file.getContentType().trim().toLowerCase(Locale.ROOT);
+    private String sanitizeObjectKey(String objectKey) {
+        String normalized = objectKey.replace("\\", "/").replaceAll("/+", "/");
+        while (normalized.startsWith("/")) {
+            normalized = normalized.substring(1);
         }
-        String guessed = URLConnection.guessContentTypeFromName(file.getOriginalFilename());
+        return normalized;
+    }
+
+    private String resolveMimeType(StoredAssetPayload payload) {
+        if (StringUtils.hasText(payload.getContentType())) {
+            return payload.getContentType().trim().toLowerCase(Locale.ROOT);
+        }
+        String guessed = URLConnection.guessContentTypeFromName(payload.getOriginalFilename());
         return StringUtils.hasText(guessed) ? guessed.toLowerCase(Locale.ROOT) : "application/octet-stream";
     }
 

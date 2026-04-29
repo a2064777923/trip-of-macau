@@ -57,3 +57,16 @@ admin/aoxiaoyou-admin-backend/src/main/resources/application-local.yml
 *.log
 logs/
 admin-frontend/
+
+# Local verification artifacts
+.playwright-cli/*.log
+.playwright-cli/page-*.png
+.playwright-cli/page-*.yml
+output/
+tmp-admin-login.json
+phase*-cos-probe.txt
+
+# Ad-hoc generated local guides; canonical docs live in README.md, docs/, and .planning/
+README_QUICK.md
+START_HERE.md
+LOTTIE_ANIMATION_GUIDE.md

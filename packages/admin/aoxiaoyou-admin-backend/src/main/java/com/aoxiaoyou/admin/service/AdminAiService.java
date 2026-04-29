@@ -10,6 +10,9 @@ import com.aoxiaoyou.admin.dto.request.AdminAiPromptTemplateUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminAiProviderTestRequest;
 import com.aoxiaoyou.admin.dto.request.AdminAiProviderUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminAiQuotaRuleUpsertRequest;
+import com.aoxiaoyou.admin.dto.request.AdminAiVoiceCloneRequest;
+import com.aoxiaoyou.admin.dto.request.AdminAiVoicePreviewRequest;
+import com.aoxiaoyou.admin.dto.request.AdminAiVoiceSyncRequest;
 import com.aoxiaoyou.admin.dto.response.AdminAiCapabilityResponse;
 import com.aoxiaoyou.admin.dto.response.AdminAiGenerationJobResponse;
 import com.aoxiaoyou.admin.dto.response.AdminAiInventoryResponse;
@@ -23,6 +26,8 @@ import com.aoxiaoyou.admin.dto.response.AdminAiProviderSyncJobResponse;
 import com.aoxiaoyou.admin.dto.response.AdminAiProviderTemplateResponse;
 import com.aoxiaoyou.admin.dto.response.AdminAiProviderTestResponse;
 import com.aoxiaoyou.admin.dto.response.AdminAiQuotaRuleResponse;
+import com.aoxiaoyou.admin.dto.response.AdminAiVoicePreviewResponse;
+import com.aoxiaoyou.admin.dto.response.AdminAiVoiceResponse;
 
 import java.util.List;
 
@@ -55,6 +60,31 @@ public interface AdminAiService {
     AdminAiInventoryResponse updateInventory(Long id, AdminAiInventoryUpsertRequest request);
 
     void deleteInventory(Long id);
+
+    List<AdminAiVoiceResponse> listVoices(Long providerId,
+                                          String modelCode,
+                                          String languageCode,
+                                          String sourceType,
+                                          Long currentAdminId,
+                                          List<String> roles);
+
+    List<AdminAiVoiceResponse> syncVoices(Long providerId,
+                                          AdminAiVoiceSyncRequest request,
+                                          Long currentAdminId,
+                                          String currentAdminName,
+                                          List<String> roles);
+
+    AdminAiVoicePreviewResponse previewVoice(AdminAiVoicePreviewRequest request,
+                                             Long currentAdminId,
+                                             String currentAdminName);
+
+    AdminAiVoiceResponse createVoiceClone(AdminAiVoiceCloneRequest request,
+                                          Long currentAdminId,
+                                          String currentAdminName);
+
+    AdminAiVoiceResponse refreshVoice(Long voiceId, Long currentAdminId, List<String> roles);
+
+    void deleteVoice(Long voiceId, Long currentAdminId, List<String> roles);
 
     List<AdminAiPolicyResponse> listPolicies(String capabilityCode);
 

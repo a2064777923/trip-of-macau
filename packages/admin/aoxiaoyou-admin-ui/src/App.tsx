@@ -6,10 +6,12 @@ import DefaultLayout from './layouts/DefaultLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import POIManagement from './pages/POIManagement';
+import POIExperienceWorkbench from './pages/POIExperienceWorkbench';
 import TestAccount from './pages/TestAccount';
 import UserManagement from './pages/UserManagement';
 import UserProgressWorkbench from './pages/UserManagement/UserProgressWorkbench';
 import StorylineManagement from './pages/StorylineManagement';
+import StorylineModeWorkbench from './pages/StorylineModeWorkbench';
 import OperationsManagement from './pages/OperationsManagement';
 import ModulePlaceholder from './pages/ModulePlaceholder';
 import MediaLibraryManagement from './pages/Content/MediaLibraryManagement';
@@ -153,6 +155,8 @@ function App() {
             })}
           />
           <Route path="space/pois" element={<POIManagement />} />
+          <Route path="space/poi-experience" element={<POIExperienceWorkbench />} />
+          <Route path="space/pois/:poiId/experience" element={<POIExperienceWorkbench />} />
           <Route path="space/indoor-buildings" element={<IndoorBuildingManagement />} />
           <Route path="space/ai-navigation" element={<Navigate to="/ai" replace />} />
 
@@ -169,6 +173,8 @@ function App() {
           </Route>
 
           <Route path="content/storylines" element={<StorylineManagement />} />
+          <Route path="content/storyline-mode" element={<StorylineModeWorkbench />} />
+          <Route path="content/storylines/:storylineId/mode" element={<StorylineModeWorkbench />} />
           <Route path="content/chapters" element={<StoryChapterWorkbench />} />
           <Route path="content/chapters/workbench" element={<StoryChapterWorkbench />} />
           <Route path="content/blocks" element={<StoryContentBlockManagement />} />
@@ -204,17 +210,7 @@ function App() {
 
           <Route path="users/progress" element={<UserManagement />} />
           <Route path="users/progress/:userId" element={<UserProgressWorkbench />} />
-          <Route
-            path="users/story-progress"
-            element={placeholder({
-              title: '用戶進度與軌跡',
-              subTitle: '追蹤探索進度、互動日誌、故事完成情況與內容消費軌跡。',
-              tags: ['用戶進度', '操作軌跡', '探索度'],
-              description:
-                '後續會補齊地圖與子地圖探索度、故事線與章節完成度、收集物與任務進度、互動日誌與回放視圖，作為精細化運營入口。',
-              todoItems: ['地圖與子地圖探索度計算', '故事與章節完成進度', '互動日誌與操作軌跡回放'],
-            })}
-          />
+          <Route path="users/story-progress" element={<Navigate to="/users/progress" replace />} />
 
           <Route path="ops/test-console" element={<TestAccount />} />
           <Route path="ops/activities" element={<OperationsManagement />} />

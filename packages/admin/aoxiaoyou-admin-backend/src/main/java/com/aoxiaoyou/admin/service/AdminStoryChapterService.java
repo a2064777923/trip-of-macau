@@ -12,6 +12,8 @@ public interface AdminStoryChapterService {
 
     List<AdminStoryChapterResponse> listByStoryline(Long storylineId);
 
+    AdminStoryChapterResponse detail(Long storylineId, Long chapterId);
+
     AdminStoryChapterResponse create(AdminStoryChapterUpsertRequest.Upsert request);
 
     AdminStoryChapterResponse update(Long chapterId, AdminStoryChapterUpsertRequest.Upsert request);

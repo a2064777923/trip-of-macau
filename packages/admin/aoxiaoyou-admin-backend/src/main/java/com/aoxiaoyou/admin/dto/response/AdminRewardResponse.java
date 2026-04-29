@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -31,9 +32,25 @@ public class AdminRewardResponse {
     private Integer inventoryRedeemed;
     private Integer inventoryRemaining;
     private Long coverAssetId;
+    private String popupPresetCode;
+    private String popupConfigJson;
+    private String displayPresetCode;
+    private String displayConfigJson;
+    private String triggerPresetCode;
+    private String triggerConfigJson;
+    private String exampleContentZh;
+    private String exampleContentEn;
+    private String exampleContentZht;
+    private String exampleContentPt;
     private String status;
     private Integer sortOrder;
     private LocalDateTime publishStartAt;
     private LocalDateTime publishEndAt;
     private LocalDateTime createdAt;
+    private List<Long> storylineBindings;
+    private List<Long> cityBindings;
+    private List<Long> subMapBindings;
+    private List<Long> indoorBuildingBindings;
+    private List<Long> indoorFloorBindings;
+    private List<Long> attachmentAssetIds;
 }

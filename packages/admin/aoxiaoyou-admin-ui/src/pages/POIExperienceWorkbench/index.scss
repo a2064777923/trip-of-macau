@@ -1,0 +1,99 @@
+.poi-experience-workbench {
+  .ant-pro-page-container-children-content {
+    padding-inline: 0;
+  }
+}
+
+.poi-experience-timeline-item,
+.poi-experience-step-card {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.poi-experience-timeline-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 12px;
+
+  &:hover,
+  &.is-active {
+    background: rgba(124, 92, 255, 0.08);
+  }
+}
+
+.poi-experience-group-card {
+  background:
+    radial-gradient(circle at top right, rgba(124, 92, 255, 0.1), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+
+  .ant-card-head {
+    border-bottom: 0;
+  }
+}
+
+.poi-experience-step-card {
+  display: block;
+  padding: 12px 14px;
+  border: 1px solid rgba(124, 92, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 28px rgba(91, 102, 181, 0.08);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+
+  &:hover,
+  &.is-active {
+    border-color: rgba(124, 92, 255, 0.55);
+    box-shadow: 0 18px 36px rgba(91, 102, 181, 0.14);
+    transform: translateY(-1px);
+  }
+}
+
+.poi-experience-editor-card {
+  margin-bottom: 14px;
+  border-color: rgba(124, 92, 255, 0.14);
+
+  .ant-card-head {
+    min-height: 42px;
+    background: linear-gradient(90deg, rgba(124, 92, 255, 0.08), rgba(36, 186, 173, 0.06));
+  }
+}
+
+.poi-experience-advanced {
+  margin-bottom: 16px;
+}
+
+.poi-experience-validation-card {
+  margin-top: 16px;
+  border-color: rgba(36, 186, 173, 0.18);
+}
+
+.codex-form-item-shake {
+  animation: poi-experience-shake 0.32s ease-in-out;
+}
+
+@keyframes poi-experience-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  50% {
+    transform: translateX(5px);
+  }
+
+  75% {
+    transform: translateX(-3px);
+  }
+}

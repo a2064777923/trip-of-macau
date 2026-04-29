@@ -2,7 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Input, Map, ScrollView, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import PageShell from '../../components/PageShell'
+import PoiTriggerModal from '../../components/PoiTriggerModal'
+import TestJoystick from '../../components/TestJoystick'
 import { cosAssetManifest } from '../../constants/assetUrls'
+import { api } from '../../services/api'
+import {
+  updatePoiTriggerState,
+  getPoiTriggerSession,
+} from '../../services/poiTriggerService'
 import {
   CheckinResult,
   getArrivalExperience,
@@ -109,7 +116,17 @@ export default function MapPage() {
   const [inRegion, setInRegion] = useState(true)
   const [heading, setHeading] = useState(0)
   const [userPulseRadius, setUserPulseRadius] = useState(22)
+  
+  // 测试模式状态
+  const [isTestAccount, setIsTestAccount] = useState(false)
+  const [mockLocation, setMockLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  
+  // 探索點触发系统状态
+  const [triggerModalVisible, setTriggerModalVisible] = useState(false)
+  const [triggeredPoi, setTriggeredPoi] = useState<PoiItem | null>(null)
+  
   const audioRef = useRef<any>(null)
+  const locationWatcherRef = useRef<number | null>(null)
 
   const currentCity = useMemo(
     () => cities.find((city) => city.id === currentCityId) || cities[0],
@@ -183,6 +200,43 @@ export default function MapPage() {
     setInRegion(checkRegion(location.latitude, location.longitude, currentCityId, currentSubMapId))
   }, [checkRegion, currentCityId, currentSubMapId, location.latitude, location.longitude])
 
+  // 探索點触发检测
+  useEffect(() => {
+    if (loading || pois.length === 0) return
+
+    const currentLocation = mockLocation || location
+    
+    // 每 2 秒检测一次探索點触发
+    const interval = setInterval(() => {
+      for (const poi of pois) {
+        const result = updatePoiTriggerState(poi, {
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+          accuracy: location.accuracy,
+        })
+
+        if (result.shouldTrigger) {
+          // 触发探索點
+          setTriggeredPoi(poi)
+          setTriggerModalVisible(true)
+          
+          // 播放提示音
+          if (audioRef.current) {
+            audioRef.current.src = 'https://cdn.tripofmacau.com/audio/poi-trigger.mp3'
+            audioRef.current.play()
+          }
+          
+          // 震动反馈
+          Taro.vibrateShort()
+          
+          break // 一次只触发一个探索點
+        }
+      }
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [loading, pois, location, mockLocation])
+
   const bootstrapPage = async () => {
     setLoading(true)
     try {
@@ -192,6 +246,20 @@ export default function MapPage() {
       const nextCityId = nextState.user.currentCityId || 'macau'
       const nextSubMaps = getCitySubMaps(nextCityId)
       const nextSubMapId = nextState.user.currentSubMapId
+
+      // 检测测试模式
+      try {
+        const testMode = await api.user.getUserTestMode()
+        setIsTestAccount(testMode.isTestAccount)
+        if (testMode.mockEnabled && testMode.mockLatitude && testMode.mockLongitude) {
+          setMockLocation({
+            latitude: testMode.mockLatitude,
+            longitude: testMode.mockLongitude,
+          })
+        }
+      } catch (error) {
+        console.warn('Failed to check test mode:', error)
+      }
 
       let nextLocation = fallbackLocation
       try {
@@ -269,6 +337,16 @@ export default function MapPage() {
   }
 
   const handleSwitchCity = async (cityId: string) => {
+    // 禁止切换到其他城市，只能在当前城市的子地图间切换
+    if (cityId !== currentCityId) {
+      Taro.showToast({ 
+        title: '暫不支持切換城市，請在當前城市的子地圖間切換', 
+        icon: 'none',
+        duration: 2000
+      })
+      return
+    }
+    
     try {
       await switchCurrentCity(cityId)
       const nextState = loadGameState()
@@ -329,8 +407,46 @@ export default function MapPage() {
     })
   }
 
+  const handlePoiCheckin = async () => {
+    if (!triggeredPoi) return
+    
+    try {
+      const result = await performMockCheckin(triggeredPoi.id, 'gps')
+      const latestState = loadGameState()
+      setState(latestState)
+      const currentLocation = mockLocation || location
+      refreshNearby(currentLocation.latitude, currentLocation.longitude, location.accuracy, currentCityId, currentSubMapId)
+      return result
+    } catch (error) {
+      console.error('Checkin failed:', error)
+      throw error
+    }
+  }
+
+  const handleMockLocationChange = (newLocation: { latitude: number; longitude: number }) => {
+    setMockLocation(newLocation)
+    setLocation({ ...newLocation, accuracy: location.accuracy })
+    refreshNearby(newLocation.latitude, newLocation.longitude, location.accuracy, currentCityId, currentSubMapId)
+  }
+
+  const handleResetMockLocation = async () => {
+    try {
+      const rawLocation = await Taro.getLocation({ type: 'gcj02' })
+      const realLocation = sanitizeLocation({
+        latitude: rawLocation.latitude,
+        longitude: rawLocation.longitude,
+        accuracy: rawLocation.accuracy || 30,
+      })
+      setMockLocation(null)
+      setLocation(realLocation)
+      refreshNearby(realLocation.latitude, realLocation.longitude, realLocation.accuracy, currentCityId, currentSubMapId)
+    } catch (error) {
+      console.error('Failed to reset location:', error)
+    }
+  }
+
   const centerCoord = selectedPoi
-    ? { latitude: selectedPoi.gcj02Latitude, longitude: selectedPoi.gcj02Longitude }
+    ? { latitude: selectedPoi.latitude, longitude: selectedPoi.longitude }
     : spatialCenter
 
   return (
@@ -341,7 +457,7 @@ export default function MapPage() {
             <View className='map-hero__text'>
               <Text className='map-hero__eyebrow'>城市探索地圖</Text>
               <Text className='map-hero__title'>{currentCity?.name || '澳門探索'}{currentSubMap ? ` · ${currentSubMap.name}` : ''}</Text>
-              <Text className='map-hero__subtitle'>{currentSubMap?.subtitle || currentCity?.subtitle || '從頂層城市進入，再下鑽到子地圖，沿著故事與 POI 持續探索。'}</Text>
+              <Text className='map-hero__subtitle'>{currentSubMap?.subtitle || currentCity?.subtitle || '從頂層城市進入，再下鑽到子地圖，沿著故事與探索點持續探索。'}</Text>
             </View>
             <View className='map-hero__stats'>
               <View className='map-hero__progressCard'>
@@ -357,7 +473,7 @@ export default function MapPage() {
             <Text className='map-hero__storyLabel'>目前故事關聯</Text>
             <Text className='map-hero__storyTitle'>{relatedStory?.name || '尚未選定故事章節'}</Text>
             <Text className='map-hero__storyDesc'>
-              {selectedPoi ? `目前選中的 POI 為「${selectedPoi.name}」，可直接查看其故事內容與打卡回饋。` : '選擇一個 POI，即可查看對應的故事線、路線摘要與互動入口。'}
+              {selectedPoi ? `目前選中的探索點為「${selectedPoi.name}」，可直接查看其故事內容與打卡回饋。` : '選擇一個探索點，即可查看對應的故事線、路線摘要與互動入口。'}
             </Text>
             <Text className='map-hero__storyAction'>前往故事頁</Text>
           </View>
@@ -366,10 +482,10 @@ export default function MapPage() {
 
       <View className='map-shell'>
         <ScrollView className='city-switcher' scrollX>
-          {cities.map((city) => (
+          {cities.filter(city => city.unlocked).map((city) => (
             <View
               key={city.id}
-              className={`city-switcher__item ${currentCityId === city.id ? 'active' : ''} ${city.unlocked ? '' : 'locked'}`}
+              className={`city-switcher__item ${currentCityId === city.id ? 'active' : ''}`}
               onClick={() => void handleSwitchCity(city.id)}
             >
               <Text className='city-switcher__name'>{city.name}</Text>
@@ -400,7 +516,7 @@ export default function MapPage() {
         <View className='map-card'>
           <View className='map-toolbar'>
             <View className='map-search'>
-              <Input className='map-search__input' value={keyword} placeholder='搜尋當前城市或子地圖中的 POI' onInput={handleSearchInput} />
+              <Input className='map-search__input' value={keyword} placeholder='搜尋當前城市或子地圖中的探索點' onInput={handleSearchInput} />
               <Button className='map-search__button' size='mini' onClick={handleRecenter}>回到我的位置</Button>
             </View>
             <View className='map-toolbar__row'>
@@ -408,7 +524,7 @@ export default function MapPage() {
                 {currentCity?.name || '澳門'}
                 {currentSubMap ? ` · ${currentSubMap.name}` : ''}
                 {' · '}
-                {searching ? '正在整理 POI...' : `目前共 ${pois.length} 個 POI`}
+                {searching ? '正在整理探索點...' : `目前共 ${pois.length} 個探索點`}
               </Text>
             </View>
           </View>
@@ -446,8 +562,8 @@ export default function MapPage() {
                 },
                 ...pois.map((poi) => ({
                   id: poi.id,
-                  latitude: poi.gcj02Latitude,
-                  longitude: poi.gcj02Longitude,
+                  latitude: poi.latitude,
+                  longitude: poi.longitude,
                   iconPath: poi.mapIconUrl || poiMarkerIconMap[poi.markerKey || resolvePoiMarkerKey(poi.name, poi.cityId)],
                   width: 44,
                   height: 44,
@@ -470,8 +586,8 @@ export default function MapPage() {
                   strokeWidth: 2,
                 },
                 ...(selectedPoi ? [{
-                  latitude: selectedPoi.gcj02Latitude,
-                  longitude: selectedPoi.gcj02Longitude,
+                  latitude: selectedPoi.latitude,
+                  longitude: selectedPoi.longitude,
                   radius: selectedPoi.triggerRadius || 50,
                   strokeColor: '#ff8ba7',
                   fillColor: 'rgba(255,139,167,0.08)',
@@ -498,7 +614,15 @@ export default function MapPage() {
 
             {!inRegion ? (
               <View className='out-of-region-mask'>
-                <Text className='out-of-region-text'>目前距離此城市 / 子地圖中心較遠，地圖仍可瀏覽，但打卡判定可能不準確。</Text>
+                <View className='out-of-region-overlay' />
+                <View className='out-of-region-content'>
+                  <Text className='out-of-region-icon'>⚠️</Text>
+                  <Text className='out-of-region-title'>您已離開當前區域</Text>
+                  <Text className='out-of-region-text'>目前距離此城市/子地圖中心較遠（超過 30km），地圖仍可瀏覽，但打卡判定可能不準確。</Text>
+                  <Button className='out-of-region-button' size='mini' onClick={handleRecenter}>
+                    返回我的位置
+                  </Button>
+                </View>
               </View>
             ) : null}
           </View>
@@ -507,7 +631,7 @@ export default function MapPage() {
         <View className='explore-grid'>
           <View className='explore-panel nearby-panel'>
             <View className='panel-header'>
-              <Text className='panel-title'>附近 POI</Text>
+              <Text className='panel-title'>附近探索點</Text>
               <Text className='panel-subtitle'>{loading ? '正在載入...' : `${pois.length} 個可探索點位`}</Text>
             </View>
             <ScrollView scrollY className='poi-scroll'>
@@ -531,7 +655,7 @@ export default function MapPage() {
 
           <View className='explore-panel detail-panel'>
             <View className='panel-header'>
-              <Text className='panel-title'>當前 POI</Text>
+              <Text className='panel-title'>當前探索點</Text>
               <Text className='panel-subtitle'>查看故事關聯、路線摘要與打卡入口。</Text>
             </View>
             {selectedPoi ? (
@@ -595,7 +719,7 @@ export default function MapPage() {
                 </View>
               </>
             ) : (
-              <Text className='empty-tip'>請先選擇一個 POI。</Text>
+              <Text className='empty-tip'>請先選擇一個探索點。</Text>
             )}
           </View>
         </View>
@@ -612,6 +736,28 @@ export default function MapPage() {
           <Text className='reward-banner__desc'>{emergencyContact.name} · {emergencyContact.phone}</Text>
         </View>
       </View>
+
+      {/* POI 触发弹窗 */}
+      {triggeredPoi && (
+        <PoiTriggerModal
+          poi={triggeredPoi}
+          visible={triggerModalVisible}
+          onClose={() => {
+            setTriggerModalVisible(false)
+            setTriggeredPoi(null)
+          }}
+          onCheckin={handlePoiCheckin}
+        />
+      )}
+
+      {/* 测试摇杆（仅测试账号可见） */}
+      {isTestAccount && (
+        <TestJoystick
+          currentLocation={mockLocation || location}
+          onLocationChange={handleMockLocationChange}
+          onReset={handleResetMockLocation}
+        />
+      )}
     </PageShell>
   )
 }

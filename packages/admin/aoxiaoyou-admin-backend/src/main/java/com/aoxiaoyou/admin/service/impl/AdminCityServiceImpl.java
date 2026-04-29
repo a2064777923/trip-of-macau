@@ -1,6 +1,8 @@
 package com.aoxiaoyou.admin.service.impl;
 
 import com.aoxiaoyou.admin.common.api.PageResponse;
+import com.aoxiaoyou.admin.common.content.ContentLifecycleStatusSupport;
+import com.aoxiaoyou.admin.common.enums.ContentStatus;
 import com.aoxiaoyou.admin.common.exception.BusinessException;
 import com.aoxiaoyou.admin.common.spatial.CoordinateNormalizationResult;
 import com.aoxiaoyou.admin.common.spatial.CoordinateNormalizationService;
@@ -63,12 +65,8 @@ public class AdminCityServiceImpl implements AdminCityService {
     public AdminCityResponse createCity(AdminCityUpsertRequest request) {
         City city = new City();
         applyRequest(city, request == null ? null : request.getUpsert());
-        if (!StringUtils.hasText(city.getStatus())) {
-            city.setStatus("draft");
-        }
-        if ("published".equals(city.getStatus()) && city.getPublishedAt() == null) {
-            city.setPublishedAt(LocalDateTime.now());
-        }
+        city.setStatus(ContentStatus.DRAFT.getCode());
+        city.setPublishedAt(null);
         cityMapper.insert(city);
         adminSpatialAssetLinkService.syncLinks("city", city.getId(), request == null || request.getUpsert() == null
                 ? Collections.emptyList()
@@ -80,9 +78,6 @@ public class AdminCityServiceImpl implements AdminCityService {
     public AdminCityResponse updateCity(Long id, AdminCityUpsertRequest request) {
         City city = requireCity(id);
         applyRequest(city, request == null ? null : request.getUpsert());
-        if ("published".equals(city.getStatus()) && city.getPublishedAt() == null) {
-            city.setPublishedAt(LocalDateTime.now());
-        }
         cityMapper.updateById(city);
         adminSpatialAssetLinkService.syncLinks("city", id, request == null || request.getUpsert() == null
                 ? Collections.emptyList()
@@ -92,11 +87,15 @@ public class AdminCityServiceImpl implements AdminCityService {
 
     @Override
     public AdminCityResponse publishCity(Long id) {
+        return updateCityStatus(id, ContentStatus.PUBLISHED.getCode());
+    }
+
+    @Override
+    public AdminCityResponse updateCityStatus(Long id, String status) {
         City city = requireCity(id);
-        city.setStatus("published");
-        city.setPublishedAt(LocalDateTime.now());
+        applyLifecycleStatus(city, ContentLifecycleStatusSupport.parseManuallyOperableStatus(status));
         cityMapper.updateById(city);
-        return toResponse(city, true);
+        return toResponse(requireCity(id), true);
     }
 
     private City requireCity(Long id) {
@@ -135,8 +134,6 @@ public class AdminCityServiceImpl implements AdminCityService {
         city.setPopupConfigJson(request.getPopupConfigJson());
         city.setDisplayConfigJson(request.getDisplayConfigJson());
         city.setSortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder());
-        city.setStatus(StringUtils.hasText(request.getStatus()) ? request.getStatus() : "draft");
-        city.setPublishedAt(parseDateTime(request.getPublishedAt()));
     }
 
     private void applyCenterCoordinates(City city, AdminCityUpsertRequest.Upsert request) {
@@ -165,6 +162,11 @@ public class AdminCityServiceImpl implements AdminCityService {
 
     private LocalDateTime parseDateTime(String value) {
         return StringUtils.hasText(value) ? LocalDateTime.parse(value) : null;
+    }
+
+    private void applyLifecycleStatus(City city, ContentStatus status) {
+        city.setStatus(status.getCode());
+        city.setPublishedAt(ContentLifecycleStatusSupport.resolvePublishedAt(status, city.getPublishedAt()));
     }
 
     private AdminCityResponse toResponse(City city, boolean includeChildren) {

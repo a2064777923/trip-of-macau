@@ -27,6 +27,12 @@ public class AiProviderInventory extends BaseEntity {
     @TableField("external_id")
     private String externalId;
 
+    @TableField("provider_voice_code")
+    private String providerVoiceCode;
+
+    @TableField("parent_inventory_code")
+    private String parentInventoryCode;
+
     @TableField("display_name")
     private String displayName;
 
@@ -38,6 +44,9 @@ public class AiProviderInventory extends BaseEntity {
 
     @TableField("capability_codes_json")
     private String capabilityCodesJson;
+
+    @TableField("language_codes_json")
+    private String languageCodesJson;
 
     @TableField("sync_strategy")
     private String syncStrategy;
@@ -65,6 +74,27 @@ public class AiProviderInventory extends BaseEntity {
 
     @TableField("audio_price_per_minute")
     private BigDecimal audioPricePerMinute;
+
+    @TableField("preview_url")
+    private String previewUrl;
+
+    @TableField("preview_text")
+    private String previewText;
+
+    @TableField("owner_admin_id")
+    private Long ownerAdminId;
+
+    @TableField("owner_admin_name")
+    private String ownerAdminName;
+
+    @TableField("source_asset_id")
+    private Long sourceAssetId;
+
+    @TableField("clone_status")
+    private String cloneStatus;
+
+    @TableField("last_verified_at")
+    private LocalDateTime lastVerifiedAt;
 
     @TableField("feature_flags_json")
     private String featureFlagsJson;

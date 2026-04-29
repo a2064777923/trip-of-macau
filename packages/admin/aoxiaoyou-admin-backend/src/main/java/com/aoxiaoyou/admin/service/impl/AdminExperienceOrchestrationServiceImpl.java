@@ -26,7 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -220,6 +222,11 @@ public class AdminExperienceOrchestrationServiceImpl implements AdminExperienceO
     private final ObjectMapper objectMapper;
 
     @Override
+    public List<AdminExperienceResponse.TemplatePreset> listTemplatePresets() {
+        return buildTemplatePresets();
+    }
+
+    @Override
     public PageResponse<AdminExperienceResponse.Template> pageTemplates(long pageNum, long pageSize, String keyword, String templateType, String status) {
         Page<ExperienceTemplate> page = templateMapper.selectPage(new Page<>(pageNum, pageSize),
                 activeTemplateQuery()
@@ -243,6 +250,61 @@ public class AdminExperienceOrchestrationServiceImpl implements AdminExperienceO
         applyTemplate(template, request);
         templateMapper.insert(template);
         return toTemplateResponse(requireTemplate(template.getId()));
+    }
+
+    @Override
+    public AdminExperienceResponse.Template cloneTemplate(Long templateId, AdminExperienceRequest.TemplateClone request) {
+        ExperienceTemplate source = requireTemplate(templateId);
+        AdminExperienceRequest.TemplateUpsert clone = new AdminExperienceRequest.TemplateUpsert();
+        clone.setCode(request.getCode());
+        clone.setTemplateType(source.getTemplateType());
+        clone.setCategory(source.getCategory());
+        clone.setNameZh(request.getNameZh());
+        clone.setNameZht(defaultText(request.getNameZht(), request.getNameZh()));
+        clone.setSummaryZh(defaultText(request.getSummaryZh(), source.getSummaryZh()));
+        clone.setSummaryZht(defaultText(request.getSummaryZht(), clone.getSummaryZh()));
+        clone.setConfigJson(source.getConfigJson());
+        clone.setSchemaJson(source.getSchemaJson());
+        clone.setRiskLevel(source.getRiskLevel());
+        clone.setStatus(defaultText(request.getStatus(), STATUS_DRAFT));
+        clone.setSortOrder(source.getSortOrder());
+        return createTemplate(clone);
+    }
+
+    @Override
+    public AdminExperienceResponse.TemplateUsage getTemplateUsage(Long templateId) {
+        ExperienceTemplate template = requireTemplate(templateId);
+        List<ExperienceFlowStep> steps = stepMapper.selectList(activeStepQuery()
+                .eq(ExperienceFlowStep::getTemplateId, templateId));
+        Map<Long, ExperienceFlow> flowsById = loadFlowsById(steps.stream().map(ExperienceFlowStep::getFlowId).toList());
+        List<AdminExperienceResponse.TemplateUsageRef> refs = steps.stream()
+                .filter(step -> flowsById.containsKey(step.getFlowId()))
+                .sorted(Comparator.comparing(ExperienceFlowStep::getFlowId, Comparator.nullsLast(Long::compareTo))
+                        .thenComparing(ExperienceFlowStep::getSortOrder, Comparator.nullsLast(Integer::compareTo))
+                        .thenComparing(ExperienceFlowStep::getId, Comparator.nullsLast(Long::compareTo)))
+                .map(step -> {
+                    ExperienceFlow flow = flowsById.get(step.getFlowId());
+                    return AdminExperienceResponse.TemplateUsageRef.builder()
+                            .flowId(flow.getId())
+                            .flowCode(flow.getCode())
+                            .flowNameZh(flow.getNameZh())
+                            .flowType(flow.getFlowType())
+                            .stepId(step.getId())
+                            .stepCode(step.getStepCode())
+                            .stepNameZh(step.getStepNameZh())
+                            .stepType(step.getStepType())
+                            .triggerType(step.getTriggerType())
+                            .status(step.getStatus())
+                            .build();
+                })
+                .toList();
+        return AdminExperienceResponse.TemplateUsage.builder()
+                .templateId(template.getId())
+                .templateCode(template.getCode())
+                .templateNameZh(template.getNameZh())
+                .usageCount((long) refs.size())
+                .flowStepRefs(refs)
+                .build();
     }
 
     @Override
@@ -937,6 +999,53 @@ public class AdminExperienceOrchestrationServiceImpl implements AdminExperienceO
                         .description("tiny / small / medium / large / core 由系統映射為 1 / 2 / 3 / 5 / 8，不直接讓運營輸入固定百分比。")
                         .build()
         );
+    }
+
+    private List<AdminExperienceResponse.TemplatePreset> buildTemplatePresets() {
+        List<AdminExperienceResponse.TemplatePreset> presets = new ArrayList<>();
+        presets.add(templatePreset("presentation.fullscreen_media", "presentation", "fullscreen_media", "全屏媒體演出", "全屏媒體演出", "播放全屏影片、Lottie、音效或劇情圖，用於到達、通關與獎勵時刻。", "high", List.of("proximity", "story_mode_enter", "task_complete"), List.of("fullscreen_media", "audio")));
+        presets.add(templatePreset("presentation.rich_popup", "presentation", "rich_popup", "圖文彈窗展示", "圖文彈窗展示", "顯示景點簡介、史實依據、行動按鈕與補充內容。", "normal", List.of("tap", "content_complete"), List.of("show_modal")));
+        presets.add(templatePreset("presentation.lottie_overlay", "presentation", "lottie_overlay", "Lottie 地圖疊加動畫", "Lottie 地圖疊加動畫", "在地圖或樓層圖上顯示可動態出現的 Lottie 疊加物。", "normal", List.of("proximity", "tap"), List.of("lottie_overlay")));
+        presets.add(templatePreset("presentation.map_overlay", "presentation", "map_overlay", "地圖疊加物標記", "地圖疊加物標記", "用於紅點、拾取物、任務點、路徑提示與 POI 視覺標記。", "normal", List.of("tap", "tap_sequence"), List.of("map_overlay")));
+        presets.add(templatePreset("display_condition.always", "display_condition", "always", "恆常顯示條件", "恆常顯示條件", "無需特殊條件即可顯示，適合普通 POI 入口與基礎提示。", "low", List.of("manual"), List.of("visibility")));
+        presets.add(templatePreset("display_condition.proximity_radius", "display_condition", "proximity", "靠近範圍顯示條件", "靠近範圍顯示條件", "進入指定半徑後顯示內容或解鎖互動。", "normal", List.of("proximity"), List.of("visibility")));
+        presets.add(templatePreset("display_condition.dwell_duration", "display_condition", "dwell", "停留時長顯示條件", "停留時長顯示條件", "在場景內停留一定秒數後顯示隱藏內容。", "normal", List.of("dwell"), List.of("visibility")));
+        presets.add(templatePreset("trigger_condition.tap", "trigger_condition", "tap", "點擊觸發條件", "點擊觸發條件", "點擊 POI、標記、疊加物或按鈕後觸發效果。", "low", List.of("tap"), List.of("trigger")));
+        presets.add(templatePreset("trigger_condition.tap_sequence", "trigger_condition", "tap_sequence", "依序點擊觸發條件", "依序點擊觸發條件", "需要按指定順序點擊多個疊加物或標記。", "normal", List.of("tap_sequence"), List.of("trigger")));
+        presets.add(templatePreset("trigger_condition.photo_checkin", "trigger_condition", "photo_checkin", "拍照打卡觸發條件", "拍照打卡觸發條件", "拍攝指定對象或完成照片上報後觸發任務進度。", "high", List.of("photo_checkin"), List.of("trigger", "task")));
+        presets.add(templatePreset("task_gameplay.quiz", "task_gameplay", "quiz", "問答挑戰玩法", "問答挑戰玩法", "完成歷史、地點或故事知識問答，支持全答對通關。", "normal", List.of("tap", "task_complete"), List.of("quiz")));
+        presets.add(templatePreset("task_gameplay.cyber_incense", "task_gameplay", "cyber_incense", "賽博點香互動", "賽博點香互動", "以小遊戲形式完成點香祈願，可接獎勵、稱號與動畫演出。", "normal", List.of("tap_action"), List.of("mini_game")));
+        presets.add(templatePreset("trigger_effect.grant_collectible", "trigger_effect", "grant_collectible", "發放收集物效果", "發放收集物效果", "互動成功後把收集物寫入背包並產生探索事件。", "normal", List.of("tap", "pickup_complete"), List.of("grant_collectible")));
+        presets.add(templatePreset("trigger_effect.grant_badge_title", "trigger_effect", "grant_badge_title", "發放徽章與稱號效果", "發放徽章與稱號效果", "通關、全收集或隱藏挑戰成功後發放徽章與榮譽稱號。", "high", List.of("task_complete", "pickup_complete"), List.of("grant_badge", "grant_title")));
+        presets.add(templatePreset("trigger_effect.grant_game_reward", "trigger_effect", "grant_game_reward", "發放遊戲內獎勵效果", "發放遊戲內獎勵效果", "發放金币、城市限定物品碎片或其他遊戲內資源。", "high", List.of("task_complete"), List.of("grant_reward")));
+        presets.add(templatePreset("reward_presentation.fullscreen_unlock", "reward_presentation", "fullscreen_unlock", "全屏解鎖獎勵演出", "全屏解鎖獎勵演出", "獲得稀有稱號、秘寶或章節通關時播放全屏動畫和音效。", "high", List.of("task_complete", "story_mode_enter"), List.of("fullscreen_reward")));
+        return presets;
+    }
+
+    private AdminExperienceResponse.TemplatePreset templatePreset(
+            String code,
+            String templateType,
+            String category,
+            String nameZh,
+            String nameZht,
+            String summary,
+            String riskLevel,
+            List<String> triggerTypes,
+            List<String> effectFamilies) {
+        return AdminExperienceResponse.TemplatePreset.builder()
+                .presetCode(code)
+                .templateType(templateType)
+                .category(category)
+                .nameZh(nameZh)
+                .nameZht(nameZht)
+                .summaryZh(summary)
+                .summaryZht(summary)
+                .riskLevel(riskLevel)
+                .configJson("{\"schemaVersion\":1,\"presetCode\":\"" + code + "\",\"category\":\"" + category + "\"}")
+                .schemaJson("{\"schemaVersion\":1,\"required\":[\"schemaVersion\",\"presetCode\"],\"advancedJsonAllowed\":true}")
+                .recommendedTriggerTypes(triggerTypes)
+                .recommendedEffectFamilies(effectFamilies)
+                .build();
     }
 
     private List<AdminExperienceResponse.VocabularyOption> buildVocabularyOptions(

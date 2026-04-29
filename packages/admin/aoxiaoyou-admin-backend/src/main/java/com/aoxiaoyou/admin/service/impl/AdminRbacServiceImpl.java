@@ -1,7 +1,9 @@
 package com.aoxiaoyou.admin.service.impl;
 
 import com.aoxiaoyou.admin.common.api.PageResponse;
+import com.aoxiaoyou.admin.common.exception.BusinessException;
 import com.aoxiaoyou.admin.dto.request.AdminRoleCreateRequest;
+import com.aoxiaoyou.admin.dto.request.AdminUserUpdateRequest;
 import com.aoxiaoyou.admin.dto.response.AdminUserResponse;
 import com.aoxiaoyou.admin.dto.response.PermissionResponse;
 import com.aoxiaoyou.admin.dto.response.RoleResponse;
@@ -43,6 +45,34 @@ public class AdminRbacServiceImpl implements AdminRbacService {
         Page<AdminUserResponse> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         result.setRecords(page.getRecords().stream().map(this::mapUser).toList());
         return PageResponse.of(result);
+    }
+
+    @Override
+    public AdminUserResponse updateAdminUser(Long adminId, AdminUserUpdateRequest request) {
+        SysAdmin admin = sysAdminMapper.selectById(adminId);
+        if (admin == null) {
+            throw new BusinessException(4041, "Admin account not found");
+        }
+        if (request == null) {
+            throw new BusinessException(4001, "Admin user update request is required");
+        }
+        if (request.getDisplayName() != null) {
+            admin.setNickname(request.getDisplayName());
+        }
+        if (request.getEmail() != null) {
+            admin.setEmail(request.getEmail());
+        }
+        if (request.getPhone() != null) {
+            admin.setPhone(request.getPhone());
+        }
+        if (request.getStatus() != null) {
+            admin.setStatus(request.getStatus());
+        }
+        if (request.getAllowLosslessUpload() != null) {
+            admin.setAllowLosslessUpload(request.getAllowLosslessUpload());
+        }
+        sysAdminMapper.updateById(admin);
+        return mapUser(sysAdminMapper.selectById(adminId));
     }
 
     @Override
@@ -112,8 +142,9 @@ public class AdminRbacServiceImpl implements AdminRbacService {
                 .email(item.getEmail())
                 .phone(item.getPhone())
                 .avatarUrl(item.getAvatarUrl())
-                .department(item.getStatus() != null && item.getStatus().equals("active") ? "系统管理" : "未分组")
+                .department("active".equalsIgnoreCase(item.getStatus()) ? "系統管理" : "未啟用")
                 .isSuperuser("admin".equals(item.getUsername()) ? 1 : 0)
+                .allowLosslessUpload(Boolean.TRUE.equals(item.getAllowLosslessUpload()))
                 .status(item.getStatus())
                 .lastLoginAt(item.getLastLoginAt())
                 .lastLoginIp(item.getLastLoginIp())

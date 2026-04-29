@@ -36,6 +36,14 @@ public class AdminStoryChapterController {
         return ApiResponse.success(adminStoryChapterService.listByStoryline(storylineId));
     }
 
+    @Operation(summary = "查詢單個故事章節")
+    @GetMapping("/{chapterId}")
+    public ApiResponse<AdminStoryChapterResponse> detail(
+            @PathVariable Long storylineId,
+            @PathVariable Long chapterId) {
+        return ApiResponse.success(adminStoryChapterService.detail(storylineId, chapterId));
+    }
+
     @Operation(summary = "创建故事章节")
     @PostMapping
     public ApiResponse<AdminStoryChapterResponse> create(

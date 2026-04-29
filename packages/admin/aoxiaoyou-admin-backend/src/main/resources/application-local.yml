@@ -24,3 +24,6 @@ app:
   translation:
     bridge-enabled: ${APP_TRANSLATION_BRIDGE_ENABLED:true}
     bridge-script-path: ${APP_TRANSLATION_BRIDGE_SCRIPT_PATH:../../../scripts/local/translation/translators_bridge.py}
+  ai:
+    secret-encryption-password: ${APP_AI_SECRET_ENCRYPTION_PASSWORD:}
+    secret-encryption-salt: ${APP_AI_SECRET_ENCRYPTION_SALT:}

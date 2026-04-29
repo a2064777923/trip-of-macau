@@ -22,7 +22,9 @@ import com.aoxiaoyou.tripofmacau.dto.response.UserRewardRedemptionResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.UserSessionResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.UserStampProgressResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.UserStateResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.TestModeResponse;
 import com.aoxiaoyou.tripofmacau.entity.City;
+import com.aoxiaoyou.tripofmacau.entity.TestAccount;
 import com.aoxiaoyou.tripofmacau.entity.Poi;
 import com.aoxiaoyou.tripofmacau.entity.Reward;
 import com.aoxiaoyou.tripofmacau.entity.RewardRedemption;
@@ -94,6 +96,7 @@ public class UserServiceImpl implements UserService {
     private final ObjectMapper objectMapper;
     private final JwtUtil jwtUtil;
     private final WechatAuthService wechatAuthService;
+    private final com.aoxiaoyou.tripofmacau.service.TestAccountService testAccountService;
 
     @Value("${app.trigger.cooldown-seconds:1800}")
     private long checkinCooldownSeconds;
@@ -948,5 +951,26 @@ public class UserServiceImpl implements UserService {
             this.zht = zht;
             this.pt = pt;
         }
+    }
+    
+    @Override
+    public TestModeResponse getTestMode(Long userId) {
+        TestAccount testAccount = testAccountService.getByUserId(userId);
+        
+        if (testAccount == null) {
+            return TestModeResponse.builder()
+                    .isTestAccount(false)
+                    .mockEnabled(false)
+                    .build();
+        }
+        
+        return TestModeResponse.builder()
+                .isTestAccount(true)
+                .testGroup(testAccount.getTestGroup())
+                .mockEnabled(testAccount.getMockEnabled() != null && testAccount.getMockEnabled())
+                .mockLatitude(testAccount.getMockLatitude())
+                .mockLongitude(testAccount.getMockLongitude())
+                .mockPoiId(testAccount.getMockPoiId())
+                .build();
     }
 }

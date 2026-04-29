@@ -32,8 +32,26 @@ public class ContentAsset extends BaseEntity {
     @TableField("mime_type")
     private String mimeType;
 
+    @TableField("animation_subtype")
+    private String animationSubtype;
+
+    @TableField("poster_asset_id")
+    private Long posterAssetId;
+
+    @TableField("fallback_asset_id")
+    private Long fallbackAssetId;
+
+    @TableField("default_loop")
+    private Boolean defaultLoop;
+
+    @TableField("default_autoplay")
+    private Boolean defaultAutoplay;
+
     @TableField("locale_code")
     private String localeCode;
+
+    @TableField("original_filename")
+    private String originalFilename;
 
     @TableField("file_size_bytes")
     private Long fileSizeBytes;

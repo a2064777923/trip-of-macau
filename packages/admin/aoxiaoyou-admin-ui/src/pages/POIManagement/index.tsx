@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@ant-design/pro-components';
 import { useRequest } from 'ahooks';
 import {
@@ -40,13 +41,17 @@ import SpatialAssetPickerField from '../../components/spatial/SpatialAssetPicker
 import SpatialAttachmentListField from '../../components/spatial/SpatialAttachmentListField';
 import SpatialCoordinateFieldGroup from '../../components/spatial/SpatialCoordinateFieldGroup';
 import SpatialPopupDisplayField from '../../components/spatial/SpatialPopupDisplayField';
+import { hydrateSpatialAttachmentDrafts, normalizeSpatialAttachmentDrafts } from '../../utils/spatialAttachments';
 
 const { Paragraph, Text } = Typography;
 
 const statusOptions = [
-  { label: '草稿', value: 'draft' },
+  { label: '未發佈', value: 'unpublished' },
+  { label: '編輯中', value: 'editing' },
+  { label: '審批中', value: 'reviewing' },
   { label: '已發布', value: 'published' },
-  { label: '已封存', value: 'archived' },
+  { label: '已下線', value: 'archived' },
+  { label: '已刪除', value: 'deleted' },
 ];
 
 const difficultyOptions = [
@@ -127,10 +132,22 @@ function renderStatus(status?: string) {
   if (status === 'published') {
     return <Tag color="green">已發布</Tag>;
   }
-  if (status === 'archived') {
-    return <Tag>已封存</Tag>;
+  if (status === 'unpublished') {
+    return <Tag>未發佈</Tag>;
   }
-  return <Tag color="gold">草稿</Tag>;
+  if (status === 'editing' || status === 'draft') {
+    return <Tag color="gold">編輯中</Tag>;
+  }
+  if (status === 'reviewing') {
+    return <Tag color="processing">審批中</Tag>;
+  }
+  if (status === 'archived') {
+    return <Tag>已下線</Tag>;
+  }
+  if (status === 'deleted') {
+    return <Tag color="red">已刪除</Tag>;
+  }
+  return <Tag color="gold">編輯中</Tag>;
 }
 
 function resolveCategoryFields(categoryCode?: string | null) {
@@ -156,9 +173,9 @@ function withPoiDefaults(detail?: Partial<AdminPoiDetail>): Partial<AdminPoiForm
     sourceCoordinateSystem: detail?.sourceCoordinateSystem || 'GCJ02',
     popupConfigJson: detail?.popupConfigJson || defaultPopupConfig,
     displayConfigJson: detail?.displayConfigJson || defaultDisplayConfig,
-    attachments: detail?.attachments || [],
+    attachments: hydrateSpatialAttachmentDrafts(detail?.attachments || []),
     sortOrder: detail?.sortOrder ?? 0,
-    status: detail?.status || 'draft',
+    status: detail?.status || 'unpublished',
     ...resolveCategoryFields(detail?.categoryCode),
     ...detail,
   };
@@ -171,11 +188,13 @@ function buildPoiPayload(values: AdminPoiFormValues): AdminPoiPayload {
 
   return {
     ...rest,
+    attachments: normalizeSpatialAttachmentDrafts(rest.attachments),
     categoryCode: categoryCode || undefined,
   };
 }
 
 const POIManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<{ keyword?: string; cityId?: number; subMapId?: number }>({});
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingPoi, setEditingPoi] = useState<AdminPoiDetail | null>(null);
@@ -198,8 +217,17 @@ const POIManagement: React.FC = () => {
   );
 
   const cities = citiesRequest.data?.data?.list || [];
+  const poiRows = useMemo(
+    () => (poiRequest.data?.data?.list || []).map((poi) => ({ ...poi, id: poi.id ?? poi.poiId })),
+    [poiRequest.data?.data?.list],
+  );
   const selectedCityId = Form.useWatch('cityId', form);
   const selectedCategoryPreset = Form.useWatch('categoryPreset', form);
+  const watchedCode = Form.useWatch('code', form);
+  const watchedNameZht = Form.useWatch('nameZht', form);
+  const watchedNameZh = Form.useWatch('nameZh', form);
+  const watchedNameEn = Form.useWatch('nameEn', form);
+  const watchedSubMapId = Form.useWatch('subMapId', form);
 
   const formSubMaps = useMemo(
     () => cities.find((city) => city.id === selectedCityId)?.subMaps || [],
@@ -209,6 +237,45 @@ const POIManagement: React.FC = () => {
     () => cities.find((city) => city.id === filters.cityId)?.subMaps || [],
     [cities, filters.cityId],
   );
+  const currentCity = useMemo(
+    () => cities.find((city) => city.id === selectedCityId) || null,
+    [cities, selectedCityId],
+  );
+  const currentSubMap = useMemo(
+    () => formSubMaps.find((subMap) => subMap.id === watchedSubMapId) || null,
+    [formSubMaps, watchedSubMapId],
+  );
+  const poiPromptName =
+    watchedNameZht || watchedNameZh || watchedNameEn || watchedCode || pickPoiName(editingPoi);
+  const cityPromptName = pickCityName(currentCity);
+  const subMapPromptName = pickSubMapName(currentSubMap);
+  const coverPromptTitle = `${poiPromptName || 'POI'} 封面`;
+  const iconPromptTitle = `${poiPromptName || 'POI'} 地圖圖標`;
+  const audioPromptTitle = `${poiPromptName || 'POI'} 語音介紹`;
+  const coverPromptText = [
+    `生成 ${poiPromptName || '此 POI'} 的文旅宣傳封面。`,
+    cityPromptName ? `城市：${cityPromptName}。` : null,
+    subMapPromptName ? `子地圖：${subMapPromptName}。` : null,
+    '要求寫實、精緻、具有故事感，適合小程序景點封面與後台資產管理。',
+  ]
+    .filter(Boolean)
+    .join('');
+  const iconPromptText = [
+    `生成 ${poiPromptName || '此 POI'} 的地圖疊加圖標。`,
+    cityPromptName ? `城市：${cityPromptName}。` : null,
+    subMapPromptName ? `子地圖：${subMapPromptName}。` : null,
+    '要求透明背景、構圖集中、辨識度高，適合手機地圖 POI 疊加層。',
+  ]
+    .filter(Boolean)
+    .join('');
+  const audioPromptText = [
+    `為 ${poiPromptName || '此 POI'} 生成 20 至 40 秒的導覽旁白。`,
+    cityPromptName ? `城市：${cityPromptName}。` : null,
+    subMapPromptName ? `子地圖：${subMapPromptName}。` : null,
+    '語氣溫暖清晰，適合旅遊導覽與故事化介紹。',
+  ]
+    .filter(Boolean)
+    .join('');
 
   const columns = useMemo(
     () => [
@@ -259,6 +326,9 @@ const POIManagement: React.FC = () => {
           <Space wrap>
             <Button type="link" icon={<EditOutlined />} onClick={() => void openEdit(record.poiId)}>
               編輯
+            </Button>
+            <Button type="link" onClick={() => navigate(`/space/pois/${record.id}/experience`)}>
+              地點體驗
             </Button>
             <Button type="link" danger icon={<DeleteOutlined />} onClick={() => void handleDelete(record.poiId)}>
               刪除
@@ -371,7 +441,7 @@ const POIManagement: React.FC = () => {
           rowKey="poiId"
           loading={poiRequest.loading}
           columns={columns}
-          dataSource={poiRequest.data?.data?.list || []}
+          dataSource={poiRows}
           pagination={{ pageSize: 10 }}
           locale={{ emptyText: '尚未建立任何 POI' }}
         />
@@ -380,7 +450,7 @@ const POIManagement: React.FC = () => {
       <Drawer
         open={editorOpen}
         width={1180}
-        destroyOnClose
+        destroyOnHidden
         title={editingPoi ? `編輯 POI：${pickPoiName(editingPoi)}` : '新增 POI'}
         onClose={() => setEditorOpen(false)}
         extra={
@@ -528,6 +598,12 @@ const POIManagement: React.FC = () => {
                 required
                 assetKind="image"
                 help="可直接上傳圖片，成功後會自動選取。"
+                defaultCapabilityCode="admin_image_generation"
+                defaultGenerationType="image"
+                defaultPromptTitle={coverPromptTitle}
+                defaultPromptText={coverPromptText}
+                defaultSourceScope="poi.cover_asset"
+                defaultSourceScopeId={editingPoi?.poiId}
               />
             </Col>
             <Col xs={24} md={8}>
@@ -537,6 +613,12 @@ const POIManagement: React.FC = () => {
                 required
                 assetKind="icon"
                 help="可直接上傳 icon / 小圖標，地圖展示會使用這個資源。"
+                defaultCapabilityCode="admin_image_generation"
+                defaultGenerationType="image"
+                defaultPromptTitle={iconPromptTitle}
+                defaultPromptText={iconPromptText}
+                defaultSourceScope="poi.map_icon_asset"
+                defaultSourceScopeId={editingPoi?.poiId}
               />
             </Col>
             <Col xs={24} md={8}>
@@ -545,6 +627,12 @@ const POIManagement: React.FC = () => {
                 label="音訊資源"
                 assetKind="audio"
                 help="可選配語音導覽或現場聲景。"
+                defaultCapabilityCode="admin_tts_generation"
+                defaultGenerationType="tts"
+                defaultPromptTitle={audioPromptTitle}
+                defaultPromptText={audioPromptText}
+                defaultSourceScope="poi.audio_asset"
+                defaultSourceScopeId={editingPoi?.poiId}
               />
             </Col>
           </Row>
@@ -609,3 +697,4 @@ const POIManagement: React.FC = () => {
 };
 
 export default POIManagement;
+

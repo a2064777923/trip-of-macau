@@ -2,6 +2,7 @@ package com.aoxiaoyou.admin.controller;
 
 import com.aoxiaoyou.admin.common.api.ApiResponse;
 import com.aoxiaoyou.admin.common.api.PageResponse;
+import com.aoxiaoyou.admin.dto.request.AdminStatusUpdateRequest;
 import com.aoxiaoyou.admin.dto.request.AdminCityUpsertRequest;
 import com.aoxiaoyou.admin.dto.response.AdminCityResponse;
 import com.aoxiaoyou.admin.service.AdminCityService;
@@ -42,5 +43,11 @@ public class AdminMapController {
     @PutMapping("/cities/{id}/publish")
     public ApiResponse<AdminCityResponse> publishCity(@PathVariable Long id) {
         return ApiResponse.success(cityService.publishCity(id));
+    }
+
+    @PutMapping("/cities/{id}/status")
+    public ApiResponse<AdminCityResponse> updateCityStatus(@PathVariable Long id,
+                                                           @RequestBody AdminStatusUpdateRequest request) {
+        return ApiResponse.success(cityService.updateCityStatus(id, request == null ? null : request.getStatus()));
     }
 }

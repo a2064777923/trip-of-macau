@@ -26,6 +26,7 @@ import {
   EnvironmentOutlined,
   PlusOutlined,
   RadarChartOutlined,
+  StopOutlined,
 } from '@ant-design/icons';
 import {
   createCity,
@@ -34,10 +35,10 @@ import {
   getCities,
   getCityDetail,
   getSubMapDetail,
-  publishCity,
-  publishSubMap,
   suggestSpatialMetadata,
+  updateCityStatus,
   updateCity,
+  updateSubMapStatus,
   updateSubMap,
   type CityItem,
 } from '../../services/api';
@@ -48,13 +49,16 @@ import SpatialAttachmentListField from '../../components/spatial/SpatialAttachme
 import SpatialCoordinateFieldGroup from '../../components/spatial/SpatialCoordinateFieldGroup';
 import SpatialPopupDisplayField from '../../components/spatial/SpatialPopupDisplayField';
 import SpatialUnlockConditionField from '../../components/spatial/SpatialUnlockConditionField';
+import { hydrateSpatialAttachmentDrafts, normalizeSpatialAttachmentDrafts } from '../../utils/spatialAttachments';
 
 const { Paragraph, Text, Title } = Typography;
 
-const statusOptions = [
-  { label: '草稿', value: 'draft' },
+type OperableStatus = 'published' | 'archived';
+
+const statusFilterOptions = [
+  { label: '編輯中', value: 'draft' },
   { label: '已發布', value: 'published' },
-  { label: '已封存', value: 'archived' },
+  { label: '已下線', value: 'archived' },
 ];
 
 const countryOptions = [
@@ -116,10 +120,38 @@ function renderStatus(status?: string) {
   if (status === 'published') {
     return <Tag color="green">已發布</Tag>;
   }
-  if (status === 'archived') {
-    return <Tag>已封存</Tag>;
+  if (status === 'unpublished') {
+    return <Tag>未發佈</Tag>;
   }
-  return <Tag color="gold">草稿</Tag>;
+  if (status === 'editing' || status === 'draft') {
+    return <Tag color="gold">編輯中</Tag>;
+  }
+  if (status === 'reviewing') {
+    return <Tag color="processing">審批中</Tag>;
+  }
+  if (status === 'archived') {
+    return <Tag>已下線</Tag>;
+  }
+  if (status === 'deleted') {
+    return <Tag color="red">已刪除</Tag>;
+  }
+  return <Tag color="gold">編輯中</Tag>;
+}
+
+function isPublished(status?: string) {
+  return status === 'published';
+}
+
+function getNextOperableStatus(status?: string): OperableStatus {
+  return isPublished(status) ? 'archived' : 'published';
+}
+
+function getStatusActionLabel(status?: string) {
+  return isPublished(status) ? '下線' : '發布';
+}
+
+function getStatusSuccessMessage(entityLabel: string, status: OperableStatus) {
+  return `${entityLabel}${status === 'published' ? '已發布' : '已下線'}`;
 }
 
 function withCityDefaults(city?: Partial<CityItem>): Partial<AdminCityPayload> {
@@ -131,9 +163,8 @@ function withCityDefaults(city?: Partial<CityItem>): Partial<AdminCityPayload> {
     sourceCoordinateSystem: city?.sourceCoordinateSystem || 'GCJ02',
     popupConfigJson: city?.popupConfigJson || defaultPopupConfig,
     displayConfigJson: city?.displayConfigJson || defaultDisplayConfig,
-    attachments: city?.attachments || [],
+    attachments: hydrateSpatialAttachmentDrafts(city?.attachments || []),
     sortOrder: city?.sortOrder ?? 0,
-    status: city?.status || 'draft',
     ...city,
   };
 }
@@ -144,9 +175,8 @@ function withSubMapDefaults(subMap?: Partial<AdminSubMapItem>, cityId?: number):
     sourceCoordinateSystem: subMap?.sourceCoordinateSystem || 'GCJ02',
     popupConfigJson: subMap?.popupConfigJson || defaultPopupConfig,
     displayConfigJson: subMap?.displayConfigJson || defaultDisplayConfig,
-    attachments: subMap?.attachments || [],
+    attachments: hydrateSpatialAttachmentDrafts(subMap?.attachments || []),
     sortOrder: subMap?.sortOrder ?? 0,
-    status: subMap?.status || 'draft',
     ...subMap,
   };
 }
@@ -214,11 +244,14 @@ const CityManagement: React.FC = () => {
           <Button type="link" icon={<EditOutlined />} onClick={() => void openSubMapEditor(city, record)}>
             編輯
           </Button>
-          {record.status !== 'published' ? (
-            <Button type="link" icon={<CheckCircleOutlined />} onClick={() => void handlePublishSubMap(record.id)}>
-              發布
-            </Button>
-          ) : null}
+          <Button
+            type="link"
+            danger={isPublished(record.status)}
+            icon={isPublished(record.status) ? <StopOutlined /> : <CheckCircleOutlined />}
+            onClick={() => handleChangeSubMapStatus(record)}
+          >
+            {getStatusActionLabel(record.status)}
+          </Button>
         </Space>
       ),
     },
@@ -311,6 +344,7 @@ const CityManagement: React.FC = () => {
     const values = await cityForm.validateFields();
     const payload: AdminCityPayload = {
       ...values,
+      attachments: normalizeSpatialAttachmentDrafts(values.attachments),
       customCountryName: values.countryCode === 'OTHER' ? values.customCountryName?.trim() : undefined,
     };
 
@@ -333,14 +367,18 @@ const CityManagement: React.FC = () => {
 
   const handleSaveSubMap = async () => {
     const values = await subMapForm.validateFields();
+    const payload: AdminSubMapPayload = {
+      ...values,
+      attachments: normalizeSpatialAttachmentDrafts(values.attachments),
+    };
     if (editingSubMapId) {
-      const response = await updateSubMap(editingSubMapId, values);
+      const response = await updateSubMap(editingSubMapId, payload);
       if (!response.success) {
         throw new Error(response.message || '子地圖更新失敗');
       }
       message.success('子地圖已更新');
     } else {
-      const response = await createSubMap(values);
+      const response = await createSubMap(payload);
       if (!response.success) {
         throw new Error(response.message || '子地圖建立失敗');
       }
@@ -350,25 +388,53 @@ const CityManagement: React.FC = () => {
     await refreshCities();
   };
 
-  const handlePublishCity = async (cityId: number) => {
-    const response = await publishCity(cityId);
-    if (!response.success) {
-      message.error(response.message || '城市發布失敗');
-      return;
-    }
-    message.success('城市已發布');
-    await refreshCities();
-  };
+  function handleChangeCityStatus(city: CityItem) {
+    const targetStatus = getNextOperableStatus(city.status);
+    const cityName = pickCityName(city);
+    Modal.confirm({
+      title: targetStatus === 'published' ? '確認發布城市' : '確認下線城市',
+      content:
+        targetStatus === 'published'
+          ? `「${cityName}」會立即對外可見，是否繼續？`
+          : `「${cityName}」會改為下線，但內容仍會保留在後台，是否繼續？`,
+      okText: targetStatus === 'published' ? '確認發布' : '確認下線',
+      okButtonProps: targetStatus === 'archived' ? { danger: true } : undefined,
+      onOk: async () => {
+        const response = await updateCityStatus(city.id, targetStatus);
+        if (!response.success) {
+          message.error(response.message || '城市狀態更新失敗');
+          return Promise.reject(new Error(response.message || '城市狀態更新失敗'));
+        }
+        message.success(getStatusSuccessMessage('城市', targetStatus));
+        await refreshCities();
+        return undefined;
+      },
+    });
+  }
 
-  const handlePublishSubMap = async (subMapId: number) => {
-    const response = await publishSubMap(subMapId);
-    if (!response.success) {
-      message.error(response.message || '子地圖發布失敗');
-      return;
-    }
-    message.success('子地圖已發布');
-    await refreshCities();
-  };
+  function handleChangeSubMapStatus(subMap: AdminSubMapItem) {
+    const targetStatus = getNextOperableStatus(subMap.status);
+    const subMapName = pickSubMapName(subMap);
+    Modal.confirm({
+      title: targetStatus === 'published' ? '確認發布子地圖' : '確認下線子地圖',
+      content:
+        targetStatus === 'published'
+          ? `「${subMapName}」會立即對外可見，是否繼續？`
+          : `「${subMapName}」會改為下線，但內容仍會保留在後台，是否繼續？`,
+      okText: targetStatus === 'published' ? '確認發布' : '確認下線',
+      okButtonProps: targetStatus === 'archived' ? { danger: true } : undefined,
+      onOk: async () => {
+        const response = await updateSubMapStatus(subMap.id, targetStatus);
+        if (!response.success) {
+          message.error(response.message || '子地圖狀態更新失敗');
+          return Promise.reject(new Error(response.message || '子地圖狀態更新失敗'));
+        }
+        message.success(getStatusSuccessMessage('子地圖', targetStatus));
+        await refreshCities();
+        return undefined;
+      },
+    });
+  }
 
   return (
     <PageContainer
@@ -387,7 +453,7 @@ const CityManagement: React.FC = () => {
             allowClear
             placeholder="狀態"
             style={{ width: 180 }}
-            options={statusOptions}
+            options={statusFilterOptions}
             onChange={(value) => setFilters((current) => ({ ...current, status: value }))}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={() => void openCityEditor()}>
@@ -421,11 +487,13 @@ const CityManagement: React.FC = () => {
                   <Button type="primary" icon={<PlusOutlined />} onClick={() => void openSubMapEditor(city)}>
                     新增子地圖
                   </Button>
-                  {city.status !== 'published' ? (
-                    <Button icon={<CheckCircleOutlined />} onClick={() => void handlePublishCity(city.id)}>
-                      發布城市
-                    </Button>
-                  ) : null}
+                  <Button
+                    danger={isPublished(city.status)}
+                    icon={isPublished(city.status) ? <StopOutlined /> : <CheckCircleOutlined />}
+                    onClick={() => handleChangeCityStatus(city)}
+                  >
+                    {getStatusActionLabel(city.status)}城市
+                  </Button>
                 </Space>
               }
             >
@@ -470,7 +538,7 @@ const CityManagement: React.FC = () => {
       <Modal
         open={cityModalOpen}
         width={1200}
-        destroyOnClose
+        destroyOnHidden
         title={editingCityId ? '編輯城市' : '新增城市'}
         onCancel={() => setCityModalOpen(false)}
         onOk={() => void handleSaveCity()}
@@ -597,15 +665,14 @@ const CityManagement: React.FC = () => {
 
           <SpatialAttachmentListField name="attachments" title="城市附件" />
 
+          <Paragraph type="secondary" style={{ marginBottom: 16 }}>
+            內容保存不會直接改變發布狀態。請回到列表使用「發布 / 下線」按鈕切換對外狀態；像編輯中、審批中這類被動狀態不再手動設定。
+          </Paragraph>
+
           <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item name="sortOrder" label="排序">
                 <InputNumber style={{ width: '100%' }} min={0} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="status" label="狀態">
-                <Select options={statusOptions} />
               </Form.Item>
             </Col>
           </Row>
@@ -615,7 +682,7 @@ const CityManagement: React.FC = () => {
       <Modal
         open={subMapModalOpen}
         width={1200}
-        destroyOnClose
+        destroyOnHidden
         title={editingSubMapId ? '編輯子地圖' : '新增子地圖'}
         onCancel={() => setSubMapModalOpen(false)}
         onOk={() => void handleSaveSubMap()}
@@ -709,15 +776,14 @@ const CityManagement: React.FC = () => {
 
           <SpatialAttachmentListField name="attachments" title="子地圖附件" />
 
+          <Paragraph type="secondary" style={{ marginBottom: 16 }}>
+            子地圖內容保存不會直接改變發布狀態。請回到列表使用「發布 / 下線」按鈕切換對外狀態；被動狀態只做展示，不再手動設定。
+          </Paragraph>
+
           <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item name="sortOrder" label="排序">
                 <InputNumber style={{ width: '100%' }} min={0} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="status" label="狀態">
-                <Select options={statusOptions} />
               </Form.Item>
             </Col>
           </Row>
@@ -728,3 +794,4 @@ const CityManagement: React.FC = () => {
 };
 
 export default CityManagement;
+

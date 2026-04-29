@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../constants/env'
 
 export type PublicLocaleCode = 'zh-Hant' | 'zh-Hans' | 'en' | 'pt'
 
-export const DEFAULT_PUBLIC_LOCALE: PublicLocaleCode = 'en'
+export const DEFAULT_PUBLIC_LOCALE: PublicLocaleCode = 'zh-Hant'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
 type Primitive = string | number | boolean
@@ -119,6 +119,15 @@ export interface PublicUserRewardRedeemDto {
   state: PublicUserStateDto
 }
 
+export interface PublicTestModeDto {
+  isTestAccount: boolean
+  testGroup?: string
+  mockEnabled: boolean
+  mockLatitude?: number
+  mockLongitude?: number
+  mockPoiId?: number
+}
+
 export interface PublicCityDto {
   id: number
   code: string
@@ -162,6 +171,42 @@ export interface PublicSubMapDto {
   publishedAt?: string
 }
 
+export interface PublicCatalogRelationBindingDto {
+  id: number
+  code: string
+  name: string
+}
+
+export interface PublicActivityDto {
+  id: number
+  code: string
+  activityType?: string
+  title: string
+  summary?: string
+  description?: string
+  htmlContent?: string
+  venueName?: string
+  address?: string
+  organizerName?: string
+  organizerContact?: string
+  organizerWebsite?: string
+  signupCapacity?: number
+  signupFeeAmount?: number
+  signupStartAt?: string
+  signupEndAt?: string
+  publishStartAt?: string
+  publishEndAt?: string
+  isPinned?: number
+  coverImageUrl?: string
+  heroImageUrl?: string
+  cityBindings?: PublicCatalogRelationBindingDto[]
+  subMapBindings?: PublicCatalogRelationBindingDto[]
+  storylineBindings?: PublicCatalogRelationBindingDto[]
+  attachmentAssetUrls?: string[]
+  participationCount?: number
+  sortOrder?: number
+}
+
 export interface PublicPoiDto {
   id: number
   cityId: number
@@ -199,6 +244,221 @@ export interface PublicPoiDto {
   publishedAt?: string
 }
 
+export interface PublicIndoorFloorDto {
+  id: number
+  floorCode?: string
+  floorNumber: number
+  name: string
+  description?: string
+  coverImageUrl?: string
+  floorPlanUrl?: string
+  tileSourceType?: string
+  tilePreviewImageUrl?: string
+  tileRootUrl?: string
+  tileManifestJson?: string
+  tileZoomDerivationJson?: string
+  imageWidthPx?: number
+  imageHeightPx?: number
+  tileSizePx?: number
+  gridCols?: number
+  gridRows?: number
+  tileLevelCount?: number
+  tileEntryCount?: number
+  importStatus?: string
+  importNote?: string
+  altitudeMeters?: number
+  areaSqm?: number
+  zoomMin?: number
+  zoomMax?: number
+  defaultZoom?: number
+  popupConfigJson?: string
+  displayConfigJson?: string
+  markers?: PublicIndoorMarkerDto[]
+}
+
+export interface PublicIndoorMarkerDto {
+  id: number
+  markerCode?: string
+  nodeType?: string
+  name: string
+  description?: string
+  relativeX?: number
+  relativeY?: number
+  relatedPoiId?: number
+  iconUrl?: string
+  animationUrl?: string
+  linkedEntityType?: string
+  linkedEntityId?: number
+  tagsJson?: string
+  popupConfigJson?: string
+  displayConfigJson?: string
+  metadataJson?: string
+  sortOrder?: number
+  status?: string
+}
+
+export interface PublicIndoorRuntimeRuleConditionDto {
+  id?: string
+  category?: string
+  label?: string
+  config?: Record<string, unknown> | null
+}
+
+export interface PublicIndoorRuntimeTriggerRuleDto {
+  id?: string
+  category?: string
+  label?: string
+  dependsOnTriggerId?: string
+  config?: Record<string, unknown> | null
+}
+
+export interface PublicIndoorRuntimeCoordinatePointDto {
+  x?: number
+  y?: number
+  order?: number
+}
+
+export interface PublicIndoorRuntimePathGraphDto {
+  points?: PublicIndoorRuntimeCoordinatePointDto[]
+  durationMs?: number
+  holdMs?: number
+  loop?: boolean
+  easing?: string
+}
+
+export interface PublicIndoorRuntimeOverlayGeometryDto {
+  geometryType?: string
+  points?: PublicIndoorRuntimeCoordinatePointDto[]
+  properties?: Record<string, unknown> | null
+}
+
+export interface PublicIndoorRuntimeEffectRuleDto {
+  id?: string
+  category?: string
+  label?: string
+  config?: Record<string, unknown> | null
+}
+
+export interface PublicIndoorRuntimeBehaviorDto {
+  behaviorId: number
+  behaviorCode?: string
+  name?: string
+  status?: string
+  sortOrder?: number
+  runtimeSupportLevel?: string
+  supported?: boolean
+  requiresAuth?: boolean
+  blockedReason?: string
+  appearanceRules?: PublicIndoorRuntimeRuleConditionDto[]
+  triggerRules?: PublicIndoorRuntimeTriggerRuleDto[]
+  effectRules?: PublicIndoorRuntimeEffectRuleDto[]
+  pathGraph?: PublicIndoorRuntimePathGraphDto | null
+  overlayGeometry?: PublicIndoorRuntimeOverlayGeometryDto | null
+}
+
+export interface PublicIndoorRuntimeNodeDto {
+  nodeId: number
+  markerCode?: string
+  nodeType?: string
+  presentationMode?: string
+  overlayType?: string
+  name?: string
+  description?: string
+  relativeX?: number
+  relativeY?: number
+  relatedPoiId?: number
+  iconUrl?: string
+  animationUrl?: string
+  linkedEntityType?: string
+  linkedEntityId?: number
+  popupConfigJson?: string
+  displayConfigJson?: string
+  sortOrder?: number
+  status?: string
+  runtimeSupportLevel?: string
+  overlayGeometry?: PublicIndoorRuntimeOverlayGeometryDto | null
+  behaviors?: PublicIndoorRuntimeBehaviorDto[]
+}
+
+export interface PublicIndoorRuntimeFloorDto {
+  floorId: number
+  floorCode?: string
+  floorNumber?: number
+  buildingId: number
+  buildingCode?: string
+  name?: string
+  description?: string
+  coverImageUrl?: string
+  floorPlanUrl?: string
+  tileSourceType?: string
+  tilePreviewImageUrl?: string
+  tileRootUrl?: string
+  tileManifestJson?: string
+  tileZoomDerivationJson?: string
+  imageWidthPx?: number
+  imageHeightPx?: number
+  tileSizePx?: number
+  gridCols?: number
+  gridRows?: number
+  tileLevelCount?: number
+  tileEntryCount?: number
+  importStatus?: string
+  importNote?: string
+  altitudeMeters?: number
+  areaSqm?: number
+  zoomMin?: number
+  zoomMax?: number
+  defaultZoom?: number
+  popupConfigJson?: string
+  displayConfigJson?: string
+  runtimeVersion?: string
+  nodes?: PublicIndoorRuntimeNodeDto[]
+}
+
+export interface PublicIndoorRuntimeTriggeredEffectDto {
+  effectId?: string
+  category?: string
+  label?: string
+  config?: Record<string, unknown> | null
+  pathGraph?: PublicIndoorRuntimePathGraphDto | null
+  overlayGeometry?: PublicIndoorRuntimeOverlayGeometryDto | null
+}
+
+export interface PublicIndoorRuntimeInteractionDto {
+  interactionAccepted?: boolean
+  visible?: boolean
+  matchedTriggerId?: string
+  blockedReason?: string | null
+  requiresAuth?: boolean
+  effects?: PublicIndoorRuntimeTriggeredEffectDto[]
+  interactionLogId?: number
+  cooldownUntil?: string | null
+}
+
+export interface PublicIndoorBuildingDto {
+  id: number
+  buildingCode: string
+  bindingMode?: string
+  cityId?: number
+  cityCode?: string
+  subMapId?: number
+  poiId?: number
+  name: string
+  address?: string
+  description?: string
+  coverImageUrl?: string
+  popupConfigJson?: string
+  displayConfigJson?: string
+  sourceCoordinateSystem?: string
+  sourceLatitude?: number
+  sourceLongitude?: number
+  latitude?: number
+  longitude?: number
+  totalFloors?: number
+  basementFloors?: number
+  floors?: PublicIndoorFloorDto[]
+}
+
 export interface PublicStoryChapterDto {
   id: number
   chapterOrder?: number
@@ -208,15 +468,82 @@ export interface PublicStoryChapterDto {
   achievement?: string
   collectible?: string
   locationName?: string
+  anchorType?: string
+  anchorTargetId?: number
+  anchorTargetCode?: string
   unlockType?: string
   mediaUrl?: string
+  primaryMediaUrl?: string
+  primaryMediaAsset?: PublicStoryMediaAssetDto
+  unlock?: PublicStoryChapterUnlockDto
+  prerequisite?: PublicStoryChapterConditionDto
+  completion?: PublicStoryChapterConditionDto
+  effect?: PublicStoryChapterEffectDto
+  contentBlocks?: PublicStoryContentBlockDto[]
+  prerequisiteJson?: string
+  completionJson?: string
+  rewardJson?: string
   sortOrder?: number
+}
+
+export interface PublicStoryMediaAssetDto {
+  id: number
+  assetKind?: string
+  url?: string
+  mimeType?: string
+  originalFilename?: string
+  widthPx?: number
+  heightPx?: number
+  animationSubtype?: string
+  defaultLoop?: boolean
+  defaultAutoplay?: boolean
+  posterAssetId?: number
+  posterUrl?: string
+  fallbackAssetId?: number
+  fallbackUrl?: string
+}
+
+export interface PublicStoryContentBlockDto {
+  id: number
+  code?: string
+  blockType?: string
+  title?: string
+  summary?: string
+  body?: string
+  stylePreset?: string
+  displayMode?: string
+  visibilityJson?: string
+  displayConditionJson?: string
+  configJson?: string
+  sortOrder?: number
+  primaryAsset?: PublicStoryMediaAssetDto
+  attachmentAssets?: PublicStoryMediaAssetDto[]
+}
+
+export interface PublicStoryChapterUnlockDto {
+  type?: string
+  config?: Record<string, unknown>
+  rawJson?: string
+}
+
+export interface PublicStoryChapterConditionDto {
+  type?: string
+  config?: Record<string, unknown>
+  rawJson?: string
+}
+
+export interface PublicStoryChapterEffectDto {
+  type?: string
+  config?: Record<string, unknown>
+  rawJson?: string
 }
 
 export interface PublicStorylineDto {
   id: number
   cityId: number
   cityCode: string
+  cityBindings?: PublicCatalogRelationBindingDto[]
+  subMapBindings?: PublicCatalogRelationBindingDto[]
   code: string
   name: string
   nameEn?: string
@@ -226,6 +553,7 @@ export interface PublicStorylineDto {
   rewardBadge?: string
   coverImageUrl?: string
   bannerImageUrl?: string
+  attachmentAssets?: PublicStoryMediaAssetDto[]
   totalChapters?: number
   sortOrder?: number
   chapters?: PublicStoryChapterDto[]
@@ -261,7 +589,170 @@ export interface PublicRewardDto {
   inventoryRedeemed?: number
   availableInventory?: number
   coverImageUrl?: string
+  popupPresetCode?: string
+  popupConfigJson?: string
+  displayPresetCode?: string
+  displayConfigJson?: string
+  triggerPresetCode?: string
+  triggerConfigJson?: string
+  exampleContent?: string
+  relatedStorylines?: PublicCatalogRelationBindingDto[]
+  relatedCities?: PublicCatalogRelationBindingDto[]
+  relatedSubMaps?: PublicCatalogRelationBindingDto[]
+  relatedIndoorBuildings?: PublicCatalogRelationBindingDto[]
+  relatedIndoorFloors?: PublicCatalogRelationBindingDto[]
+  attachmentAssetUrls?: string[]
   sortOrder?: number
+}
+
+export interface PublicRewardRuleSummaryDto {
+  id: number
+  code: string
+  name: string
+  ruleType?: string
+  summaryText?: string
+}
+
+export interface PublicRewardPresentationStepDto {
+  stepType?: string
+  stepCode?: string
+  titleText?: string
+  assetUrl?: string
+  durationMs?: number
+  skippableOverride?: number
+  triggerSfxUrl?: string
+  voiceOverUrl?: string
+  overlayConfigJson?: string
+  sortOrder?: number
+}
+
+export interface PublicRewardPresentationDto {
+  id: number
+  code: string
+  name: string
+  presentationType?: string
+  firstTimeOnly?: number
+  skippable?: number
+  minimumDisplayMs?: number
+  interruptPolicy?: string
+  queuePolicy?: string
+  priorityWeight?: number
+  coverImageUrl?: string
+  voiceOverUrl?: string
+  sfxUrl?: string
+  summaryText?: string
+  configJson?: string
+  steps?: PublicRewardPresentationStepDto[]
+}
+
+export interface PublicRedeemablePrizeDto {
+  id: number
+  code: string
+  prizeType?: string
+  fulfillmentMode?: string
+  name: string
+  subtitle?: string
+  description?: string
+  highlight?: string
+  coverImageUrl?: string
+  stampCost?: number
+  inventoryTotal?: number
+  inventoryRedeemed?: number
+  availableInventory?: number
+  stockPolicyJson?: string
+  fulfillmentConfigJson?: string
+  presentationId?: number
+  presentation?: PublicRewardPresentationDto
+  ruleSummaries?: PublicRewardRuleSummaryDto[]
+  relatedStorylines?: PublicCatalogRelationBindingDto[]
+  relatedCities?: PublicCatalogRelationBindingDto[]
+  relatedSubMaps?: PublicCatalogRelationBindingDto[]
+  relatedIndoorBuildings?: PublicCatalogRelationBindingDto[]
+  relatedIndoorFloors?: PublicCatalogRelationBindingDto[]
+  attachmentAssetUrls?: string[]
+  sortOrder?: number
+}
+
+export interface PublicGameRewardDto {
+  id: number
+  code: string
+  rewardType?: string
+  rarity?: string
+  stackable?: number
+  maxOwned?: number
+  canEquip?: number
+  canConsume?: number
+  name: string
+  subtitle?: string
+  description?: string
+  highlight?: string
+  coverImageUrl?: string
+  iconUrl?: string
+  animationUrl?: string
+  rewardConfigJson?: string
+  presentationId?: number
+  presentation?: PublicRewardPresentationDto
+  ruleSummaries?: PublicRewardRuleSummaryDto[]
+  relatedStorylines?: PublicCatalogRelationBindingDto[]
+  relatedCities?: PublicCatalogRelationBindingDto[]
+  relatedSubMaps?: PublicCatalogRelationBindingDto[]
+  relatedIndoorBuildings?: PublicCatalogRelationBindingDto[]
+  relatedIndoorFloors?: PublicCatalogRelationBindingDto[]
+  attachmentAssetUrls?: string[]
+  sortOrder?: number
+}
+
+export interface PublicCollectibleDto {
+  id: number
+  code: string
+  name: string
+  description?: string
+  collectibleType?: string
+  rarity?: string
+  acquisitionSource?: string
+  coverImageUrl?: string
+  iconImageUrl?: string
+  animationUrl?: string
+  popupPresetCode?: string
+  popupConfigJson?: string
+  displayPresetCode?: string
+  displayConfigJson?: string
+  triggerPresetCode?: string
+  triggerConfigJson?: string
+  exampleContent?: string
+  relatedStorylines?: PublicCatalogRelationBindingDto[]
+  relatedCities?: PublicCatalogRelationBindingDto[]
+  relatedSubMaps?: PublicCatalogRelationBindingDto[]
+  relatedIndoorBuildings?: PublicCatalogRelationBindingDto[]
+  relatedIndoorFloors?: PublicCatalogRelationBindingDto[]
+  attachmentAssetUrls?: string[]
+  sortOrder?: number
+}
+
+export interface PublicBadgeDto {
+  id: number
+  code: string
+  name: string
+  description?: string
+  badgeType?: string
+  rarity?: string
+  hidden?: boolean
+  coverImageUrl?: string
+  iconImageUrl?: string
+  animationUrl?: string
+  popupPresetCode?: string
+  popupConfigJson?: string
+  displayPresetCode?: string
+  displayConfigJson?: string
+  triggerPresetCode?: string
+  triggerConfigJson?: string
+  exampleContent?: string
+  relatedStorylines?: PublicCatalogRelationBindingDto[]
+  relatedCities?: PublicCatalogRelationBindingDto[]
+  relatedSubMaps?: PublicCatalogRelationBindingDto[]
+  relatedIndoorBuildings?: PublicCatalogRelationBindingDto[]
+  relatedIndoorFloors?: PublicCatalogRelationBindingDto[]
+  attachmentAssetUrls?: string[]
 }
 
 export interface PublicStampDto {
@@ -341,46 +832,74 @@ function buildQuery(query?: RequestQuery) {
 }
 
 async function request<TResponse, TBody = unknown>(options: RequestOptions<TBody>): Promise<TResponse> {
-  if (options.loading !== false) {
-    Taro.showLoading({ title: 'Loading...' })
-  }
+  const maxRetries = 3
+  const retryDelay = 1000 // 1 second
+  let lastError: Error | null = null
 
-  try {
-    const token = Taro.getStorageSync('token')
-    const response = await Taro.request<ApiEnvelope<TResponse>>({
-      url: `${API_BASE_URL}${options.url}${buildQuery(options.query)}`,
-      method: options.method || 'GET',
-      data: options.data,
-      header: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.header,
-      },
-    })
-
-    if (options.loading !== false) {
-      Taro.hideLoading()
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (options.loading !== false && attempt === 0) {
+      Taro.showLoading({ title: 'Loading...' })
     }
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      if (response.data?.code !== 0) {
-        throw new Error(response.data?.message || 'Request failed')
+    try {
+      const token = Taro.getStorageSync('token')
+      const response = await Taro.request<ApiEnvelope<TResponse>>({
+        url: `${API_BASE_URL}${options.url}${buildQuery(options.query)}`,
+        method: options.method || 'GET',
+        data: options.data,
+        header: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...options.header,
+        },
+        timeout: 30000,
+      })
+
+      if (options.loading !== false) {
+        Taro.hideLoading()
       }
-      return response.data.data
-    }
 
-    if (response.statusCode === 401) {
-      Taro.removeStorageSync('token')
-      throw new Error('Unauthorized')
-    }
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        if (response.data?.code !== 0) {
+          throw new Error(response.data?.message || 'Request failed')
+        }
+        return response.data.data
+      }
 
-    throw new Error(response.data?.message || 'Request failed')
-  } catch (error) {
-    if (options.loading !== false) {
-      Taro.hideLoading()
+      if (response.statusCode === 401) {
+        Taro.removeStorageSync('token')
+        throw new Error('AUTH_REQUIRED')
+      }
+
+      throw new Error(response.data?.message || 'Request failed')
+    } catch (error: any) {
+      lastError = error
+
+      // Don't retry on auth errors or client errors
+      if (error.message === 'AUTH_REQUIRED' || (error.statusCode && error.statusCode >= 400 && error.statusCode < 500)) {
+        if (options.loading !== false) {
+          Taro.hideLoading()
+        }
+        throw error
+      }
+
+      // Retry on network errors or server errors
+      if (attempt < maxRetries) {
+        console.warn(`Request failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying...`, error)
+        await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, attempt))) // Exponential backoff
+        continue
+      }
+
+      // All retries exhausted
+      if (options.loading !== false) {
+        Taro.hideLoading()
+      }
+      throw error
     }
-    throw error
   }
+
+  // This should never be reached, but TypeScript needs it
+  throw lastError || new Error('Request failed after all retries')
 }
 
 async function getPublicCities(locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE) {
@@ -431,6 +950,54 @@ async function getPublicRewards(locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE
   })
 }
 
+async function getPublicRedeemablePrizes(locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE) {
+  return request<PublicRedeemablePrizeDto[]>({
+    url: '/redeemable-prizes',
+    query: { locale },
+    loading: false,
+  })
+}
+
+async function getPublicGameRewards(locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE, honorsOnly?: boolean) {
+  return request<PublicGameRewardDto[]>({
+    url: '/game-rewards',
+    query: { locale, honorsOnly },
+    loading: false,
+  })
+}
+
+async function getPublicRewardPresentation(presentationId: number, locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE) {
+  return request<PublicRewardPresentationDto>({
+    url: `/reward-presentations/${presentationId}`,
+    query: { locale },
+    loading: false,
+  })
+}
+
+async function getPublicActivities(locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE) {
+  return request<PublicActivityDto[]>({
+    url: '/activities',
+    query: { locale },
+    loading: false,
+  })
+}
+
+async function getPublicCollectibles(locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE) {
+  return request<PublicCollectibleDto[]>({
+    url: '/collectibles',
+    query: { locale },
+    loading: false,
+  })
+}
+
+async function getPublicBadges(locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE) {
+  return request<PublicBadgeDto[]>({
+    url: '/badges',
+    query: { locale },
+    loading: false,
+  })
+}
+
 async function getPublicStamps(locale: PublicLocaleCode = DEFAULT_PUBLIC_LOCALE) {
   return request<PublicStampDto[]>({
     url: '/stamps',
@@ -459,6 +1026,82 @@ async function getPublicDiscoverCards(locale: PublicLocaleCode = DEFAULT_PUBLIC_
   return request<PublicDiscoverCardDto[]>({
     url: '/discover/cards',
     query: { locale },
+    loading: false,
+  })
+}
+
+async function getPublicIndoorBuilding(params: {
+  buildingId?: number
+  poiId?: number
+  locale?: PublicLocaleCode
+}) {
+  if (params.buildingId) {
+    return request<PublicIndoorBuildingDto>({
+      url: `/indoor/buildings/${params.buildingId}`,
+      query: { locale: params.locale || DEFAULT_PUBLIC_LOCALE },
+      loading: false,
+    })
+  }
+  if (params.poiId) {
+    return request<PublicIndoorBuildingDto>({
+      url: `/indoor/buildings/by-poi/${params.poiId}`,
+      query: { locale: params.locale || DEFAULT_PUBLIC_LOCALE },
+      loading: false,
+    })
+  }
+  throw new Error('Indoor building id or poi id is required')
+}
+
+async function getPublicIndoorFloor(params: {
+  floorId: number
+  locale?: PublicLocaleCode
+}) {
+  return request<PublicIndoorFloorDto>({
+    url: `/indoor/floors/${params.floorId}`,
+    query: { locale: params.locale || DEFAULT_PUBLIC_LOCALE },
+    loading: false,
+  })
+}
+
+async function getPublicIndoorFloorMarkers(params: {
+  floorId: number
+  locale?: PublicLocaleCode
+}) {
+  return request<PublicIndoorMarkerDto[]>({
+    url: `/indoor/floors/${params.floorId}/markers`,
+    query: { locale: params.locale || DEFAULT_PUBLIC_LOCALE },
+    loading: false,
+  })
+}
+
+async function getPublicIndoorFloorRuntime(params: {
+  floorId: number
+  locale?: PublicLocaleCode
+}) {
+  return request<PublicIndoorRuntimeFloorDto>({
+    url: `/indoor/floors/${params.floorId}/runtime`,
+    query: { locale: params.locale || DEFAULT_PUBLIC_LOCALE },
+    loading: false,
+  })
+}
+
+async function submitPublicIndoorRuntimeInteraction(data: {
+  floorId: number
+  nodeId: number
+  behaviorId: number
+  triggerId?: string
+  eventType: string
+  eventTimestamp?: string
+  relativeX?: number
+  relativeY?: number
+  dwellMs?: number
+  clientSessionId?: string
+  locale?: PublicLocaleCode
+}) {
+  return request<PublicIndoorRuntimeInteractionDto>({
+    url: '/indoor/runtime/interactions',
+    method: 'POST',
+    data,
     loading: false,
   })
 }
@@ -573,6 +1216,13 @@ async function redeemUserReward(rewardId: number) {
   })
 }
 
+async function getUserTestMode() {
+  return request<PublicTestModeDto>({
+    url: '/user/test-mode',
+    loading: false,
+  })
+}
+
 export const api = {
   public: {
     getPublicCities,
@@ -581,10 +1231,21 @@ export const api = {
     getPublicStorylines,
     getPublicTips,
     getPublicRewards,
+    getPublicRedeemablePrizes,
+    getPublicGameRewards,
+    getPublicRewardPresentation,
+    getPublicActivities,
+    getPublicCollectibles,
+    getPublicBadges,
     getPublicStamps,
     getPublicNotifications,
     getPublicRuntimeGroup,
     getPublicDiscoverCards,
+    getPublicIndoorBuilding,
+    getPublicIndoorFloor,
+    getPublicIndoorFloorMarkers,
+    getPublicIndoorFloorRuntime,
+    submitPublicIndoorRuntimeInteraction,
   },
   user: {
     loginWithWechat,
@@ -598,6 +1259,7 @@ export const api = {
     getUserRewardRedemptions,
     createUserCheckin,
     redeemUserReward,
+    getUserTestMode,
   },
 }
 

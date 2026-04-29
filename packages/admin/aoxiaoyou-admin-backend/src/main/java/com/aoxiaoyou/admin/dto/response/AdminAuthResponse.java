@@ -25,6 +25,7 @@ public class AdminAuthResponse {
         private String username;
         private String realName;
         private String email;
+        private Boolean allowLosslessUpload;
         private List<String> roles;
         private List<String> permissions;
         private LocalDateTime lastLoginAt;

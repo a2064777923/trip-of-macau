@@ -37,6 +37,48 @@ public class AdminExperienceResponse {
 
     @Data
     @Builder
+    public static class TemplatePreset {
+        private String presetCode;
+        private String templateType;
+        private String category;
+        private String nameZh;
+        private String nameZht;
+        private String summaryZh;
+        private String summaryZht;
+        private String riskLevel;
+        private String configJson;
+        private String schemaJson;
+        private List<String> recommendedTriggerTypes;
+        private List<String> recommendedEffectFamilies;
+    }
+
+    @Data
+    @Builder
+    public static class TemplateUsage {
+        private Long templateId;
+        private String templateCode;
+        private String templateNameZh;
+        private Long usageCount;
+        private List<TemplateUsageRef> flowStepRefs;
+    }
+
+    @Data
+    @Builder
+    public static class TemplateUsageRef {
+        private Long flowId;
+        private String flowCode;
+        private String flowNameZh;
+        private String flowType;
+        private Long stepId;
+        private String stepCode;
+        private String stepNameZh;
+        private String stepType;
+        private String triggerType;
+        private String status;
+    }
+
+    @Data
+    @Builder
     public static class Flow {
         private Long id;
         private String code;
@@ -185,6 +227,62 @@ public class AdminExperienceResponse {
 
     @Data
     @Builder
+    public static class GovernanceItem {
+        private String itemKey;
+        private String sourceDomain;
+        private String ownerType;
+        private Long ownerId;
+        private String ownerCode;
+        private String ownerName;
+        private Long cityId;
+        private Long subMapId;
+        private Long poiId;
+        private Long indoorBuildingId;
+        private Long storylineId;
+        private Long storyChapterId;
+        private Long templateId;
+        private String templateCode;
+        private String templateNameZh;
+        private String templateType;
+        private Long flowId;
+        private String flowCode;
+        private Long stepId;
+        private String stepCode;
+        private String triggerType;
+        private String effectFamily;
+        private String rewardType;
+        private String status;
+        private String riskLevel;
+        private Boolean storyOverride;
+        private Long conflictCount;
+    }
+
+    @Data
+    @Builder
+    public static class GovernanceDetail {
+        private GovernanceItem item;
+        private List<GovernanceUsageRef> usageRefs;
+        private List<GovernanceFinding> conflicts;
+        private String rawSummary;
+    }
+
+    @Data
+    @Builder
+    public static class GovernanceUsageRef {
+        private String sourceDomain;
+        private String relationType;
+        private String ownerType;
+        private Long ownerId;
+        private String ownerName;
+        private Long flowId;
+        private Long stepId;
+        private Long rewardRuleId;
+        private Long indoorNodeId;
+        private String description;
+    }
+
+    @Data
+    @Builder
     public static class ContractVocabulary {
         private List<VocabularyOption> templateTypes;
         private List<VocabularyOption> flowTypes;
@@ -222,9 +320,13 @@ public class AdminExperienceResponse {
         private String findingType;
         private String title;
         private String description;
+        private String sourceDomain;
         private String ownerType;
         private Long ownerId;
         private Long flowId;
         private Long stepId;
+        private Long templateId;
+        private Long rewardRuleId;
+        private String itemKey;
     }
 }

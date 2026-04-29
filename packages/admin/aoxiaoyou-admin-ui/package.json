@@ -9,7 +9,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .ts,.tsx --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "smoke:phase15:indoor-authoring": "powershell -ExecutionPolicy Bypass -File ../../scripts/local/smoke-phase-15-indoor-authoring.ps1",
+    "smoke:phase16:indoor-rules": "powershell -ExecutionPolicy Bypass -File ../../scripts/local/smoke-phase-16-indoor-rule-governance.ps1"
   },
   "dependencies": {
     "@ant-design/charts": "^2.2.7",

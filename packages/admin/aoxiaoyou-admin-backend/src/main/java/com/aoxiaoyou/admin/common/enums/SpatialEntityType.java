@@ -6,7 +6,9 @@ import java.util.Set;
 public enum SpatialEntityType {
     CITY("city"),
     SUB_MAP("sub_map"),
-    POI("poi");
+    POI("poi"),
+    INDOOR_BUILDING("indoor_building"),
+    INDOOR_FLOOR("indoor_floor");
 
     private final String code;
 
@@ -26,6 +28,6 @@ public enum SpatialEntityType {
     }
 
     public static Set<String> supportedCodes() {
-        return Set.of(CITY.code, SUB_MAP.code, POI.code);
+        return Set.of(CITY.code, SUB_MAP.code, POI.code, INDOOR_BUILDING.code, INDOOR_FLOOR.code);
     }
 }

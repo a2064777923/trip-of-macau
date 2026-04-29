@@ -32,8 +32,41 @@ public class ContentAsset extends BaseEntity {
     @TableField("mime_type")
     private String mimeType;
 
+    @TableField("animation_subtype")
+    private String animationSubtype;
+
+    @TableField("poster_asset_id")
+    private Long posterAssetId;
+
+    @TableField("fallback_asset_id")
+    private Long fallbackAssetId;
+
+    @TableField("default_loop")
+    private Boolean defaultLoop;
+
+    @TableField("default_autoplay")
+    private Boolean defaultAutoplay;
+
     @TableField("locale_code")
     private String localeCode;
+
+    @TableField("original_filename")
+    private String originalFilename;
+
+    @TableField("file_extension")
+    private String fileExtension;
+
+    @TableField("upload_source")
+    private String uploadSource;
+
+    @TableField("client_relative_path")
+    private String clientRelativePath;
+
+    @TableField("uploaded_by_admin_id")
+    private Long uploadedByAdminId;
+
+    @TableField("uploaded_by_admin_name")
+    private String uploadedByAdminName;
 
     @TableField("file_size_bytes")
     private Long fileSizeBytes;
@@ -48,5 +81,20 @@ public class ContentAsset extends BaseEntity {
 
     private String etag;
 
+    @TableField("processing_policy_code")
+    private String processingPolicyCode;
+
+    @TableField("processing_profile_json")
+    private String processingProfileJson;
+
+    @TableField("processing_status")
+    private String processingStatus;
+
+    @TableField("processing_note")
+    private String processingNote;
+
     private String status;
+
+    @TableField("published_at")
+    private java.time.LocalDateTime publishedAt;
 }

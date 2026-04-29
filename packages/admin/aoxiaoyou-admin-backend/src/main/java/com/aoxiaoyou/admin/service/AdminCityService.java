@@ -10,4 +10,5 @@ public interface AdminCityService {
     AdminCityResponse createCity(AdminCityUpsertRequest request);
     AdminCityResponse updateCity(Long id, AdminCityUpsertRequest request);
     AdminCityResponse publishCity(Long id);
+    AdminCityResponse updateCityStatus(Long id, String status);
 }

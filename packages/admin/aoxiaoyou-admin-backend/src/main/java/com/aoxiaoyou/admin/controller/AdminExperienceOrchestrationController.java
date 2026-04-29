@@ -4,6 +4,7 @@ import com.aoxiaoyou.admin.common.api.ApiResponse;
 import com.aoxiaoyou.admin.common.api.PageResponse;
 import com.aoxiaoyou.admin.dto.request.AdminExperienceRequest;
 import com.aoxiaoyou.admin.dto.response.AdminExperienceResponse;
+import com.aoxiaoyou.admin.service.AdminExperienceGovernanceService;
 import com.aoxiaoyou.admin.service.AdminExperienceOrchestrationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -26,6 +28,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminExperienceOrchestrationController {
 
     private final AdminExperienceOrchestrationService experienceOrchestrationService;
+    private final AdminExperienceGovernanceService experienceGovernanceService;
+
+    @Operation(summary = "查詢內置互動與任務模板預設")
+    @GetMapping("/templates/presets")
+    public ApiResponse<java.util.List<AdminExperienceResponse.TemplatePreset>> listTemplatePresets() {
+        return ApiResponse.success(experienceOrchestrationService.listTemplatePresets());
+    }
 
     @Operation(summary = "分頁查詢互動與任務模板")
     @GetMapping("/templates")
@@ -43,6 +52,20 @@ public class AdminExperienceOrchestrationController {
     public ApiResponse<AdminExperienceResponse.Template> createTemplate(
             @Valid @RequestBody AdminExperienceRequest.TemplateUpsert request) {
         return ApiResponse.success(experienceOrchestrationService.createTemplate(request));
+    }
+
+    @Operation(summary = "複製互動與任務模板")
+    @PostMapping("/templates/{templateId}/clone")
+    public ApiResponse<AdminExperienceResponse.Template> cloneTemplate(
+            @PathVariable Long templateId,
+            @Valid @RequestBody AdminExperienceRequest.TemplateClone request) {
+        return ApiResponse.success(experienceOrchestrationService.cloneTemplate(templateId, request));
+    }
+
+    @Operation(summary = "查詢互動與任務模板使用處")
+    @GetMapping("/templates/{templateId}/usage")
+    public ApiResponse<AdminExperienceResponse.TemplateUsage> getTemplateUsage(@PathVariable Long templateId) {
+        return ApiResponse.success(experienceOrchestrationService.getTemplateUsage(templateId));
     }
 
     @Operation(summary = "更新互動與任務模板")
@@ -230,5 +253,25 @@ public class AdminExperienceOrchestrationController {
     @GetMapping("/governance/overview")
     public ApiResponse<AdminExperienceResponse.GovernanceOverview> getGovernanceOverview() {
         return ApiResponse.success(experienceOrchestrationService.getGovernanceOverview());
+    }
+
+    @Operation(summary = "分頁查詢體驗規則治理項")
+    @GetMapping("/governance/items")
+    public ApiResponse<PageResponse<AdminExperienceResponse.GovernanceItem>> pageGovernanceItems(
+            @ModelAttribute AdminExperienceRequest.GovernanceQuery query) {
+        return ApiResponse.success(experienceGovernanceService.pageGovernanceItems(query));
+    }
+
+    @Operation(summary = "查詢體驗規則治理項詳情")
+    @GetMapping("/governance/items/{itemKey}")
+    public ApiResponse<AdminExperienceResponse.GovernanceDetail> getGovernanceDetail(@PathVariable String itemKey) {
+        return ApiResponse.success(experienceGovernanceService.getGovernanceDetail(itemKey));
+    }
+
+    @Operation(summary = "重新檢查體驗規則衝突")
+    @PostMapping("/governance/check")
+    public ApiResponse<java.util.List<AdminExperienceResponse.GovernanceFinding>> checkGovernanceConflicts(
+            @RequestBody(required = false) AdminExperienceRequest.GovernanceQuery query) {
+        return ApiResponse.success(experienceGovernanceService.checkGovernanceConflicts(query == null ? new AdminExperienceRequest.GovernanceQuery() : query));
     }
 }

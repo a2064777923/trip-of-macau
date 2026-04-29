@@ -15,12 +15,18 @@ import type {
   AdminExperienceFlowItem,
   AdminExperienceFlowPayload,
   AdminExperienceGovernanceOverview,
+  AdminExperienceGovernanceDetail,
+  AdminExperienceGovernanceItem,
+  AdminExperienceGovernanceQuery,
   AdminExperienceOverrideItem,
   AdminExperienceOverridePayload,
   AdminExperienceStepItem,
   AdminExperienceStepPayload,
+  AdminExperienceTemplateClonePayload,
   AdminExperienceTemplateItem,
   AdminExperienceTemplatePayload,
+  AdminExperienceTemplatePreset,
+  AdminExperienceTemplateUsage,
   AdminExplorationElementItem,
   AdminExplorationElementPayload,
   AdminMediaPolicySettings,
@@ -29,7 +35,19 @@ import type {
   AdminNotificationItem,
   AdminOperationLog,
   AdminPoiDetail,
+  AdminPoiExperienceFlowDraft,
+  AdminPoiExperienceSaveTemplatePayload,
+  AdminPoiExperienceSnapshot,
+  AdminPoiExperienceStep,
+  AdminPoiExperienceStructuredStepPayload,
   AdminPoiListItem,
+  AdminStorylineModeAnchorPayload,
+  AdminStorylineModeConfigPayload,
+  AdminStorylineModeOverridePolicyPayload,
+  AdminStorylineModeOverrideRule,
+  AdminStorylineModeOverrideStepPayload,
+  AdminStorylineModeRuntimePreview,
+  AdminStorylineModeSnapshot,
   AdminIndoorBuildingDetail,
   AdminIndoorBuildingItem,
   AdminIndoorBuildingPayload,
@@ -240,6 +258,47 @@ export const deleteAdminPoi = (poiId: number) => {
   return request.delete<boolean>(`/api/admin/v1/pois/${poiId}`);
 };
 
+export const getAdminPoiExperienceDefault = (poiId: number) => {
+  return request.get<AdminPoiExperienceSnapshot>(`/api/admin/v1/pois/${poiId}/experience/default`);
+};
+
+export const upsertAdminPoiExperienceDefaultFlow = (
+  poiId: number,
+  data: AdminPoiExperienceFlowDraft,
+) => {
+  return request.put<AdminPoiExperienceSnapshot>(`/api/admin/v1/pois/${poiId}/experience/default-flow`, data);
+};
+
+export const createAdminPoiExperienceStep = (
+  poiId: number,
+  data: AdminPoiExperienceStructuredStepPayload,
+) => {
+  return request.post<AdminPoiExperienceStep>(`/api/admin/v1/pois/${poiId}/experience/steps`, data);
+};
+
+export const updateAdminPoiExperienceStep = (
+  poiId: number,
+  stepId: number,
+  data: AdminPoiExperienceStructuredStepPayload,
+) => {
+  return request.put<AdminPoiExperienceStep>(`/api/admin/v1/pois/${poiId}/experience/steps/${stepId}`, data);
+};
+
+export const deleteAdminPoiExperienceStep = (poiId: number, stepId: number) => {
+  return request.delete<boolean>(`/api/admin/v1/pois/${poiId}/experience/steps/${stepId}`);
+};
+
+export const saveAdminPoiExperienceStepAsTemplate = (
+  poiId: number,
+  stepId: number,
+  data: AdminPoiExperienceSaveTemplatePayload,
+) => {
+  return request.post<AdminExperienceTemplateItem>(
+    `/api/admin/v1/pois/${poiId}/experience/steps/${stepId}/save-template`,
+    data,
+  );
+};
+
 export const getAdminStorylines = (params?: {
   pageNum?: number;
   pageSize?: number;
@@ -285,6 +344,81 @@ export const deleteStorylineChapter = (storylineId: number, chapterId: number) =
   return request.delete<boolean>(`/api/admin/v1/storylines/${storylineId}/chapters/${chapterId}`);
 };
 
+export const getAdminStorylineModeWorkbench = (storylineId: number) => {
+  return request.get<AdminStorylineModeSnapshot>(`/api/admin/v1/storylines/${storylineId}/mode-workbench`);
+};
+
+export const updateAdminStorylineModeConfig = (
+  storylineId: number,
+  data: AdminStorylineModeConfigPayload,
+) => {
+  return request.put<AdminStorylineModeSnapshot>(
+    `/api/admin/v1/storylines/${storylineId}/mode-workbench/mode-config`,
+    data,
+  );
+};
+
+export const updateAdminStorylineChapterAnchor = (
+  storylineId: number,
+  chapterId: number,
+  data: AdminStorylineModeAnchorPayload,
+) => {
+  return request.put<AdminStorylineModeSnapshot>(
+    `/api/admin/v1/storylines/${storylineId}/mode-workbench/chapters/${chapterId}/anchor`,
+    data,
+  );
+};
+
+export const updateAdminStorylineChapterOverridePolicy = (
+  storylineId: number,
+  chapterId: number,
+  data: AdminStorylineModeOverridePolicyPayload,
+) => {
+  return request.put<AdminStorylineModeSnapshot>(
+    `/api/admin/v1/storylines/${storylineId}/mode-workbench/chapters/${chapterId}/overrides`,
+    data,
+  );
+};
+
+export const createAdminStorylineChapterOverrideStep = (
+  storylineId: number,
+  chapterId: number,
+  data: AdminStorylineModeOverrideStepPayload,
+) => {
+  return request.post<AdminStorylineModeOverrideRule>(
+    `/api/admin/v1/storylines/${storylineId}/mode-workbench/chapters/${chapterId}/override-steps`,
+    data,
+  );
+};
+
+export const updateAdminStorylineChapterOverrideStep = (
+  storylineId: number,
+  chapterId: number,
+  overrideId: number,
+  data: AdminStorylineModeOverrideStepPayload,
+) => {
+  return request.put<AdminStorylineModeOverrideRule>(
+    `/api/admin/v1/storylines/${storylineId}/mode-workbench/chapters/${chapterId}/override-steps/${overrideId}`,
+    data,
+  );
+};
+
+export const deleteAdminStorylineChapterOverrideStep = (
+  storylineId: number,
+  chapterId: number,
+  overrideId: number,
+) => {
+  return request.delete<boolean>(
+    `/api/admin/v1/storylines/${storylineId}/mode-workbench/chapters/${chapterId}/override-steps/${overrideId}`,
+  );
+};
+
+export const getAdminStorylineRuntimePreview = (storylineId: number) => {
+  return request.get<AdminStorylineModeRuntimePreview>(
+    `/api/admin/v1/storylines/${storylineId}/mode-workbench/runtime-preview`,
+  );
+};
+
 export const getAdminStoryContentBlocks = (params?: {
   pageNum?: number;
   pageSize?: number;
@@ -316,13 +450,27 @@ export const getAdminExperienceTemplates = (params?: {
   pageSize?: number;
   keyword?: string;
   templateType?: string;
+  category?: string;
+  riskLevel?: string;
   status?: string;
 }) => {
   return request.get<PaginationResponse<AdminExperienceTemplateItem>>('/api/admin/v1/experience/templates', { params });
 };
 
+export const getAdminExperienceTemplatePresets = () => {
+  return request.get<AdminExperienceTemplatePreset[]>('/api/admin/v1/experience/templates/presets');
+};
+
 export const createAdminExperienceTemplate = (data: AdminExperienceTemplatePayload) => {
   return request.post<AdminExperienceTemplateItem>('/api/admin/v1/experience/templates', data);
+};
+
+export const cloneAdminExperienceTemplate = (templateId: number, data: AdminExperienceTemplateClonePayload) => {
+  return request.post<AdminExperienceTemplateItem>(`/api/admin/v1/experience/templates/${templateId}/clone`, data);
+};
+
+export const getAdminExperienceTemplateUsage = (templateId: number) => {
+  return request.get<AdminExperienceTemplateUsage>(`/api/admin/v1/experience/templates/${templateId}/usage`);
 };
 
 export const updateAdminExperienceTemplate = (templateId: number, data: AdminExperienceTemplatePayload) => {
@@ -442,6 +590,18 @@ export const deleteAdminExplorationElement = (elementId: number) => {
 
 export const getAdminExperienceGovernanceOverview = () => {
   return request.get<AdminExperienceGovernanceOverview>('/api/admin/v1/experience/governance/overview');
+};
+
+export const getAdminExperienceGovernanceItems = (params?: AdminExperienceGovernanceQuery) => {
+  return request.get<PaginationResponse<AdminExperienceGovernanceItem>>('/api/admin/v1/experience/governance/items', { params });
+};
+
+export const getAdminExperienceGovernanceDetail = (itemKey: string) => {
+  return request.get<AdminExperienceGovernanceDetail>(`/api/admin/v1/experience/governance/items/${encodeURIComponent(itemKey)}`);
+};
+
+export const checkAdminExperienceGovernanceConflicts = (data?: AdminExperienceGovernanceQuery) => {
+  return request.post<AdminExperienceGovernanceOverview['findings']>('/api/admin/v1/experience/governance/check', data || {});
 };
 
 export const getAdminTestAccounts = (params?: {

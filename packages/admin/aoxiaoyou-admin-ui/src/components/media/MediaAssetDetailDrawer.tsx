@@ -27,7 +27,7 @@ const MediaAssetDetailDrawer: React.FC<MediaAssetDetailDrawerProps> = ({
   onClose,
 }) => {
   return (
-    <Drawer title="資源詳情" open={open} width={640} onClose={onClose} destroyOnClose>
+    <Drawer title="資源詳情" open={open} width={640} onClose={onClose} destroyOnHidden>
       {asset ? (
         <Space direction="vertical" size={20} style={{ width: '100%' }}>
           <Space align="start" size={16}>
@@ -173,3 +173,4 @@ const MediaAssetDetailDrawer: React.FC<MediaAssetDetailDrawerProps> = ({
 };
 
 export default MediaAssetDetailDrawer;
+

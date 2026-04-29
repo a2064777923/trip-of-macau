@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
+import { AimOutlined } from '@ant-design/icons';
 import { Alert, Button, Card, Col, Form, InputNumber, Row, Select, Space, Typography, message } from 'antd';
 import type { FormInstance } from 'antd/es/form';
-import { AimOutlined } from '@ant-design/icons';
 import { previewSpatialCoordinate } from '../../services/api';
 import type { AdminCoordinatePreviewResult, CoordinateSystem } from '../../types/admin';
 
 const { Text } = Typography;
+
 type NamePath = string | number | Array<string | number>;
 
 const coordinateSystemOptions: Array<{ label: string; value: CoordinateSystem }> = [
@@ -39,7 +40,7 @@ function toNumber(value: unknown) {
 
 const SpatialCoordinateFieldGroup: React.FC<SpatialCoordinateFieldGroupProps> = ({
   form,
-  title = '座標與坐標系',
+  title = '座標與坐標系統',
   required,
   sourceSystemName,
   sourceLatitudeName,
@@ -68,8 +69,9 @@ const SpatialCoordinateFieldGroup: React.FC<SpatialCoordinateFieldGroupProps> = 
   const handlePreview = async () => {
     const latitude = toNumber(sourceLatitude);
     const longitude = toNumber(sourceLongitude);
+
     if (latitude == null || longitude == null) {
-      message.warning('請先輸入來源緯度與來源經度。');
+      message.warning('請先輸入來源緯度與來源經度');
       return;
     }
 
@@ -80,9 +82,11 @@ const SpatialCoordinateFieldGroup: React.FC<SpatialCoordinateFieldGroupProps> = 
         latitude,
         longitude,
       });
+
       if (!response.success || !response.data) {
         throw new Error(response.message || '座標換算失敗');
       }
+
       setPreview(response.data);
       if (normalizedLatitudeName) {
         form.setFieldValue(normalizedLatitudeName, response.data.normalizedLatitude ?? null);
@@ -110,7 +114,7 @@ const SpatialCoordinateFieldGroup: React.FC<SpatialCoordinateFieldGroupProps> = 
     >
       <Row gutter={16}>
         <Col xs={24} md={8}>
-          <Form.Item name={sourceSystemName} label="來源坐標系" initialValue="GCJ02">
+          <Form.Item name={sourceSystemName} label="來源座標系統" initialValue="GCJ02">
             <Select options={coordinateSystemOptions} />
           </Form.Item>
         </Col>
@@ -134,28 +138,27 @@ const SpatialCoordinateFieldGroup: React.FC<SpatialCoordinateFieldGroupProps> = 
         </Col>
       </Row>
 
-      <Row gutter={16}>
+      <Row gutter={16} align="top">
         {normalizedLatitudeName ? (
-          <Col xs={24} md={8}>
+          <Col xs={24} md={7}>
             <Form.Item name={normalizedLatitudeName} label="換算後緯度（GCJ-02）">
               <InputNumber style={{ width: '100%' }} step={0.000001} disabled />
             </Form.Item>
           </Col>
         ) : null}
         {normalizedLongitudeName ? (
-          <Col xs={24} md={8}>
+          <Col xs={24} md={7}>
             <Form.Item name={normalizedLongitudeName} label="換算後經度（GCJ-02）">
               <InputNumber style={{ width: '100%' }} step={0.000001} disabled />
             </Form.Item>
           </Col>
         ) : null}
-      </Row>
-
-      <Row gutter={16} style={{ marginTop: 4, marginBottom: 8 }}>
-        <Col xs={24} md={8}>
-          <Button block icon={<AimOutlined />} loading={previewing} onClick={() => void handlePreview()}>
-            預覽並換算
-          </Button>
+        <Col xs={24} md={10}>
+          <Form.Item label="座標工具" style={{ marginTop: 8 }}>
+            <Button block icon={<AimOutlined />} loading={previewing} onClick={() => void handlePreview()}>
+              預覽並換算
+            </Button>
+          </Form.Item>
         </Col>
       </Row>
 

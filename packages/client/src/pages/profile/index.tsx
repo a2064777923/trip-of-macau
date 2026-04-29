@@ -52,11 +52,23 @@ export default function ProfilePage() {
 
   const handleWechatLogin = async () => {
     try {
-      await loginWithWeChat()
-      syncLocalProfile()
-      Taro.showToast({ title: '登入成功', icon: 'success' })
+      // 在开发环境使用开发者绕过登录
+      if (isDevBypassAvailable()) {
+        await loginWithDevBypass()
+        syncLocalProfile()
+        Taro.showToast({ title: '登入成功', icon: 'success' })
+      } else {
+        await loginWithWeChat()
+        syncLocalProfile()
+        Taro.showToast({ title: '登入成功', icon: 'success' })
+      }
     } catch (error) {
-      Taro.showToast({ title: error instanceof Error ? error.message : '登入未完成', icon: 'none' })
+      console.error('Login error:', error)
+      Taro.showToast({ 
+        title: error instanceof Error ? error.message : '登入失敗，請稍後再試', 
+        icon: 'none',
+        duration: 3000
+      })
     }
   }
 
@@ -87,10 +99,9 @@ export default function ProfilePage() {
               </View>
             </View>
 
-            <Button className='wechat-login-btn' onClick={handleWechatLogin}>使用微信登入</Button>
-            {isDevBypassAvailable() && (
-              <Button className='wechat-login-btn' onClick={handleDevBypassLogin}>本地調試登入</Button>
-            )}
+            <Button className='wechat-login-btn' onClick={handleWechatLogin}>
+              {isDevBypassAvailable() ? '開始探索' : '使用微信登入'}
+            </Button>
           </View>
         </View>
       </PageShell>

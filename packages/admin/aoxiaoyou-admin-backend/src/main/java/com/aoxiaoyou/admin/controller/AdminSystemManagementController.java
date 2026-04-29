@@ -2,10 +2,16 @@ package com.aoxiaoyou.admin.controller;
 
 import com.aoxiaoyou.admin.common.api.ApiResponse;
 import com.aoxiaoyou.admin.common.api.PageResponse;
+import com.aoxiaoyou.admin.dto.request.AdminCarryoverSettingsUpsertRequest;
+import com.aoxiaoyou.admin.dto.request.AdminIndoorRuntimeSettingsUpsertRequest;
+import com.aoxiaoyou.admin.dto.request.AdminMediaPolicySettingsUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminRewardUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminTranslateRequest;
 import com.aoxiaoyou.admin.dto.request.AdminTranslationSettingsUpsertRequest;
+import com.aoxiaoyou.admin.dto.response.AdminCarryoverSettingsResponse;
+import com.aoxiaoyou.admin.dto.response.AdminIndoorRuntimeSettingsResponse;
 import com.aoxiaoyou.admin.dto.response.AdminMapTileResponse;
+import com.aoxiaoyou.admin.dto.response.AdminMediaPolicySettingsResponse;
 import com.aoxiaoyou.admin.dto.response.AdminOperationLogResponse;
 import com.aoxiaoyou.admin.dto.response.AdminRewardResponse;
 import com.aoxiaoyou.admin.dto.response.AdminSystemConfigResponse;
@@ -72,6 +78,39 @@ public class AdminSystemManagementController {
             @RequestParam(defaultValue = "10") long pageSize,
             @RequestParam(required = false) String keyword) {
         return ApiResponse.success(adminSystemManagementService.pageConfigs(pageNum, pageSize, keyword));
+    }
+
+    @GetMapping("/carryover-settings")
+    public ApiResponse<AdminCarryoverSettingsResponse> getCarryoverSettings() {
+        return ApiResponse.success(adminSystemManagementService.getCarryoverSettings());
+    }
+
+    @PutMapping("/carryover-settings")
+    public ApiResponse<AdminCarryoverSettingsResponse> updateCarryoverSettings(
+            @RequestBody AdminCarryoverSettingsUpsertRequest request) {
+        return ApiResponse.success(adminSystemManagementService.updateCarryoverSettings(request));
+    }
+
+    @GetMapping("/media-policy")
+    public ApiResponse<AdminMediaPolicySettingsResponse> getMediaPolicySettings() {
+        return ApiResponse.success(adminSystemManagementService.getMediaPolicySettings());
+    }
+
+    @PutMapping("/media-policy")
+    public ApiResponse<AdminMediaPolicySettingsResponse> updateMediaPolicySettings(
+            @Valid @RequestBody AdminMediaPolicySettingsUpsertRequest request) {
+        return ApiResponse.success(adminSystemManagementService.updateMediaPolicySettings(request));
+    }
+
+    @GetMapping("/indoor-runtime")
+    public ApiResponse<AdminIndoorRuntimeSettingsResponse> getIndoorRuntimeSettings() {
+        return ApiResponse.success(adminSystemManagementService.getIndoorRuntimeSettings());
+    }
+
+    @PutMapping("/indoor-runtime")
+    public ApiResponse<AdminIndoorRuntimeSettingsResponse> updateIndoorRuntimeSettings(
+            @RequestBody AdminIndoorRuntimeSettingsUpsertRequest request) {
+        return ApiResponse.success(adminSystemManagementService.updateIndoorRuntimeSettings(request));
     }
 
     @Operation(summary = "获取翻译设置")

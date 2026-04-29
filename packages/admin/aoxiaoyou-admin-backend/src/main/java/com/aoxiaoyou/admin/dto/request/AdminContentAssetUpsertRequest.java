@@ -14,11 +14,27 @@ public class AdminContentAssetUpsertRequest {
     private String objectKey;
     private String canonicalUrl;
     private String mimeType;
+    private String animationSubtype;
+    private Long posterAssetId;
+    private Long fallbackAssetId;
+    private Boolean defaultLoop;
+    private Boolean defaultAutoplay;
     private String localeCode;
+    private String originalFilename;
+    private String fileExtension;
+    private String uploadSource;
+    private String clientRelativePath;
+    private Long uploadedByAdminId;
+    private String uploadedByAdminName;
     private Long fileSizeBytes;
     private Integer widthPx;
     private Integer heightPx;
     private String checksum;
     private String etag;
+    private String processingPolicyCode;
+    private String processingProfileJson;
+    private String processingStatus;
+    private String processingNote;
     private String status;
+    private String publishedAt;
 }

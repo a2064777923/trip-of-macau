@@ -10,6 +10,9 @@ import {
   PoiItem,
   RewardItem,
   StampItem,
+  StoryContentBlockItem,
+  StoryMediaAssetItem,
+  StoryRulePayload,
   StorylineItem,
   SubMapProgressItem,
   TipArticleItem,
@@ -19,7 +22,10 @@ import {
 import {
   api,
   DEFAULT_PUBLIC_LOCALE,
+  PublicActivityDto,
+  PublicBadgeDto,
   PublicCityDto,
+  PublicCollectibleDto,
   PublicDiscoverCardDto,
   PublicNotificationDto,
   PublicPoiDto,
@@ -27,6 +33,11 @@ import {
   PublicRuntimeGroupDto,
   PublicStampDto,
   PublicStoryChapterDto,
+  PublicStoryChapterConditionDto,
+  PublicStoryChapterEffectDto,
+  PublicStoryChapterUnlockDto,
+  PublicStoryContentBlockDto,
+  PublicStoryMediaAssetDto,
   PublicStorylineDto,
   PublicSubMapDto,
   PublicTipArticleDto,
@@ -89,6 +100,9 @@ interface PublicContentCache {
   pois: PublicPoiDto[]
   storylines: PublicStorylineDto[]
   tips: PublicTipArticleDto[]
+  activities: PublicActivityDto[]
+  collectibles: PublicCollectibleDto[]
+  badges: PublicBadgeDto[]
   rewards: PublicRewardDto[]
   stamps: PublicStampDto[]
   notifications: PublicNotificationDto[]
@@ -112,13 +126,13 @@ function createDefaultState(): GameStateSnapshot {
   return {
     user: {
       userId: '',
-      nickname: 'Traveler',
+      nickname: '旅行者',
       avatarUrl: '',
       authStatus: 'anonymous',
       localeCode: DEFAULT_PUBLIC_LOCALE,
       openId: '',
       level: 1,
-      title: 'Traveler',
+      title: '旅行者',
       totalStamps: 0,
       currentExp: 0,
       nextLevelExp: 120,
@@ -152,6 +166,9 @@ function createEmptyPublicContent(): PublicContentCache {
     pois: [],
     storylines: [],
     tips: [],
+    activities: [],
+    collectibles: [],
+    badges: [],
     rewards: [],
     stamps: [],
     notifications: [],
@@ -317,6 +334,9 @@ function normalizePublicContent(raw: any): PublicContentCache {
     pois: Array.isArray(raw?.pois) ? raw.pois : defaults.pois,
     storylines: Array.isArray(raw?.storylines) ? raw.storylines : defaults.storylines,
     tips: Array.isArray(raw?.tips) ? raw.tips : defaults.tips,
+    activities: Array.isArray(raw?.activities) ? raw.activities : defaults.activities,
+    collectibles: Array.isArray(raw?.collectibles) ? raw.collectibles : defaults.collectibles,
+    badges: Array.isArray(raw?.badges) ? raw.badges : defaults.badges,
     rewards: Array.isArray(raw?.rewards) ? raw.rewards : defaults.rewards,
     stamps: Array.isArray(raw?.stamps) ? raw.stamps : defaults.stamps,
     notifications: Array.isArray(raw?.notifications) ? raw.notifications : defaults.notifications,
@@ -432,7 +452,7 @@ function applyRemoteUserState(remote: PublicUserStateDto, current = loadGameStat
   })
 
   const emergencyContact = {
-    name: remote.preferences.emergencyContactName || 'Emergency contact',
+    name: remote.preferences.emergencyContactName || '緊急聯絡人',
     phone: remote.preferences.emergencyContactPhone || '10086',
   }
   Taro.setStorageSync(EMERGENCY_CONTACT_KEY, emergencyContact)
@@ -559,10 +579,10 @@ function colorFromKey(key: string, palette = DEFAULT_COLOR_PALETTE) {
 
 function formatMinutes(minutes?: number) {
   if (!minutes || minutes <= 0) {
-    return 'Flexible walk'
+    return '彈性漫步'
   }
   if (minutes < 60) {
-    return `${minutes} min`
+    return `${minutes} 分鐘`
   }
   const hours = Math.floor(minutes / 60)
   const remaining = minutes % 60
@@ -681,13 +701,13 @@ function resolveStampIcon(type: StampItem['type'], rarity: StampItem['rarity']) 
 function resolveCategoryLabel(code?: string) {
   switch (code) {
     case 'newbie':
-      return 'Newbie'
+      return '新手攻略'
     case 'slow-travel':
-      return 'Slow travel'
+      return '慢遊推薦'
     case 'photo':
-      return 'Photo'
+      return '拍照秘籍'
     default:
-      return pickReadableText(humanizeCode(code), 'Guide')
+      return pickReadableText(humanizeCode(code), '指南')
   }
 }
 
@@ -698,18 +718,18 @@ function resolveCityRewardTitle(cityName: string) {
 function buildPoiSubtitle(dto: PublicPoiDto) {
   return pickReadableText(
     dto.subtitle,
-    dto.storylineName ? `${dto.storylineName} stop` : '',
+    dto.storylineName ? `${dto.storylineName} 站點` : '',
     humanizeCode(dto.categoryCode),
-    'Featured route stop',
+    '精選路線站點',
   )
 }
 
 function buildPoiDescription(dto: PublicPoiDto) {
   const storyName = pickReadableText(dto.storylineName, humanizeCode(dto.storylineCode))
-  const poiName = pickReadableText(dto.name, humanizeCode(dto.code), 'Explorer stop')
+  const poiName = pickReadableText(dto.name, humanizeCode(dto.code), '探索點')
   return pickReadableText(
     dto.description,
-    storyName ? `${poiName} is a key stop on the ${storyName} route.` : `${poiName} is a featured Macau exploration stop.`,
+    storyName ? `${poiName}是${storyName}路線的重要站點` : `${poiName}是澳門精選探索點`,
   )
 }
 
@@ -723,10 +743,29 @@ function buildPoiTags(dto: PublicPoiDto) {
 }
 
 function buildCollectibleHints(poiName: string, storyName?: string) {
+  const liveHints = getCollectibleCatalog()
+    .filter((collectible) => {
+      const names = [
+        ...collectible.relatedStorylines.map((binding) => binding.name),
+        ...collectible.relatedCities.map((binding) => binding.name),
+        ...collectible.relatedSubMaps.map((binding) => binding.name),
+      ]
+      const normalizedPoiName = poiName.toLowerCase()
+      const normalizedStoryName = storyName?.toLowerCase() || ''
+      return names.some((name) => {
+        const normalized = name.toLowerCase()
+        return normalized.includes(normalizedPoiName) || (!!normalizedStoryName && normalized.includes(normalizedStoryName))
+      })
+    })
+    .map((collectible) => collectible.name)
+    .slice(0, 3)
+  if (liveHints.length) {
+    return liveHints
+  }
   return [
-    `${poiName} stamp`,
-    storyName ? `${storyName} keepsake` : 'Route keepsake',
-    'Traveler photo note',
+    `${poiName}印章`,
+    storyName ? `${storyName}紀念品` : '路線紀念品',
+    '旅人照片筆記',
   ]
 }
 
@@ -779,14 +818,14 @@ function getPoiCatalog() {
         icon: resolvePoiIcon(dto.categoryCode),
         latitude: dto.latitude,
         longitude: dto.longitude,
-        gcj02Latitude: dto.latitude,
-        gcj02Longitude: dto.longitude,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
         address: pickReadableText(dto.address, name),
         geofenceRadius: dto.manualCheckinRadius || dto.triggerRadius || 200,
         triggerRadius: dto.triggerRadius || 50,
         difficulty: sanitizeDifficulty(dto.difficulty),
-        category: pickReadableText(humanizeCode(dto.categoryCode), 'Explorer stop'),
-        district: pickReadableText(humanizeCode(dto.district), humanizeCode(dto.cityCode), 'Macau'),
+        category: pickReadableText(humanizeCode(dto.categoryCode), '探索點'),
+        district: pickReadableText(humanizeCode(dto.district), humanizeCode(dto.cityCode), '澳門'),
         storyLineId: dto.storylineId,
         storyName,
         description: buildPoiDescription(dto),
@@ -801,9 +840,9 @@ function getPoiCatalog() {
         markerKey: resolvePoiMarkerKey(dto),
         mapIconUrl: dto.mapIconUrl,
         introTitle: pickReadableText(dto.introTitle, name),
-        introSummary: pickReadableText(dto.introSummary, dto.description, `Follow the route narrative at ${name}.`),
-        indoorMapTitle: `${name} guide`,
-        indoorMapHint: `Use the nearby route and story panels to plan your stop at ${name}.`,
+        introSummary: pickReadableText(dto.introSummary, dto.description, `在${name}跟隨路線故事`),
+        indoorMapTitle: `${name}指南`,
+        indoorMapHint: `使用附近的路線和故事面板規劃您在${name}的停留`,
         recommendedTipIds: [],
         recommendedDiscoverIds: [],
         collectibleHints: buildCollectibleHints(name, storyName),
@@ -819,17 +858,75 @@ function getRewardCatalog() {
       const availableInventory = reward.availableInventory
         ?? Math.max(0, (reward.inventoryTotal || 0) - (reward.inventoryRedeemed || 0))
       return {
+        ...reward,
         id: reward.id,
-        name: pickReadableText(reward.name, humanizeCode(reward.code), `Reward ${reward.id}`),
-        subtitle: pickReadableText(reward.subtitle, 'Redeemable reward'),
+        name: pickReadableText(reward.name, humanizeCode(reward.code), `獎勵 ${reward.id}`),
+        subtitle: pickReadableText(reward.subtitle, '可兌換獎勵'),
         icon: resolveRewardIcon(reward.code),
         stampCost: reward.stampCost,
         inventory: availableInventory,
         status: availableInventory > 0 ? 'available' as const : 'coming_soon' as const,
-        description: pickReadableText(reward.description, 'Collect stamps to unlock this reward.'),
+        description: pickReadableText(reward.description, '收集印章解鎖此獎勵'),
         highlight: pickReadableText(reward.highlight, `Redeem with ${reward.stampCost} stamps.`),
+        relatedStorylines: reward.relatedStorylines || [],
+        relatedCities: reward.relatedCities || [],
+        relatedSubMaps: reward.relatedSubMaps || [],
+        relatedIndoorBuildings: reward.relatedIndoorBuildings || [],
+        relatedIndoorFloors: reward.relatedIndoorFloors || [],
+        attachmentAssetUrls: reward.attachmentAssetUrls || [],
       }
     })
+}
+
+function firstRelationName(bindings?: Array<{ name: string; code: string }>) {
+  if (!Array.isArray(bindings) || !bindings.length) {
+    return ''
+  }
+  return pickReadableText(bindings[0].name, humanizeCode(bindings[0].code))
+}
+
+function getActivityCatalog() {
+  return loadPublicContent().activities
+    .slice()
+    .sort((left, right) => {
+      const leftPinned = left.isPinned || 0
+      const rightPinned = right.isPinned || 0
+      if (leftPinned !== rightPinned) {
+        return rightPinned - leftPinned
+      }
+      return (left.sortOrder || 0) - (right.sortOrder || 0)
+    })
+}
+
+function getCollectibleCatalog() {
+  return loadPublicContent().collectibles
+    .slice()
+    .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
+    .map((collectible) => ({
+      ...collectible,
+      name: pickReadableText(collectible.name, humanizeCode(collectible.code), `Collectible ${collectible.id}`),
+      relatedStorylines: collectible.relatedStorylines || [],
+      relatedCities: collectible.relatedCities || [],
+      relatedSubMaps: collectible.relatedSubMaps || [],
+      relatedIndoorBuildings: collectible.relatedIndoorBuildings || [],
+      relatedIndoorFloors: collectible.relatedIndoorFloors || [],
+      attachmentAssetUrls: collectible.attachmentAssetUrls || [],
+    }))
+}
+
+function getBadgeCatalog() {
+  return loadPublicContent().badges
+    .slice()
+    .map((badge) => ({
+      ...badge,
+      name: pickReadableText(badge.name, humanizeCode(badge.code), `Badge ${badge.id}`),
+      relatedStorylines: badge.relatedStorylines || [],
+      relatedCities: badge.relatedCities || [],
+      relatedSubMaps: badge.relatedSubMaps || [],
+      relatedIndoorBuildings: badge.relatedIndoorBuildings || [],
+      relatedIndoorFloors: badge.relatedIndoorFloors || [],
+      attachmentAssetUrls: badge.attachmentAssetUrls || [],
+    }))
 }
 
 function getStampCatalog(state = loadGameState()) {
@@ -859,6 +956,13 @@ function mapStoryChapter(
   storyUnlocked: boolean,
   completedChapters: number,
 ) {
+  const contentBlocks = Array.isArray(chapter.contentBlocks)
+    ? chapter.contentBlocks
+      .slice()
+      .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
+      .map((block) => mapStoryContentBlock(block))
+    : []
+
   return {
     id: chapter.id,
     title: pickReadableText(chapter.title, `Chapter ${index + 1}`),
@@ -867,8 +971,94 @@ function mapStoryChapter(
     achievement: pickReadableText(chapter.achievement, 'Unlock a new milestone.'),
     collectible: pickReadableText(chapter.collectible, 'Story keepsake'),
     locationName: pickReadableText(chapter.locationName, 'Macau'),
+    anchorType: chapter.anchorType,
+    anchorTargetId: chapter.anchorTargetId,
+    anchorTargetCode: chapter.anchorTargetCode,
+    primaryMediaUrl: chapter.primaryMediaUrl || chapter.mediaUrl,
+    primaryMediaAsset: mapStoryMediaAsset(chapter.primaryMediaAsset),
+    unlock: mapStoryRulePayload(chapter.unlock),
+    prerequisite: mapStoryRulePayload(chapter.prerequisite, chapter.prerequisiteJson),
+    completion: mapStoryRulePayload(chapter.completion, chapter.completionJson),
+    effect: mapStoryRulePayload(chapter.effect, chapter.rewardJson),
+    contentBlocks,
+    prerequisiteJson: chapter.prerequisiteJson,
+    completionJson: chapter.completionJson,
+    rewardJson: chapter.rewardJson,
     locked: !storyUnlocked || index > completedChapters,
   }
+}
+
+function mapStoryMediaAsset(asset?: PublicStoryMediaAssetDto | null): StoryMediaAssetItem | undefined {
+  if (!asset) {
+    return undefined
+  }
+
+  return {
+    id: asset.id,
+    assetKind: asset.assetKind,
+    url: asset.url,
+    mimeType: asset.mimeType,
+    originalFilename: asset.originalFilename,
+    widthPx: asset.widthPx,
+    heightPx: asset.heightPx,
+    animationSubtype: asset.animationSubtype,
+    defaultLoop: asset.defaultLoop,
+    defaultAutoplay: asset.defaultAutoplay,
+    posterUrl: asset.posterUrl,
+    fallbackUrl: asset.fallbackUrl,
+  }
+}
+
+function mapStoryContentBlock(block: PublicStoryContentBlockDto): StoryContentBlockItem {
+  return {
+    id: block.id,
+    code: block.code,
+    blockType: block.blockType,
+    title: block.title,
+    summary: block.summary,
+    body: block.body,
+    stylePreset: block.stylePreset,
+    displayMode: block.displayMode,
+    visibilityJson: block.visibilityJson,
+    displayConditionJson: block.displayConditionJson,
+    configJson: block.configJson,
+    sortOrder: block.sortOrder,
+    primaryAsset: mapStoryMediaAsset(block.primaryAsset),
+    attachmentAssets: Array.isArray(block.attachmentAssets)
+      ? block.attachmentAssets.map((asset) => mapStoryMediaAsset(asset)).filter(Boolean) as StoryMediaAssetItem[]
+      : [],
+  }
+}
+
+function mapStoryRulePayload(
+  payload?: PublicStoryChapterUnlockDto | PublicStoryChapterConditionDto | PublicStoryChapterEffectDto | null,
+  rawJson?: string | null,
+): StoryRulePayload | undefined {
+  if (!payload && !rawJson) {
+    return undefined
+  }
+
+  return {
+    type: payload?.type,
+    config: payload?.config,
+    rawJson: payload?.rawJson || rawJson || undefined,
+  }
+}
+
+function getStoryCityBindingCodes(story: PublicStorylineDto) {
+  const bindingCodes = Array.isArray(story.cityBindings)
+    ? story.cityBindings.map((binding) => binding.code).filter((value) => hasText(value))
+    : []
+  if (bindingCodes.length) {
+    return bindingCodes
+  }
+  return hasText(story.cityCode) ? [story.cityCode] : [DEFAULT_UNLOCKED_CITY_ID]
+}
+
+function getStorySubMapBindingCodes(story: PublicStorylineDto) {
+  return Array.isArray(story.subMapBindings)
+    ? story.subMapBindings.map((binding) => binding.code).filter((value) => hasText(value))
+    : []
 }
 
 function ensureAtLeastOneCity(state = loadGameState()) {
@@ -924,9 +1114,12 @@ function getStoryCatalog(state = loadGameState()) {
     .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
     .map((story) => {
       const storyPoiIds = pois.filter((poi) => poi.storyLineId === story.id).map((poi) => poi.id)
-      const storyUnlocked = unlockedCities.has(story.cityCode)
+      const cityBindingCodes = getStoryCityBindingCodes(story)
+      const subMapBindingCodes = getStorySubMapBindingCodes(story)
+      const primaryCityCode = cityBindingCodes[0] || DEFAULT_UNLOCKED_CITY_ID
+      const storyUnlocked = cityBindingCodes.some((cityCode) => unlockedCities.has(cityCode))
         || state.completedStoryIds.includes(story.id)
-        || story.cityCode === DEFAULT_UNLOCKED_CITY_ID
+        || primaryCityCode === DEFAULT_UNLOCKED_CITY_ID
       const chapters = Array.isArray(story.chapters) ? story.chapters : []
       const completedChapters = chapters.filter((chapter) => state.completedChapterIds.includes(chapter.id)).length
       const totalChapters = story.totalChapters || chapters.length || 1
@@ -938,6 +1131,11 @@ function getStoryCatalog(state = loadGameState()) {
         description: pickReadableText(story.description, `${pickReadableText(story.name, story.nameEn, 'This route')} connects major Macau story stops.`),
         icon: resolveStoryIcon(story.code),
         coverColor: colorFromKey(story.code || String(story.id)),
+        coverImageUrl: story.coverImageUrl,
+        bannerImageUrl: story.bannerImageUrl,
+        attachmentAssets: Array.isArray(story.attachmentAssets)
+          ? story.attachmentAssets.map((asset) => mapStoryMediaAsset(asset)).filter(Boolean) as StoryMediaAssetItem[]
+          : [],
         totalChapters,
         completedChapters,
         estimatedTime: formatMinutes(story.estimatedMinutes),
@@ -947,11 +1145,13 @@ function getStoryCatalog(state = loadGameState()) {
         progress: Math.round((completedChapters / totalChapters) * 100),
         rewardBadge: pickReadableText(story.rewardBadge, `${pickReadableText(story.name, story.nameEn, 'Story')} badge`),
         locked: !storyUnlocked,
-        unlockHint: storyUnlocked ? '' : `Explore ${humanizeCode(story.cityCode)} to unlock this storyline.`,
+        unlockHint: storyUnlocked ? '' : `Explore ${humanizeCode(primaryCityCode)} to unlock this storyline.`,
         chapters: mappedChapters,
+        cityBindingCodes,
+        subMapBindingCodes,
         moodTags: [
           sanitizeDifficulty(story.difficulty),
-          humanizeCode(story.cityCode),
+          humanizeCode(primaryCityCode),
           humanizeCode(story.code),
         ].filter(Boolean),
       }
@@ -971,8 +1171,8 @@ function getLiveNotifications(state = loadGameState()) {
 
       return {
         id: notification.id,
-        title: pickReadableText(notification.title, `Update ${notification.id}`),
-        content: pickReadableText(notification.content, 'A new traveler update is available.'),
+        title: pickReadableText(notification.title, `更新 ${notification.id}`),
+        content: pickReadableText(notification.content, '有新的旅人更新可用'),
         timeLabel: formatPublishedTime(notification.publishedAt),
         unread: (state.unreadNotificationIds || []).includes(notification.id),
         type,
@@ -986,17 +1186,17 @@ function getLiveTips(state = loadGameState()) {
     .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
     .map((tip) => ({
       id: tip.id,
-      title: pickReadableText(tip.title, humanizeCode(tip.code), `Tip ${tip.id}`),
-      summary: pickReadableText(tip.summary, 'Traveler guidance for this route.'),
+      title: pickReadableText(tip.title, humanizeCode(tip.code), `秘笈 ${tip.id}`),
+      summary: pickReadableText(tip.summary, '旅人路線指南'),
       coverColor: colorFromKey(tip.code || String(tip.id)),
       category: resolveCategoryLabel(tip.categoryCode),
-      author: pickReadableText(tip.authorDisplayName, 'Trip of Macau'),
+      author: pickReadableText(tip.authorDisplayName, '澳門之旅'),
       likes: 0,
       saves: 0,
       readMinutes: Math.max(3, (tip.contentParagraphs || []).length * 2),
       tags: Array.isArray(tip.tags) ? tip.tags : [],
       imageUrl: tip.coverImageUrl || undefined,
-      locationName: pickReadableText(tip.locationName, humanizeCode(tip.cityCode), 'Macau'),
+      locationName: pickReadableText(tip.locationName, humanizeCode(tip.cityCode), '澳門'),
       contentParagraphs: Array.isArray(tip.contentParagraphs) ? tip.contentParagraphs : [],
       createdAt: tip.publishedAt,
     }))
@@ -1005,21 +1205,70 @@ function getLiveTips(state = loadGameState()) {
 }
 
 function getLiveDiscoverCards() {
-  return loadPublicContent().discoverCards.map((card) => ({
-    id: card.id,
-    title: pickReadableText(card.title, `Discover ${card.sourceId || card.id}`),
-    subtitle: pickReadableText(card.subtitle, humanizeCode(card.sourceType), humanizeCode(card.type)),
-    description: pickReadableText(card.description, 'Discover a featured Macau experience.'),
-    tag: pickReadableText(card.tag, humanizeCode(card.type), 'Featured'),
-    icon: pickReadableText(card.icon, card.type === 'activity' ? '🌃' : card.type === 'merchant' ? '🎟️' : '🔥'),
-    type: card.type,
-    district: pickReadableText(card.district, 'Macau'),
-    actionText: pickReadableText(
-      card.actionText,
-      card.type === 'merchant' ? 'Redeem' : card.type === 'checkin' ? 'Check in' : 'View',
-    ),
-    coverColor: pickReadableText(card.coverColor, colorFromKey(card.id)),
-  }))
+  const activitiesById = new Map(getActivityCatalog().map((item) => [item.id, item]))
+  const rewardsById = new Map(loadPublicContent().rewards.map((item) => [item.id, item]))
+  const poisById = new Map(loadPublicContent().pois.map((item) => [item.id, item]))
+
+  return loadPublicContent().discoverCards.map((card) => {
+    const activity = card.sourceType === 'activity' && card.sourceId ? activitiesById.get(card.sourceId) : undefined
+    const reward = card.sourceType === 'reward' && card.sourceId ? rewardsById.get(card.sourceId) : undefined
+    const poi = card.sourceType === 'poi' && card.sourceId ? poisById.get(card.sourceId) : undefined
+
+    return {
+      id: card.id,
+      title: pickReadableText(
+        card.title,
+        activity?.title,
+        reward?.name,
+        poi?.name,
+        `探索 ${card.sourceId || card.id}`,
+      ),
+      subtitle: pickReadableText(
+        card.subtitle,
+        activity?.venueName,
+        activity?.activityType,
+        reward?.subtitle,
+        poi?.subtitle,
+        humanizeCode(card.sourceType),
+        humanizeCode(card.type),
+      ),
+      description: pickReadableText(
+        card.description,
+        activity?.summary,
+        activity?.description,
+        reward?.description,
+        poi?.description,
+        '探索澳門精選體驗',
+      ),
+      tag: pickReadableText(
+        card.tag,
+        activity?.isPinned ? '精選' : '',
+        humanizeCode(activity?.activityType),
+        humanizeCode(card.type),
+        '精選',
+      ),
+      icon: pickReadableText(
+        card.icon,
+        card.type === 'activity' ? '🌃' : card.type === 'merchant' ? '🎟️' : '🔥',
+      ),
+      type: card.type,
+      district: pickReadableText(
+        card.district,
+        firstRelationName(activity?.subMapBindings),
+        firstRelationName(activity?.cityBindings),
+        firstRelationName(reward?.relatedSubMaps),
+        firstRelationName(reward?.relatedCities),
+        poi?.district,
+        activity?.venueName,
+        'Macau',
+      ),
+      actionText: pickReadableText(
+        card.actionText,
+        card.type === 'merchant' ? 'Redeem' : card.type === 'checkin' ? 'Check in' : 'View',
+      ),
+      coverColor: pickReadableText(card.coverColor, colorFromKey(String(card.id))),
+    }
+  })
 }
 
 function getRuntimeGroupSettings(group: string): Record<string, any> {
@@ -1069,6 +1318,9 @@ export async function refreshPublicContent(locale: PublicLocaleCode = (loadGameS
     pois,
     storylines,
     tips,
+    activities,
+    collectibles,
+    badges,
     rewards,
     stamps,
     notifications,
@@ -1082,6 +1334,9 @@ export async function refreshPublicContent(locale: PublicLocaleCode = (loadGameS
     api.public.getPublicPois(locale),
     api.public.getPublicStorylines(locale),
     api.public.getPublicTips(locale),
+    api.public.getPublicActivities(locale),
+    api.public.getPublicCollectibles(locale),
+    api.public.getPublicBadges(locale),
     api.public.getPublicRewards(locale),
     api.public.getPublicStamps(locale),
     api.public.getPublicNotifications(locale),
@@ -1099,6 +1354,9 @@ export async function refreshPublicContent(locale: PublicLocaleCode = (loadGameS
     pois,
     storylines,
     tips,
+    activities,
+    collectibles,
+    badges,
     rewards,
     stamps,
     notifications,
@@ -1307,7 +1565,7 @@ export async function saveTravelAssessment(answer: TravelAssessmentAnswer, userL
   if (userLocation) {
     void registerCityVisitByLocation(userLocation.latitude, userLocation.longitude)
   }
-  const recommendation = getTravelRecommendation(answer)
+  const recommendation = getTravelRecommendation(answer, userLocation)
   const next = {
     ...state,
     travelAssessment: answer,
@@ -1317,13 +1575,19 @@ export async function saveTravelAssessment(answer: TravelAssessmentAnswer, userL
   return recommendation
 }
 
-export function getTravelRecommendation(answer?: TravelAssessmentAnswer | null) {
+export function getTravelRecommendation(answer?: TravelAssessmentAnswer | null, userLocation?: { latitude: number; longitude: number }) {
   const target = answer || loadGameState().travelAssessment
   const stories = getStorylines()
   const discoverCards = getDiscoverCards()
   const tips = getTipArticles().filter((tip) => !tip.isPublishedByUser)
   const pois = getPoiCatalog()
   const profiles = getTravelRecommendationProfiles()
+
+  // Check if user is in Macau (within 30km of center)
+  const macauCenter = { latitude: 22.1987, longitude: 113.5439 }
+  const isInMacau = userLocation 
+    ? calculateDistance(userLocation.latitude, userLocation.longitude, macauCenter.latitude, macauCenter.longitude) < 30000
+    : false
 
   if (profiles.length) {
     const normalizedInterests = (target?.interests || []).map((interest) => interest.toLowerCase())
@@ -1350,29 +1614,60 @@ export function getTravelRecommendation(answer?: TravelAssessmentAnswer | null) 
       || tips.find((tip) => humanizeCode(tip.title).toLowerCase() === humanizeCode(selectedProfile.tipCode).toLowerCase())
       || tips[0]
 
+    // Calculate distance to starting POI if user location is available
+    const distanceToStart = userLocation && selectedPoi
+      ? calculateDistance(userLocation.latitude, userLocation.longitude, selectedPoi.latitude, selectedPoi.longitude)
+      : null
+
+    // Generate detailed recommendation reasons
+    const reasons = []
+    if (isInMacau) {
+      reasons.push('您目前在澳門地區')
+    }
+    if (distanceToStart !== null) {
+      reasons.push(`距離起點 ${formatDistance(distanceToStart)}`)
+    }
+    if (selectedStory?.difficulty) {
+      const difficultyMap: Record<string, string> = { easy: '簡單', medium: '中等', hard: '困難' }
+      reasons.push(`難度：${difficultyMap[selectedStory.difficulty] || selectedStory.difficulty}`)
+    }
+    if (selectedStory?.estimatedMinutes) {
+      const hours = Math.floor(selectedStory.estimatedMinutes / 60)
+      const minutes = selectedStory.estimatedMinutes % 60
+      reasons.push(`預計 ${hours > 0 ? `${hours}小時` : ''}${minutes > 0 ? `${minutes}分鐘` : ''}`)
+    }
+    if (target?.interests && target.interests.length > 0) {
+      reasons.push(`符合您的興趣：${target.interests.slice(0, 2).join('、')}`)
+    }
+
     return {
       storyId: selectedStory?.id || 0,
-      storyName: selectedStory?.name || pickReadableText(humanizeCode(selectedProfile.storyCode), 'Macau Highlights'),
-      activityTitle: pickReadableText(selectedProfile.activityTitle, discoverCards[0]?.title, 'Featured route'),
-      poiName: selectedPoi?.name || pickReadableText(humanizeCode(selectedProfile.poiCode), 'Macau'),
-      ugcTitle: selectedTip?.title || pickReadableText(humanizeCode(selectedProfile.tipCode), 'Traveler guide'),
-      reason: pickReadableText(
+      storyName: selectedStory?.name || pickReadableText(humanizeCode(selectedProfile.storyCode), '澳門精選'),
+      activityTitle: pickReadableText(selectedProfile.activityTitle, discoverCards[0]?.title, '精選路線'),
+      poiName: selectedPoi?.name || pickReadableText(humanizeCode(selectedProfile.poiCode), '澳門'),
+      ugcTitle: selectedTip?.title || pickReadableText(humanizeCode(selectedProfile.tipCode), '旅行指南'),
+      reason: reasons.length > 0 ? reasons.join(' • ') : pickReadableText(
         selectedProfile.reason,
         target
-          ? `Based on your selected interests, ${selectedStory?.name || 'this route'} fits the current journey best.`
-          : `Start with ${selectedStory?.name || 'the highlighted route'} to connect the main live story path.`,
+          ? `根據您選擇的興趣，${selectedStory?.name || '此路線'}最適合當前的旅程。`
+          : `從${selectedStory?.name || '精選路線'}開始，連接主要的故事路徑。`,
       ),
+      isInMacau,
+      distanceToStart,
+      difficulty: selectedStory?.difficulty,
+      estimatedMinutes: selectedStory?.estimatedMinutes,
+      tags: target?.interests || [],
     }
   }
 
   if (!stories.length || !tips.length || !pois.length) {
     return {
       storyId: 0,
-      storyName: 'Macau Highlights',
-      activityTitle: discoverCards[0]?.title || 'Featured route',
-      poiName: 'Macau',
-      ugcTitle: tips[0]?.title || 'Traveler guide',
-      reason: 'Live content is still loading. Refresh once public data is available.',
+      storyName: '澳門精選',
+      activityTitle: discoverCards[0]?.title || '精選路線',
+      poiName: '澳門',
+      ugcTitle: tips[0]?.title || '旅行指南',
+      reason: '內容正在加載中，請稍後刷新。',
     }
   }
 
@@ -1389,12 +1684,12 @@ export function getTravelRecommendation(answer?: TravelAssessmentAnswer | null) 
   return {
     storyId: selectedStory.id,
     storyName: selectedStory.name,
-    activityTitle: discoverCards[0]?.title || 'Featured route',
+    activityTitle: discoverCards[0]?.title || '精選路線',
     poiName: selectedPoi.name,
     ugcTitle: selectedTip.title,
     reason: target
-      ? `Based on your selected interests, ${selectedStory.name} and ${selectedPoi.name} fit the current route best.`
-      : `Start with ${selectedStory.name} to connect the main public story route.`,
+      ? `根據您選擇的興趣，${selectedStory.name}和${selectedPoi.name}最適合當前路線。`
+      : `從${selectedStory.name}開始，連接主要的公開故事路線。`,
   }
 }
 
@@ -1465,11 +1760,11 @@ function buildArrivalExperience(poi: PoiItem) {
   const stamp = pickCheckinStamp(poi.id, poi.storyLineId)
   return {
     poiId: poi.id,
-    title: `Arrived at ${poi.name}`,
-    narrative: pickReadableText(poi.introSummary, poi.description, `${poi.name} is ready for your next story beat.`),
-    audioTitle: pickReadableText(poi.introTitle, `${poi.name} audio guide`),
+    title: `抵達${poi.name}`,
+    narrative: pickReadableText(poi.introSummary, poi.description, `${poi.name}已準備好迎接您的下一個故事節拍`),
+    audioTitle: pickReadableText(poi.introTitle, `${poi.name}語音導覽`),
     audioDuration: formatMinutes(Math.max(1, Math.round((poi.staySeconds || 30) / 60))),
-    rewardLabel: stamp ? `Unlock ${stamp.name}` : `Advance ${storyline?.name || 'your route'}`,
+    rewardLabel: stamp ? `解鎖${stamp.name}` : `推進${storyline?.name || '您的路線'}`,
     canManualCheckin: (poi.geofenceRadius || 0) > (poi.triggerRadius || 0),
   }
 }
@@ -1493,8 +1788,8 @@ export function getNearbyPois(lat: number, lng: number, accuracy: number, cityId
     .filter((poi) => poi.cityId === currentCityId)
     .filter((poi) => !currentSubMapId || poi.subMapId === currentSubMapId)
     .map((poi) => {
-      const evaluation = isWithinTriggerRange(lat, lng, poi.gcj02Latitude, poi.gcj02Longitude, poi.triggerRadius, accuracy)
-      const distanceMeters = calculateDistance(lat, lng, poi.gcj02Latitude, poi.gcj02Longitude)
+      const evaluation = isWithinTriggerRange(lat, lng, poi.latitude, poi.longitude, poi.triggerRadius, accuracy)
+      const distanceMeters = calculateDistance(lat, lng, poi.latitude, poi.longitude)
       return {
         ...poi,
         distanceMeters,
@@ -1629,13 +1924,13 @@ export function getPoiSearchTips(keyword: string, currentCityId?: string, curren
       id: String(poi.id),
       name: poi.name,
       address: poi.address,
-      location: `${poi.gcj02Longitude},${poi.gcj02Latitude}`,
+      location: `${poi.longitude},${poi.latitude}`,
       district: poi.district,
     }))
 }
 
 export function getWalkingRouteSummary(poi: PoiItem, location: { latitude: number; longitude: number }) {
-  const distance = calculateDistance(location.latitude, location.longitude, poi.gcj02Latitude, poi.gcj02Longitude)
+  const distance = calculateDistance(location.latitude, location.longitude, poi.latitude, poi.longitude)
   const minutes = Math.max(3, Math.ceil(distance / 65))
   return {
     distance: String(Math.round(distance)),
@@ -1764,7 +2059,7 @@ export function getCheckinHistory() {
 
 export function getEmergencyContact() {
   return Taro.getStorageSync(EMERGENCY_CONTACT_KEY) || {
-    name: 'Emergency contact',
+    name: '緊急聯絡人',
     phone: '10086',
   }
 }

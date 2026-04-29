@@ -12,17 +12,31 @@ CREATE TABLE IF NOT EXISTS content_assets (
   `canonical_url` VARCHAR(1024) NOT NULL DEFAULT '',
   `mime_type` VARCHAR(128) NOT NULL DEFAULT '',
   `locale_code` VARCHAR(16) NOT NULL DEFAULT '',
+  `original_filename` VARCHAR(255) NOT NULL DEFAULT '',
+  `file_extension` VARCHAR(32) NOT NULL DEFAULT '',
+  `upload_source` VARCHAR(32) NOT NULL DEFAULT 'picker',
+  `client_relative_path` VARCHAR(1024) NULL,
+  `uploaded_by_admin_id` BIGINT NULL,
+  `uploaded_by_admin_name` VARCHAR(128) NOT NULL DEFAULT '',
   `file_size_bytes` BIGINT NOT NULL DEFAULT 0,
   `width_px` INT NULL,
   `height_px` INT NULL,
   `checksum` VARCHAR(128) NOT NULL DEFAULT '',
   `etag` VARCHAR(128) NOT NULL DEFAULT '',
+  `processing_policy_code` VARCHAR(64) NOT NULL DEFAULT 'passthrough',
+  `processing_profile_json` JSON NULL,
+  `processing_status` VARCHAR(32) NOT NULL DEFAULT 'stored',
+  `processing_note` TEXT NULL,
   `status` VARCHAR(16) NOT NULL DEFAULT 'draft',
+  `published_at` DATETIME NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted` TINYINT NOT NULL DEFAULT 0,
   KEY `idx_content_assets_kind_status` (`asset_kind`, `status`),
-  KEY `idx_content_assets_locale` (`locale_code`)
+  KEY `idx_content_assets_locale` (`locale_code`),
+  KEY `idx_content_assets_upload_source` (`upload_source`),
+  KEY `idx_content_assets_processing_policy` (`processing_policy_code`),
+  KEY `idx_content_assets_uploaded_by_admin_id` (`uploaded_by_admin_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS app_runtime_settings (

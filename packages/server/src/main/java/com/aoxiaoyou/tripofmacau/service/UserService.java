@@ -14,6 +14,7 @@ import com.aoxiaoyou.tripofmacau.dto.response.UserRewardRedemptionResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.UserSessionResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.UserStampProgressResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.UserStateResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.TestModeResponse;
 
 import java.util.List;
 
@@ -42,4 +43,6 @@ public interface UserService {
     UserCheckinResponse checkin(Long userId, UserCheckinRequest request, String localeHint);
 
     UserRewardRedeemResponse redeemReward(Long userId, Long rewardId, String localeHint);
+    
+    TestModeResponse getTestMode(Long userId);
 }

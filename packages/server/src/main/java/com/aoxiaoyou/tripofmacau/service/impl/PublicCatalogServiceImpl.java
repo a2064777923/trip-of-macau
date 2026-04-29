@@ -2,30 +2,62 @@ package com.aoxiaoyou.tripofmacau.service.impl;
 
 import com.aoxiaoyou.tripofmacau.common.exception.BusinessException;
 import com.aoxiaoyou.tripofmacau.common.util.LocalizedContentSupport;
+import com.aoxiaoyou.tripofmacau.dto.response.ActivityResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.BadgeResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.CityResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.CatalogRelationBindingResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.CollectibleResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.DiscoverCardResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.GameRewardResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.NotificationResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.PoiResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.RedeemablePrizeResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.RewardPresentationResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.RewardPresentationStepResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.RewardRuleSummaryResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.RewardResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.RuntimeGroupResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.StampResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.StoryChapterResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.StoryChapterConditionResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.StoryChapterEffectResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.StoryChapterUnlockResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.StoryContentBlockResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.StoryLineResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.StoryMediaAssetResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.SubMapResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.TipArticleResponse;
+import com.aoxiaoyou.tripofmacau.entity.Activity;
+import com.aoxiaoyou.tripofmacau.entity.Badge;
 import com.aoxiaoyou.tripofmacau.entity.ContentAsset;
+import com.aoxiaoyou.tripofmacau.entity.ContentAssetLink;
+import com.aoxiaoyou.tripofmacau.entity.ContentRelationLink;
 import com.aoxiaoyou.tripofmacau.entity.City;
+import com.aoxiaoyou.tripofmacau.entity.Collectible;
+import com.aoxiaoyou.tripofmacau.entity.GameReward;
+import com.aoxiaoyou.tripofmacau.entity.IndoorBuilding;
+import com.aoxiaoyou.tripofmacau.entity.IndoorFloor;
 import com.aoxiaoyou.tripofmacau.entity.Notification;
 import com.aoxiaoyou.tripofmacau.entity.Poi;
+import com.aoxiaoyou.tripofmacau.entity.RedeemablePrize;
+import com.aoxiaoyou.tripofmacau.entity.RewardPresentation;
+import com.aoxiaoyou.tripofmacau.entity.RewardPresentationStep;
+import com.aoxiaoyou.tripofmacau.entity.RewardRule;
+import com.aoxiaoyou.tripofmacau.entity.RewardRuleBinding;
 import com.aoxiaoyou.tripofmacau.entity.Reward;
 import com.aoxiaoyou.tripofmacau.entity.Stamp;
 import com.aoxiaoyou.tripofmacau.entity.StoryChapter;
+import com.aoxiaoyou.tripofmacau.entity.StoryChapterBlockLink;
+import com.aoxiaoyou.tripofmacau.entity.StoryContentBlock;
 import com.aoxiaoyou.tripofmacau.entity.StoryLine;
 import com.aoxiaoyou.tripofmacau.entity.SubMap;
 import com.aoxiaoyou.tripofmacau.entity.TipArticle;
 import com.aoxiaoyou.tripofmacau.service.CatalogFoundationService;
 import com.aoxiaoyou.tripofmacau.service.PublicCatalogService;
 import com.aoxiaoyou.tripofmacau.service.RuntimeSettingsService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -36,6 +68,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,6 +83,7 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
     private final CatalogFoundationService catalogFoundationService;
     private final RuntimeSettingsService runtimeSettingsService;
     private final LocalizedContentSupport localizedContentSupport;
+    private final ObjectMapper objectMapper;
 
     @Override
     public List<CityResponse> listCities(String localeHint) {
@@ -176,8 +210,26 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
     @Override
     public List<RewardResponse> listRewards(String localeHint) {
         List<Reward> rewards = catalogFoundationService.listPublishedRewards();
-        Map<Long, ContentAsset> assets = catalogFoundationService.getPublishedAssetsByIds(rewards.stream()
-                .map(Reward::getCoverAssetId)
+        List<Long> rewardIds = rewards.stream().map(Reward::getId).toList();
+        Map<Long, StoryLine> storyLinesById = catalogFoundationService.listPublishedStoryLines().stream()
+                .collect(Collectors.toMap(StoryLine::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, City> citiesById = catalogFoundationService.listPublishedCities().stream()
+                .collect(Collectors.toMap(City::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, SubMap> subMapsById = catalogFoundationService.listPublishedSubMaps(null).stream()
+                .collect(Collectors.toMap(SubMap::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, List<ContentRelationLink>> storylineBindingsByReward = groupRelationLinks("reward", rewardIds, "storyline_binding", "storyline");
+        Map<Long, List<ContentRelationLink>> cityBindingsByReward = groupRelationLinks("reward", rewardIds, "city_binding", "city");
+        Map<Long, List<ContentRelationLink>> subMapBindingsByReward = groupRelationLinks("reward", rewardIds, "sub_map_binding", "sub_map");
+        Map<Long, List<ContentRelationLink>> indoorBuildingBindingsByReward = groupRelationLinks("reward", rewardIds, "indoor_building_binding", "indoor_building");
+        Map<Long, List<ContentRelationLink>> indoorFloorBindingsByReward = groupRelationLinks("reward", rewardIds, "indoor_floor_binding", "indoor_floor");
+        Map<Long, List<ContentRelationLink>> attachmentBindingsByReward = groupRelationLinks("reward", rewardIds, "attachment_asset", "asset");
+        Map<Long, IndoorBuilding> indoorBuildingsById = catalogFoundationService.getPublishedIndoorBuildingsByIds(flattenTargetIds(indoorBuildingBindingsByReward));
+        Map<Long, IndoorFloor> indoorFloorsById = catalogFoundationService.getPublishedIndoorFloorsByIds(flattenTargetIds(indoorFloorBindingsByReward));
+        Map<Long, ContentAsset> assets = catalogFoundationService.getPublishedAssetsByIds(Stream.concat(
+                        rewards.stream().map(Reward::getCoverAssetId),
+                        attachmentBindingsByReward.values().stream()
+                                .flatMap(List::stream)
+                                .map(ContentRelationLink::getTargetId))
                 .filter(Objects::nonNull)
                 .toList());
         return rewards.stream()
@@ -193,7 +245,376 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
                         .inventoryRedeemed(reward.getInventoryRedeemed())
                         .availableInventory(Math.max(0, safeInt(reward.getInventoryTotal()) - safeInt(reward.getInventoryRedeemed())))
                         .coverImageUrl(localizedContentSupport.resolveAssetUrl(assets, reward.getCoverAssetId()))
+                        .popupPresetCode(reward.getPopupPresetCode())
+                        .popupConfigJson(reward.getPopupConfigJson())
+                        .displayPresetCode(reward.getDisplayPresetCode())
+                        .displayConfigJson(reward.getDisplayConfigJson())
+                        .triggerPresetCode(reward.getTriggerPresetCode())
+                        .triggerConfigJson(reward.getTriggerConfigJson())
+                        .exampleContent(localizedContentSupport.resolveText(localeHint, reward.getExampleContentZh(), reward.getExampleContentEn(), reward.getExampleContentZht(), reward.getExampleContentPt()))
+                        .relatedStorylines(toStorylineBindings(storylineBindingsByReward.get(reward.getId()), storyLinesById, localeHint))
+                        .relatedCities(toCityBindings(cityBindingsByReward.get(reward.getId()), citiesById, null, localeHint))
+                        .relatedSubMaps(toSubMapBindings(subMapBindingsByReward.get(reward.getId()), subMapsById, localeHint))
+                        .relatedIndoorBuildings(toIndoorBuildingBindings(indoorBuildingBindingsByReward.get(reward.getId()), indoorBuildingsById, localeHint))
+                        .relatedIndoorFloors(toIndoorFloorBindings(indoorFloorBindingsByReward.get(reward.getId()), indoorFloorsById, localeHint))
+                        .attachmentAssetUrls(toAssetUrls(attachmentBindingsByReward.get(reward.getId()), assets))
                         .sortOrder(reward.getSortOrder())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public List<RedeemablePrizeResponse> listRedeemablePrizes(String localeHint) {
+        List<RedeemablePrize> prizes = catalogFoundationService.listPublishedRedeemablePrizes();
+        if (prizes.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> prizeIds = prizes.stream().map(RedeemablePrize::getId).toList();
+        Map<Long, StoryLine> storyLinesById = catalogFoundationService.listPublishedStoryLines().stream()
+                .collect(Collectors.toMap(StoryLine::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, City> citiesById = catalogFoundationService.listPublishedCities().stream()
+                .collect(Collectors.toMap(City::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, SubMap> subMapsById = catalogFoundationService.listPublishedSubMaps(null).stream()
+                .collect(Collectors.toMap(SubMap::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, List<ContentRelationLink>> storylineBindingsByPrize = groupRelationLinks("redeemable_prize", prizeIds, "storyline_binding", "storyline");
+        Map<Long, List<ContentRelationLink>> cityBindingsByPrize = groupRelationLinks("redeemable_prize", prizeIds, "city_binding", "city");
+        Map<Long, List<ContentRelationLink>> subMapBindingsByPrize = groupRelationLinks("redeemable_prize", prizeIds, "sub_map_binding", "sub_map");
+        Map<Long, List<ContentRelationLink>> indoorBuildingBindingsByPrize = groupRelationLinks("redeemable_prize", prizeIds, "indoor_building_binding", "indoor_building");
+        Map<Long, List<ContentRelationLink>> indoorFloorBindingsByPrize = groupRelationLinks("redeemable_prize", prizeIds, "indoor_floor_binding", "indoor_floor");
+        Map<Long, List<ContentRelationLink>> attachmentBindingsByPrize = groupRelationLinks("redeemable_prize", prizeIds, "attachment_asset", "asset");
+        Map<Long, IndoorBuilding> indoorBuildingsById = catalogFoundationService.getPublishedIndoorBuildingsByIds(flattenTargetIds(indoorBuildingBindingsByPrize));
+        Map<Long, IndoorFloor> indoorFloorsById = catalogFoundationService.getPublishedIndoorFloorsByIds(flattenTargetIds(indoorFloorBindingsByPrize));
+        Map<Long, List<RewardRuleBinding>> ruleBindingsByPrize = catalogFoundationService.getRewardRuleBindings("redeemable_prize", prizeIds);
+        Map<Long, RewardRule> rewardRulesById = catalogFoundationService.getRewardRulesByIds(ruleBindingsByPrize.values().stream()
+                .flatMap(List::stream)
+                .map(RewardRuleBinding::getRuleId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList());
+        Map<Long, RewardPresentation> presentationsById = catalogFoundationService.getRewardPresentationsByIds(
+                prizes.stream().map(RedeemablePrize::getPresentationId).filter(Objects::nonNull).distinct().toList()
+        );
+        Map<Long, List<RewardPresentationStep>> stepsByPresentationId = catalogFoundationService.listRewardPresentationSteps(presentationsById.keySet())
+                .stream()
+                .collect(Collectors.groupingBy(RewardPresentationStep::getPresentationId, LinkedHashMap::new, Collectors.toList()));
+        Map<Long, ContentAsset> assets = catalogFoundationService.getPublishedAssetsByIds(Stream.of(
+                        prizes.stream().map(RedeemablePrize::getCoverAssetId),
+                        attachmentBindingsByPrize.values().stream().flatMap(List::stream).map(ContentRelationLink::getTargetId),
+                        presentationAssetIds(presentationsById.values(), stepsByPresentationId).stream())
+                .flatMap(Function.identity())
+                .filter(Objects::nonNull)
+                .toList());
+
+        return prizes.stream()
+                .map(prize -> RedeemablePrizeResponse.builder()
+                        .id(prize.getId())
+                        .code(prize.getCode())
+                        .prizeType(prize.getPrizeType())
+                        .fulfillmentMode(prize.getFulfillmentMode())
+                        .name(localizedContentSupport.resolveText(localeHint, prize.getNameZh(), prize.getNameEn(), prize.getNameZht(), prize.getNamePt()))
+                        .subtitle(localizedContentSupport.resolveText(localeHint, prize.getSubtitleZh(), prize.getSubtitleEn(), prize.getSubtitleZht(), prize.getSubtitlePt()))
+                        .description(localizedContentSupport.resolveText(localeHint, prize.getDescriptionZh(), prize.getDescriptionEn(), prize.getDescriptionZht(), prize.getDescriptionPt()))
+                        .highlight(localizedContentSupport.resolveText(localeHint, prize.getHighlightZh(), prize.getHighlightEn(), prize.getHighlightZht(), prize.getHighlightPt()))
+                        .coverImageUrl(localizedContentSupport.resolveAssetUrl(assets, prize.getCoverAssetId()))
+                        .stampCost(prize.getStampCost())
+                        .inventoryTotal(prize.getInventoryTotal())
+                        .inventoryRedeemed(prize.getInventoryRedeemed())
+                        .availableInventory(Math.max(0, safeInt(prize.getInventoryTotal()) - safeInt(prize.getInventoryRedeemed())))
+                        .stockPolicyJson(prize.getStockPolicyJson())
+                        .fulfillmentConfigJson(prize.getFulfillmentConfigJson())
+                        .presentationId(prize.getPresentationId())
+                        .presentation(toRewardPresentationResponse(presentationsById.get(prize.getPresentationId()), stepsByPresentationId, assets, localeHint))
+                        .ruleSummaries(toRewardRuleSummaries(ruleBindingsByPrize.get(prize.getId()), rewardRulesById, localeHint))
+                        .relatedStorylines(toStorylineBindings(storylineBindingsByPrize.get(prize.getId()), storyLinesById, localeHint))
+                        .relatedCities(toCityBindings(cityBindingsByPrize.get(prize.getId()), citiesById, null, localeHint))
+                        .relatedSubMaps(toSubMapBindings(subMapBindingsByPrize.get(prize.getId()), subMapsById, localeHint))
+                        .relatedIndoorBuildings(toIndoorBuildingBindings(indoorBuildingBindingsByPrize.get(prize.getId()), indoorBuildingsById, localeHint))
+                        .relatedIndoorFloors(toIndoorFloorBindings(indoorFloorBindingsByPrize.get(prize.getId()), indoorFloorsById, localeHint))
+                        .attachmentAssetUrls(toAssetUrls(attachmentBindingsByPrize.get(prize.getId()), assets))
+                        .sortOrder(prize.getSortOrder())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public List<GameRewardResponse> listGameRewards(String localeHint, Boolean honorsOnly) {
+        List<GameReward> rewards = catalogFoundationService.listPublishedGameRewards(honorsOnly);
+        if (rewards.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> rewardIds = rewards.stream().map(GameReward::getId).toList();
+        Map<Long, StoryLine> storyLinesById = catalogFoundationService.listPublishedStoryLines().stream()
+                .collect(Collectors.toMap(StoryLine::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, City> citiesById = catalogFoundationService.listPublishedCities().stream()
+                .collect(Collectors.toMap(City::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, SubMap> subMapsById = catalogFoundationService.listPublishedSubMaps(null).stream()
+                .collect(Collectors.toMap(SubMap::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, List<ContentRelationLink>> storylineBindingsByReward = groupRelationLinks("game_reward", rewardIds, "storyline_binding", "storyline");
+        Map<Long, List<ContentRelationLink>> cityBindingsByReward = groupRelationLinks("game_reward", rewardIds, "city_binding", "city");
+        Map<Long, List<ContentRelationLink>> subMapBindingsByReward = groupRelationLinks("game_reward", rewardIds, "sub_map_binding", "sub_map");
+        Map<Long, List<ContentRelationLink>> indoorBuildingBindingsByReward = groupRelationLinks("game_reward", rewardIds, "indoor_building_binding", "indoor_building");
+        Map<Long, List<ContentRelationLink>> indoorFloorBindingsByReward = groupRelationLinks("game_reward", rewardIds, "indoor_floor_binding", "indoor_floor");
+        Map<Long, List<ContentRelationLink>> attachmentBindingsByReward = groupRelationLinks("game_reward", rewardIds, "attachment_asset", "asset");
+        Map<Long, IndoorBuilding> indoorBuildingsById = catalogFoundationService.getPublishedIndoorBuildingsByIds(flattenTargetIds(indoorBuildingBindingsByReward));
+        Map<Long, IndoorFloor> indoorFloorsById = catalogFoundationService.getPublishedIndoorFloorsByIds(flattenTargetIds(indoorFloorBindingsByReward));
+        Map<Long, List<RewardRuleBinding>> ruleBindingsByReward = catalogFoundationService.getRewardRuleBindings("game_reward", rewardIds);
+        Map<Long, RewardRule> rewardRulesById = catalogFoundationService.getRewardRulesByIds(ruleBindingsByReward.values().stream()
+                .flatMap(List::stream)
+                .map(RewardRuleBinding::getRuleId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList());
+        Map<Long, RewardPresentation> presentationsById = catalogFoundationService.getRewardPresentationsByIds(
+                rewards.stream().map(GameReward::getPresentationId).filter(Objects::nonNull).distinct().toList()
+        );
+        Map<Long, List<RewardPresentationStep>> stepsByPresentationId = catalogFoundationService.listRewardPresentationSteps(presentationsById.keySet())
+                .stream()
+                .collect(Collectors.groupingBy(RewardPresentationStep::getPresentationId, LinkedHashMap::new, Collectors.toList()));
+        Map<Long, ContentAsset> assets = catalogFoundationService.getPublishedAssetsByIds(Stream.of(
+                        rewards.stream().flatMap(item -> Stream.of(item.getCoverAssetId(), item.getIconAssetId(), item.getAnimationAssetId())),
+                        attachmentBindingsByReward.values().stream().flatMap(List::stream).map(ContentRelationLink::getTargetId),
+                        presentationAssetIds(presentationsById.values(), stepsByPresentationId).stream())
+                .flatMap(Function.identity())
+                .filter(Objects::nonNull)
+                .toList());
+
+        return rewards.stream()
+                .map(reward -> GameRewardResponse.builder()
+                        .id(reward.getId())
+                        .code(reward.getCode())
+                        .rewardType(reward.getRewardType())
+                        .rarity(reward.getRarity())
+                        .stackable(reward.getStackable())
+                        .maxOwned(reward.getMaxOwned())
+                        .canEquip(reward.getCanEquip())
+                        .canConsume(reward.getCanConsume())
+                        .name(localizedContentSupport.resolveText(localeHint, reward.getNameZh(), reward.getNameEn(), reward.getNameZht(), reward.getNamePt()))
+                        .subtitle(localizedContentSupport.resolveText(localeHint, reward.getSubtitleZh(), reward.getSubtitleEn(), reward.getSubtitleZht(), reward.getSubtitlePt()))
+                        .description(localizedContentSupport.resolveText(localeHint, reward.getDescriptionZh(), reward.getDescriptionEn(), reward.getDescriptionZht(), reward.getDescriptionPt()))
+                        .highlight(localizedContentSupport.resolveText(localeHint, reward.getHighlightZh(), reward.getHighlightEn(), reward.getHighlightZht(), reward.getHighlightPt()))
+                        .coverImageUrl(localizedContentSupport.resolveAssetUrl(assets, reward.getCoverAssetId()))
+                        .iconUrl(localizedContentSupport.resolveAssetUrl(assets, reward.getIconAssetId()))
+                        .animationUrl(localizedContentSupport.resolveAssetUrl(assets, reward.getAnimationAssetId()))
+                        .rewardConfigJson(reward.getRewardConfigJson())
+                        .presentationId(reward.getPresentationId())
+                        .presentation(toRewardPresentationResponse(presentationsById.get(reward.getPresentationId()), stepsByPresentationId, assets, localeHint))
+                        .ruleSummaries(toRewardRuleSummaries(ruleBindingsByReward.get(reward.getId()), rewardRulesById, localeHint))
+                        .relatedStorylines(toStorylineBindings(storylineBindingsByReward.get(reward.getId()), storyLinesById, localeHint))
+                        .relatedCities(toCityBindings(cityBindingsByReward.get(reward.getId()), citiesById, null, localeHint))
+                        .relatedSubMaps(toSubMapBindings(subMapBindingsByReward.get(reward.getId()), subMapsById, localeHint))
+                        .relatedIndoorBuildings(toIndoorBuildingBindings(indoorBuildingBindingsByReward.get(reward.getId()), indoorBuildingsById, localeHint))
+                        .relatedIndoorFloors(toIndoorFloorBindings(indoorFloorBindingsByReward.get(reward.getId()), indoorFloorsById, localeHint))
+                        .attachmentAssetUrls(toAssetUrls(attachmentBindingsByReward.get(reward.getId()), assets))
+                        .sortOrder(reward.getSortOrder())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public RewardPresentationResponse getRewardPresentation(Long presentationId, String localeHint) {
+        RewardPresentation presentation = catalogFoundationService.getRewardPresentationsByIds(List.of(presentationId)).get(presentationId);
+        if (presentation == null) {
+            throw new BusinessException(4045, "Reward presentation not found");
+        }
+        Map<Long, List<RewardPresentationStep>> stepsByPresentationId = catalogFoundationService.listRewardPresentationSteps(List.of(presentationId))
+                .stream()
+                .collect(Collectors.groupingBy(RewardPresentationStep::getPresentationId, LinkedHashMap::new, Collectors.toList()));
+        Map<Long, ContentAsset> assets = catalogFoundationService.getPublishedAssetsByIds(
+                presentationAssetIds(List.of(presentation), stepsByPresentationId)
+        );
+        return toRewardPresentationResponse(presentation, stepsByPresentationId, assets, localeHint);
+    }
+
+    @Override
+    public List<ActivityResponse> listActivities(String localeHint) {
+        List<Activity> activities = catalogFoundationService.listPublishedActivities();
+        if (activities.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<Long, City> citiesById = catalogFoundationService.listPublishedCities().stream()
+                .collect(Collectors.toMap(City::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, SubMap> subMapsById = catalogFoundationService.listPublishedSubMaps(null).stream()
+                .collect(Collectors.toMap(SubMap::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, StoryLine> storyLinesById = catalogFoundationService.listPublishedStoryLines().stream()
+                .collect(Collectors.toMap(StoryLine::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, List<ContentRelationLink>> cityBindingsByActivity = catalogFoundationService
+                .listRelationLinks("activity", activities.stream().map(Activity::getId).toList(), "city_binding")
+                .stream()
+                .filter(link -> "city".equals(link.getTargetType()))
+                .collect(Collectors.groupingBy(ContentRelationLink::getOwnerId, LinkedHashMap::new, Collectors.toList()));
+        Map<Long, List<ContentRelationLink>> subMapBindingsByActivity = catalogFoundationService
+                .listRelationLinks("activity", activities.stream().map(Activity::getId).toList(), "sub_map_binding")
+                .stream()
+                .filter(link -> "sub_map".equals(link.getTargetType()))
+                .collect(Collectors.groupingBy(ContentRelationLink::getOwnerId, LinkedHashMap::new, Collectors.toList()));
+        Map<Long, List<ContentRelationLink>> storylineBindingsByActivity = catalogFoundationService
+                .listRelationLinks("activity", activities.stream().map(Activity::getId).toList(), "storyline_binding")
+                .stream()
+                .filter(link -> "storyline".equals(link.getTargetType()))
+                .collect(Collectors.groupingBy(ContentRelationLink::getOwnerId, LinkedHashMap::new, Collectors.toList()));
+        Map<Long, List<ContentRelationLink>> attachmentBindingsByActivity = catalogFoundationService
+                .listRelationLinks("activity", activities.stream().map(Activity::getId).toList(), "attachment_asset")
+                .stream()
+                .filter(link -> "asset".equals(link.getTargetType()))
+                .collect(Collectors.groupingBy(ContentRelationLink::getOwnerId, LinkedHashMap::new, Collectors.toList()));
+
+        List<Long> assetIds = activities.stream()
+                .flatMap(activity -> Stream.concat(
+                        nonNullIds(activity.getCoverAssetId(), activity.getHeroAssetId()).stream(),
+                        attachmentBindingsByActivity.getOrDefault(activity.getId(), Collections.emptyList()).stream()
+                                .map(ContentRelationLink::getTargetId)
+                                .filter(Objects::nonNull)))
+                .toList();
+        Map<Long, ContentAsset> assets = catalogFoundationService.getPublishedAssetsByIds(assetIds);
+
+        return activities.stream()
+                .map(activity -> ActivityResponse.builder()
+                        .id(activity.getId())
+                        .code(activity.getCode())
+                        .activityType(activity.getActivityType())
+                        .title(localizedContentSupport.resolveText(localeHint, activity.getTitleZh(), activity.getTitleEn(), activity.getTitleZht(), activity.getTitlePt()))
+                        .summary(localizedContentSupport.resolveText(localeHint, activity.getSummaryZh(), activity.getSummaryEn(), activity.getSummaryZht(), activity.getSummaryPt()))
+                        .description(localizedContentSupport.resolveText(localeHint, activity.getDescriptionZh(), activity.getDescriptionEn(), activity.getDescriptionZht(), activity.getDescriptionPt()))
+                        .htmlContent(localizedContentSupport.resolveText(localeHint, activity.getHtmlZh(), activity.getHtmlEn(), activity.getHtmlZht(), activity.getHtmlPt()))
+                        .venueName(localizedContentSupport.resolveText(localeHint, activity.getVenueNameZh(), activity.getVenueNameEn(), activity.getVenueNameZht(), activity.getVenueNamePt()))
+                        .address(localizedContentSupport.resolveText(localeHint, activity.getAddressZh(), activity.getAddressEn(), activity.getAddressZht(), activity.getAddressPt()))
+                        .organizerName(activity.getOrganizerName())
+                        .organizerContact(activity.getOrganizerContact())
+                        .organizerWebsite(activity.getOrganizerWebsite())
+                        .signupCapacity(activity.getSignupCapacity())
+                        .signupFeeAmount(activity.getSignupFeeAmount())
+                        .signupStartAt(activity.getSignupStartAt())
+                        .signupEndAt(activity.getSignupEndAt())
+                        .publishStartAt(activity.getPublishStartAt())
+                        .publishEndAt(activity.getPublishEndAt())
+                        .isPinned(activity.getIsPinned())
+                        .coverImageUrl(localizedContentSupport.resolveAssetUrl(assets, activity.getCoverAssetId()))
+                        .heroImageUrl(localizedContentSupport.resolveAssetUrl(assets, activity.getHeroAssetId()))
+                        .cityBindings(toCityBindings(cityBindingsByActivity.get(activity.getId()), citiesById, null, localeHint))
+                        .subMapBindings(toSubMapBindings(subMapBindingsByActivity.get(activity.getId()), subMapsById, localeHint))
+                        .storylineBindings(toStorylineBindings(storylineBindingsByActivity.get(activity.getId()), storyLinesById, localeHint))
+                        .attachmentAssetUrls(toAssetUrls(attachmentBindingsByActivity.get(activity.getId()), assets))
+                        .participationCount(activity.getParticipationCount())
+                        .sortOrder(activity.getSortOrder())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public List<CollectibleResponse> listCollectibles(String localeHint) {
+        List<Collectible> collectibles = catalogFoundationService.listPublishedCollectibles();
+        if (collectibles.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> collectibleIds = collectibles.stream().map(Collectible::getId).toList();
+        Map<Long, StoryLine> storyLinesById = catalogFoundationService.listPublishedStoryLines().stream()
+                .collect(Collectors.toMap(StoryLine::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, City> citiesById = catalogFoundationService.listPublishedCities().stream()
+                .collect(Collectors.toMap(City::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, SubMap> subMapsById = catalogFoundationService.listPublishedSubMaps(null).stream()
+                .collect(Collectors.toMap(SubMap::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, List<ContentRelationLink>> storylineBindings = groupRelationLinks("collectible", collectibleIds, "storyline_binding", "storyline");
+        Map<Long, List<ContentRelationLink>> cityBindings = groupRelationLinks("collectible", collectibleIds, "city_binding", "city");
+        Map<Long, List<ContentRelationLink>> subMapBindings = groupRelationLinks("collectible", collectibleIds, "sub_map_binding", "sub_map");
+        Map<Long, List<ContentRelationLink>> indoorBuildingBindings = groupRelationLinks("collectible", collectibleIds, "indoor_building_binding", "indoor_building");
+        Map<Long, List<ContentRelationLink>> indoorFloorBindings = groupRelationLinks("collectible", collectibleIds, "indoor_floor_binding", "indoor_floor");
+        Map<Long, List<ContentRelationLink>> attachmentBindings = groupRelationLinks("collectible", collectibleIds, "attachment_asset", "asset");
+        Map<Long, IndoorBuilding> indoorBuildingsById = catalogFoundationService.getPublishedIndoorBuildingsByIds(flattenTargetIds(indoorBuildingBindings));
+        Map<Long, IndoorFloor> indoorFloorsById = catalogFoundationService.getPublishedIndoorFloorsByIds(flattenTargetIds(indoorFloorBindings));
+        Map<Long, ContentAsset> assets = catalogFoundationService.getPublishedAssetsByIds(Stream.concat(
+                        collectibles.stream()
+                                .flatMap(item -> nonNullIds(item.getCoverAssetId(), item.getIconAssetId(), item.getAnimationAssetId()).stream()),
+                        attachmentBindings.values().stream()
+                                .flatMap(List::stream)
+                                .map(ContentRelationLink::getTargetId))
+                .filter(Objects::nonNull)
+                .toList());
+        return collectibles.stream()
+                .map(item -> CollectibleResponse.builder()
+                        .id(item.getId())
+                        .code(item.getCollectibleCode())
+                        .name(localizedContentSupport.resolveText(localeHint, item.getNameZh(), item.getNameEn(), item.getNameZht(), item.getNamePt()))
+                        .description(localizedContentSupport.resolveText(localeHint, item.getDescriptionZh(), item.getDescriptionEn(), item.getDescriptionZht(), item.getDescriptionPt()))
+                        .collectibleType(item.getCollectibleType())
+                        .rarity(item.getRarity())
+                        .acquisitionSource(item.getAcquisitionSource())
+                        .coverImageUrl(localizedContentSupport.resolveAssetUrl(assets, item.getCoverAssetId()))
+                        .iconImageUrl(localizedContentSupport.resolveAssetUrl(assets, item.getIconAssetId()))
+                        .animationUrl(localizedContentSupport.resolveAssetUrl(assets, item.getAnimationAssetId()))
+                        .popupPresetCode(item.getPopupPresetCode())
+                        .popupConfigJson(item.getPopupConfigJson())
+                        .displayPresetCode(item.getDisplayPresetCode())
+                        .displayConfigJson(item.getDisplayConfigJson())
+                        .triggerPresetCode(item.getTriggerPresetCode())
+                        .triggerConfigJson(item.getTriggerConfigJson())
+                        .exampleContent(localizedContentSupport.resolveText(localeHint, item.getExampleContentZh(), item.getExampleContentEn(), item.getExampleContentZht(), item.getExampleContentPt()))
+                        .relatedStorylines(toStorylineBindings(storylineBindings.get(item.getId()), storyLinesById, localeHint))
+                        .relatedCities(toCityBindings(cityBindings.get(item.getId()), citiesById, null, localeHint))
+                        .relatedSubMaps(toSubMapBindings(subMapBindings.get(item.getId()), subMapsById, localeHint))
+                        .relatedIndoorBuildings(toIndoorBuildingBindings(indoorBuildingBindings.get(item.getId()), indoorBuildingsById, localeHint))
+                        .relatedIndoorFloors(toIndoorFloorBindings(indoorFloorBindings.get(item.getId()), indoorFloorsById, localeHint))
+                        .attachmentAssetUrls(toAssetUrls(attachmentBindings.get(item.getId()), assets))
+                        .sortOrder(item.getSortOrder())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public List<BadgeResponse> listBadges(String localeHint) {
+        List<Badge> badges = catalogFoundationService.listPublishedBadges();
+        if (badges.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> badgeIds = badges.stream().map(Badge::getId).toList();
+        Map<Long, StoryLine> storyLinesById = catalogFoundationService.listPublishedStoryLines().stream()
+                .collect(Collectors.toMap(StoryLine::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, City> citiesById = catalogFoundationService.listPublishedCities().stream()
+                .collect(Collectors.toMap(City::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, SubMap> subMapsById = catalogFoundationService.listPublishedSubMaps(null).stream()
+                .collect(Collectors.toMap(SubMap::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        Map<Long, List<ContentRelationLink>> storylineBindings = groupRelationLinks("badge", badgeIds, "storyline_binding", "storyline");
+        Map<Long, List<ContentRelationLink>> cityBindings = groupRelationLinks("badge", badgeIds, "city_binding", "city");
+        Map<Long, List<ContentRelationLink>> subMapBindings = groupRelationLinks("badge", badgeIds, "sub_map_binding", "sub_map");
+        Map<Long, List<ContentRelationLink>> indoorBuildingBindings = groupRelationLinks("badge", badgeIds, "indoor_building_binding", "indoor_building");
+        Map<Long, List<ContentRelationLink>> indoorFloorBindings = groupRelationLinks("badge", badgeIds, "indoor_floor_binding", "indoor_floor");
+        Map<Long, List<ContentRelationLink>> attachmentBindings = groupRelationLinks("badge", badgeIds, "attachment_asset", "asset");
+        Map<Long, IndoorBuilding> indoorBuildingsById = catalogFoundationService.getPublishedIndoorBuildingsByIds(flattenTargetIds(indoorBuildingBindings));
+        Map<Long, IndoorFloor> indoorFloorsById = catalogFoundationService.getPublishedIndoorFloorsByIds(flattenTargetIds(indoorFloorBindings));
+        Map<Long, ContentAsset> assets = catalogFoundationService.getPublishedAssetsByIds(Stream.concat(
+                        badges.stream()
+                                .flatMap(item -> nonNullIds(item.getCoverAssetId(), item.getIconAssetId(), item.getAnimationAssetId()).stream()),
+                        attachmentBindings.values().stream()
+                                .flatMap(List::stream)
+                                .map(ContentRelationLink::getTargetId))
+                .filter(Objects::nonNull)
+                .toList());
+        return badges.stream()
+                .map(item -> BadgeResponse.builder()
+                        .id(item.getId())
+                        .code(item.getBadgeCode())
+                        .name(localizedContentSupport.resolveText(localeHint, item.getNameZh(), item.getNameEn(), item.getNameZht(), item.getNamePt()))
+                        .description(localizedContentSupport.resolveText(localeHint, item.getDescriptionZh(), item.getDescriptionEn(), item.getDescriptionZht(), item.getDescriptionPt()))
+                        .badgeType(item.getBadgeType())
+                        .rarity(item.getRarity())
+                        .hidden(safeInt(item.getIsHidden()) > 0)
+                        .coverImageUrl(localizedContentSupport.resolveAssetUrl(assets, item.getCoverAssetId()))
+                        .iconImageUrl(localizedContentSupport.resolveAssetUrl(assets, item.getIconAssetId()))
+                        .animationUrl(localizedContentSupport.resolveAssetUrl(assets, item.getAnimationAssetId()))
+                        .popupPresetCode(item.getPopupPresetCode())
+                        .popupConfigJson(item.getPopupConfigJson())
+                        .displayPresetCode(item.getDisplayPresetCode())
+                        .displayConfigJson(item.getDisplayConfigJson())
+                        .triggerPresetCode(item.getTriggerPresetCode())
+                        .triggerConfigJson(item.getTriggerConfigJson())
+                        .exampleContent(localizedContentSupport.resolveText(localeHint, item.getExampleContentZh(), item.getExampleContentEn(), item.getExampleContentZht(), item.getExampleContentPt()))
+                        .relatedStorylines(toStorylineBindings(storylineBindings.get(item.getId()), storyLinesById, localeHint))
+                        .relatedCities(toCityBindings(cityBindings.get(item.getId()), citiesById, null, localeHint))
+                        .relatedSubMaps(toSubMapBindings(subMapBindings.get(item.getId()), subMapsById, localeHint))
+                        .relatedIndoorBuildings(toIndoorBuildingBindings(indoorBuildingBindings.get(item.getId()), indoorBuildingsById, localeHint))
+                        .relatedIndoorFloors(toIndoorFloorBindings(indoorFloorBindings.get(item.getId()), indoorFloorsById, localeHint))
+                        .attachmentAssetUrls(toAssetUrls(attachmentBindings.get(item.getId()), assets))
                         .build())
                 .toList();
     }
@@ -285,42 +706,86 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
         if (storyLines == null || storyLines.isEmpty()) {
             return Collections.emptyList();
         }
+        List<Long> storylineIds = storyLines.stream()
+                .map(StoryLine::getId)
+                .filter(Objects::nonNull)
+                .toList();
         Map<Long, City> citiesById = catalogFoundationService.listPublishedCities().stream()
                 .collect(Collectors.toMap(City::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
-        List<StoryChapter> chapters = catalogFoundationService.listPublishedStoryChapters(storyLines.stream()
-                .map(StoryLine::getId)
-                .toList());
+        Map<Long, SubMap> subMapsById = catalogFoundationService.listPublishedSubMaps(null).stream()
+                .collect(Collectors.toMap(SubMap::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
+        List<StoryChapter> chapters = catalogFoundationService.listPublishedStoryChapters(storylineIds);
         Map<Long, List<StoryChapter>> chaptersByStoryline = chapters.stream()
                 .collect(Collectors.groupingBy(StoryChapter::getStorylineId, LinkedHashMap::new, Collectors.toList()));
 
-        List<Long> assetIds = new ArrayList<>();
+        Map<Long, List<ContentRelationLink>> cityBindingLinks = groupRelationLinks("storyline", storylineIds, "city_binding", "city");
+        Map<Long, List<ContentRelationLink>> subMapBindingLinks = groupRelationLinks("storyline", storylineIds, "sub_map_binding", "sub_map");
+        Map<Long, List<ContentRelationLink>> attachmentLinksByStoryline = groupRelationLinks("storyline", storylineIds, "attachment_asset", "asset");
+
+        List<Long> chapterIds = chapters.stream()
+                .map(StoryChapter::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        List<StoryChapterBlockLink> chapterBlockLinks = catalogFoundationService.listPublishedStoryChapterBlockLinks(chapterIds);
+        Map<Long, List<StoryChapterBlockLink>> chapterBlockLinksByChapter = chapterBlockLinks.stream()
+                .collect(Collectors.groupingBy(StoryChapterBlockLink::getChapterId, LinkedHashMap::new, Collectors.toList()));
+        Map<Long, StoryContentBlock> contentBlocksById = catalogFoundationService.getPublishedStoryContentBlocksByIds(
+                chapterBlockLinks.stream()
+                        .map(StoryChapterBlockLink::getBlockId)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .toList());
+        Map<Long, List<ContentAssetLink>> blockAssetLinksByBlock = catalogFoundationService.listPublishedContentAssetLinks(
+                        "story_content_block",
+                        contentBlocksById.keySet())
+                .stream()
+                .collect(Collectors.groupingBy(ContentAssetLink::getEntityId, LinkedHashMap::new, Collectors.toList()));
+
+        LinkedHashSet<Long> assetIds = new LinkedHashSet<>();
         storyLines.forEach(storyLine -> assetIds.addAll(nonNullIds(storyLine.getCoverAssetId(), storyLine.getBannerAssetId())));
+        attachmentLinksByStoryline.values().forEach(links -> links.stream()
+                .map(ContentRelationLink::getTargetId)
+                .filter(Objects::nonNull)
+                .forEach(assetIds::add));
         chapters.forEach(chapter -> assetIds.addAll(nonNullIds(chapter.getMediaAssetId())));
-        Map<Long, ContentAsset> assets = catalogFoundationService.getPublishedAssetsByIds(assetIds);
+        contentBlocksById.values().forEach(block -> assetIds.addAll(nonNullIds(block.getPrimaryAssetId())));
+        blockAssetLinksByBlock.values().forEach(links -> links.stream()
+                .map(ContentAssetLink::getAssetId)
+                .filter(Objects::nonNull)
+                .forEach(assetIds::add));
+        Map<Long, ContentAsset> assets = getPublishedAssetsWithFallbacks(assetIds);
 
         return storyLines.stream()
-                .sorted(Comparator.comparing(StoryLine::getSortOrder, Comparator.nullsLast(Integer::compareTo)).thenComparing(StoryLine::getId))
+                .sorted(Comparator.comparing(StoryLine::getSortOrder, Comparator.nullsLast(Integer::compareTo))
+                        .thenComparing(StoryLine::getId))
                 .map(storyLine -> {
-                    City city = citiesById.get(storyLine.getCityId());
-                    List<StoryChapterResponse> chapterResponses = chaptersByStoryline.getOrDefault(storyLine.getId(), Collections.emptyList()).stream()
-                            .map(chapter -> StoryChapterResponse.builder()
-                                    .id(chapter.getId())
-                                    .chapterOrder(chapter.getChapterOrder())
-                                    .title(localizedContentSupport.resolveText(localeHint, chapter.getTitleZh(), chapter.getTitleEn(), chapter.getTitleZht(), chapter.getTitlePt()))
-                                    .summary(localizedContentSupport.resolveText(localeHint, chapter.getSummaryZh(), chapter.getSummaryEn(), chapter.getSummaryZht(), chapter.getSummaryPt()))
-                                    .detail(localizedContentSupport.resolveText(localeHint, chapter.getDetailZh(), chapter.getDetailEn(), chapter.getDetailZht(), chapter.getDetailPt()))
-                                    .achievement(localizedContentSupport.resolveText(localeHint, chapter.getAchievementZh(), chapter.getAchievementEn(), chapter.getAchievementZht(), chapter.getAchievementPt()))
-                                    .collectible(localizedContentSupport.resolveText(localeHint, chapter.getCollectibleZh(), chapter.getCollectibleEn(), chapter.getCollectibleZht(), chapter.getCollectiblePt()))
-                                    .locationName(localizedContentSupport.resolveText(localeHint, chapter.getLocationNameZh(), chapter.getLocationNameEn(), chapter.getLocationNameZht(), chapter.getLocationNamePt()))
-                                    .unlockType(chapter.getUnlockType())
-                                    .mediaUrl(localizedContentSupport.resolveAssetUrl(assets, chapter.getMediaAssetId()))
-                                    .sortOrder(chapter.getSortOrder())
-                                    .build())
+                    List<CatalogRelationBindingResponse> cityBindings = toCityBindings(
+                            cityBindingLinks.get(storyLine.getId()),
+                            citiesById,
+                            storyLine.getCityId(),
+                            localeHint);
+                    List<CatalogRelationBindingResponse> subMapBindings = toSubMapBindings(
+                            subMapBindingLinks.get(storyLine.getId()),
+                            subMapsById,
+                            localeHint);
+                    CatalogRelationBindingResponse primaryCityBinding = cityBindings.isEmpty() ? null : cityBindings.get(0);
+                    List<StoryChapterResponse> chapterResponses = chaptersByStoryline
+                            .getOrDefault(storyLine.getId(), Collections.emptyList())
+                            .stream()
+                            .map(chapter -> toStoryChapterResponse(
+                                    chapter,
+                                    chapterBlockLinksByChapter,
+                                    contentBlocksById,
+                                    blockAssetLinksByBlock,
+                                    assets,
+                                    localeHint))
                             .toList();
                     return StoryLineResponse.builder()
                             .id(storyLine.getId())
-                            .cityId(storyLine.getCityId())
-                            .cityCode(city == null ? "" : city.getCode())
+                            .cityId(primaryCityBinding == null ? storyLine.getCityId() : primaryCityBinding.getId())
+                            .cityCode(primaryCityBinding == null ? "" : primaryCityBinding.getCode())
+                            .cityBindings(cityBindings)
+                            .subMapBindings(subMapBindings)
                             .code(storyLine.getCode())
                             .name(localizedContentSupport.resolveText(localeHint, storyLine.getNameZh(), storyLine.getNameEn(), storyLine.getNameZht(), storyLine.getNamePt()))
                             .nameEn(localizedContentSupport.firstNonBlank(storyLine.getNameEn(), storyLine.getNamePt(), storyLine.getNameZh(), storyLine.getNameZht()))
@@ -330,12 +795,582 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
                             .rewardBadge(localizedContentSupport.resolveText(localeHint, storyLine.getRewardBadgeZh(), storyLine.getRewardBadgeEn(), storyLine.getRewardBadgeZht(), storyLine.getRewardBadgePt()))
                             .coverImageUrl(localizedContentSupport.resolveAssetUrl(assets, storyLine.getCoverAssetId()))
                             .bannerImageUrl(localizedContentSupport.resolveAssetUrl(assets, storyLine.getBannerAssetId()))
+                            .attachmentAssets(toStoryMediaAssetsFromRelationLinks(attachmentLinksByStoryline.get(storyLine.getId()), assets))
                             .totalChapters(chapterResponses.size())
                             .sortOrder(storyLine.getSortOrder())
                             .chapters(chapterResponses)
                             .build();
                 })
                 .toList();
+    }
+
+    private StoryChapterResponse toStoryChapterResponse(
+            StoryChapter chapter,
+            Map<Long, List<StoryChapterBlockLink>> chapterBlockLinksByChapter,
+            Map<Long, StoryContentBlock> contentBlocksById,
+            Map<Long, List<ContentAssetLink>> blockAssetLinksByBlock,
+            Map<Long, ContentAsset> assets,
+            String localeHint
+    ) {
+        StoryMediaAssetResponse primaryMediaAsset = toStoryMediaAssetResponse(chapter.getMediaAssetId(), assets);
+        return StoryChapterResponse.builder()
+                .id(chapter.getId())
+                .chapterOrder(chapter.getChapterOrder())
+                .title(localizedContentSupport.resolveText(localeHint, chapter.getTitleZh(), chapter.getTitleEn(), chapter.getTitleZht(), chapter.getTitlePt()))
+                .summary(localizedContentSupport.resolveText(localeHint, chapter.getSummaryZh(), chapter.getSummaryEn(), chapter.getSummaryZht(), chapter.getSummaryPt()))
+                .detail(localizedContentSupport.resolveText(localeHint, chapter.getDetailZh(), chapter.getDetailEn(), chapter.getDetailZht(), chapter.getDetailPt()))
+                .achievement(localizedContentSupport.resolveText(localeHint, chapter.getAchievementZh(), chapter.getAchievementEn(), chapter.getAchievementZht(), chapter.getAchievementPt()))
+                .collectible(localizedContentSupport.resolveText(localeHint, chapter.getCollectibleZh(), chapter.getCollectibleEn(), chapter.getCollectibleZht(), chapter.getCollectiblePt()))
+                .locationName(localizedContentSupport.resolveText(localeHint, chapter.getLocationNameZh(), chapter.getLocationNameEn(), chapter.getLocationNameZht(), chapter.getLocationNamePt()))
+                .anchorType(chapter.getAnchorType())
+                .anchorTargetId(chapter.getAnchorTargetId())
+                .anchorTargetCode(chapter.getAnchorTargetCode())
+                .unlockType(chapter.getUnlockType())
+                .mediaUrl(primaryMediaAsset == null ? null : primaryMediaAsset.getUrl())
+                .experienceFlowId(chapter.getExperienceFlowId())
+                .overridePolicy(readObjectJson(chapter.getOverridePolicyJson()))
+                .storyModeConfig(readObjectJson(chapter.getStoryModeConfigJson()))
+                .primaryMediaUrl(primaryMediaAsset == null ? null : primaryMediaAsset.getUrl())
+                .primaryMediaAsset(primaryMediaAsset)
+                .unlock(buildUnlockResponse(chapter))
+                .prerequisite(buildConditionResponse(chapter.getPrerequisiteJson(), null))
+                .completion(buildConditionResponse(chapter.getCompletionJson(), null))
+                .effect(buildEffectResponse(chapter.getRewardJson()))
+                .contentBlocks(buildChapterContentBlocks(chapter, chapterBlockLinksByChapter, contentBlocksById, blockAssetLinksByBlock, assets, localeHint))
+                .prerequisiteJson(chapter.getPrerequisiteJson())
+                .completionJson(chapter.getCompletionJson())
+                .rewardJson(chapter.getRewardJson())
+                .sortOrder(chapter.getSortOrder())
+                .build();
+    }
+
+    private List<StoryContentBlockResponse> buildChapterContentBlocks(
+            StoryChapter chapter,
+            Map<Long, List<StoryChapterBlockLink>> chapterBlockLinksByChapter,
+            Map<Long, StoryContentBlock> contentBlocksById,
+            Map<Long, List<ContentAssetLink>> blockAssetLinksByBlock,
+            Map<Long, ContentAsset> assets,
+            String localeHint
+    ) {
+        List<StoryChapterBlockLink> links = chapterBlockLinksByChapter.getOrDefault(chapter.getId(), Collections.emptyList());
+        if (!links.isEmpty()) {
+            return links.stream()
+                    .map(link -> toStoryContentBlockResponse(link, contentBlocksById.get(link.getBlockId()), blockAssetLinksByBlock, assets, localeHint))
+                    .filter(Objects::nonNull)
+                    .toList();
+        }
+
+        StoryMediaAssetResponse primaryMediaAsset = toStoryMediaAssetResponse(chapter.getMediaAssetId(), assets);
+        if (primaryMediaAsset == null) {
+            return Collections.emptyList();
+        }
+        return List.of(StoryContentBlockResponse.builder()
+                .id(chapter.getId() == null ? null : -chapter.getId())
+                .code("legacy-media-" + chapter.getId())
+                .blockType(inferLegacyBlockType(primaryMediaAsset))
+                .title(localizedContentSupport.resolveText(localeHint, chapter.getTitleZh(), chapter.getTitleEn(), chapter.getTitleZht(), chapter.getTitlePt()))
+                .summary(localizedContentSupport.resolveText(localeHint, chapter.getSummaryZh(), chapter.getSummaryEn(), chapter.getSummaryZht(), chapter.getSummaryPt()))
+                .body(localizedContentSupport.resolveText(localeHint, chapter.getDetailZh(), chapter.getDetailEn(), chapter.getDetailZht(), chapter.getDetailPt()))
+                .stylePreset("chapter-legacy")
+                .displayMode("default")
+                .sortOrder(0)
+                .primaryAsset(primaryMediaAsset)
+                .attachmentAssets(Collections.emptyList())
+                .build());
+    }
+
+    private StoryContentBlockResponse toStoryContentBlockResponse(
+            StoryChapterBlockLink link,
+            StoryContentBlock block,
+            Map<Long, List<ContentAssetLink>> blockAssetLinksByBlock,
+            Map<Long, ContentAsset> assets,
+            String localeHint
+    ) {
+        if (link == null || block == null) {
+            return null;
+        }
+        String defaultTitle = localizedContentSupport.resolveText(localeHint, block.getTitleZh(), block.getTitleEn(), block.getTitleZht(), block.getTitlePt());
+        String defaultSummary = localizedContentSupport.resolveText(localeHint, block.getSummaryZh(), block.getSummaryEn(), block.getSummaryZht(), block.getSummaryPt());
+        String defaultBody = localizedContentSupport.resolveText(localeHint, block.getBodyZh(), block.getBodyEn(), block.getBodyZht(), block.getBodyPt());
+        return StoryContentBlockResponse.builder()
+                .id(block.getId())
+                .code(block.getCode())
+                .blockType(block.getBlockType())
+                .title(resolveLocalizedOverride(link.getOverrideTitleJson(), localeHint, defaultTitle))
+                .summary(resolveLocalizedOverride(link.getOverrideSummaryJson(), localeHint, defaultSummary))
+                .body(resolveLocalizedOverride(link.getOverrideBodyJson(), localeHint, defaultBody))
+                .stylePreset(block.getStylePreset())
+                .displayMode(block.getDisplayMode())
+                .visibilityJson(block.getVisibilityJson())
+                .displayConditionJson(link.getDisplayConditionJson())
+                .configJson(localizedContentSupport.firstNonBlank(link.getOverrideConfigJson(), block.getConfigJson()))
+                .sortOrder(link.getSortOrder() == null ? block.getSortOrder() : link.getSortOrder())
+                .primaryAsset(toStoryMediaAssetResponse(block.getPrimaryAssetId(), assets))
+                .attachmentAssets(toStoryMediaAssetsFromAssetLinks(blockAssetLinksByBlock.get(block.getId()), assets))
+                .build();
+    }
+
+    private StoryChapterUnlockResponse buildUnlockResponse(StoryChapter chapter) {
+        Map<String, Object> config = readObjectJson(chapter.getUnlockParamJson());
+        return StoryChapterUnlockResponse.builder()
+                .type(localizedContentSupport.firstNonBlank(chapter.getUnlockType(), resolveStructuredType(config, null), "sequence"))
+                .config(config)
+                .rawJson(chapter.getUnlockParamJson())
+                .build();
+    }
+
+    private StoryChapterConditionResponse buildConditionResponse(String rawJson, String fallbackType) {
+        if (!StringUtils.hasText(rawJson)) {
+            return null;
+        }
+        Map<String, Object> config = readObjectJson(rawJson);
+        return StoryChapterConditionResponse.builder()
+                .type(resolveStructuredType(config, fallbackType))
+                .config(config)
+                .rawJson(rawJson)
+                .build();
+    }
+
+    private StoryChapterEffectResponse buildEffectResponse(String rawJson) {
+        if (!StringUtils.hasText(rawJson)) {
+            return null;
+        }
+        Map<String, Object> config = readObjectJson(rawJson);
+        return StoryChapterEffectResponse.builder()
+                .type(resolveStructuredType(config, "custom"))
+                .config(config)
+                .rawJson(rawJson)
+                .build();
+    }
+
+    private Map<Long, ContentAsset> getPublishedAssetsWithFallbacks(Collection<Long> assetIds) {
+        if (assetIds == null || assetIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        LinkedHashSet<Long> directIds = assetIds.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        if (directIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, ContentAsset> assets = new LinkedHashMap<>(catalogFoundationService.getPublishedAssetsByIds(directIds));
+        LinkedHashSet<Long> fallbackIds = assets.values().stream()
+                .flatMap(asset -> Stream.of(asset.getPosterAssetId(), asset.getFallbackAssetId()))
+                .filter(Objects::nonNull)
+                .filter(id -> !assets.containsKey(id))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        if (!fallbackIds.isEmpty()) {
+            assets.putAll(catalogFoundationService.getPublishedAssetsByIds(fallbackIds));
+        }
+        return assets;
+    }
+
+    private StoryMediaAssetResponse toStoryMediaAssetResponse(Long assetId, Map<Long, ContentAsset> assets) {
+        return assetId == null ? null : toStoryMediaAssetResponse(assets.get(assetId), assets);
+    }
+
+    private StoryMediaAssetResponse toStoryMediaAssetResponse(ContentAsset asset, Map<Long, ContentAsset> assets) {
+        if (asset == null) {
+            return null;
+        }
+        return StoryMediaAssetResponse.builder()
+                .id(asset.getId())
+                .assetKind(asset.getAssetKind())
+                .url(asset.getCanonicalUrl())
+                .mimeType(asset.getMimeType())
+                .originalFilename(asset.getOriginalFilename())
+                .widthPx(asset.getWidthPx())
+                .heightPx(asset.getHeightPx())
+                .animationSubtype(asset.getAnimationSubtype())
+                .defaultLoop(asset.getDefaultLoop())
+                .defaultAutoplay(asset.getDefaultAutoplay())
+                .posterAssetId(asset.getPosterAssetId())
+                .posterUrl(localizedContentSupport.resolveAssetUrl(assets, asset.getPosterAssetId()))
+                .fallbackAssetId(asset.getFallbackAssetId())
+                .fallbackUrl(localizedContentSupport.resolveAssetUrl(assets, asset.getFallbackAssetId()))
+                .build();
+    }
+
+    private List<StoryMediaAssetResponse> toStoryMediaAssetsFromRelationLinks(
+            List<ContentRelationLink> links,
+            Map<Long, ContentAsset> assets
+    ) {
+        if (links == null || links.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return links.stream()
+                .map(ContentRelationLink::getTargetId)
+                .filter(Objects::nonNull)
+                .map(assetId -> toStoryMediaAssetResponse(assetId, assets))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private List<StoryMediaAssetResponse> toStoryMediaAssetsFromAssetLinks(
+            List<ContentAssetLink> links,
+            Map<Long, ContentAsset> assets
+    ) {
+        if (links == null || links.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return links.stream()
+                .map(ContentAssetLink::getAssetId)
+                .filter(Objects::nonNull)
+                .map(assetId -> toStoryMediaAssetResponse(assetId, assets))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private Map<String, Object> readObjectJson(String rawJson) {
+        if (!StringUtils.hasText(rawJson)) {
+            return Collections.emptyMap();
+        }
+        try {
+            JsonNode node = objectMapper.readTree(rawJson);
+            if (node == null || node.isNull()) {
+                return Collections.emptyMap();
+            }
+            if (node.isObject()) {
+                return objectMapper.convertValue(node, new TypeReference<LinkedHashMap<String, Object>>() {});
+            }
+            Map<String, Object> wrapper = new LinkedHashMap<>();
+            wrapper.put("value", objectMapper.convertValue(node, Object.class));
+            return wrapper;
+        } catch (Exception exception) {
+            return Collections.emptyMap();
+        }
+    }
+
+    private String resolveStructuredType(Map<String, Object> config, String fallbackType) {
+        if (config != null) {
+            Object rawType = config.get("type");
+            if (rawType instanceof String type && StringUtils.hasText(type)) {
+                return type;
+            }
+        }
+        return StringUtils.hasText(fallbackType) ? fallbackType : "custom";
+    }
+
+    private String resolveLocalizedOverride(String rawJson, String localeHint, String fallbackValue) {
+        Map<String, Object> config = readObjectJson(rawJson);
+        if (config.isEmpty()) {
+            return fallbackValue;
+        }
+        Map<String, Object> normalized = new LinkedHashMap<>();
+        config.forEach((key, value) -> normalized.put(normalizeLocaleKey(key), value));
+        for (String candidate : localeCandidates(localeHint)) {
+            Object value = normalized.get(normalizeLocaleKey(candidate));
+            if (value instanceof String text && StringUtils.hasText(text)) {
+                return text;
+            }
+        }
+        return config.values().stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .filter(StringUtils::hasText)
+                .findFirst()
+                .orElse(fallbackValue);
+    }
+
+    private List<String> localeCandidates(String localeHint) {
+        if ("zh-Hans".equalsIgnoreCase(localeHint)) {
+            return List.of("zh-Hans", "zhHans", "zh", "zh-CN", "zh_cn", "zhs", "zh-Hant", "zht", "en", "pt");
+        }
+        if ("en".equalsIgnoreCase(localeHint)) {
+            return List.of("en", "en-US", "en_us", "zh-Hant", "zht", "zh", "pt");
+        }
+        if ("pt".equalsIgnoreCase(localeHint)) {
+            return List.of("pt", "pt-PT", "pt_pt", "zh-Hant", "zht", "zh", "en");
+        }
+        return List.of("zh-Hant", "zhHant", "zht", "zh-TW", "zh_tw", "zh", "en", "pt");
+    }
+
+    private String normalizeLocaleKey(String value) {
+        return value == null ? "" : value.replace("_", "").replace("-", "").toLowerCase();
+    }
+
+    private String inferLegacyBlockType(StoryMediaAssetResponse primaryAsset) {
+        if (primaryAsset == null || !StringUtils.hasText(primaryAsset.getAssetKind())) {
+            return "attachment_list";
+        }
+        return switch (primaryAsset.getAssetKind()) {
+            case "image", "icon" -> "image";
+            case "video" -> "video";
+            case "audio" -> "audio";
+            case "lottie" -> "lottie";
+            default -> "attachment_list";
+        };
+    }
+
+    private List<CatalogRelationBindingResponse> toCityBindings(
+            List<ContentRelationLink> links,
+            Map<Long, City> citiesById,
+            Long legacyCityId,
+            String localeHint
+    ) {
+        List<CatalogRelationBindingResponse> bindings = (links == null ? Collections.<ContentRelationLink>emptyList() : links).stream()
+                .map(link -> {
+                    City city = citiesById.get(link.getTargetId());
+                    if (city == null) {
+                        return null;
+                    }
+                      return CatalogRelationBindingResponse.builder()
+                              .id(city.getId())
+                              .code(city.getCode())
+                              .name(localizedContentSupport.resolveText(localeHint, city.getNameZh(), city.getNameEn(), city.getNameZht(), city.getNamePt()))
+                              .build();
+                  })
+                .filter(Objects::nonNull)
+                .toList();
+        if (!bindings.isEmpty()) {
+            return bindings;
+        }
+        City legacyCity = legacyCityId == null ? null : citiesById.get(legacyCityId);
+        if (legacyCity == null) {
+            return Collections.emptyList();
+        }
+        return List.of(CatalogRelationBindingResponse.builder()
+                .id(legacyCity.getId())
+                .code(legacyCity.getCode())
+                .name(localizedContentSupport.resolveText(localeHint, legacyCity.getNameZh(), legacyCity.getNameEn(), legacyCity.getNameZht(), legacyCity.getNamePt()))
+                .build());
+    }
+
+    private List<CatalogRelationBindingResponse> toSubMapBindings(
+            List<ContentRelationLink> links,
+            Map<Long, SubMap> subMapsById,
+            String localeHint
+    ) {
+        if (links == null || links.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return links.stream()
+                .map(link -> {
+                    SubMap subMap = subMapsById.get(link.getTargetId());
+                    if (subMap == null) {
+                        return null;
+                    }
+                      return CatalogRelationBindingResponse.builder()
+                              .id(subMap.getId())
+                              .code(subMap.getCode())
+                              .name(localizedContentSupport.resolveText(localeHint, subMap.getNameZh(), subMap.getNameEn(), subMap.getNameZht(), subMap.getNamePt()))
+                              .build();
+                  })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private List<CatalogRelationBindingResponse> toStorylineBindings(
+            List<ContentRelationLink> links,
+            Map<Long, StoryLine> storyLinesById,
+            String localeHint
+    ) {
+        if (links == null || links.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return links.stream()
+                .map(link -> {
+                    StoryLine storyLine = storyLinesById.get(link.getTargetId());
+                    if (storyLine == null) {
+                        return null;
+                    }
+                      return CatalogRelationBindingResponse.builder()
+                              .id(storyLine.getId())
+                              .code(storyLine.getCode())
+                              .name(localizedContentSupport.resolveText(localeHint, storyLine.getNameZh(), storyLine.getNameEn(), storyLine.getNameZht(), storyLine.getNamePt()))
+                              .build();
+                  })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private Map<Long, List<ContentRelationLink>> groupRelationLinks(
+            String ownerType,
+            Collection<Long> ownerIds,
+            String relationType,
+            String targetType
+    ) {
+        if (!StringUtils.hasText(ownerType) || ownerIds == null || ownerIds.isEmpty() || !StringUtils.hasText(relationType)) {
+            return Collections.emptyMap();
+        }
+        return catalogFoundationService.listRelationLinks(ownerType, ownerIds, relationType).stream()
+                .filter(link -> !StringUtils.hasText(targetType) || targetType.equals(link.getTargetType()))
+                .collect(Collectors.groupingBy(ContentRelationLink::getOwnerId, LinkedHashMap::new, Collectors.toList()));
+    }
+
+    private List<Long> flattenTargetIds(Map<Long, List<ContentRelationLink>> relationMap) {
+        if (relationMap == null || relationMap.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return relationMap.values().stream()
+                .flatMap(List::stream)
+                .map(ContentRelationLink::getTargetId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    private List<CatalogRelationBindingResponse> toIndoorBuildingBindings(
+            List<ContentRelationLink> links,
+            Map<Long, IndoorBuilding> indoorBuildingsById,
+            String localeHint
+    ) {
+        if (links == null || links.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return links.stream()
+                .map(link -> {
+                    IndoorBuilding building = indoorBuildingsById.get(link.getTargetId());
+                    if (building == null) {
+                        return null;
+                    }
+                    return CatalogRelationBindingResponse.builder()
+                            .id(building.getId())
+                            .code(building.getBuildingCode())
+                            .name(localizedContentSupport.resolveText(
+                                    localeHint,
+                                    building.getNameZh(),
+                                    building.getNameEn(),
+                                    building.getNameZht(),
+                                    building.getNamePt()))
+                            .build();
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private List<CatalogRelationBindingResponse> toIndoorFloorBindings(
+            List<ContentRelationLink> links,
+            Map<Long, IndoorFloor> indoorFloorsById,
+            String localeHint
+    ) {
+        if (links == null || links.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return links.stream()
+                .map(link -> {
+                    IndoorFloor floor = indoorFloorsById.get(link.getTargetId());
+                    if (floor == null) {
+                        return null;
+                    }
+                    return CatalogRelationBindingResponse.builder()
+                            .id(floor.getId())
+                            .code(floor.getFloorCode())
+                            .name(localizedContentSupport.resolveText(
+                                    localeHint,
+                                    floor.getFloorNameZh(),
+                                    floor.getFloorNameEn(),
+                                    floor.getFloorNameZht(),
+                                    floor.getFloorNamePt()))
+                            .build();
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    private List<String> toAssetUrls(
+            List<ContentRelationLink> links,
+            Map<Long, ContentAsset> assets
+    ) {
+        if (links == null || links.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return links.stream()
+                .map(ContentRelationLink::getTargetId)
+                .filter(Objects::nonNull)
+                .map(assetId -> localizedContentSupport.resolveAssetUrl(assets, assetId))
+                .filter(StringUtils::hasText)
+                .toList();
+    }
+
+    private List<RewardRuleSummaryResponse> toRewardRuleSummaries(
+            List<RewardRuleBinding> bindings,
+            Map<Long, RewardRule> rewardRulesById,
+            String localeHint
+    ) {
+        if (bindings == null || bindings.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return bindings.stream()
+                .map(binding -> rewardRulesById.get(binding.getRuleId()))
+                .filter(Objects::nonNull)
+                .map(rule -> RewardRuleSummaryResponse.builder()
+                        .id(rule.getId())
+                        .code(rule.getCode())
+                        .name(localizedContentSupport.resolveText(localeHint, rule.getNameZh(), null, rule.getNameZht(), null))
+                        .ruleType(rule.getRuleType())
+                        .summaryText(rule.getSummaryText())
+                        .build())
+                .toList();
+    }
+
+    private RewardPresentationResponse toRewardPresentationResponse(
+            RewardPresentation presentation,
+            Map<Long, List<RewardPresentationStep>> stepsByPresentationId,
+            Map<Long, ContentAsset> assets,
+            String localeHint
+    ) {
+        if (presentation == null) {
+            return null;
+        }
+        List<RewardPresentationStep> steps = stepsByPresentationId.getOrDefault(presentation.getId(), Collections.emptyList());
+        return RewardPresentationResponse.builder()
+                .id(presentation.getId())
+                .code(presentation.getCode())
+                .name(localizedContentSupport.resolveText(localeHint, presentation.getNameZh(), null, presentation.getNameZht(), null))
+                .presentationType(presentation.getPresentationType())
+                .firstTimeOnly(presentation.getFirstTimeOnly())
+                .skippable(presentation.getSkippable())
+                .minimumDisplayMs(presentation.getMinimumDisplayMs())
+                .interruptPolicy(presentation.getInterruptPolicy())
+                .queuePolicy(presentation.getQueuePolicy())
+                .priorityWeight(presentation.getPriorityWeight())
+                .coverImageUrl(localizedContentSupport.resolveAssetUrl(assets, presentation.getCoverAssetId()))
+                .voiceOverUrl(localizedContentSupport.resolveAssetUrl(assets, presentation.getVoiceOverAssetId()))
+                .sfxUrl(localizedContentSupport.resolveAssetUrl(assets, presentation.getSfxAssetId()))
+                .summaryText(presentation.getSummaryText())
+                .configJson(presentation.getConfigJson())
+                .steps(steps.stream()
+                        .map(step -> RewardPresentationStepResponse.builder()
+                                .stepType(step.getStepType())
+                                .stepCode(step.getStepCode())
+                                .titleText(step.getTitleText())
+                                .assetUrl(localizedContentSupport.resolveAssetUrl(assets, step.getAssetId()))
+                                .durationMs(step.getDurationMs())
+                                .skippableOverride(step.getSkippableOverride())
+                                .triggerSfxUrl(localizedContentSupport.resolveAssetUrl(assets, step.getTriggerSfxAssetId()))
+                                .voiceOverUrl(localizedContentSupport.resolveAssetUrl(assets, step.getVoiceOverAssetId()))
+                                .overlayConfigJson(step.getOverlayConfigJson())
+                                .sortOrder(step.getSortOrder())
+                                .build())
+                        .toList())
+                .build();
+    }
+
+    private List<Long> presentationAssetIds(
+            Collection<RewardPresentation> presentations,
+            Map<Long, List<RewardPresentationStep>> stepsByPresentationId
+    ) {
+        if ((presentations == null || presentations.isEmpty())
+                && (stepsByPresentationId == null || stepsByPresentationId.isEmpty())) {
+            return Collections.emptyList();
+        }
+        return Stream.concat(
+                        presentations == null ? Stream.empty() : presentations.stream()
+                                .flatMap(item -> Stream.of(item.getCoverAssetId(), item.getVoiceOverAssetId(), item.getSfxAssetId())),
+                        stepsByPresentationId == null ? Stream.empty() : stepsByPresentationId.values().stream()
+                                .flatMap(List::stream)
+                                .flatMap(step -> Stream.of(step.getAssetId(), step.getTriggerSfxAssetId(), step.getVoiceOverAssetId())))
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    private String firstBindingName(List<CatalogRelationBindingResponse> bindings) {
+        if (bindings == null || bindings.isEmpty()) {
+            return "";
+        }
+        return localizedContentSupport.firstNonBlank(bindings.get(0).getName(), bindings.get(0).getCode());
     }
 
     private CityResponse toCityResponse(City city, List<SubMap> subMaps, Map<Long, ContentAsset> assets, String localeHint) {
@@ -470,6 +1505,41 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
     }
 
     private DiscoverCardResponse buildActivityCard(String localeHint) {
+        List<ActivityResponse> activities = listActivities(localeHint);
+        if (!activities.isEmpty()) {
+            ActivityResponse activity = activities.get(0);
+            String district = localizedContentSupport.firstNonBlank(
+                    firstBindingName(activity.getSubMapBindings()),
+                    firstBindingName(activity.getCityBindings()),
+                    activity.getVenueName(),
+                    activity.getAddress(),
+                    "Macau");
+            String subtitle = localizedContentSupport.firstNonBlank(
+                    activity.getVenueName(),
+                    activity.getActivityType(),
+                    "Featured activity");
+            String description = localizedContentSupport.firstNonBlank(
+                    activity.getSummary(),
+                    activity.getDescription());
+            String tag = safeInt(activity.getIsPinned()) > 0
+                    ? "Featured"
+                    : localizedContentSupport.firstNonBlank(activity.getActivityType(), "Activity");
+            return DiscoverCardResponse.builder()
+                    .id("discover-activity-" + activity.getId())
+                    .title(activity.getTitle())
+                    .subtitle(subtitle)
+                    .description(description)
+                    .tag(tag)
+                    .icon("event")
+                    .type("activity")
+                    .district(district)
+                    .actionText("View activity")
+                    .coverColor("#ffe2ef")
+                    .sourceType("activity")
+                    .sourceId(activity.getId())
+                    .build();
+        }
+
         List<TipArticleResponse> tips = listTipArticles(localeHint, null, null);
         if (!tips.isEmpty()) {
             TipArticleResponse tip = tips.get(0);

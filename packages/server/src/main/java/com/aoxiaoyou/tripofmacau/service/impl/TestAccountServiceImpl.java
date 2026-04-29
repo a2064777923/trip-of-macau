@@ -131,4 +131,17 @@ public class TestAccountServiceImpl implements TestAccountService {
     public void addUserStamp(Long userId, String stampType, Long sourceId) {
         // TODO: 实现添加印章逻辑
     }
+    
+    @Override
+    public TestAccount getByUserId(Long userId) {
+        LambdaQueryWrapper<TestAccount> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TestAccount::getUserId, userId);
+        return testAccountMapper.selectOne(queryWrapper);
+    }
+    
+    @Override
+    public boolean isTestModeEnabled(Long userId) {
+        TestAccount testAccount = getByUserId(userId);
+        return testAccount != null && Boolean.TRUE.equals(testAccount.getMockEnabled());
+    }
 }

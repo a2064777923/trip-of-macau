@@ -20,12 +20,17 @@ spring:
       auto-index-creation: true
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: ${APP_MEDIA_MAX_FILE_SIZE:128MB}
+      max-request-size: ${APP_MEDIA_MAX_REQUEST_SIZE:256MB}
 
 server:
   port: ${SERVER_PORT:8081}
   shutdown: graceful
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
@@ -70,5 +75,16 @@ app:
     request-timeout-ms: ${APP_TRANSLATION_REQUEST_TIMEOUT_MS:8000}
     max-text-length: ${APP_TRANSLATION_MAX_TEXT_LENGTH:5000}
     default-engine-priority: ${APP_TRANSLATION_DEFAULT_ENGINE_PRIORITY:google,bing,deepl,yandex,baidu,alibaba,sogou,iciba,tencent}
+  ai:
+    secret-encryption-password: ${APP_AI_SECRET_ENCRYPTION_PASSWORD:}
+    secret-encryption-salt: ${APP_AI_SECRET_ENCRYPTION_SALT:}
+    provider-test-timeout-ms: ${APP_AI_PROVIDER_TEST_TIMEOUT_MS:8000}
+    request-timeout-ms: ${APP_AI_REQUEST_TIMEOUT_MS:30000}
+    default-poll-interval-ms: ${APP_AI_DEFAULT_POLL_INTERVAL_MS:3000}
+    max-download-bytes: ${APP_AI_MAX_DOWNLOAD_BYTES:67108864}
+    dashscope-compatible-base-url: ${APP_AI_DASHSCOPE_COMPATIBLE_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+    dashscope-image-base-url: ${APP_AI_DASHSCOPE_IMAGE_BASE_URL:https://dashscope.aliyuncs.com/api/v1/services/aigc/image-generation/generation}
+    dashscope-task-status-base-url: ${APP_AI_DASHSCOPE_TASK_STATUS_BASE_URL:https://dashscope.aliyuncs.com/api/v1/tasks}
+    dashscope-tts-base-url: ${APP_AI_DASHSCOPE_TTS_BASE_URL:https://dashscope.aliyuncs.com/api/v1/services/audio/tts/SpeechSynthesizer}
 
 

@@ -26,10 +26,20 @@ public class ExperienceRuntimeResponse {
     public static class StoryModeConfig {
         private Integer schemaVersion;
         private Boolean hideUnrelatedContent;
+        private Boolean nearbyRevealEnabled;
+        private Integer nearbyRevealRadiusMeters;
         private Integer nearbyRevealMeters;
+        private String currentRouteHighlight;
         private String currentRouteStyle;
         private String inactiveRouteStyle;
+        private Boolean clearTemporaryProgressOnExit;
         private Boolean exitResetsSessionProgress;
+        private Boolean preservePermanentEvents;
+        private String branchSourceType;
+        private String branchInsertPosition;
+        private Boolean branchSkippable;
+        private Boolean branchAffectsStoryProgress;
+        private List<Long> manualBranchPoiIds;
         private Map<String, Object> extra;
     }
 

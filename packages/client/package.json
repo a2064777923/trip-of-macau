@@ -7,6 +7,7 @@
   "scripts": {
     "clean:dist": "node scripts/clean-output.js",
     "build:weapp": "npm run clean:dist && taro build --type weapp && node scripts/write-weapp-project-config.js",
+    "smoke:phase17:indoor-runtime": "powershell -ExecutionPolicy Bypass -File ..\\..\\scripts\\local\\smoke-phase-17-indoor-runtime.ps1",
     "build:swan": "taro build --type swan",
     "build:alipay": "taro build --type alipay",
     "build:tt": "taro build --type tt",
@@ -45,6 +46,7 @@
     "@tarojs/runtime": "3.6.23",
     "@tarojs/shared": "3.6.23",
     "@tarojs/taro": "3.6.23",
+    "lottie-miniprogram": "^1.0.12",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "zustand": "^4.4.7"

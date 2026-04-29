@@ -325,7 +325,7 @@ const StoryContentBlockManagement: React.FC = () => {
             </Button>
           </Space>
         }
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={editorForm} layout="vertical" initialValues={defaultBlockValues}>
           <Space style={{ width: '100%' }} size="large" align="start">
@@ -417,3 +417,4 @@ const StoryContentBlockManagement: React.FC = () => {
 };
 
 export default StoryContentBlockManagement;
+

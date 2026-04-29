@@ -3,6 +3,8 @@ package com.aoxiaoyou.admin.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.List;
+
 public class AdminRewardUpsertRequest {
 
     @Data
@@ -32,9 +34,25 @@ public class AdminRewardUpsertRequest {
         private Integer inventoryTotal;
         private Integer inventoryRedeemed;
         private Long coverAssetId;
+        private String popupPresetCode;
+        private String popupConfigJson;
+        private String displayPresetCode;
+        private String displayConfigJson;
+        private String triggerPresetCode;
+        private String triggerConfigJson;
+        private String exampleContentZh;
+        private String exampleContentEn;
+        private String exampleContentZht;
+        private String exampleContentPt;
         private String status;
         private Integer sortOrder;
         private String publishStartAt;
         private String publishEndAt;
+        private List<Long> storylineBindings;
+        private List<Long> cityBindings;
+        private List<Long> subMapBindings;
+        private List<Long> indoorBuildingBindings;
+        private List<Long> indoorFloorBindings;
+        private List<Long> attachmentAssetIds;
     }
 }

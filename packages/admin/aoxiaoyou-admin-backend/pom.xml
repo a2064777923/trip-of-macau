@@ -85,6 +85,13 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
+        <!-- Traditional/Simplified Chinese conversion -->
+        <dependency>
+            <groupId>com.github.houbb</groupId>
+            <artifactId>opencc4j</artifactId>
+            <version>1.8.1</version>
+        </dependency>
+
         <!-- Tencent COS -->
         <dependency>
             <groupId>com.qcloud</groupId>

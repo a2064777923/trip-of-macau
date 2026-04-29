@@ -2,6 +2,7 @@ package com.aoxiaoyou.admin.controller;
 
 import com.aoxiaoyou.admin.common.api.ApiResponse;
 import com.aoxiaoyou.admin.common.api.PageResponse;
+import com.aoxiaoyou.admin.dto.request.AdminStatusUpdateRequest;
 import com.aoxiaoyou.admin.dto.request.AdminSubMapUpsertRequest;
 import com.aoxiaoyou.admin.dto.response.AdminSubMapResponse;
 import com.aoxiaoyou.admin.service.AdminSubMapService;
@@ -43,5 +44,11 @@ public class AdminSubMapController {
     @PutMapping("/{id}/publish")
     public ApiResponse<AdminSubMapResponse> publish(@PathVariable Long id) {
         return ApiResponse.success(adminSubMapService.publishSubMap(id));
+    }
+
+    @PutMapping("/{id}/status")
+    public ApiResponse<AdminSubMapResponse> updateStatus(@PathVariable Long id,
+                                                         @RequestBody AdminStatusUpdateRequest request) {
+        return ApiResponse.success(adminSubMapService.updateSubMapStatus(id, request == null ? null : request.getStatus()));
     }
 }

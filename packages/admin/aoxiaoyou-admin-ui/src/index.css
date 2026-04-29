@@ -19,3 +19,37 @@ body {
 .ant-card {
   border-radius: 18px;
 }
+
+.codex-form-item-shake {
+  animation: codex-form-item-shake 0.42s ease;
+}
+
+.codex-form-item-shake .ant-input,
+.codex-form-item-shake .ant-input-affix-wrapper,
+.codex-form-item-shake .ant-input-number,
+.codex-form-item-shake .ant-select-selector,
+.codex-form-item-shake .ant-picker,
+.codex-form-item-shake .ant-upload-wrapper,
+.codex-form-item-shake .ant-input-textarea {
+  border-color: #ff4d4f !important;
+  box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.15) !important;
+}
+
+@keyframes codex-form-item-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}

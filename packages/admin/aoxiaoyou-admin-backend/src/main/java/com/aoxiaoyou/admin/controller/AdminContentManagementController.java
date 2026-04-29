@@ -2,13 +2,16 @@ package com.aoxiaoyou.admin.controller;
 
 import com.aoxiaoyou.admin.common.api.ApiResponse;
 import com.aoxiaoyou.admin.common.api.PageResponse;
+import com.aoxiaoyou.admin.dto.request.AdminContentAssetBatchUploadRequest;
 import com.aoxiaoyou.admin.dto.request.AdminContentAssetUploadRequest;
 import com.aoxiaoyou.admin.dto.request.AdminContentAssetUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminNotificationUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminRuntimeSettingUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminStampUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminTipArticleUpsertRequest;
+import com.aoxiaoyou.admin.dto.response.AdminContentAssetBatchUploadResponse;
 import com.aoxiaoyou.admin.dto.response.AdminContentAssetResponse;
+import com.aoxiaoyou.admin.dto.response.AdminContentAssetUsageSummaryResponse;
 import com.aoxiaoyou.admin.dto.response.AdminNotificationResponse;
 import com.aoxiaoyou.admin.dto.response.AdminRuntimeSettingResponse;
 import com.aoxiaoyou.admin.dto.response.AdminStampResponse;
@@ -58,13 +61,40 @@ public class AdminContentManagementController {
             @RequestParam(defaultValue = "20") long pageSize,
             @RequestParam(required = false) String assetKind,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String uploadSource,
+            @RequestParam(required = false) String processingPolicyCode,
+            @RequestParam(required = false) String processingStatus,
             @RequestParam(required = false) String keyword) {
-        return ApiResponse.success(adminContentManagementService.pageAssets(pageNum, pageSize, assetKind, status, keyword));
+        return ApiResponse.success(adminContentManagementService.pageAssets(
+                pageNum,
+                pageSize,
+                assetKind,
+                status,
+                uploadSource,
+                processingPolicyCode,
+                processingStatus,
+                keyword
+        ));
     }
 
     @PostMapping(value = "/assets/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<AdminContentAssetResponse> uploadAsset(@Valid @ModelAttribute AdminContentAssetUploadRequest request) {
-        return ApiResponse.success(adminContentManagementService.uploadAsset(request));
+    public ApiResponse<AdminContentAssetResponse> uploadAsset(@Valid @ModelAttribute AdminContentAssetUploadRequest request,
+                                                              jakarta.servlet.http.HttpServletRequest httpRequest) {
+        return ApiResponse.success(adminContentManagementService.uploadAsset(
+                request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername")
+        ));
+    }
+
+    @PostMapping(value = "/assets/batch-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<AdminContentAssetBatchUploadResponse> batchUploadAssets(@Valid @ModelAttribute AdminContentAssetBatchUploadRequest request,
+                                                                               jakarta.servlet.http.HttpServletRequest httpRequest) {
+        return ApiResponse.success(adminContentManagementService.batchUploadAssets(
+                request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername")
+        ));
     }
 
     @PostMapping("/assets")
@@ -75,6 +105,11 @@ public class AdminContentManagementController {
     @PutMapping("/assets/{id}")
     public ApiResponse<AdminContentAssetResponse> updateAsset(@PathVariable Long id, @Valid @RequestBody AdminContentAssetUpsertRequest request) {
         return ApiResponse.success(adminContentManagementService.updateAsset(id, request));
+    }
+
+    @GetMapping("/assets/{id}/usages")
+    public ApiResponse<AdminContentAssetUsageSummaryResponse> getAssetUsages(@PathVariable Long id) {
+        return ApiResponse.success(adminContentManagementService.getAssetUsages(id));
     }
 
     @DeleteMapping("/assets/{id}")

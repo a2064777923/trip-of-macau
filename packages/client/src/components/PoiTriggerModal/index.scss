@@ -1,0 +1,263 @@
+@import '../../styles/variables.scss';
+
+.poi-trigger-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+
+  &__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  &__content {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  &__cover {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+  }
+
+  &__cover-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__cover-gradient {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+  }
+
+  &__body {
+    padding: 32px 28px;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  &__icon {
+    font-size: 48px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  &__title-group {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+
+  &__subtitle {
+    display: block;
+    font-size: 16px;
+    color: #666;
+    line-height: 1.4;
+  }
+
+  &__description {
+    margin-bottom: 20px;
+  }
+
+  &__description-text {
+    display: block;
+    font-size: 16px;
+    color: #444;
+    line-height: 1.6;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  &__tag {
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 999px;
+  }
+
+  &__tag-text {
+    font-size: 14px;
+    color: #1976d2;
+    font-weight: 500;
+  }
+
+  &__reward,
+  &__story {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    border-radius: 16px;
+    margin-bottom: 12px;
+  }
+
+  &__story {
+    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  }
+
+  &__reward-icon,
+  &__story-icon {
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  &__reward-text,
+  &__story-text {
+    flex: 1;
+    font-size: 15px;
+    color: #444;
+    font-weight: 500;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+    padding: 0 28px 28px;
+  }
+
+  &__button {
+    flex: 1;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 17px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    user-select: none;
+
+    &--secondary {
+      background: #f5f5f5;
+      color: #666;
+
+      &:active {
+        background: #e0e0e0;
+        transform: scale(0.98);
+      }
+    }
+
+    &--primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+
+      &:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      }
+
+      &--loading {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+    }
+  }
+
+  &__button-text {
+    font-size: 17px;
+    font-weight: 600;
+  }
+}
+
+// 长者模式适配
+.elderly-mode {
+  .poi-trigger-modal {
+    &__content {
+      max-width: 640px;
+    }
+
+    &__title {
+      font-size: 34px;
+    }
+
+    &__subtitle,
+    &__description-text {
+      font-size: 20px;
+    }
+
+    &__tag-text {
+      font-size: 17px;
+    }
+
+    &__reward-text,
+    &__story-text {
+      font-size: 18px;
+    }
+
+    &__button {
+      height: 64px;
+      min-width: 64px;
+    }
+
+    &__button-text {
+      font-size: 20px;
+    }
+  }
+}
+
+// 动画
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

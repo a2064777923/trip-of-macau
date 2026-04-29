@@ -20,6 +20,19 @@ public class AdminExperienceRequest {
     private static final String RISK_LEVEL_PATTERN = "low|normal|high|critical";
 
     @Data
+    public static class TemplateClone {
+        @NotBlank(message = "code is required")
+        private String code;
+        @NotBlank(message = "nameZh is required")
+        private String nameZh;
+        private String nameZht;
+        private String summaryZh;
+        private String summaryZht;
+        @Pattern(regexp = STATUS_PATTERN, message = "status must use the canonical publish vocabulary")
+        private String status;
+    }
+
+    @Data
     public static class TemplateUpsert {
         private String code;
         @NotBlank(message = "templateType is required")
@@ -165,5 +178,27 @@ public class AdminExperienceRequest {
         @Pattern(regexp = STATUS_PATTERN, message = "status must use the canonical publish vocabulary")
         private String status;
         private Integer sortOrder;
+    }
+
+    @Data
+    public static class GovernanceQuery {
+        private Long pageNum;
+        private Long pageSize;
+        private String keyword;
+        private Long cityId;
+        private Long subMapId;
+        private Long poiId;
+        private Long indoorBuildingId;
+        private Long storylineId;
+        private Long storyChapterId;
+        private String ownerType;
+        private String templateType;
+        private String triggerType;
+        private String effectFamily;
+        private String rewardType;
+        private String status;
+        private Boolean storyOverrideOnly;
+        private Boolean highRiskOnly;
+        private Boolean conflictOnly;
     }
 }

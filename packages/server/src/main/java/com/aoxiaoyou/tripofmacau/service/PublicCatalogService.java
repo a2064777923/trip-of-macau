@@ -1,9 +1,15 @@
 package com.aoxiaoyou.tripofmacau.service;
 
+import com.aoxiaoyou.tripofmacau.dto.response.ActivityResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.BadgeResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.CityResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.CollectibleResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.DiscoverCardResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.GameRewardResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.NotificationResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.PoiResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.RedeemablePrizeResponse;
+import com.aoxiaoyou.tripofmacau.dto.response.RewardPresentationResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.RewardResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.StampResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.StoryLineResponse;
@@ -31,6 +37,18 @@ public interface PublicCatalogService {
     TipArticleResponse getTipArticle(Long articleId, String localeHint);
 
     List<RewardResponse> listRewards(String localeHint);
+
+    List<RedeemablePrizeResponse> listRedeemablePrizes(String localeHint);
+
+    List<GameRewardResponse> listGameRewards(String localeHint, Boolean honorsOnly);
+
+    RewardPresentationResponse getRewardPresentation(Long presentationId, String localeHint);
+
+    List<ActivityResponse> listActivities(String localeHint);
+
+    List<CollectibleResponse> listCollectibles(String localeHint);
+
+    List<BadgeResponse> listBadges(String localeHint);
 
     List<StampResponse> listStamps(String localeHint);
 

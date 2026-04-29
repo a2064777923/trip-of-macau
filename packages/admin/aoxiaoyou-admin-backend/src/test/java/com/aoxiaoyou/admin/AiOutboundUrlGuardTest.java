@@ -64,4 +64,22 @@ class AiOutboundUrlGuardTest {
 
         assertEquals("https://8.8.8.8/file.png", normalized);
     }
+
+    @Test
+    void rejectsLoopbackVoiceCloneSourceUrl() {
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> guard.validatePublicSourceUrl("https://127.0.0.1/sample.mp3", "Voice clone source URL"));
+
+        assertEquals(4055, ex.getCode());
+    }
+
+    @Test
+    void allowsPublicVoiceCloneSourceUrlWithQueryString() {
+        String normalized = guard.validatePublicSourceUrl(
+                "https://example.com/sample.mp3?signature=test",
+                "Voice clone source URL"
+        );
+
+        assertEquals("https://example.com/sample.mp3?signature=test", normalized);
+    }
 }

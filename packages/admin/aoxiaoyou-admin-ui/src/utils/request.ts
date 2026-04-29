@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosRequestConfig } from 'axios';
 import { clearAdminAuth, getAdminToken } from './auth';
+import { findSuspiciousTextIssue } from './textEncodingGuard';
 
 interface ApiResponse<T = unknown> {
   code: number;
@@ -78,15 +79,38 @@ async function unwrapResponse<T>(promise: Promise<any>): Promise<RequestResult<T
   };
 }
 
+function buildSuspiciousTextFailure<T>(path: string, reason: string, preview: string): Promise<RequestResult<T>> {
+  return Promise.resolve({
+    success: false,
+    data: null as T,
+    message: `检测到疑似乱码，请改用 UTF-8 重新填写后再提交。字段: ${path}，原因: ${reason}，内容片段: ${preview}`,
+  });
+}
+
 const request = {
   get<T = unknown>(url: string, config?: AxiosRequestConfig) {
     return unwrapResponse<T>(instance.get(url, config));
   },
   post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    const issue = findSuspiciousTextIssue(data);
+    if (issue) {
+      return buildSuspiciousTextFailure<T>(issue.path, issue.reason, issue.preview);
+    }
     return unwrapResponse<T>(instance.post(url, data, config));
   },
   put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    const issue = findSuspiciousTextIssue(data);
+    if (issue) {
+      return buildSuspiciousTextFailure<T>(issue.path, issue.reason, issue.preview);
+    }
     return unwrapResponse<T>(instance.put(url, data, config));
+  },
+  patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    const issue = findSuspiciousTextIssue(data);
+    if (issue) {
+      return buildSuspiciousTextFailure<T>(issue.path, issue.reason, issue.preview);
+    }
+    return unwrapResponse<T>(instance.patch(url, data, config));
   },
   delete<T = unknown>(url: string, config?: AxiosRequestConfig) {
     return unwrapResponse<T>(instance.delete(url, config));

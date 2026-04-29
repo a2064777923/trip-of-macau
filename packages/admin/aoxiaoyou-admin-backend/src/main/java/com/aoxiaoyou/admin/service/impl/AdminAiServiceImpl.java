@@ -50,6 +50,11 @@ public class AdminAiServiceImpl implements AdminAiService {
     private static final String CONFIG_AI_PROVIDER_FAILURE_RATE_WARNING = "ai.platform.provider-failure-rate-warning";
     private static final String CONFIG_AI_RECENT_WINDOW_HOURS = "ai.platform.recent-window-hours";
     private static final String CONFIG_AI_ALLOW_OPERATOR_GLOBAL_HISTORY = "ai.platform.allow-operator-global-history";
+    private static final Map<String, WitnessDefault> WITNESS_DEFAULTS = Map.of(
+            "travel_qa", new WitnessDefault("dashscope-chat", "qwen3.5-flash"),
+            "admin_image_generation", new WitnessDefault("dashscope-image", "wan2.6-image"),
+            "admin_tts_generation", new WitnessDefault("dashscope-tts", "cosyvoice-v3-flash")
+    );
 
     private final ObjectMapper objectMapper;
     private final AiCapabilityProperties aiCapabilityProperties;
@@ -291,15 +296,15 @@ public class AdminAiServiceImpl implements AdminAiService {
         try {
             if ("dashscope_image".equalsIgnoreCase(provider.getEndpointStyle())) {
                 DashScopeProviderGateway.ImageTaskResult result = dashScopeProviderGateway.submitImageJob(
-                        provider, apiKey, prompt, request.getModelOverride(), "{\"size\":\"1024*1024\"}"
+                        provider, null, apiKey, prompt, request.getModelOverride(), "{\"size\":\"1024*1024\"}"
                 );
                 resolvedModel = result.resolvedModel();
                 preview = result.taskStatus();
                 taskId = result.taskId();
             } else if ("dashscope_tts".equalsIgnoreCase(provider.getEndpointStyle())) {
                 DashScopeProviderGateway.TtsResult result = dashScopeProviderGateway.synthesizeSpeech(
-                        provider, apiKey, prompt, request.getModelOverride(), "{\"voice\":\"longyang\",\"format\":\"mp3\",\"sampleRate\":24000}"
-                );
+                    provider, apiKey, prompt, request.getModelOverride(), "{\"voice\":\"longanyang\",\"format\":\"mp3\",\"sampleRate\":24000}"
+            );
                 resolvedModel = result.resolvedModel();
                 preview = result.assetUrl();
                 latencyMs = result.latencyMs();
@@ -417,6 +422,7 @@ public class AdminAiServiceImpl implements AdminAiService {
                         new LambdaQueryWrapper<AiProviderInventory>()
                                 .eq(providerId != null, AiProviderInventory::getProviderId, providerId)
                                 .eq(StringUtils.hasText(sourceType), AiProviderInventory::getSourceType, sourceType)
+                                .ne(AiProviderInventory::getInventoryType, "voice")
                                 .orderByAsc(AiProviderInventory::getProviderId)
                                 .orderByAsc(AiProviderInventory::getSortOrder)
                                 .orderByAsc(AiProviderInventory::getId)
@@ -483,6 +489,229 @@ public class AdminAiServiceImpl implements AdminAiService {
             throw new BusinessException(4094, "仍有能力路由或生成任務引用此模型庫項目，無法刪除");
         }
         aiProviderInventoryMapper.deleteById(id);
+        refreshProviderInventoryCount(inventory.getProviderId());
+    }
+
+    @Override
+    public List<AdminAiVoiceResponse> listVoices(Long providerId,
+                                                 String modelCode,
+                                                 String languageCode,
+                                                 String sourceType,
+                                                 Long currentAdminId,
+                                                 List<String> roles) {
+        Map<Long, AiProviderConfig> providerMap = aiProviderConfigMapper.selectList(null).stream()
+                .collect(Collectors.toMap(AiProviderConfig::getId, item -> item, (left, right) -> left));
+        boolean superAdmin = isSuperAdmin(roles);
+        String normalizedModelCode = StringUtils.hasText(modelCode) ? modelCode.trim() : null;
+        String normalizedLanguageCode = StringUtils.hasText(languageCode) ? languageCode.trim().toLowerCase(Locale.ROOT) : null;
+        return aiProviderInventoryMapper.selectList(
+                        new LambdaQueryWrapper<AiProviderInventory>()
+                                .eq(AiProviderInventory::getInventoryType, "voice")
+                                .eq(providerId != null, AiProviderInventory::getProviderId, providerId)
+                                .eq(StringUtils.hasText(sourceType), AiProviderInventory::getSourceType, sourceType)
+                                .eq(StringUtils.hasText(normalizedModelCode), AiProviderInventory::getParentInventoryCode, normalizedModelCode)
+                                .ne(AiProviderInventory::getAvailabilityStatus, "stale")
+                                .orderByAsc(AiProviderInventory::getProviderId)
+                                .orderByAsc(AiProviderInventory::getParentInventoryCode)
+                                .orderByAsc(AiProviderInventory::getSortOrder)
+                                .orderByAsc(AiProviderInventory::getId)
+                ).stream()
+                .filter(item -> superAdmin
+                        || item.getOwnerAdminId() == null
+                        || Objects.equals(item.getOwnerAdminId(), currentAdminId))
+                .filter(item -> !StringUtils.hasText(normalizedLanguageCode)
+                        || resolveVoiceLanguageCodes(item).isEmpty()
+                        || resolveVoiceLanguageCodes(item).stream()
+                        .map(code -> code == null ? null : code.toLowerCase(Locale.ROOT))
+                        .filter(Objects::nonNull)
+                        .anyMatch(code -> code.equals(normalizedLanguageCode)))
+                .map(item -> mapVoice(item, providerMap.get(item.getProviderId())))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<AdminAiVoiceResponse> syncVoices(Long providerId,
+                                                 AdminAiVoiceSyncRequest request,
+                                                 Long currentAdminId,
+                                                 String currentAdminName,
+                                                 List<String> roles) {
+        AiProviderConfig provider = requireProvider(providerId);
+        if (!"bailian".equalsIgnoreCase(defaultString(provider.getPlatformCode(), ""))) {
+            throw new BusinessException(4055, "目前仅支持百炼 TTS 音色目录同步");
+        }
+        synchronizeSystemVoices(provider, request == null ? null : request.getModelCode());
+        return listVoices(providerId, request == null ? null : request.getModelCode(), null, "system_catalog", currentAdminId, roles);
+    }
+
+    @Override
+    public AdminAiVoicePreviewResponse previewVoice(AdminAiVoicePreviewRequest request,
+                                                    Long currentAdminId,
+                                                    String currentAdminName) {
+        if (currentAdminId == null) {
+            throw new BusinessException(4010, "需要管理员身份才能试听音色");
+        }
+        AiProviderConfig provider = requireProvider(request.getProviderId());
+        String apiKey = decryptRequiredApiKey(provider);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("voice", request.getVoiceCode().trim());
+        payload.put("languageCode", request.getLanguageCode());
+        payload.put("instruction", request.getInstruction());
+        payload.put("format", defaultString(request.getFormat(), "mp3"));
+        payload.put("sampleRate", request.getSampleRate() == null ? 24000 : request.getSampleRate());
+        if (request.getRate() != null) {
+            payload.put("rate", request.getRate());
+        }
+        if (request.getPitch() != null) {
+            payload.put("pitch", request.getPitch());
+        }
+        if (request.getVolume() != null) {
+            payload.put("volume", request.getVolume());
+        }
+        String previewText = StringUtils.hasText(request.getScriptText())
+                ? request.getScriptText().trim()
+                : defaultPreviewScript(request.getLanguageCode());
+        DashScopeProviderGateway.TtsResult result = dashScopeProviderGateway.synthesizeSpeech(
+                provider,
+                apiKey,
+                previewText,
+                request.getModelCode().trim(),
+                writeJson(payload)
+        );
+        byte[] bytes = dashScopeProviderGateway.downloadBinary(provider, result.assetUrl(), provider.getRequestTimeoutMs());
+        String format = defaultString(request.getFormat(), "mp3").toLowerCase(Locale.ROOT);
+        StoredAssetMetadata stored = cosAssetStorageService.storeAsset(StoredAssetPayload.builder()
+                .bytes(bytes)
+                .originalFilename("voice-preview-" + request.getVoiceCode().trim() + "." + format)
+                .contentType(resolveAudioContentType(format))
+                .assetKind("audio")
+                .localeCode("zh-Hant")
+                .build());
+        return AdminAiVoicePreviewResponse.builder()
+                .providerId(provider.getId())
+                .modelCode(request.getModelCode().trim())
+                .voiceCode(request.getVoiceCode().trim())
+                .previewUrl(stored.getCanonicalUrl())
+                .mimeType(stored.getMimeType())
+                .fileSizeBytes(stored.getFileSizeBytes())
+                .metadataJson(result.metadataJson())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public AdminAiVoiceResponse createVoiceClone(AdminAiVoiceCloneRequest request,
+                                                 Long currentAdminId,
+                                                 String currentAdminName) {
+        if (currentAdminId == null) {
+            throw new BusinessException(4010, "需要管理员身份才能创建自定义音色");
+        }
+        AiProviderConfig provider = requireProvider(request.getProviderId());
+        if (!"bailian".equalsIgnoreCase(defaultString(provider.getPlatformCode(), ""))) {
+            throw new BusinessException(4055, "目前仅支持百炼声音复刻");
+        }
+        String sourceUrl = resolveVoiceSourceUrl(request.getSourceAssetId(), request.getSourceUrl());
+        String apiKey = decryptRequiredApiKey(provider);
+        String targetModel = request.getTargetModel().trim();
+        String prefix = sanitizeVoicePrefix(request.getVoiceName());
+        DashScopeProviderGateway.VoiceCloneResult result = dashScopeProviderGateway.createVoiceClone(
+                provider,
+                apiKey,
+                targetModel,
+                prefix,
+                sourceUrl
+        );
+        if (!StringUtils.hasText(result.voiceId())) {
+            throw new BusinessException(5058, "声音复刻未返回可用 voice_id");
+        }
+        AiProviderInventory inventory = aiProviderInventoryMapper.selectOne(
+                new LambdaQueryWrapper<AiProviderInventory>()
+                        .eq(AiProviderInventory::getProviderId, provider.getId())
+                        .eq(AiProviderInventory::getExternalId, result.voiceId())
+                        .last("LIMIT 1")
+        );
+        boolean creating = inventory == null;
+        if (creating) {
+            inventory = new AiProviderInventory();
+            inventory.setProviderId(provider.getId());
+        }
+        inventory.setInventoryCode(createCloneInventoryCode(targetModel, result.voiceId()));
+        inventory.setExternalId(result.voiceId());
+        inventory.setProviderVoiceCode(result.voiceId());
+        inventory.setParentInventoryCode(targetModel);
+        inventory.setDisplayName(request.getVoiceName().trim());
+        inventory.setInventoryType("voice");
+        inventory.setModalityCodesJson(writeJson(List.of("audio")));
+        inventory.setCapabilityCodesJson(writeJson(List.of("admin_tts_generation", "npc_voice_dialogue")));
+        inventory.setLanguageCodesJson(writeJson(resolveCloneLanguageCodes(targetModel, request.getLanguageCodes())));
+        inventory.setSyncStrategy("manual");
+        inventory.setSourceType("voice_clone");
+        inventory.setAvailabilityStatus(resolveCloneAvailability(result.status()));
+        inventory.setPreviewText(trimTo(request.getPreviewText(), 1024));
+        inventory.setOwnerAdminId(currentAdminId);
+        inventory.setOwnerAdminName(StringUtils.hasText(currentAdminName) ? currentAdminName : "admin");
+        inventory.setSourceAssetId(request.getSourceAssetId());
+        inventory.setCloneStatus(defaultString(result.status(), "submitted"));
+        inventory.setFeatureFlagsJson(writeJson(Map.of(
+                "voiceName", request.getVoiceName().trim(),
+                "targetModel", targetModel,
+                "sourceUrl", sourceUrl
+        )));
+        inventory.setRawPayloadJson(result.rawPayloadJson());
+        inventory.setIsDefault(0);
+        inventory.setSortOrder(0);
+        inventory.setSyncedAt(LocalDateTime.now());
+        inventory.setLastSeenAt(LocalDateTime.now());
+        inventory.setLastVerifiedAt(LocalDateTime.now());
+        if (creating) {
+            aiProviderInventoryMapper.insert(inventory);
+        } else {
+            aiProviderInventoryMapper.updateById(inventory);
+        }
+        refreshProviderInventoryCount(provider.getId());
+        return mapVoice(inventory, provider);
+    }
+
+    @Override
+    @Transactional
+    public AdminAiVoiceResponse refreshVoice(Long voiceId, Long currentAdminId, List<String> roles) {
+        AiProviderInventory inventory = requireVoiceInventory(voiceId);
+        assertVoiceAccessible(inventory, currentAdminId, roles);
+        AiProviderConfig provider = requireProvider(inventory.getProviderId());
+        if (!"voice_clone".equalsIgnoreCase(defaultString(inventory.getSourceType(), ""))) {
+            return mapVoice(inventory, provider);
+        }
+        String apiKey = decryptRequiredApiKey(provider);
+        DashScopeProviderGateway.VoiceCloneResult result = dashScopeProviderGateway.queryVoiceClone(
+                provider,
+                apiKey,
+                defaultString(inventory.getProviderVoiceCode(), inventory.getExternalId())
+        );
+        inventory.setCloneStatus(defaultString(result.status(), inventory.getCloneStatus()));
+        inventory.setAvailabilityStatus(resolveCloneAvailability(result.status()));
+        inventory.setRawPayloadJson(result.rawPayloadJson());
+        inventory.setLastVerifiedAt(LocalDateTime.now());
+        inventory.setSyncedAt(LocalDateTime.now());
+        aiProviderInventoryMapper.updateById(inventory);
+        return mapVoice(inventory, provider);
+    }
+
+    @Override
+    @Transactional
+    public void deleteVoice(Long voiceId, Long currentAdminId, List<String> roles) {
+        AiProviderInventory inventory = requireVoiceInventory(voiceId);
+        assertVoiceAccessible(inventory, currentAdminId, roles);
+        if (!"voice_clone".equalsIgnoreCase(defaultString(inventory.getSourceType(), ""))) {
+            throw new BusinessException(4094, "系统音色不可删除，请重新同步目录");
+        }
+        AiProviderConfig provider = requireProvider(inventory.getProviderId());
+        String apiKey = decryptRequiredApiKey(provider);
+        dashScopeProviderGateway.deleteVoiceClone(
+                provider,
+                apiKey,
+                defaultString(inventory.getProviderVoiceCode(), inventory.getExternalId())
+        );
+        aiProviderInventoryMapper.deleteById(voiceId);
         refreshProviderInventoryCount(inventory.getProviderId());
     }
 
@@ -734,7 +963,13 @@ public class AdminAiServiceImpl implements AdminAiService {
         AiCapability capability = resolveCapability(request.getCapabilityCode());
         AiPromptTemplate promptTemplate = request.getPromptTemplateId() == null ? null : requirePromptTemplate(request.getPromptTemplateId());
         AiCapabilityPolicy policy = resolvePolicy(capability, request.getPolicyId(), promptTemplate);
-        ResolvedProvider resolvedProvider = resolveProvider(capability, policy, promptTemplate, request.getProviderId());
+        ResolvedProvider resolvedProvider = resolveProvider(
+                capability,
+                policy,
+                promptTemplate,
+                request.getProviderId(),
+                request.getInventoryId()
+        );
         String promptText = buildPromptText(request.getPromptText(), request.getPromptVariablesJson(), promptTemplate, policy);
         if (!StringUtils.hasText(promptText)) {
             throw new BusinessException(4055, "AI 提示詞不能為空");
@@ -1245,6 +1480,80 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .build();
     }
 
+    private AdminAiVoiceResponse mapVoice(AiProviderInventory inventory, AiProviderConfig provider) {
+        List<String> resolvedLanguageCodes = resolveVoiceLanguageCodes(inventory);
+        return AdminAiVoiceResponse.builder()
+                .id(inventory.getId())
+                .providerId(inventory.getProviderId())
+                .providerName(provider == null ? null : provider.getProviderName())
+                .providerDisplayName(provider == null ? null : provider.getDisplayName())
+                .providerPlatformCode(provider == null ? null : provider.getPlatformCode())
+                .inventoryCode(inventory.getInventoryCode())
+                .externalId(inventory.getExternalId())
+                .voiceCode(defaultString(inventory.getProviderVoiceCode(), inventory.getExternalId()))
+                .parentModelCode(inventory.getParentInventoryCode())
+                .displayName(inventory.getDisplayName())
+                .sourceType(inventory.getSourceType())
+                .availabilityStatus(inventory.getAvailabilityStatus())
+                .cloneStatus(inventory.getCloneStatus())
+                .previewUrl(inventory.getPreviewUrl())
+                .previewText(inventory.getPreviewText())
+                .languageCodes(resolvedLanguageCodes)
+                .ownerAdminId(inventory.getOwnerAdminId())
+                .ownerAdminName(inventory.getOwnerAdminName())
+                .sourceAssetId(inventory.getSourceAssetId())
+                .featureFlagsJson(inventory.getFeatureFlagsJson())
+                .rawPayloadJson(inventory.getRawPayloadJson())
+                .syncedAt(inventory.getSyncedAt())
+                .createdAt(inventory.getCreatedAt())
+                .updatedAt(inventory.getUpdatedAt())
+                .lastVerifiedAt(inventory.getLastVerifiedAt())
+                .build();
+    }
+
+    private List<String> resolveVoiceLanguageCodes(AiProviderInventory inventory) {
+        return mergeVoiceLanguageCodes(
+                readJsonList(inventory.getLanguageCodesJson()),
+                inventory.getProviderVoiceCode(),
+                inventory.getExternalId(),
+                inventory.getDisplayName(),
+                inventory.getFeatureFlagsJson(),
+                inventory.getRawPayloadJson()
+        );
+    }
+
+    private List<String> resolveVoiceLanguageCodes(DashScopeProviderGateway.VoiceDescriptor voice) {
+        return mergeVoiceLanguageCodes(
+                voice.languageCodes(),
+                voice.voiceCode(),
+                voice.displayName(),
+                voice.rawPayloadJson()
+        );
+    }
+
+    private List<String> mergeVoiceLanguageCodes(List<String> baseCodes, String... hintTexts) {
+        LinkedHashSet<String> codes = new LinkedHashSet<>(parseStringList(baseCodes));
+        String combinedHints = Arrays.stream(hintTexts)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.joining(" "))
+                .toLowerCase(Locale.ROOT);
+        if (containsCantoneseHint(combinedHints)) {
+            codes.add("yue");
+        }
+        return new ArrayList<>(codes);
+    }
+
+    private boolean containsCantoneseHint(String text) {
+        if (!StringUtils.hasText(text)) {
+            return false;
+        }
+        return text.contains("yue")
+                || text.contains("cantonese")
+                || text.contains("\u7ca4")
+                || text.contains("\u7ca4\u8bed")
+                || text.contains("\u5e7f\u4e1c\u8bdd");
+    }
+
     private void fillInventory(AiProviderInventory inventory, AdminAiInventoryUpsertRequest request) {
         inventory.setProviderId(request.getProviderId());
         inventory.setInventoryCode(request.getInventoryCode().trim());
@@ -1266,6 +1575,70 @@ public class AdminAiServiceImpl implements AdminAiService {
         inventory.setRawPayloadJson(normalizeJson(request.getRawPayloadJson()));
         inventory.setIsDefault(request.getIsDefault() == null ? 0 : request.getIsDefault());
         inventory.setSortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder());
+    }
+
+    private void synchronizeSystemVoices(AiProviderConfig provider, String modelCode) {
+        List<DashScopeProviderGateway.VoiceDescriptor> discovered = dashScopeProviderGateway.listSystemVoices(
+                modelCode,
+                provider.getRequestTimeoutMs()
+        );
+        LocalDateTime now = LocalDateTime.now();
+        List<AiProviderInventory> existingVoices = aiProviderInventoryMapper.selectList(
+                new LambdaQueryWrapper<AiProviderInventory>()
+                        .eq(AiProviderInventory::getProviderId, provider.getId())
+                        .eq(AiProviderInventory::getInventoryType, "voice")
+                        .eq(AiProviderInventory::getSourceType, "system_catalog")
+        );
+        Map<String, AiProviderInventory> existingByInventoryCode = existingVoices.stream()
+                .collect(Collectors.toMap(AiProviderInventory::getInventoryCode, item -> item, (left, right) -> left));
+        Set<String> activeCodes = new HashSet<>();
+        for (DashScopeProviderGateway.VoiceDescriptor voice : discovered) {
+            String inventoryCode = createSystemVoiceInventoryCode(voice.modelCode(), voice.voiceCode());
+            activeCodes.add(inventoryCode);
+            AiProviderInventory inventory = existingByInventoryCode.get(inventoryCode);
+            boolean creating = inventory == null;
+            if (creating) {
+                inventory = new AiProviderInventory();
+                inventory.setProviderId(provider.getId());
+            }
+            inventory.setInventoryCode(inventoryCode);
+            inventory.setExternalId(voice.modelCode() + "::" + voice.voiceCode());
+            inventory.setProviderVoiceCode(voice.voiceCode());
+            inventory.setParentInventoryCode(voice.modelCode());
+            inventory.setDisplayName(defaultString(voice.displayName(), voice.voiceCode()));
+            inventory.setInventoryType("voice");
+            inventory.setModalityCodesJson(writeJson(List.of("audio")));
+            inventory.setCapabilityCodesJson(writeJson(List.of("admin_tts_generation", "npc_voice_dialogue")));
+            inventory.setLanguageCodesJson(writeJson(resolveVoiceLanguageCodes(voice)));
+            inventory.setSyncStrategy(defaultString(provider.getSyncStrategy(), "manual"));
+            inventory.setSourceType("system_catalog");
+            inventory.setAvailabilityStatus("available");
+            inventory.setPreviewUrl(voice.previewUrl());
+            inventory.setPreviewText(trimTo(voice.previewText(), 1024));
+            inventory.setCloneStatus(null);
+            inventory.setLastVerifiedAt(now);
+            inventory.setFeatureFlagsJson(voice.rawPayloadJson());
+            inventory.setRawPayloadJson(voice.rawPayloadJson());
+            inventory.setIsDefault(0);
+            inventory.setSortOrder(0);
+            inventory.setLastSeenAt(now);
+            inventory.setSyncedAt(now);
+            if (creating) {
+                aiProviderInventoryMapper.insert(inventory);
+            } else {
+                aiProviderInventoryMapper.updateById(inventory);
+            }
+        }
+
+        for (AiProviderInventory existing : existingVoices) {
+            if (!activeCodes.contains(existing.getInventoryCode())
+                    && (!StringUtils.hasText(modelCode) || modelCode.equalsIgnoreCase(existing.getParentInventoryCode()))) {
+                existing.setAvailabilityStatus("stale");
+                existing.setSyncedAt(now);
+                aiProviderInventoryMapper.updateById(existing);
+            }
+        }
+        refreshProviderInventoryCount(provider.getId());
     }
 
     private InventorySyncResult synchronizeInventory(AiProviderConfig provider) {
@@ -1618,6 +1991,104 @@ public class AdminAiServiceImpl implements AdminAiService {
                 || normalized.equalsIgnoreCase(defaultString(inventory.getExternalId(), ""));
     }
 
+    private AiProviderInventory requireVoiceInventory(Long id) {
+        AiProviderInventory inventory = requireInventory(id);
+        if (!"voice".equalsIgnoreCase(defaultString(inventory.getInventoryType(), ""))) {
+            throw new BusinessException(4044, "指定的音色记录不存在");
+        }
+        return inventory;
+    }
+
+    private void assertVoiceAccessible(AiProviderInventory inventory, Long currentAdminId, List<String> roles) {
+        if (inventory == null) {
+            throw new BusinessException(4044, "指定的音色记录不存在");
+        }
+        if (isSuperAdmin(roles) || inventory.getOwnerAdminId() == null || Objects.equals(inventory.getOwnerAdminId(), currentAdminId)) {
+            return;
+        }
+        throw new BusinessException(4030, "没有权限操作该自定义音色");
+    }
+
+    private String resolveVoiceSourceUrl(Long sourceAssetId, String sourceUrl) {
+        if (sourceAssetId != null) {
+            ContentAsset asset = contentAssetMapper.selectById(sourceAssetId);
+            if (asset == null || !StringUtils.hasText(asset.getCanonicalUrl())) {
+                throw new BusinessException(4044, "指定的音频资源不存在");
+            }
+            return aiOutboundUrlGuard.validatePublicSourceUrl(asset.getCanonicalUrl(), "Voice clone asset URL");
+        }
+        if (!StringUtils.hasText(sourceUrl)) {
+            throw new BusinessException(4001, "请提供可访问的声音样本 URL 或音频资源");
+        }
+        return aiOutboundUrlGuard.validatePublicSourceUrl(sourceUrl.trim(), "Voice clone source URL");
+    }
+
+    private String sanitizeVoicePrefix(String voiceName) {
+        String normalized = defaultString(voiceName, "voice")
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "");
+        if (!StringUtils.hasText(normalized)) {
+            normalized = "voice";
+        }
+        return normalized.length() <= 10 ? normalized : normalized.substring(0, 10);
+    }
+
+    private String createSystemVoiceInventoryCode(String modelCode, String voiceCode) {
+        return sanitizeInventoryCode("voice-" + defaultString(modelCode, "tts") + "-" + defaultString(voiceCode, "sample"));
+    }
+
+    private String createCloneInventoryCode(String modelCode, String voiceId) {
+        return sanitizeInventoryCode("clone-" + defaultString(modelCode, "tts") + "-" + defaultString(voiceId, UUID.randomUUID().toString()));
+    }
+
+    private List<String> resolveCloneLanguageCodes(String targetModel, List<String> requestedLanguageCodes) {
+        List<String> requested = parseStringList(requestedLanguageCodes);
+        if (!requested.isEmpty()) {
+            return requested;
+        }
+        String normalized = defaultString(targetModel, "").toLowerCase(Locale.ROOT);
+        if (normalized.contains("v3.5") || normalized.contains("v3-flash")) {
+            return List.of("zh", "yue", "en", "pt");
+        }
+        if (normalized.contains("v3-plus")) {
+            return List.of("zh", "en");
+        }
+        return List.of("zh", "en");
+    }
+
+    private String resolveCloneAvailability(String status) {
+        String normalized = defaultString(status, "").toUpperCase(Locale.ROOT);
+        return switch (normalized) {
+            case "OK", "READY", "ACTIVE" -> "available";
+            case "UNDEPLOYED", "FAILED", "ERROR" -> "error";
+            default -> "provisioning";
+        };
+    }
+
+    private String defaultPreviewScript(String languageCode) {
+        String normalized = defaultString(languageCode, "").toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "en", "english", "en-us", "en-gb" ->
+                    "Welcome to Trip of Macau. This is a preview sample for the selected voice.";
+            case "pt", "portuguese", "pt-pt", "pt-br" ->
+                    "Bem-vindo ao Trip of Macau. Este e um trecho de teste para a voz selecionada.";
+            case "yue", "cantonese", "zh-yue" ->
+                    "歡迎來到澳門漫遊，呢段係所選音色嘅試聽片段。";
+            default ->
+                    "歡迎來到澳門漫遊，這是一段所選音色的試聽樣本。";
+        };
+    }
+
+    private String resolveAudioContentType(String format) {
+        String normalized = defaultString(format, "mp3").toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "wav" -> "audio/wav";
+            case "opus" -> "audio/ogg";
+            case "pcm" -> "audio/pcm";
+            default -> "audio/mpeg";
+        };
+    }
+
     private AiProviderTemplateRegistry.AiProviderTemplateDefinition resolveProviderTemplate(String platformCode) {
         return aiProviderTemplateRegistry.find(defaultString(platformCode, "custom")).orElse(null);
     }
@@ -1907,7 +2378,23 @@ public class AdminAiServiceImpl implements AdminAiService {
         );
     }
 
-    private ResolvedProvider resolveProvider(AiCapability capability, AiCapabilityPolicy policy, AiPromptTemplate template, Long providerId) {
+    private ResolvedProvider resolveProvider(AiCapability capability,
+                                             AiCapabilityPolicy policy,
+                                             AiPromptTemplate template,
+                                             Long providerId,
+                                             Long inventoryId) {
+        if (inventoryId != null) {
+            AiProviderInventory inventory = requireInventory(inventoryId);
+            if (providerId != null && !Objects.equals(providerId, inventory.getProviderId())) {
+                throw new BusinessException(4055, "指定的 AI 供應商與模型 / 端點不匹配");
+            }
+            List<String> capabilityCodes = readJsonList(inventory.getCapabilityCodesJson());
+            if (!capabilityCodes.isEmpty() && !capabilityCodes.contains(capability.getCapabilityCode())) {
+                throw new BusinessException(4055, "指定的模型 / 端點不支援能力 `" + capability.getCapabilityCode() + "`");
+            }
+            AiProviderConfig provider = requireProvider(providerId != null ? providerId : inventory.getProviderId());
+            return new ResolvedProvider(provider, inventory, null, inventory.getExternalId());
+        }
         if (providerId != null) {
             AiProviderConfig provider = requireProvider(providerId);
             AiProviderInventory inventory = resolvePreferredInventory(provider.getId(), capability.getCapabilityCode(), template == null ? null : template.getAssetSlotCode());
@@ -1945,6 +2432,10 @@ public class AdminAiServiceImpl implements AdminAiService {
                 );
             }
         }
+        ResolvedProvider witnessResolvedProvider = resolveWitnessProvider(capability.getCapabilityCode());
+        if (witnessResolvedProvider != null) {
+            return witnessResolvedProvider;
+        }
         AiProviderConfig provider = aiProviderConfigMapper.selectList(
                         new LambdaQueryWrapper<AiProviderConfig>()
                                 .eq(AiProviderConfig::getStatus, 1)
@@ -1955,6 +2446,35 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .orElseThrow(() -> new BusinessException(4044, "未找到可用的 AI 供應商"));
         AiProviderInventory inventory = resolvePreferredInventory(provider.getId(), capability.getCapabilityCode(), null);
         return new ResolvedProvider(provider, inventory, null, inventory == null ? null : inventory.getExternalId());
+    }
+
+    private ResolvedProvider resolveWitnessProvider(String capabilityCode) {
+        WitnessDefault witnessDefault = WITNESS_DEFAULTS.get(capabilityCode);
+        if (witnessDefault == null) {
+            return null;
+        }
+        AiProviderConfig provider = aiProviderConfigMapper.selectOne(
+                new LambdaQueryWrapper<AiProviderConfig>()
+                        .eq(AiProviderConfig::getProviderName, witnessDefault.providerName())
+                        .eq(AiProviderConfig::getStatus, 1)
+                        .last("LIMIT 1")
+        );
+        if (provider == null) {
+            throw new BusinessException(4044, "AI witness provider `" + witnessDefault.providerName()
+                    + "` is not configured for capability `" + capabilityCode + "`");
+        }
+        AiProviderInventory inventory = aiProviderInventoryMapper.selectOne(
+                new LambdaQueryWrapper<AiProviderInventory>()
+                        .eq(AiProviderInventory::getProviderId, provider.getId())
+                        .eq(AiProviderInventory::getInventoryCode, witnessDefault.inventoryCode())
+                        .eq(AiProviderInventory::getAvailabilityStatus, "available")
+                        .last("LIMIT 1")
+        );
+        if (inventory == null) {
+            throw new BusinessException(4044, "AI witness inventory `" + witnessDefault.inventoryCode()
+                    + "` is unavailable for provider `" + witnessDefault.providerName() + "`");
+        }
+        return new ResolvedProvider(provider, inventory, null, inventory.getExternalId());
     }
 
     private List<AiQuotaRule> loadQuotaRules(Long capabilityId, Long policyId) {
@@ -2017,7 +2537,7 @@ public class AdminAiServiceImpl implements AdminAiService {
 
         if ("image".equalsIgnoreCase(job.getGenerationType())) {
             DashScopeProviderGateway.ImageTaskResult result = dashScopeProviderGateway.submitImageJob(
-                    provider, apiKey, job.getPromptText(), modelOverride, job.getRequestPayloadJson()
+                    provider, resolvedProvider.inventory(), apiKey, job.getPromptText(), modelOverride, job.getRequestPayloadJson()
             );
             job.setProviderRequestId(result.taskId());
             job.setJobStatus(JOB_STATUS_SUBMITTED);
@@ -2187,6 +2707,9 @@ public class AdminAiServiceImpl implements AdminAiService {
                                     AiProviderInventory inventory,
                                     AiPolicyProviderBinding binding,
                                     String modelOverride) {
+    }
+
+    private record WitnessDefault(String providerName, String inventoryCode) {
     }
 
     private boolean isSuperAdmin(List<String> roles) {

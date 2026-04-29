@@ -50,7 +50,7 @@ public class AiProviderTemplateRegistry {
                     .credentialFields(defaultCredentialFields())
                     .inventorySeeds(List.of(
                             inventorySeed("qwen-plus", "qwen-plus", "Qwen Plus", "model", List.of("text", "vision"), List.of("admin_prompt_drafting", "itinerary_planning", "travel_qa", "npc_voice_dialogue", "navigation_assist"), new BigDecimal("0.010000"), new BigDecimal("0.030000"), null, null, 128000, 10, 1),
-                            inventorySeed("wan2.6-t2i-turbo", "wan2.6-t2i-turbo", "Wan 2.6 T2I Turbo", "model", List.of("image"), List.of("admin_image_generation"), null, null, new BigDecimal("0.080000"), null, null, 20, 0),
+                            inventorySeed("wan2.6-image", "wan2.6-image", "Wan 2.6 Image", "model", List.of("image"), List.of("admin_image_generation"), null, null, new BigDecimal("0.080000"), null, null, 20, 0),
                             inventorySeed("cosyvoice-v3-flash", "cosyvoice-v3-flash", "CosyVoice V3 Flash", "model", List.of("audio"), List.of("admin_tts_generation", "npc_voice_dialogue"), null, null, null, new BigDecimal("0.030000"), null, 30, 0)
                     ))
                     .build(),

@@ -50,4 +50,14 @@ public interface TestAccountService {
      * 添加印章
      */
     void addUserStamp(Long userId, String stampType, Long sourceId);
+    
+    /**
+     * 检查用户是否为测试账号
+     */
+    TestAccount getByUserId(Long userId);
+    
+    /**
+     * 检查用户是否启用测试模式
+     */
+    boolean isTestModeEnabled(Long userId);
 }

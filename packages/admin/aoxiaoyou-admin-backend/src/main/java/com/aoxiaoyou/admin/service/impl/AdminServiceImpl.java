@@ -130,6 +130,7 @@ public class AdminServiceImpl implements AdminService {
                         .username(admin.getUsername())
                         .realName(admin.getNickname())
                         .email(admin.getEmail())
+                        .allowLosslessUpload(Boolean.TRUE.equals(admin.getAllowLosslessUpload()))
                         .roles(roles)
                         .permissions(permissions)
                         .lastLoginAt(admin.getLastLoginAt())

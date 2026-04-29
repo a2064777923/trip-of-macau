@@ -21,7 +21,7 @@ public class AiCapabilityProperties {
 
     private String dashscopeCompatibleBaseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1";
 
-    private String dashscopeImageBaseUrl = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis";
+    private String dashscopeImageBaseUrl = "https://dashscope.aliyuncs.com/api/v1/services/aigc/image-generation/generation";
 
     private String dashscopeTaskStatusBaseUrl = "https://dashscope.aliyuncs.com/api/v1/tasks";
 

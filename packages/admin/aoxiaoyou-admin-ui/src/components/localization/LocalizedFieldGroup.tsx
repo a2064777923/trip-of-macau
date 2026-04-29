@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { CopyOutlined, TranslationOutlined } from '@ant-design/icons';
 import {
+  App as AntdApp,
   Alert,
   Button,
   Card,
@@ -11,15 +13,11 @@ import {
   Space,
   Tag,
   Typography,
-  message,
 } from 'antd';
 import type { FormInstance, Rule } from 'antd/es/form';
-import { CopyOutlined, TranslationOutlined } from '@ant-design/icons';
 import { translateAdminText } from '../../services/api';
-import type {
-  AdminTranslationSettings,
-  SupportedLocale,
-} from '../../types/admin';
+import type { AdminTranslationSettings, SupportedLocale } from '../../types/admin';
+import { findSuspiciousTextIssue } from '../../utils/textEncodingGuard';
 
 const { Paragraph, Text } = Typography;
 
@@ -35,8 +33,8 @@ export const LOCALE_LABELS: Record<SupportedLocale, string> = {
 export const LOCALE_SHORT_LABELS: Record<SupportedLocale, string> = {
   'zh-Hant': '繁中',
   'zh-Hans': '簡中',
-  en: 'English',
-  pt: 'Português',
+  en: 'EN',
+  pt: 'PT',
 };
 
 type LocaleStatusMode = 'manual' | 'machine' | 'error';
@@ -96,6 +94,7 @@ function resolvePreview(locale: SupportedLocale, values: Partial<Record<Supporte
       };
     }
   }
+
   return {
     text: '',
     resolvedLocale: locale,
@@ -135,10 +134,14 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
   placeholder,
   translationDefaults,
 }) => {
+  const { message } = AntdApp.useApp();
   const primaryLocale = translationDefaults?.primaryAuthoringLocale || 'zh-Hant';
+  const sourceLocale: SupportedLocale = primaryLocale;
+  const overwriteDefault = !!translationDefaults?.overwriteFilledLocales;
+  const enginePriority = translationDefaults?.enginePriority || [];
+
   const [previewLocale, setPreviewLocale] = useState<SupportedLocale>(primaryLocale);
   const [localeMeta, setLocaleMeta] = useState<Record<SupportedLocale, LocaleStatusMeta>>(createEmptyMeta());
-  const sourceLocale: SupportedLocale = primaryLocale;
 
   const zhHantValue = Form.useWatch(fieldNames['zh-Hant'], form);
   const zhHansValue = Form.useWatch(fieldNames['zh-Hans'], form);
@@ -165,8 +168,15 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
     [localeValues, previewLocale],
   );
 
-  const overwriteDefault = !!translationDefaults?.overwriteFilledLocales;
-  const enginePriority = translationDefaults?.enginePriority || [];
+  const editorOrder = useMemo(() => {
+    const rest = SUPPORTED_LOCALES.filter((locale) => locale !== primaryLocale);
+    return [primaryLocale, ...rest];
+  }, [primaryLocale]);
+
+  const previewFallbackNote =
+    preview.text && preview.resolvedLocale !== previewLocale
+      ? `目前預覽使用 ${LOCALE_LABELS[preview.resolvedLocale]} 欄位回退`
+      : '目前顯示的是所選語言欄位內容';
 
   const setMetaForLocales = (locales: SupportedLocale[], next: Partial<LocaleStatusMeta>) => {
     setLocaleMeta((current) => {
@@ -184,6 +194,7 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
       [locale]: {
         mode: 'manual',
         translating: false,
+        message: undefined,
       },
     }));
   };
@@ -200,10 +211,12 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
 
   const runTranslation = async (targetLocales: SupportedLocale[], overwriteFilledLocales: boolean) => {
     const sourceText = localeValues[sourceLocale];
+
     if (!hasText(sourceText)) {
-      message.warning(`請先填寫${LOCALE_LABELS[sourceLocale]}內容，再執行翻譯`);
+      message.warning(`請先填寫 ${LOCALE_LABELS[sourceLocale]} 內容，再進行翻譯`);
       return;
     }
+
     if (!targetLocales.length) {
       message.info('目前沒有需要翻譯的語言欄位');
       return;
@@ -232,9 +245,16 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
 
       const translatedValues: Partial<Record<SupportedLocale, string>> = {};
       const successLocales: SupportedLocale[] = [];
+      const suspiciousResults: Partial<Record<SupportedLocale, string>> = {};
 
       response.data.results.forEach((result) => {
         if (result.status === 'success' && hasText(result.translatedText)) {
+          const suspiciousIssue = findSuspiciousTextIssue({ translatedText: result.translatedText });
+          if (suspiciousIssue) {
+            suspiciousResults[result.targetLocale] =
+              `Translation result was rejected because it looks corrupted (${suspiciousIssue.reason}).`;
+            return;
+          }
           translatedValues[result.targetLocale] = result.translatedText.trim();
           successLocales.push(result.targetLocale);
         }
@@ -247,6 +267,14 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
       setLocaleMeta((current) => {
         const updated = { ...current };
         targetLocales.forEach((locale) => {
+          if (suspiciousResults[locale]) {
+            updated[locale] = {
+              mode: 'error',
+              translating: false,
+              message: suspiciousResults[locale],
+            };
+            return;
+          }
           const result = response.data.results.find((item) => item.targetLocale === locale);
           if (result?.status === 'success') {
             updated[locale] = {
@@ -254,14 +282,15 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
               translating: false,
               engine: result.engine,
             };
-          } else {
-            updated[locale] = {
-              mode: 'error',
-              translating: false,
-              message: result?.message || '翻譯未完成，可稍後重試或手動補齊',
-              engine: result?.engine,
-            };
+            return;
           }
+
+          updated[locale] = {
+            mode: 'error',
+            translating: false,
+            engine: result?.engine,
+            message: result?.message || '翻譯未完成，可稍後重試或手動補齊',
+          };
         });
         return updated;
       });
@@ -269,7 +298,10 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
       if (successLocales.length > 0) {
         message.success(`已更新 ${successLocales.length} 個語言欄位`);
       } else {
-        message.warning('翻譯未產生可用內容，請檢查引擎設定或稍後再試');
+        message.warning('翻譯未產生可用內容，請檢查翻譯引擎設定後再試');
+      }
+      if (Object.keys(suspiciousResults).length > 0) {
+        message.error('Some translation results looked corrupted and were not applied.');
       }
     } catch (error) {
       setMetaForLocales(targetLocales, {
@@ -293,7 +325,7 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
     await new Promise<void>((resolve) => {
       Modal.confirm({
         title: '覆蓋翻譯',
-        content: '這會用主欄位內容重新覆蓋其餘語言欄位，是否繼續？',
+        content: '這會用主欄位內容重新覆蓋其他語言欄位，是否繼續？',
         okText: '確認覆蓋',
         cancelText: '取消',
         onOk: async () => {
@@ -311,12 +343,14 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
       message.warning('請先填寫主欄位內容');
       return;
     }
+
     const copiedValues: Partial<Record<SupportedLocale, string>> = {};
     SUPPORTED_LOCALES.forEach((locale) => {
       if (locale !== sourceLocale) {
         copiedValues[locale] = sourceText.trim();
       }
     });
+
     applyValues(copiedValues);
     setMetaForLocales(
       SUPPORTED_LOCALES.filter((locale) => locale !== sourceLocale),
@@ -327,7 +361,7 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
         engine: undefined,
       },
     );
-    message.success('已將主欄位內容複製到其他語言');
+    message.success('已將主欄位內容複製到其他語言欄位');
   };
 
   const clearMachineTranslations = () => {
@@ -336,11 +370,13 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
       message.info('目前沒有可清除的機器翻譯內容');
       return;
     }
+
     const clearedValues: Partial<Record<SupportedLocale, string>> = {};
     removableLocales.forEach((locale) => {
       clearedValues[locale] = '';
     });
     applyValues(clearedValues);
+
     setLocaleMeta((current) => {
       const updated = { ...current };
       removableLocales.forEach((locale) => {
@@ -348,6 +384,7 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
       });
       return updated;
     });
+
     message.success('已清除機器翻譯內容');
   };
 
@@ -360,26 +397,16 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
       return <Tag color="purple">{meta.engine ? `機器翻譯 · ${meta.engine}` : '機器翻譯'}</Tag>;
     }
     if (meta.mode === 'manual') {
-      return <Tag color="blue">手動</Tag>;
+      return <Tag color="blue">手動編輯</Tag>;
     }
     if (meta.mode === 'error') {
-      return <Tag color="error">翻譯未完成</Tag>;
+      return <Tag color="error">翻譯失敗</Tag>;
     }
     if (hasText(localeValues[locale])) {
       return <Tag color="success">已填寫</Tag>;
     }
     return <Tag>未填寫</Tag>;
   };
-
-  const editorOrder = useMemo(() => {
-    const rest = SUPPORTED_LOCALES.filter((locale) => locale !== primaryLocale);
-    return [primaryLocale, ...rest];
-  }, [primaryLocale]);
-
-  const previewFallbackNote =
-    preview.text && preview.resolvedLocale !== previewLocale
-      ? `目前預覽使用 ${LOCALE_LABELS[preview.resolvedLocale]} 補位`
-      : '目前顯示的是該語言欄位內容';
 
   return (
     <Card
@@ -404,12 +431,7 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
       }
     >
       {help ? (
-        <Alert
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-          message={help}
-        />
+        <Alert type="info" showIcon style={{ marginBottom: 16 }} message={help} />
       ) : null}
 
       <Space size={12} wrap style={{ width: '100%', marginBottom: 12 }}>
@@ -423,14 +445,12 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
           複製主欄位到其他語言
         </Button>
         <Button danger type="text" onClick={clearMachineTranslations}>
-          清除機器翻譯內容
+          清除機器翻譯
         </Button>
       </Space>
 
       <Space wrap size={8}>
-        <Tag color="purple">
-          預設覆蓋策略：{overwriteDefault ? '允許覆蓋已有內容' : '只填寫空白欄位'}
-        </Tag>
+        <Tag color="purple">{overwriteDefault ? '覆蓋策略：允許覆蓋已有內容' : '覆蓋策略：只填空白欄位'}</Tag>
         {enginePriority.map((engine) => (
           <Tag key={engine}>{engine}</Tag>
         ))}
@@ -440,7 +460,7 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
 
       <Card
         size="small"
-        title="預覽與補位結果"
+        title="預覽與欄位結果"
         style={{ marginBottom: 16, background: '#fafcff', borderColor: '#e8ecf7' }}
       >
         <Space direction="vertical" size={12} style={{ width: '100%' }}>
@@ -465,6 +485,7 @@ const LocalizedFieldGroup: React.FC<LocalizedFieldGroupProps> = ({
         {editorOrder.map((locale) => {
           const isPrimary = locale === primaryLocale;
           const meta = localeMeta[locale];
+
           return (
             <Card
               key={locale}

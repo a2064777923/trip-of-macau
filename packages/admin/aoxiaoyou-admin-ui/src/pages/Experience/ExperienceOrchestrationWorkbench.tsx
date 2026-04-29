@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@ant-design/pro-components';
 import {
   App as AntdApp,
@@ -66,6 +67,9 @@ import type {
   AdminExplorationElementPayload,
 } from '../../types/admin';
 import { focusFirstInvalidField } from '../../utils/formErrorFeedback';
+import ExperienceTemplateLibrary from './ExperienceTemplateLibrary';
+import ExperienceGovernanceCenter from './ExperienceGovernanceCenter';
+import './ExperienceWorkbench.css';
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -74,6 +78,15 @@ type TabKey = 'templates' | 'flows' | 'bindings' | 'overrides' | 'exploration' |
 interface Props {
   initialTab?: TabKey;
 }
+
+const tabRoutes: Record<TabKey, string> = {
+  flows: '/content/experience',
+  templates: '/content/experience/templates',
+  bindings: '/content/experience/bindings',
+  overrides: '/content/experience/overrides',
+  exploration: '/content/experience/exploration',
+  governance: '/content/experience/governance',
+};
 
 type EditorState =
   | { type: 'template'; item?: AdminExperienceTemplateItem }
@@ -330,6 +343,7 @@ const pickStepName = (item?: AdminExperienceStepItem | null) =>
 
 const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows' }) => {
   const { message } = AntdApp.useApp();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [templates, setTemplates] = useState<AdminExperienceTemplateItem[]>([]);
   const [flows, setFlows] = useState<AdminExperienceFlowItem[]>([]);
@@ -388,6 +402,10 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
     void refreshAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const openTemplate = (item?: AdminExperienceTemplateItem) => {
     setEditor({ type: 'template', item });
@@ -619,20 +637,26 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
     {
       title: '流程',
       render: (_, record) => (
-        <Space direction="vertical" size={2}>
-          <Text strong>{pickFlowName(record)}</Text>
-          <Text type="secondary">{record.code}</Text>
+        <Space direction="vertical" size={4} style={{ width: '100%', minWidth: 0 }}>
+          <Text strong ellipsis={{ tooltip: pickFlowName(record) }}>
+            {pickFlowName(record)}
+          </Text>
+          <Text type="secondary" ellipsis={{ tooltip: record.code }}>
+            {record.code}
+          </Text>
+          <Space size={4} wrap>
+            <Tag>{record.flowType}</Tag>
+            <Tag>{record.mode}</Tag>
+            <Tag color={statusColor(record.status)}>{record.status}</Tag>
+          </Space>
         </Space>
       ),
     },
-    { title: '類型', dataIndex: 'flowType', width: 160, render: (value) => <Tag>{value}</Tag> },
-    { title: '模式', dataIndex: 'mode', width: 130 },
-    { title: '狀態', dataIndex: 'status', width: 110, render: (value) => <Tag color={statusColor(value)}>{value}</Tag> },
     {
       title: '操作',
-      width: 240,
+      width: 150,
       render: (_, record) => (
-        <Space>
+        <Space size={0} wrap>
           <Button type="link" onClick={() => selectFlow(record)}>打開流程</Button>
           <Button type="link" onClick={() => openFlow(record)}>編輯</Button>
           <Popconfirm title="確認刪除此流程？已綁定流程不可刪除。" onConfirm={() => deleteAdminExperienceFlow(record.id).then(refreshAll)}>
@@ -743,7 +767,7 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
 
   const renderFlowWorkbench = () => (
     <Row gutter={16}>
-      <Col span={10}>
+      <Col xs={24} xl={14}>
         <Card
           title="體驗流程"
           extra={<Button type="primary" onClick={() => openFlow()}>新增流程</Button>}
@@ -758,7 +782,7 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
           />
         </Card>
       </Col>
-      <Col span={14}>
+      <Col xs={24} xl={10}>
         <Card
           title={selectedFlow ? `流程編排：${pickFlowName(selectedFlow)}` : '流程時間線'}
           extra={selectedFlow ? <Button type="primary" onClick={() => openStep(selectedFlow.id)}>新增步驟</Button> : null}
@@ -800,7 +824,15 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
       </Row>
       <Card title="衝突與治理提示">
         <Table
-          rowKey={(record, index) => `${record.findingType}-${record.ownerType}-${record.ownerId}-${index}`}
+          rowKey={(record) =>
+            [
+              record.findingType,
+              record.ownerType || '-',
+              record.ownerId || '-',
+              record.title || '-',
+              record.severity || '-',
+            ].join(':')
+          }
           dataSource={governance?.findings || []}
           pagination={false}
           columns={[
@@ -831,7 +863,11 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
 
         <Tabs
           activeKey={activeTab}
-          onChange={(key) => setActiveTab(key as TabKey)}
+          onChange={(key) => {
+            const nextTab = key as TabKey;
+            setActiveTab(nextTab);
+            navigate(tabRoutes[nextTab]);
+          }}
           items={[
             {
               key: 'flows',
@@ -841,11 +877,7 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
             {
               key: 'templates',
               label: '互動與任務模板庫',
-              children: (
-                <Card title="可復用模板" extra={<Button type="primary" onClick={() => openTemplate()}>新增模板</Button>}>
-                  <Table rowKey="id" loading={loading} columns={templateColumns} dataSource={templates} pagination={{ pageSize: 10 }} />
-                </Card>
-              ),
+              children: <ExperienceTemplateLibrary />,
             },
             {
               key: 'bindings',
@@ -877,11 +909,22 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
             {
               key: 'governance',
               label: '體驗規則治理中心',
-              children: renderGovernance(),
+              children: <ExperienceGovernanceCenter />,
             },
           ]}
         />
       </Space>
+
+      {!editor && (
+        <>
+          <Form form={templateForm} style={{ display: 'none' }}><Form.Item name="__formConnector" hidden preserve={false}><Input /></Form.Item></Form>
+          <Form form={flowForm} style={{ display: 'none' }}><Form.Item name="__formConnector" hidden preserve={false}><Input /></Form.Item></Form>
+          <Form form={stepForm} style={{ display: 'none' }}><Form.Item name="__formConnector" hidden preserve={false}><Input /></Form.Item></Form>
+          <Form form={bindingForm} style={{ display: 'none' }}><Form.Item name="__formConnector" hidden preserve={false}><Input /></Form.Item></Form>
+          <Form form={overrideForm} style={{ display: 'none' }}><Form.Item name="__formConnector" hidden preserve={false}><Input /></Form.Item></Form>
+          <Form form={elementForm} style={{ display: 'none' }}><Form.Item name="__formConnector" hidden preserve={false}><Input /></Form.Item></Form>
+        </>
+      )}
 
       <Drawer
         open={!!editor}

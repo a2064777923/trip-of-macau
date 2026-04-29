@@ -1,6 +1,8 @@
 package com.aoxiaoyou.admin.service.impl;
 
 import com.aoxiaoyou.admin.common.api.PageResponse;
+import com.aoxiaoyou.admin.common.content.ContentLifecycleStatusSupport;
+import com.aoxiaoyou.admin.common.enums.ContentStatus;
 import com.aoxiaoyou.admin.common.exception.BusinessException;
 import com.aoxiaoyou.admin.common.spatial.CoordinateNormalizationResult;
 import com.aoxiaoyou.admin.common.spatial.CoordinateNormalizationService;
@@ -58,6 +60,8 @@ public class AdminSubMapServiceImpl implements AdminSubMapService {
         requireCity(request.getCityId());
         SubMap subMap = new SubMap();
         applyRequest(subMap, request);
+        subMap.setStatus(ContentStatus.DRAFT.getCode());
+        subMap.setPublishedAt(null);
         subMapMapper.insert(subMap);
         adminSpatialAssetLinkService.syncLinks("sub_map", subMap.getId(), request.getAttachments());
         return toResponse(requireSubMap(subMap.getId()));
@@ -75,11 +79,15 @@ public class AdminSubMapServiceImpl implements AdminSubMapService {
 
     @Override
     public AdminSubMapResponse publishSubMap(Long id) {
+        return updateSubMapStatus(id, ContentStatus.PUBLISHED.getCode());
+    }
+
+    @Override
+    public AdminSubMapResponse updateSubMapStatus(Long id, String status) {
         SubMap subMap = requireSubMap(id);
-        subMap.setStatus("published");
-        subMap.setPublishedAt(LocalDateTime.now());
+        applyLifecycleStatus(subMap, ContentLifecycleStatusSupport.parseManuallyOperableStatus(status));
         subMapMapper.updateById(subMap);
-        return toResponse(subMap);
+        return toResponse(requireSubMap(id));
     }
 
     private City requireCity(Long cityId) {
@@ -119,8 +127,6 @@ public class AdminSubMapServiceImpl implements AdminSubMapService {
         subMap.setPopupConfigJson(request.getPopupConfigJson());
         subMap.setDisplayConfigJson(request.getDisplayConfigJson());
         subMap.setSortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder());
-        subMap.setStatus(StringUtils.hasText(request.getStatus()) ? request.getStatus() : "draft");
-        subMap.setPublishedAt(StringUtils.hasText(request.getPublishedAt()) ? LocalDateTime.parse(request.getPublishedAt()) : null);
     }
 
     private void applyCoordinates(SubMap subMap, AdminSubMapUpsertRequest request) {
@@ -181,5 +187,10 @@ public class AdminSubMapServiceImpl implements AdminSubMapService {
                 .publishedAt(subMap.getPublishedAt())
                 .attachments(adminSpatialAssetLinkService.listLinks("sub_map", subMap.getId()))
                 .build();
+    }
+
+    private void applyLifecycleStatus(SubMap subMap, ContentStatus status) {
+        subMap.setStatus(status.getCode());
+        subMap.setPublishedAt(ContentLifecycleStatusSupport.resolvePublishedAt(status, subMap.getPublishedAt()));
     }
 }

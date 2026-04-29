@@ -29,8 +29,8 @@ export interface PoiItem {
   icon: string
   latitude: number
   longitude: number
-  gcj02Latitude: number
-  gcj02Longitude: number
+  latitude: number
+  longitude: number
   address: string
   geofenceRadius: number
   triggerRadius: number
@@ -68,6 +68,19 @@ export interface StoryChapterItem {
   achievement: string
   collectible: string
   locationName: string
+  anchorType?: string
+  anchorTargetId?: number
+  anchorTargetCode?: string
+  primaryMediaUrl?: string
+  primaryMediaAsset?: StoryMediaAssetItem
+  unlock?: StoryRulePayload
+  prerequisite?: StoryRulePayload
+  completion?: StoryRulePayload
+  effect?: StoryRulePayload
+  contentBlocks?: StoryContentBlockItem[]
+  prerequisiteJson?: string
+  completionJson?: string
+  rewardJson?: string
   locked: boolean
 }
 
@@ -78,6 +91,9 @@ export interface StorylineItem {
   description: string
   icon: string
   coverColor: string
+  coverImageUrl?: string
+  bannerImageUrl?: string
+  attachmentAssets?: StoryMediaAssetItem[]
   totalChapters: number
   completedChapters: number
   estimatedTime: string
@@ -90,6 +106,46 @@ export interface StorylineItem {
   unlockHint?: string
   chapters?: StoryChapterItem[]
   moodTags?: string[]
+  cityBindingCodes?: string[]
+  subMapBindingCodes?: string[]
+}
+
+export interface StoryMediaAssetItem {
+  id: number
+  assetKind?: string
+  url?: string
+  mimeType?: string
+  originalFilename?: string
+  widthPx?: number
+  heightPx?: number
+  animationSubtype?: string
+  defaultLoop?: boolean
+  defaultAutoplay?: boolean
+  posterUrl?: string
+  fallbackUrl?: string
+}
+
+export interface StoryContentBlockItem {
+  id: number
+  code?: string
+  blockType?: string
+  title?: string
+  summary?: string
+  body?: string
+  stylePreset?: string
+  displayMode?: string
+  visibilityJson?: string
+  displayConditionJson?: string
+  configJson?: string
+  sortOrder?: number
+  primaryAsset?: StoryMediaAssetItem
+  attachmentAssets?: StoryMediaAssetItem[]
+}
+
+export interface StoryRulePayload {
+  type?: string
+  config?: Record<string, unknown>
+  rawJson?: string
 }
 
 export interface StampItem {
@@ -115,6 +171,101 @@ export interface RewardItem {
   status: 'available' | 'coming_soon' | 'redeemed'
   description: string
   highlight: string
+  popupPresetCode?: string
+  popupConfigJson?: string
+  displayPresetCode?: string
+  displayConfigJson?: string
+  triggerPresetCode?: string
+  triggerConfigJson?: string
+  exampleContent?: string
+  relatedIndoorBuildings?: Array<{ id: number; code: string; name: string }>
+  relatedIndoorFloors?: Array<{ id: number; code: string; name: string }>
+  attachmentAssetUrls?: string[]
+}
+
+export interface RewardRuleSummaryItem {
+  id: number
+  code: string
+  name: string
+  ruleType?: string
+  summaryText?: string
+}
+
+export interface RewardPresentationStepItem {
+  stepType?: string
+  stepCode?: string
+  titleText?: string
+  assetUrl?: string
+  durationMs?: number
+  skippableOverride?: number
+  triggerSfxUrl?: string
+  voiceOverUrl?: string
+  overlayConfigJson?: string
+  sortOrder?: number
+}
+
+export interface RewardPresentationItem {
+  id: number
+  code: string
+  name: string
+  presentationType?: string
+  firstTimeOnly?: number
+  skippable?: number
+  minimumDisplayMs?: number
+  interruptPolicy?: string
+  queuePolicy?: string
+  priorityWeight?: number
+  coverImageUrl?: string
+  voiceOverUrl?: string
+  sfxUrl?: string
+  summaryText?: string
+  configJson?: string
+  steps?: RewardPresentationStepItem[]
+}
+
+export interface RedeemablePrizeItem {
+  id: number
+  code: string
+  prizeType?: string
+  fulfillmentMode?: string
+  name: string
+  subtitle?: string
+  description?: string
+  highlight?: string
+  coverImageUrl?: string
+  stampCost?: number
+  inventoryTotal?: number
+  inventoryRedeemed?: number
+  availableInventory?: number
+  stockPolicyJson?: string
+  fulfillmentConfigJson?: string
+  presentationId?: number
+  presentation?: RewardPresentationItem
+  ruleSummaries?: RewardRuleSummaryItem[]
+  attachmentAssetUrls?: string[]
+}
+
+export interface GameRewardItem {
+  id: number
+  code: string
+  rewardType?: string
+  rarity?: string
+  stackable?: number
+  maxOwned?: number
+  canEquip?: number
+  canConsume?: number
+  name: string
+  subtitle?: string
+  description?: string
+  highlight?: string
+  coverImageUrl?: string
+  iconUrl?: string
+  animationUrl?: string
+  rewardConfigJson?: string
+  presentationId?: number
+  presentation?: RewardPresentationItem
+  ruleSummaries?: RewardRuleSummaryItem[]
+  attachmentAssetUrls?: string[]
 }
 
 export interface CheckinResult {
@@ -227,4 +378,9 @@ export interface TravelRecommendation {
   poiName: string
   ugcTitle: string
   reason: string
+  isInMacau?: boolean
+  distanceToStart?: number | null
+  difficulty?: string
+  estimatedMinutes?: number
+  tags?: string[]
 }

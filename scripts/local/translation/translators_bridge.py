@@ -3,6 +3,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+if hasattr(sys.stdin, "reconfigure"):
+    sys.stdin.reconfigure(encoding="utf-8")
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 DEFAULT_LOCALE_MAP = {
     "zh-Hans": "zh-CN",
@@ -35,6 +41,22 @@ def resolve_locale(engine: str, locale: str) -> str:
 
 def resolve_requirements_path() -> Path:
     return Path(__file__).resolve().with_name("requirements.txt")
+
+
+def read_payload() -> dict:
+    raw = sys.stdin.buffer.read()
+    if not raw:
+        return {}
+
+    for encoding in ("utf-8", "utf-8-sig", "gb18030", "cp936"):
+        try:
+            return json.loads(raw.decode(encoding))
+        except UnicodeDecodeError:
+            continue
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"invalid JSON payload ({encoding}): {exc}") from exc
+
+    raise ValueError("stdin payload could not be decoded as UTF-8 or GB18030/CP936")
 
 
 def ensure_translators_installed():
@@ -73,7 +95,15 @@ def ensure_translators_installed():
 
 
 def main() -> int:
-    payload = json.loads(sys.stdin.read() or "{}")
+    try:
+        payload = read_payload()
+    except Exception as exc:
+        print(json.dumps({
+            "ok": False,
+            "error": f"invalid bridge payload: {exc}",
+        }, ensure_ascii=False))
+        return 0
+
     engine = str(payload.get("engine", "")).strip().lower()
     source_locale = str(payload.get("sourceLocale", "")).strip()
     target_locale = str(payload.get("targetLocale", "")).strip()

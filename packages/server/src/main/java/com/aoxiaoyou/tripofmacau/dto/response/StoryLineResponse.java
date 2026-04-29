@@ -12,6 +12,8 @@ public class StoryLineResponse {
     private Long id;
     private Long cityId;
     private String cityCode;
+    private List<CatalogRelationBindingResponse> cityBindings;
+    private List<CatalogRelationBindingResponse> subMapBindings;
     private String code;
     private String name;
     private String nameEn;
@@ -21,6 +23,7 @@ public class StoryLineResponse {
     private String rewardBadge;
     private String coverImageUrl;
     private String bannerImageUrl;
+    private List<StoryMediaAssetResponse> attachmentAssets;
     private Integer totalChapters;
     private Integer sortOrder;
     private List<StoryChapterResponse> chapters;

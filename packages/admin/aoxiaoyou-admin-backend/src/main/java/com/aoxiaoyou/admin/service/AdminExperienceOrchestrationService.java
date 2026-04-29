@@ -6,9 +6,15 @@ import com.aoxiaoyou.admin.dto.response.AdminExperienceResponse;
 
 public interface AdminExperienceOrchestrationService {
 
+    java.util.List<AdminExperienceResponse.TemplatePreset> listTemplatePresets();
+
     PageResponse<AdminExperienceResponse.Template> pageTemplates(long pageNum, long pageSize, String keyword, String templateType, String status);
 
     AdminExperienceResponse.Template createTemplate(AdminExperienceRequest.TemplateUpsert request);
+
+    AdminExperienceResponse.Template cloneTemplate(Long templateId, AdminExperienceRequest.TemplateClone request);
+
+    AdminExperienceResponse.TemplateUsage getTemplateUsage(Long templateId);
 
     AdminExperienceResponse.Template updateTemplate(Long templateId, AdminExperienceRequest.TemplateUpsert request);
 

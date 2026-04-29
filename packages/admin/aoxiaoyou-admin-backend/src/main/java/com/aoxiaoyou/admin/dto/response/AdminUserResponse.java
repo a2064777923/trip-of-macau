@@ -15,6 +15,7 @@ public class AdminUserResponse {
     private String avatarUrl;
     private String department;
     private Integer isSuperuser;
+    private Boolean allowLosslessUpload;
     private String status;
     private LocalDateTime lastLoginAt;
     private String lastLoginIp;

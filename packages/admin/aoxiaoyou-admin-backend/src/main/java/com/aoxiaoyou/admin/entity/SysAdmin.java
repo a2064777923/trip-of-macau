@@ -25,6 +25,9 @@ public class SysAdmin extends BaseEntity {
     private String phone;
     
     private String avatarUrl;
+
+    @TableField("allow_lossless_upload")
+    private Boolean allowLosslessUpload;
     
     /**
      * active: 正常

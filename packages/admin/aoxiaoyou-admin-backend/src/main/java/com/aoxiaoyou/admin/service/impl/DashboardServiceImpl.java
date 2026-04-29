@@ -151,9 +151,9 @@ public class DashboardServiceImpl implements DashboardService {
         try {
             Number probe = jdbcTemplate.queryForObject("SELECT 1", Number.class);
             boolean healthy = probe != null && probe.intValue() == 1;
-            return componentStatus(healthy, healthy ? "UP" : "DOWN", healthy ? "MySQL query probe succeeded." : "MySQL query probe failed.", null);
+            return componentStatus(healthy, healthy ? "UP" : "DOWN", healthy ? "MySQL 查詢探針通過。" : "MySQL 查詢探針失敗。", null);
         } catch (Exception ex) {
-            return componentStatus(false, "DOWN", "MySQL probe failed: " + ex.getMessage(), null);
+            return componentStatus(false, "DOWN", "MySQL 探針失敗：" + ex.getMessage(), null);
         }
     }
 
@@ -180,13 +180,13 @@ public class DashboardServiceImpl implements DashboardService {
                     && (apiCode == 0 || apiCode == 200)
                     && "UP".equalsIgnoreCase(status);
 
-            String detail = "Public API health responded from " + url + " (apiCode=" + apiCode + ")";
+            String detail = "公開 API 健康檢查已回應：" + url + "（apiCode=" + apiCode + "）";
             if (data.has("discoverCuratedCardsConfigured")) {
-                detail += ", curated discover cards: " + data.path("discoverCuratedCardsConfigured").asBoolean(false);
+                detail += "，發現頁精選卡片配置：" + data.path("discoverCuratedCardsConfigured").asBoolean(false);
             }
             return componentStatus(healthy, healthy ? "UP" : "DOWN", detail, latency);
         } catch (Exception ex) {
-            return componentStatus(false, "DOWN", "Public API probe failed: " + ex.getMessage(), System.currentTimeMillis() - startedAt);
+            return componentStatus(false, "DOWN", "公開 API 探針失敗：" + ex.getMessage(), System.currentTimeMillis() - startedAt);
         }
     }
 
@@ -200,13 +200,13 @@ public class DashboardServiceImpl implements DashboardService {
         String status;
         if (configured) {
             status = "UP";
-            detail = "COS bucket " + cosProperties.getBucketName() + " in " + cosProperties.getRegion() + " is configured.";
+            detail = "COS bucket " + cosProperties.getBucketName() + " 已配置，區域：" + cosProperties.getRegion() + "。";
         } else if (enabled) {
             status = "WARN";
-            detail = "COS is enabled but runtime configuration is incomplete.";
+            detail = "COS 已啟用，但當前運行配置不完整。";
         } else {
             status = "DOWN";
-            detail = "COS upload is disabled in the current admin runtime.";
+            detail = "當前後台運行環境未啟用 COS 上傳。";
         }
         return componentStatus(configured, status, detail, null);
     }
@@ -228,14 +228,14 @@ public class DashboardServiceImpl implements DashboardService {
                     .seedKey(integrationProperties.getPhase6SeedKey())
                     .status("missing")
                     .executedAt(null)
-                    .notes("No seed_runs row found for the Phase 6 migration.")
+                    .notes("未找到 Phase 6 種子資料遷移的 seed_runs 記錄。")
                     .build();
         } catch (Exception ex) {
             return DashboardStatsResponse.SeedStatus.builder()
                     .seedKey(integrationProperties.getPhase6SeedKey())
                     .status("error")
                     .executedAt(null)
-                    .notes("Failed to read seed_runs: " + ex.getMessage())
+                    .notes("讀取 seed_runs 失敗：" + ex.getMessage())
                     .build();
         }
     }

@@ -11,6 +11,9 @@ import com.aoxiaoyou.admin.dto.request.AdminAiPromptTemplateUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminAiProviderTestRequest;
 import com.aoxiaoyou.admin.dto.request.AdminAiProviderUpsertRequest;
 import com.aoxiaoyou.admin.dto.request.AdminAiQuotaRuleUpsertRequest;
+import com.aoxiaoyou.admin.dto.request.AdminAiVoiceCloneRequest;
+import com.aoxiaoyou.admin.dto.request.AdminAiVoicePreviewRequest;
+import com.aoxiaoyou.admin.dto.request.AdminAiVoiceSyncRequest;
 import com.aoxiaoyou.admin.dto.response.AdminAiCapabilityResponse;
 import com.aoxiaoyou.admin.dto.response.AdminAiGenerationJobResponse;
 import com.aoxiaoyou.admin.dto.response.AdminAiInventoryResponse;
@@ -24,6 +27,8 @@ import com.aoxiaoyou.admin.dto.response.AdminAiProviderSyncJobResponse;
 import com.aoxiaoyou.admin.dto.response.AdminAiProviderTemplateResponse;
 import com.aoxiaoyou.admin.dto.response.AdminAiProviderTestResponse;
 import com.aoxiaoyou.admin.dto.response.AdminAiQuotaRuleResponse;
+import com.aoxiaoyou.admin.dto.response.AdminAiVoicePreviewResponse;
+import com.aoxiaoyou.admin.dto.response.AdminAiVoiceResponse;
 import com.aoxiaoyou.admin.service.AdminAiService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -136,6 +141,74 @@ public class AdminAiController {
     @DeleteMapping("/inventory/{id}")
     public ApiResponse<Boolean> deleteInventory(@PathVariable Long id) {
         adminAiService.deleteInventory(id);
+        return ApiResponse.success(Boolean.TRUE);
+    }
+
+    @GetMapping("/voices")
+    public ApiResponse<List<AdminAiVoiceResponse>> listVoices(@RequestParam(required = false) Long providerId,
+                                                              @RequestParam(required = false) String modelCode,
+                                                              @RequestParam(required = false) String languageCode,
+                                                              @RequestParam(required = false) String sourceType,
+                                                              HttpServletRequest request) {
+        return ApiResponse.success(adminAiService.listVoices(
+                providerId,
+                modelCode,
+                languageCode,
+                sourceType,
+                (Long) request.getAttribute("adminUserId"),
+                readRoles(request)
+        ));
+    }
+
+    @PostMapping("/providers/{id}/sync-voices")
+    public ApiResponse<List<AdminAiVoiceResponse>> syncVoices(@PathVariable Long id,
+                                                              @RequestBody(required = false) AdminAiVoiceSyncRequest request,
+                                                              HttpServletRequest httpRequest) {
+        return ApiResponse.success(adminAiService.syncVoices(
+                id,
+                request == null ? new AdminAiVoiceSyncRequest() : request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername"),
+                readRoles(httpRequest)
+        ));
+    }
+
+    @PostMapping("/voices/preview")
+    public ApiResponse<AdminAiVoicePreviewResponse> previewVoice(@Valid @RequestBody AdminAiVoicePreviewRequest request,
+                                                                 HttpServletRequest httpRequest) {
+        return ApiResponse.success(adminAiService.previewVoice(
+                request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername")
+        ));
+    }
+
+    @PostMapping("/voices/clone")
+    public ApiResponse<AdminAiVoiceResponse> createVoiceClone(@Valid @RequestBody AdminAiVoiceCloneRequest request,
+                                                              HttpServletRequest httpRequest) {
+        return ApiResponse.success(adminAiService.createVoiceClone(
+                request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername")
+        ));
+    }
+
+    @PostMapping("/voices/{voiceId}/refresh")
+    public ApiResponse<AdminAiVoiceResponse> refreshVoice(@PathVariable Long voiceId, HttpServletRequest request) {
+        return ApiResponse.success(adminAiService.refreshVoice(
+                voiceId,
+                (Long) request.getAttribute("adminUserId"),
+                readRoles(request)
+        ));
+    }
+
+    @DeleteMapping("/voices/{voiceId}")
+    public ApiResponse<Boolean> deleteVoice(@PathVariable Long voiceId, HttpServletRequest request) {
+        adminAiService.deleteVoice(
+                voiceId,
+                (Long) request.getAttribute("adminUserId"),
+                readRoles(request)
+        );
         return ApiResponse.success(Boolean.TRUE);
     }
 

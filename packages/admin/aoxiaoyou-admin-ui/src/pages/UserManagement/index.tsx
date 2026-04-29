@@ -10,6 +10,14 @@ import type { AdminUserListItem } from '../../types/admin';
 
 const { Text } = Typography;
 
+const isUsableAvatarUrl = (url?: string) => Boolean(url && !/example\.test/i.test(url));
+
+const accountStatusLabel: Record<string, { text: string; color: string }> = {
+  active: { text: '已啟用', color: 'success' },
+  disabled: { text: '已停用', color: 'default' },
+  deleted: { text: '已刪除', color: 'error' },
+};
+
 const UserManagement: React.FC = () => {
   const navigate = useNavigate();
 
@@ -18,17 +26,20 @@ const UserManagement: React.FC = () => {
       {
         title: '旅客',
         dataIndex: 'nickname',
-        render: (_, record) => (
-          <Space>
-            <Avatar src={record.avatarUrl}>{record.nickname?.[0]}</Avatar>
-            <div>
-              <div>{record.nickname || '未命名旅客'}</div>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                {record.openId}
-              </Text>
-            </div>
-          </Space>
-        ),
+        render: (_, record) => {
+          const avatarSrc = isUsableAvatarUrl(record.avatarUrl) ? record.avatarUrl : undefined;
+          return (
+            <Space>
+              <Avatar src={avatarSrc}>{record.nickname?.[0] || '旅'}</Avatar>
+              <div>
+                <div>{record.nickname || '未命名旅客'}</div>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {record.openId}
+                </Text>
+              </div>
+            </Space>
+          );
+        },
       },
       {
         title: '測試帳號',
@@ -76,7 +87,10 @@ const UserManagement: React.FC = () => {
         title: '帳號狀態',
         dataIndex: 'accountStatus',
         hideInSearch: true,
-        render: (value) => <Tag color={value === 'active' ? 'success' : 'default'}>{value || 'unknown'}</Tag>,
+        render: (value) => {
+          const status = accountStatusLabel[String(value || '')];
+          return <Tag color={status?.color || 'default'}>{status?.text || '未知'}</Tag>;
+        },
       },
       {
         title: '建立時間',

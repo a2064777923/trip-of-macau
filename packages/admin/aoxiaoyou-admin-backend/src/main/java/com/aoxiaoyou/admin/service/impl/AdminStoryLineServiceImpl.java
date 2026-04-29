@@ -11,6 +11,8 @@ import com.aoxiaoyou.admin.entity.StoryLine;
 import com.aoxiaoyou.admin.mapper.CityMapper;
 import com.aoxiaoyou.admin.mapper.StoryChapterMapper;
 import com.aoxiaoyou.admin.mapper.StoryLineMapper;
+import com.aoxiaoyou.admin.mapper.SubMapMapper;
+import com.aoxiaoyou.admin.service.AdminContentRelationService;
 import com.aoxiaoyou.admin.service.AdminStoryLineService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -19,6 +21,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +35,8 @@ public class AdminStoryLineServiceImpl implements AdminStoryLineService {
     private final StoryLineMapper storyLineMapper;
     private final StoryChapterMapper storyChapterMapper;
     private final CityMapper cityMapper;
+    private final SubMapMapper subMapMapper;
+    private final AdminContentRelationService adminContentRelationService;
 
     @Override
     public PageResponse<AdminStoryLineListItemResponse> page(long pageNum, long pageSize, String keyword, String status) {
@@ -54,19 +64,21 @@ public class AdminStoryLineServiceImpl implements AdminStoryLineService {
 
     @Override
     public AdminStoryLineDetailResponse create(AdminStoryLineUpsertRequest.Upsert request) {
-        verifyCity(request.getCityId());
+        StorylineRelationPayload relationPayload = resolveStorylineRelations(request);
         StoryLine storyLine = new StoryLine();
-        applyRequest(storyLine, request);
+        applyRequest(storyLine, request, relationPayload);
         storyLineMapper.insert(storyLine);
+        syncRelations(storyLine.getId(), relationPayload);
         return toDetail(requireStoryline(storyLine.getId()));
     }
 
     @Override
     public AdminStoryLineDetailResponse update(Long storylineId, AdminStoryLineUpsertRequest.Upsert request) {
-        verifyCity(request.getCityId());
+        StorylineRelationPayload relationPayload = resolveStorylineRelations(request);
         StoryLine storyLine = requireStoryline(storylineId);
-        applyRequest(storyLine, request);
+        applyRequest(storyLine, request, relationPayload);
         storyLineMapper.updateById(storyLine);
+        syncRelations(storylineId, relationPayload);
         return toDetail(requireStoryline(storylineId));
     }
 
@@ -90,8 +102,8 @@ public class AdminStoryLineServiceImpl implements AdminStoryLineService {
         }
     }
 
-    private void applyRequest(StoryLine storyLine, AdminStoryLineUpsertRequest.Upsert request) {
-        storyLine.setCityId(request.getCityId());
+    private void applyRequest(StoryLine storyLine, AdminStoryLineUpsertRequest.Upsert request, StorylineRelationPayload relationPayload) {
+        storyLine.setCityId(relationPayload.primaryCityId());
         storyLine.setCode(request.getCode());
         storyLine.setNameZh(request.getNameZh());
         storyLine.setNameEn(request.getNameEn());
@@ -115,11 +127,14 @@ public class AdminStoryLineServiceImpl implements AdminStoryLineService {
     }
 
     private AdminStoryLineListItemResponse toListItem(StoryLine storyLine) {
-        City city = storyLine.getCityId() == null ? null : cityMapper.selectById(storyLine.getCityId());
+        List<Long> cityBindingIds = getCityBindingIds(storyLine);
+        List<Long> subMapBindingIds = adminContentRelationService.listTargetIds("storyline", storyLine.getId(), "sub_map_binding", "sub_map");
         return AdminStoryLineListItemResponse.builder()
                 .storylineId(storyLine.getId())
-                .cityId(storyLine.getCityId())
-                .cityName(city == null ? null : city.getNameZh())
+                .cityId(cityBindingIds.isEmpty() ? storyLine.getCityId() : cityBindingIds.get(0))
+                .cityName(joinCityNames(cityBindingIds))
+                .cityBindings(cityBindingIds)
+                .subMapBindings(subMapBindingIds)
                 .code(storyLine.getCode())
                 .nameZh(storyLine.getNameZh())
                 .difficulty(storyLine.getDifficulty())
@@ -133,11 +148,16 @@ public class AdminStoryLineServiceImpl implements AdminStoryLineService {
     }
 
     private AdminStoryLineDetailResponse toDetail(StoryLine storyLine) {
-        City city = storyLine.getCityId() == null ? null : cityMapper.selectById(storyLine.getCityId());
+        List<Long> cityBindingIds = getCityBindingIds(storyLine);
+        List<Long> subMapBindingIds = adminContentRelationService.listTargetIds("storyline", storyLine.getId(), "sub_map_binding", "sub_map");
+        List<Long> attachmentAssetIds = adminContentRelationService.listTargetIds("storyline", storyLine.getId(), "attachment_asset", "asset");
         return AdminStoryLineDetailResponse.builder()
                 .storylineId(storyLine.getId())
-                .cityId(storyLine.getCityId())
-                .cityName(city == null ? null : city.getNameZh())
+                .cityId(cityBindingIds.isEmpty() ? storyLine.getCityId() : cityBindingIds.get(0))
+                .cityName(joinCityNames(cityBindingIds))
+                .cityBindings(cityBindingIds)
+                .subMapBindings(subMapBindingIds)
+                .attachmentAssetIds(attachmentAssetIds)
                 .code(storyLine.getCode())
                 .nameZh(storyLine.getNameZh())
                 .nameEn(storyLine.getNameEn())
@@ -171,5 +191,85 @@ public class AdminStoryLineServiceImpl implements AdminStoryLineService {
 
     private LocalDateTime parseDateTime(String value) {
         return StringUtils.hasText(value) ? LocalDateTime.parse(value) : null;
+    }
+
+    private StorylineRelationPayload resolveStorylineRelations(AdminStoryLineUpsertRequest.Upsert request) {
+        List<Long> cityIds = normalizeIds(request.getCityBindings());
+        if (cityIds.isEmpty() && request.getCityId() != null) {
+            cityIds = List.of(request.getCityId());
+        }
+        cityIds.forEach(this::verifyCity);
+
+        List<Long> subMapIds = normalizeIds(request.getSubMapBindings());
+        if (!subMapIds.isEmpty()) {
+            Map<Long, Long> subMapCityIds = subMapIds.stream()
+                    .collect(LinkedHashMap::new, (map, id) -> {
+                        var subMap = subMapMapper.selectById(id);
+                        if (subMap == null) {
+                            throw new BusinessException(4048, "Sub-map not found");
+                        }
+                        map.put(id, subMap.getCityId());
+                    }, Map::putAll);
+            if (!cityIds.isEmpty()) {
+                boolean allCompatible = subMapCityIds.values().stream().allMatch(cityIds::contains);
+                if (!allCompatible) {
+                    throw new BusinessException(4049, "Sub-map bindings must belong to bound cities");
+                }
+            } else {
+                cityIds = subMapCityIds.values().stream().filter(Objects::nonNull).distinct().toList();
+            }
+        }
+
+        return new StorylineRelationPayload(
+                cityIds.isEmpty() ? null : cityIds.get(0),
+                cityIds,
+                subMapIds,
+                normalizeIds(request.getAttachmentAssetIds()));
+    }
+
+    private void syncRelations(Long storylineId, StorylineRelationPayload payload) {
+        adminContentRelationService.syncTargetIds("storyline", storylineId, "city_binding", "city", payload.cityBindings());
+        adminContentRelationService.syncTargetIds("storyline", storylineId, "sub_map_binding", "sub_map", payload.subMapBindings());
+        adminContentRelationService.syncTargetIds("storyline", storylineId, "attachment_asset", "asset", payload.attachmentAssetIds());
+    }
+
+    private List<Long> getCityBindingIds(StoryLine storyLine) {
+        if (storyLine.getId() == null) {
+            return storyLine.getCityId() == null ? Collections.emptyList() : List.of(storyLine.getCityId());
+        }
+        List<Long> cityBindingIds = adminContentRelationService.listTargetIds("storyline", storyLine.getId(), "city_binding", "city");
+        if (cityBindingIds.isEmpty() && storyLine.getCityId() != null) {
+            return List.of(storyLine.getCityId());
+        }
+        return cityBindingIds;
+    }
+
+    private List<Long> normalizeIds(List<Long> values) {
+        if (values == null || values.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return values.stream().filter(Objects::nonNull).distinct().toList();
+    }
+
+    private String joinCityNames(List<Long> cityIds) {
+        if (cityIds == null || cityIds.isEmpty()) {
+            return null;
+        }
+        List<String> cityNames = new ArrayList<>();
+        for (Long cityId : cityIds) {
+            City city = cityMapper.selectById(cityId);
+            if (city != null && StringUtils.hasText(city.getNameZh())) {
+                cityNames.add(city.getNameZh());
+            }
+        }
+        return cityNames.isEmpty() ? null : String.join(" / ", cityNames);
+    }
+
+    private record StorylineRelationPayload(
+            Long primaryCityId,
+            List<Long> cityBindings,
+            List<Long> subMapBindings,
+            List<Long> attachmentAssetIds
+    ) {
     }
 }

@@ -12,7 +12,7 @@ const taroCommand = process.platform === 'win32' ? 'npx.cmd' : 'npx'
 const child = spawn(taroCommand, ['taro', 'build', '--type', 'weapp', '--watch'], {
   cwd: path.resolve(__dirname, '..'),
   stdio: 'inherit',
-  shell: false,
+  shell: true,
   env: {
     ...process.env,
     NODE_ENV: process.env.NODE_ENV || 'development',

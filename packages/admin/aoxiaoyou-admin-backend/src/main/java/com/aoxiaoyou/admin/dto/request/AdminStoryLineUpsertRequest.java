@@ -3,11 +3,20 @@ package com.aoxiaoyou.admin.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AdminStoryLineUpsertRequest {
 
     @Data
     public static class Upsert {
         private Long cityId;
+
+        private List<Long> cityBindings = new ArrayList<>();
+
+        private List<Long> subMapBindings = new ArrayList<>();
+
+        private List<Long> attachmentAssetIds = new ArrayList<>();
 
         @NotBlank(message = "code is required")
         private String code;

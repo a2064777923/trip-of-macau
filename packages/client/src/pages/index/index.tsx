@@ -137,12 +137,21 @@ export default function IndexPage() {
 
     try {
       await switchCurrentCity(map.id)
+      
+      // 重新加载所有相关数据
       const nextState = loadGameState()
       const nextCities = getCities()
+      const nextStories = getStorylines()
+      const nextRewards = getRewards()
+      
+      // 更新所有状态
       setCurrentMap(nextCities.find((item) => item.id === map.id) || map)
       setCities(nextCities)
       setState(nextState)
+      setStories(nextStories)
+      setRewards(nextRewards)
       setShowMapSelector(false)
+      
       Taro.showToast({ title: `已切換至${map.name}`, icon: 'success' })
     } catch (error) {
       Taro.showToast({ title: error instanceof Error ? error.message : '切換城市失敗', icon: 'none' })

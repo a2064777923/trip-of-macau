@@ -79,6 +79,36 @@ public class Reward extends BaseEntity {
     @TableField("cover_asset_id")
     private Long coverAssetId;
 
+    @TableField("popup_preset_code")
+    private String popupPresetCode;
+
+    @TableField("popup_config_json")
+    private String popupConfigJson;
+
+    @TableField("display_preset_code")
+    private String displayPresetCode;
+
+    @TableField("display_config_json")
+    private String displayConfigJson;
+
+    @TableField("trigger_preset_code")
+    private String triggerPresetCode;
+
+    @TableField("trigger_config_json")
+    private String triggerConfigJson;
+
+    @TableField("example_content_zh")
+    private String exampleContentZh;
+
+    @TableField("example_content_en")
+    private String exampleContentEn;
+
+    @TableField("example_content_zht")
+    private String exampleContentZht;
+
+    @TableField("example_content_pt")
+    private String exampleContentPt;
+
     private String status;
 
     @TableField("sort_order")

@@ -40,7 +40,8 @@ export const formatDistance = (distance: number): string => {
   }
 }
 
-// 判断是否在POI触发范围内
+
+// 判断是否在探索點触发范围内
 export const isWithinTriggerRange = (
   userLat: number,
   userLng: number,

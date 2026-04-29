@@ -3,9 +3,10 @@ package com.aoxiaoyou.admin.controller;
 import com.aoxiaoyou.admin.common.api.ApiResponse;
 import com.aoxiaoyou.admin.common.api.PageResponse;
 import com.aoxiaoyou.admin.dto.request.AdminRoleCreateRequest;
-import com.aoxiaoyou.admin.dto.response.RoleResponse;
-import com.aoxiaoyou.admin.dto.response.PermissionResponse;
+import com.aoxiaoyou.admin.dto.request.AdminUserUpdateRequest;
 import com.aoxiaoyou.admin.dto.response.AdminUserResponse;
+import com.aoxiaoyou.admin.dto.response.PermissionResponse;
+import com.aoxiaoyou.admin.dto.response.RoleResponse;
 import com.aoxiaoyou.admin.service.AdminRbacService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,11 @@ public class AdminRbacController {
             @RequestParam(defaultValue = "20") long pageSize,
             @RequestParam(required = false) String keyword) {
         return ApiResponse.success(rbacService.pageAdminUsers(pageNum, pageSize, keyword));
+    }
+
+    @PutMapping("/admin-users/{adminId}")
+    public ApiResponse<AdminUserResponse> updateAdminUser(@PathVariable Long adminId, @RequestBody AdminUserUpdateRequest request) {
+        return ApiResponse.success(rbacService.updateAdminUser(adminId, request));
     }
 
     @GetMapping("/roles")

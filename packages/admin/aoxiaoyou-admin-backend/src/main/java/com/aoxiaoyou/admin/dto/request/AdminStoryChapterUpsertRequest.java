@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.util.List;
+
 public class AdminStoryChapterUpsertRequest {
 
     @Data
@@ -42,10 +44,33 @@ public class AdminStoryChapterUpsertRequest {
         private String locationNameZht;
         private String locationNamePt;
         private Long mediaAssetId;
+        private Long experienceFlowId;
+        private String overridePolicyJson;
+        private String storyModeConfigJson;
+        private String anchorType;
+        private Long anchorTargetId;
+        private String anchorTargetCode;
         private String unlockType;
         private String unlockParamJson;
+        private String prerequisiteJson;
+        private String completionJson;
+        private String rewardJson;
         private String status;
         private Integer sortOrder;
         private String publishedAt;
+        private List<ContentBlockLinkUpsert> contentBlocks;
+    }
+
+    @Data
+    public static class ContentBlockLinkUpsert {
+        private Long id;
+        private Long blockId;
+        private String overrideTitleJson;
+        private String overrideSummaryJson;
+        private String overrideBodyJson;
+        private String displayConditionJson;
+        private String overrideConfigJson;
+        private String status;
+        private Integer sortOrder;
     }
 }
