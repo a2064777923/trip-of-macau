@@ -74,6 +74,7 @@ function resolveSelectedKey(pathname: string) {
     '/content/storyline-mode',
     '/content/chapters',
     '/content/chapters/workbench',
+    '/content/material-packages',
     '/content/blocks',
     '/content/experience',
     '/content/experience/templates',
@@ -220,6 +221,11 @@ const DefaultLayout: React.FC = () => {
             key: '/content/chapters',
             icon: <ClusterOutlined />,
             label: <Link to="/content/chapters">章節管理</Link>,
+          },
+          {
+            key: '/content/material-packages',
+            icon: <DatabaseOutlined />,
+            label: <Link to="/content/material-packages">故事素材包</Link>,
           },
           {
             key: '/content/blocks',

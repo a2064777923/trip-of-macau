@@ -1,9 +1,9 @@
 ---
 phase: 33
 slug: complete-flagship-story-content-material-package
-status: draft
+status: complete
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-04-29
 ---
 
@@ -33,12 +33,12 @@ created: 2026-04-29
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 33-01-01 | 01 | 1 | STORY-03 | T33-01 | Admin-only package API does not expose secrets and validates ids/status | compile | `mvn -q -DskipTests compile -f packages/admin/aoxiaoyou-admin-backend/pom.xml` | W0 | pending |
-| 33-01-02 | 01 | 1 | VER-02 | T33-02 | Manifest item provenance is persisted without storing provider secrets | SQL import | `mysql --default-character-set=utf8mb4 aoxiaoyou < scripts/local/mysql/init/47-phase-33-story-material-package-model.sql` | W0 | pending |
-| 33-02-01 | 02 | 2 | STORY-03 | T33-03 | Asset records use COS keys and fallback ids without hardcoded credentials | SQL import | `mysql --default-character-set=utf8mb4 aoxiaoyou < scripts/local/mysql/init/48-phase-33-flagship-material-assets.sql` | W0 | pending |
-| 33-03-01 | 03 | 3 | VER-02 | T33-04 | Flagship seed is idempotent and UTF-8 safe | SQL import | `mysql --default-character-set=utf8mb4 aoxiaoyou < scripts/local/mysql/init/49-phase-33-east-west-flagship-story.sql` | W0 | pending |
-| 33-04-01 | 04 | 4 | STORY-03 | T33-05 | Admin package page requires authenticated admin API and shows only package metadata | UI build | `npm run build --prefix packages/admin/aoxiaoyou-admin-ui` | W0 | pending |
-| 33-04-02 | 04 | 4 | VER-02 | T33-06 | Smoke uses ignored local auth/env tokens, not tracked secrets | smoke | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-33-flagship-package.ps1` | W0 | pending |
+| 33-01-01 | 01 | 1 | STORY-03 | T33-01 | Admin-only package API does not expose secrets and validates ids/status | compile | `mvn -q -DskipTests compile -f packages/admin/aoxiaoyou-admin-backend/pom.xml` | W0 | complete |
+| 33-01-02 | 01 | 1 | VER-02 | T33-02 | Manifest item provenance is persisted without storing provider secrets | SQL import | `mysql --default-character-set=utf8mb4 ... --execute="SOURCE .../47-phase-33-story-material-package-model.sql"` | W0 | complete |
+| 33-02-01 | 02 | 2 | STORY-03 | T33-03 | Asset records use COS keys and fallback ids without hardcoded credentials | SQL import | `mysql --default-character-set=utf8mb4 ... --execute="SOURCE .../48-phase-33-flagship-material-assets.sql"` | W0 | complete |
+| 33-03-01 | 03 | 3 | VER-02 | T33-04 | Flagship seed is idempotent and UTF-8 safe | SQL import | `mysql --default-character-set=utf8mb4 ... --execute="SOURCE .../49-phase-33-east-west-flagship-story.sql"` | W0 | complete |
+| 33-04-01 | 04 | 4 | STORY-03 | T33-05 | Admin package page requires authenticated admin API and shows only package metadata | UI build | `npm run build --prefix packages/admin/aoxiaoyou-admin-ui` | W0 | complete |
+| 33-04-02 | 04 | 4 | VER-02 | T33-06 | Smoke uses ignored local auth/env tokens, not tracked secrets | smoke | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-33-flagship-package.ps1` | W0 | complete |
 
 ## Wave 0 Requirements
 
@@ -62,4 +62,4 @@ created: 2026-04-29
 - [x] Feedback latency target < 180s after services are running.
 - [x] `nyquist_compliant: true` set in frontmatter.
 
-**Approval:** pending execution
+**Approval:** complete after backend compile, admin UI build, SQL seed import, and live 8081 smoke.

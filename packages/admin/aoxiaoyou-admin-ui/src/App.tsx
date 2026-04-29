@@ -17,6 +17,7 @@ import ModulePlaceholder from './pages/ModulePlaceholder';
 import MediaLibraryManagement from './pages/Content/MediaLibraryManagement';
 import StoryChapterWorkbench from './pages/Content/StoryChapterWorkbench';
 import StoryContentBlockManagement from './pages/Content/StoryContentBlockManagement';
+import StoryMaterialPackageManagement from './pages/Content/StoryMaterialPackageManagement';
 import ExperienceOrchestrationWorkbench from './pages/Experience/ExperienceOrchestrationWorkbench';
 import CityManagement from './pages/MapSpace/CityManagement';
 import IndoorBuildingManagement from './pages/MapSpace/IndoorBuildingManagement';
@@ -177,6 +178,7 @@ function App() {
           <Route path="content/storylines/:storylineId/mode" element={<StorylineModeWorkbench />} />
           <Route path="content/chapters" element={<StoryChapterWorkbench />} />
           <Route path="content/chapters/workbench" element={<StoryChapterWorkbench />} />
+          <Route path="content/material-packages" element={<StoryMaterialPackageManagement />} />
           <Route path="content/blocks" element={<StoryContentBlockManagement />} />
           <Route path="content/experience" element={<ExperienceOrchestrationWorkbench initialTab="flows" />} />
           <Route path="content/experience/templates" element={<ExperienceOrchestrationWorkbench initialTab="templates" />} />

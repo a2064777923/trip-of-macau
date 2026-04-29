@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Admin Core Domain Completion and Control-Plane Linkage
 current_phase: 33
-current_plan: 3
-status: executing
-stopped_at: Completed 33-03-PLAN.md
-last_updated: "2026-04-29T15:57:06.990Z"
+current_plan: 4
+status: ready_for_next_phase
+stopped_at: Completed Phase 33
+last_updated: "2026-04-29T16:15:00.000Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 25
-  completed_plans: 24
-  percent: 96
+  completed_plans: 25
+  percent: 100
 ---
 
 # Project State
@@ -23,21 +23,21 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-29)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Phase 33 — Complete Flagship Story Content/Material Package
+**Current focus:** Phase 34 — Public Runtime and Mini-program Consumption Baseline
 
 ## Current Position
 
-Phase: 33 (Complete Flagship Story Content/Material Package) — EXECUTING
-Plan: 4 of 4
+Phase: 33 (Complete Flagship Story Content/Material Package) — COMPLETE
+Plan: 4 of 4 complete
 Milestone: `v3.0`
-Current Phase: 33
+Current Phase: 34
 Total Phases Planned: 7
-Status: Ready to execute
-Current Plan: 3
+Status: Ready to plan/execute next phase
+Current Plan: 0
 Last activity: 2026-04-29
-Last Activity Description: Phase 33 execution started
+Last Activity Description: Phase 33 completed and verified against live 8081 admin backend
 
-Progress: [█████████░] 92% of v3.0 plans complete; Phase 33 Plan 33-03 is next
+Progress: [██████████] 100% of planned v3.0 plans through Phase 33 complete; Phase 34 remains the next roadmap phase
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [█████████░] 92% of v3.0 plans complete; Phase 33 
 | --- | --- | --- |
 | 2026-04-29 | `260429-ocp` | Cleaned local verification artifacts, documented admin IA, removed confirmed dead admin entry points, and browser-verified the retained admin control plane. |
 | Phase 33 P33-03 | 55 min | 2 tasks | 2 files |
+| Phase 33 P33-04 | 35 min | 4 tasks | Admin story material package page, route/sidebar, smoke script, and handoff docs |
 
 ## Accumulated Context
 
@@ -79,6 +80,6 @@ Progress: [█████████░] 92% of v3.0 plans complete; Phase 33 
 
 ## Session Continuity
 
-Last session: 2026-04-29T15:57:06.986Z
-Stopped at: Completed 33-03-PLAN.md
+Last session: 2026-04-29T16:15:00.000Z
+Stopped at: Completed Phase 33 and left admin backend running on 8081
 Resume file: None

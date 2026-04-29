@@ -9,7 +9,7 @@
 
 - [x] **STORY-01**: Operators have a canonical foundation for storylines and location experiences that bind maps, sub-maps, POIs, indoor entities, rewards, and interaction rules through shared selectors, relation links, and default experience flows. Phase 29 completes the dedicated POI default experience workbench.
 - [x] **STORY-02**: Operators have a canonical foundation for chapters that bind POI, task, marker, overlay, indoor, or manual anchors and inherit, disable, replace, or append target experience flows through structured versioned payloads. Phase 30 completes the storyline mode and chapter override workbench.
-- [x] **STORY-03**: Operators can manage reusable story content blocks and Lottie-aware media assets as the shared content substrate; Phase 33 completes the full flagship story content/material package.
+- [x] **STORY-03**: Operators can manage reusable story content blocks and Lottie-aware media assets as the shared content substrate; Phase 33 completes the full flagship story content/material package and exposes it through the admin `故事素材包` page.
 - [ ] **STORY-04**: Phase 28-owned story, experience, content-block, and media surfaces no longer route to placeholders or reused pages; Phase 29 through Phase 31 split the specialized workbenches.
 
 ### User and Progress Intelligence
@@ -59,7 +59,7 @@
 |-------------|-------|--------|
 | STORY-01 | Phase 28 foundation; Phase 29 completion | Complete |
 | STORY-02 | Phase 28 foundation; Phase 30 completion | Complete |
-| STORY-03 | Phase 28 foundation; Phase 33 completion | Planned |
+| STORY-03 | Phase 28 foundation; Phase 33 completion | Complete |
 | STORY-04 | Phase 28 foundation; Phase 29-30 workbenches; Phase 31 specialized governance | In progress |
 | USER-01 | Phase 32 | Complete |
 | USER-02 | Phase 32 | Complete |
@@ -73,7 +73,7 @@
 | LINK-02 | Phase 28 foundation; Phase 30 story runtime contract; Phase 34 runtime baseline | In progress |
 | LINK-03 | Phase 32 | Complete |
 | VER-01 | Phase 34 | Planned |
-| VER-02 | Phase 33 | Planned |
+| VER-02 | Phase 33 | Complete |
 
 **Coverage:**
 - v3.0 requirements: 17 total
@@ -82,4 +82,4 @@
 
 ---
 *Requirements defined: 2026-04-19*
-*Last updated: 2026-04-29 after completing Phase 32 dynamic exploration and user progress model*
+*Last updated: 2026-04-29 after completing Phase 33 flagship story content/material package*

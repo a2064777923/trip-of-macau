@@ -22,7 +22,7 @@
 | 30 | Storyline Mode and Chapter Override Workbench | Complete on 2026-04-29 (4/4 plans); storyline mode, route strategy, chapter anchor inheritance, override workbench, seed, and admin/public smoke verification delivered | `STORY-02`, `STORY-04`, `LINK-02` |
 | 31 | Interaction/Task Template Library and Governance Center | Complete on 2026-04-29 (4/4 plans); reusable interaction/task templates, governance filters, usage tracing, and conflict checks delivered | `OPS-01`, `OPS-03`, `LINK-01` |
 | 32 | Dynamic Exploration and User Progress Model | Complete on 2026-04-29 (6/6 plans); weighted exploration engine, durable story sessions, repair/audit core, admin workbench, and live smoke verification delivered | `USER-01`, `USER-02`, `USER-03`, `USER-04`, `LINK-03` |
-| 33 | 3/4 | In Progress|  |
+| 33 | Complete Flagship Story Content/Material Package | Complete on 2026-04-29 (4/4 plans); five-chapter flagship story package, manifest traceability, admin material package inspection route, and live smoke verification delivered | `STORY-03`, `VER-02` |
 | 34 | Public Runtime and Mini-program Consumption Baseline | Align public compiled runtime DTOs and mini-program story consumption baseline with the admin-authored experience model | `OPS-02`, `OPS-04`, `LINK-02`, `VER-01` |
 
 ## Phase Details
@@ -109,7 +109,7 @@ Plans:
 
 ### Phase 33: Complete Flagship Story Content/Material Package
 
-**Goal:** Produce and seed the complete "東西方文明的戰火與共生" content and material package.
+**Goal:** Complete on 2026-04-29 (4/4 plans); produce and seed the complete "東西方文明的戰火與共生" content and material package, expose it in admin, and verify it through live API/MySQL smoke.
 
 **Requirements:** `STORY-03`, `VER-02`
 
@@ -120,6 +120,14 @@ Plans:
 4. The material package is reusable by the admin media/content/experience workbenches.
 
 **Depends on:** Phases 28, 29, 30, and 31
+
+**Plans:** 4 plans
+
+Plans:
+- [x] `33-01-PLAN.md` — Story material package registry, admin API, and schema
+- [x] `33-02-PLAN.md` — Flagship material asset manifest and seeded asset rows
+- [x] `33-03-PLAN.md` — Five-chapter flagship story seed and story script
+- [x] `33-04-PLAN.md` — Admin package inspection page, route/sidebar, smoke, and handoff docs
 
 ### Phase 34: Public Runtime and Mini-program Consumption Baseline
 
@@ -176,4 +184,4 @@ Plans:
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
-| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-34 | Phases 28-32 complete (21/21 executed plans); 5/7 phases complete | Active | In progress |
+| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-34 | Phases 28-33 complete (25/25 executed plans); 6/7 phases complete | Active | In progress |
