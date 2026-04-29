@@ -18,6 +18,7 @@ import com.aoxiaoyou.tripofmacau.entity.ExperienceOverride;
 import com.aoxiaoyou.tripofmacau.entity.ExperienceTemplate;
 import com.aoxiaoyou.tripofmacau.entity.ExplorationElement;
 import com.aoxiaoyou.tripofmacau.entity.UserExplorationEvent;
+import com.aoxiaoyou.tripofmacau.entity.UserStorylineSession;
 import com.aoxiaoyou.tripofmacau.mapper.ContentAssetMapper;
 import com.aoxiaoyou.tripofmacau.mapper.ExperienceBindingMapper;
 import com.aoxiaoyou.tripofmacau.mapper.ExperienceFlowMapper;
@@ -26,12 +27,14 @@ import com.aoxiaoyou.tripofmacau.mapper.ExperienceOverrideMapper;
 import com.aoxiaoyou.tripofmacau.mapper.ExperienceTemplateMapper;
 import com.aoxiaoyou.tripofmacau.mapper.ExplorationElementMapper;
 import com.aoxiaoyou.tripofmacau.mapper.UserExplorationEventMapper;
+import com.aoxiaoyou.tripofmacau.mapper.UserStorylineSessionMapper;
 import com.aoxiaoyou.tripofmacau.service.PublicExperienceService;
 import com.aoxiaoyou.tripofmacau.service.StoryLineService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -39,6 +42,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -64,10 +68,14 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
     private static final String OVERRIDE_MODE_INHERIT = "inherit";
     private static final String OVERRIDE_MODE_REPLACE = "replace";
     private static final String SCOPE_GLOBAL = "global";
+    private static final String SESSION_STATUS_EXITED = "exited";
+    private static final String SESSION_STATUS_STARTED = "started";
     private static final String OWNER_TYPE_EXPERIENCE_FLOW_STEP = "experience_flow_step";
     private static final String OWNER_TYPE_COLLECTIBLE = "collectible";
     private static final String OWNER_TYPE_REWARD = "reward";
     private static final String OWNER_TYPE_CONTENT_ASSET = "content_asset";
+    private static final String DEFAULT_SESSION_LOCALE = "zh-Hant";
+    private static final String EMPTY_JSON_OBJECT = "{}";
     private static final Map<String, Integer> EXPLORATION_WEIGHT_VALUES = Map.of(
             "tiny", 1,
             "small", 2,
@@ -86,6 +94,12 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
     private final ContentAssetMapper contentAssetMapper;
     private final LocalizedContentSupport localizedContentSupport;
     private final ObjectMapper objectMapper;
+    private UserStorylineSessionMapper userStorylineSessionMapper;
+
+    @Autowired
+    void setUserStorylineSessionMapper(UserStorylineSessionMapper userStorylineSessionMapper) {
+        this.userStorylineSessionMapper = userStorylineSessionMapper;
+    }
 
     @Override
     public ExperienceRuntimeResponse.Flow getPoiExperience(Long poiId, String localeHint) {
@@ -138,6 +152,7 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         event.setCreatedAt(LocalDateTime.now());
         try {
             userExplorationEventMapper.insert(event);
+            updateStorylineSessionAfterEvent(userId, request, event, element);
             return toEventResponse(event);
         } catch (DuplicateKeyException ex) {
             UserExplorationEvent duplicateEvent = findEventByClientEventId(userId, clientEventId);
@@ -153,12 +168,24 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         if (userId == null) {
             throw new BusinessException(4010, "Unauthorized");
         }
-        storyLineService.getDetail(storylineId, "zh-Hant");
-        return StorylineSessionResponse.builder()
-                .storylineId(storylineId)
-                .sessionId("story-" + storylineId + "-" + UUID.randomUUID())
-                .status("started")
-                .build();
+        StoryLineResponse storyline = storyLineService.getDetail(storylineId, DEFAULT_SESSION_LOCALE);
+        UserStorylineSession activeSession = findActiveStorylineSession(userId, storylineId);
+        if (activeSession != null) {
+            return toSessionResponse(activeSession);
+        }
+        LocalDateTime now = LocalDateTime.now();
+        UserStorylineSession session = new UserStorylineSession();
+        session.setSessionId("story-" + storylineId + "-" + UUID.randomUUID());
+        session.setUserId(userId);
+        session.setStorylineId(storylineId);
+        session.setCurrentChapterId(resolveInitialChapterId(storyline));
+        session.setStatus(SESSION_STATUS_STARTED);
+        session.setStartedAt(now);
+        session.setEventCount(0);
+        session.setTemporaryStepStateJson(EMPTY_JSON_OBJECT);
+        session.setExitClearedTemporaryState(false);
+        requireUserStorylineSessionMapper().insert(session);
+        return toSessionResponse(session);
     }
 
     @Override
@@ -166,11 +193,17 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         if (userId == null) {
             throw new BusinessException(4010, "Unauthorized");
         }
-        return StorylineSessionResponse.builder()
-                .storylineId(storylineId)
-                .sessionId(sessionId)
-                .status("exited")
-                .build();
+        UserStorylineSession session = findStorylineSession(userId, storylineId, sessionId);
+        if (session == null) {
+            throw new BusinessException(4044, "Storyline session not found");
+        }
+        UserStorylineSession exitedSession = copyStorylineSession(session);
+        exitedSession.setStatus(SESSION_STATUS_EXITED);
+        exitedSession.setExitedAt(LocalDateTime.now());
+        exitedSession.setTemporaryStepStateJson(EMPTY_JSON_OBJECT);
+        exitedSession.setExitClearedTemporaryState(true);
+        requireUserStorylineSessionMapper().updateById(exitedSession);
+        return toSessionResponse(exitedSession);
     }
 
     @Override
@@ -931,6 +964,163 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         return StringUtils.hasText(value) ? value.trim() : fallback;
     }
 
+    private void updateStorylineSessionAfterEvent(
+            Long userId,
+            ExperienceEventRequest request,
+            UserExplorationEvent event,
+            ExplorationElement element) {
+        String sessionId = event.getStorylineSessionId();
+        if (!StringUtils.hasText(sessionId)) {
+            return;
+        }
+        UserStorylineSession session = findStorylineSession(userId, null, sessionId);
+        if (session == null || SESSION_STATUS_EXITED.equals(normalizeToken(session.getStatus()))) {
+            return;
+        }
+        UserStorylineSession updatedSession = copyStorylineSession(session);
+        updatedSession.setStatus(SESSION_STATUS_STARTED);
+        updatedSession.setCurrentChapterId(resolveCurrentChapterId(session, element, request.getPayloadJson()));
+        updatedSession.setLastEventAt(event.getOccurredAt());
+        updatedSession.setEventCount((session.getEventCount() == null ? 0 : session.getEventCount()) + 1);
+        updatedSession.setTemporaryStepStateJson(buildTemporaryStepStateJson(request, event, updatedSession.getCurrentChapterId()));
+        updatedSession.setExitClearedTemporaryState(false);
+        requireUserStorylineSessionMapper().updateById(updatedSession);
+    }
+
+    private UserStorylineSession findActiveStorylineSession(Long userId, Long storylineId) {
+        return requireUserStorylineSessionMapper().selectOne(new LambdaQueryWrapper<UserStorylineSession>()
+                .eq(UserStorylineSession::getUserId, userId)
+                .eq(UserStorylineSession::getStorylineId, storylineId)
+                .eq(UserStorylineSession::getStatus, SESSION_STATUS_STARTED)
+                .orderByDesc(UserStorylineSession::getStartedAt)
+                .last("LIMIT 1"));
+    }
+
+    private UserStorylineSession findStorylineSession(Long userId, Long storylineId, String sessionId) {
+        if (userId == null || !StringUtils.hasText(sessionId)) {
+            return null;
+        }
+        LambdaQueryWrapper<UserStorylineSession> query = new LambdaQueryWrapper<UserStorylineSession>()
+                .eq(UserStorylineSession::getSessionId, sessionId.trim())
+                .eq(UserStorylineSession::getUserId, userId);
+        if (storylineId != null) {
+            query.eq(UserStorylineSession::getStorylineId, storylineId);
+        }
+        return requireUserStorylineSessionMapper().selectOne(query.last("LIMIT 1"));
+    }
+
+    private UserStorylineSession copyStorylineSession(UserStorylineSession source) {
+        UserStorylineSession copy = new UserStorylineSession();
+        copy.setSessionId(source.getSessionId());
+        copy.setUserId(source.getUserId());
+        copy.setStorylineId(source.getStorylineId());
+        copy.setCurrentChapterId(source.getCurrentChapterId());
+        copy.setStatus(source.getStatus());
+        copy.setStartedAt(source.getStartedAt());
+        copy.setLastEventAt(source.getLastEventAt());
+        copy.setExitedAt(source.getExitedAt());
+        copy.setEventCount(source.getEventCount());
+        copy.setTemporaryStepStateJson(source.getTemporaryStepStateJson());
+        copy.setExitClearedTemporaryState(source.getExitClearedTemporaryState());
+        copy.setCreatedAt(source.getCreatedAt());
+        copy.setUpdatedAt(source.getUpdatedAt());
+        return copy;
+    }
+
+    private StorylineSessionResponse toSessionResponse(UserStorylineSession session) {
+        return StorylineSessionResponse.builder()
+                .storylineId(session.getStorylineId())
+                .sessionId(session.getSessionId())
+                .currentChapterId(session.getCurrentChapterId())
+                .status(defaultText(session.getStatus(), SESSION_STATUS_STARTED))
+                .startedAt(session.getStartedAt())
+                .lastEventAt(session.getLastEventAt())
+                .exitedAt(session.getExitedAt())
+                .eventCount(session.getEventCount() == null ? 0 : session.getEventCount())
+                .exitClearedTemporaryState(Boolean.TRUE.equals(session.getExitClearedTemporaryState()))
+                .build();
+    }
+
+    private Long resolveInitialChapterId(StoryLineResponse storyline) {
+        if (storyline == null || storyline.getChapters() == null || storyline.getChapters().isEmpty()) {
+            return null;
+        }
+        return storyline.getChapters().stream()
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(
+                        chapter -> chapter.getChapterOrder() == null ? Integer.MAX_VALUE : chapter.getChapterOrder()))
+                .map(StoryChapterResponse::getId)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private Long resolveCurrentChapterId(UserStorylineSession session, ExplorationElement element, String payloadJson) {
+        Long payloadChapterId = extractChapterId(payloadJson);
+        if (payloadChapterId != null) {
+            return payloadChapterId;
+        }
+        if (element != null && element.getStoryChapterId() != null) {
+            return element.getStoryChapterId();
+        }
+        return session == null ? null : session.getCurrentChapterId();
+    }
+
+    private Long extractChapterId(String payloadJson) {
+        Map<String, Object> payload = readObjectMap(payloadJson);
+        for (String key : List.of("currentChapterId", "storyChapterId", "chapterId")) {
+            Long chapterId = readLongValue(payload.get(key));
+            if (chapterId != null) {
+                return chapterId;
+            }
+        }
+        return null;
+    }
+
+    private String buildTemporaryStepStateJson(
+            ExperienceEventRequest request,
+            UserExplorationEvent event,
+            Long currentChapterId) {
+        Map<String, Object> state = new LinkedHashMap<>();
+        state.put("lastEventType", request.getEventType());
+        state.put("lastElementId", firstNonNull(event.getElementId(), request.getElementId()));
+        state.put("lastElementCode", firstNonNull(event.getElementCode(), request.getElementCode()));
+        if (currentChapterId != null) {
+            state.put("currentChapterId", currentChapterId);
+        }
+        Map<String, Object> payload = readObjectMap(request.getPayloadJson());
+        if (!payload.isEmpty()) {
+            state.put("lastPayload", payload);
+        }
+        return writeObjectJson(state);
+    }
+
+    private Map<String, Object> readObjectMap(String json) {
+        if (!StringUtils.hasText(json)) {
+            return Collections.emptyMap();
+        }
+        try {
+            return objectMapper.readValue(json, MAP_TYPE);
+        } catch (Exception ex) {
+            return Collections.emptyMap();
+        }
+    }
+
+    private String writeObjectJson(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value == null ? Collections.emptyMap() : value);
+        } catch (Exception ex) {
+            return EMPTY_JSON_OBJECT;
+        }
+    }
+
+    private UserStorylineSessionMapper requireUserStorylineSessionMapper() {
+        if (userStorylineSessionMapper == null) {
+            throw new IllegalStateException("UserStorylineSessionMapper not configured");
+        }
+        return userStorylineSessionMapper;
+    }
+
     private Integer readInteger(Object value) {
         if (value instanceof Number number) {
             return number.intValue();
@@ -938,6 +1128,20 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         if (value instanceof String stringValue && StringUtils.hasText(stringValue)) {
             try {
                 return Integer.parseInt(stringValue.trim());
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private Long readLongValue(Object value) {
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        if (value instanceof String stringValue && StringUtils.hasText(stringValue)) {
+            try {
+                return Long.parseLong(stringValue.trim());
             } catch (NumberFormatException ignored) {
                 return null;
             }
