@@ -266,8 +266,6 @@ class AdminUserProgressRepairServiceTest {
         when(readMapper.selectUserEvents(88L)).thenReturn(List.of(
                 event(9001L, 88L, 10L, "ama_poi_arrival", LocalDateTime.of(2026, 4, 29, 10, 0))
         ));
-        when(readMapper.selectElementsByIdsOrCodes(List.of(), List.of())).thenReturn(List.of());
-        when(readMapper.selectLastRecomputeTime(88L, "poi", 101L)).thenReturn(LocalDateTime.of(2026, 4, 29, 9, 30));
     }
 
     private AdminUserProgressRepairService.OperatorContext operator() {
