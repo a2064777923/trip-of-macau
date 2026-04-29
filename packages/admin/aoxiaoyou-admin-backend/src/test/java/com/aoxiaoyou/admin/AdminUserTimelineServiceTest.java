@@ -87,6 +87,7 @@ class AdminUserTimelineServiceTest {
 
     @Test
     void mergesCheckinsTriggersExplorationEventsSessionsAndRewardRedemptions() {
+        when(travelerProfileMapper.selectById(88L)).thenReturn(profile());
         when(readMapper.selectCheckinTimelineRows(88L)).thenReturn(List.of(
                 timelineRow("checkin:1", "checkin", "user_checkins", 1L, 501L, "Fire Route", 101L, "A-Ma Temple",
                         "Check-in", "gps", "gps", null, LocalDateTime.of(2026, 4, 29, 12, 0))
@@ -124,6 +125,7 @@ class AdminUserTimelineServiceTest {
 
     @Test
     void paginatesAndFiltersTimelineEntries() {
+        when(travelerProfileMapper.selectById(88L)).thenReturn(profile());
         when(readMapper.selectCheckinTimelineRows(88L)).thenReturn(List.of(
                 timelineRow("checkin:1", "checkin", "user_checkins", 1L, 700L, "Route A", 101L, "A-Ma Temple",
                         "Check-in", "gps", "gps", null, LocalDateTime.of(2026, 4, 29, 12, 0))
