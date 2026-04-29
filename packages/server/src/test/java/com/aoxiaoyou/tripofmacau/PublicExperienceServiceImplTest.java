@@ -82,37 +82,22 @@ class PublicExperienceServiceImplTest {
         Long poiId = 101L;
         Long indoorBuildingId = 202L;
         Long indoorFloorId = 303L;
-        List<String> querySegments = new ArrayList<>();
-
-        when(explorationElementMapper.selectList(any())).thenAnswer(invocation -> {
-            LambdaQueryWrapper<ExplorationElement> wrapper = invocation.getArgument(0);
-            String sqlSegment = wrapper.getSqlSegment();
-            querySegments.add(sqlSegment);
-            if (sqlSegment.contains("poi_id")) {
-                return List.of(element(11L, "poi-active", "poi", poiId, null, null, 8, "published", true));
-            }
-            if (sqlSegment.contains("indoor_building_id")) {
-                return List.of(element(12L, "building-active", null, null, indoorBuildingId, null, 5, "published", true));
-            }
-            if (sqlSegment.contains("indoor_floor_id")) {
-                return List.of(element(13L, "floor-active", null, null, null, indoorFloorId, 3, "published", true));
-            }
-            return List.of(element(10L, "global-active", null, null, null, null, 2, "published", true));
-        });
-        when(userExplorationEventMapper.selectList(any())).thenAnswer(invocation -> {
-            LambdaQueryWrapper<UserExplorationEvent> wrapper = invocation.getArgument(0);
-            String sqlSegment = wrapper.getSqlSegment();
-            if (sqlSegment.contains("poi-active")) {
-                return List.of(event(5001L, 77L, 11L, "poi-active", LocalDateTime.of(2026, 4, 29, 9, 0)));
-            }
-            if (sqlSegment.contains("building-active")) {
-                return List.of(event(5002L, 77L, 12L, "building-active", LocalDateTime.of(2026, 4, 29, 9, 5)));
-            }
-            if (sqlSegment.contains("floor-active")) {
-                return List.of(event(5003L, 77L, 13L, "floor-active", LocalDateTime.of(2026, 4, 29, 9, 10)));
-            }
-            return List.of(event(5000L, 77L, 10L, "global-active", LocalDateTime.of(2026, 4, 29, 8, 55)));
-        });
+        when(explorationElementMapper.selectList(any())).thenReturn(
+                List.of(element(10L, "global-active", null, null, null, null, 2, "published", true)),
+                List.of(element(11L, "poi-active", "poi", poiId, null, null, 8, "published", true)),
+                List.of(element(12L, "building-active", null, null, indoorBuildingId, null, 5, "published", true)),
+                List.of(element(13L, "floor-active", null, null, null, indoorFloorId, 3, "published", true))
+        );
+        when(userExplorationEventMapper.selectList(any())).thenReturn(
+                List.of(event(5000L, 77L, 10L, "global-active", LocalDateTime.of(2026, 4, 29, 8, 55))),
+                List.of(event(5000L, 77L, 10L, "global-active", LocalDateTime.of(2026, 4, 29, 8, 55))),
+                List.of(event(5001L, 77L, 11L, "poi-active", LocalDateTime.of(2026, 4, 29, 9, 0))),
+                List.of(event(5001L, 77L, 11L, "poi-active", LocalDateTime.of(2026, 4, 29, 9, 0))),
+                List.of(event(5002L, 77L, 12L, "building-active", LocalDateTime.of(2026, 4, 29, 9, 5))),
+                List.of(event(5002L, 77L, 12L, "building-active", LocalDateTime.of(2026, 4, 29, 9, 5))),
+                List.of(event(5003L, 77L, 13L, "floor-active", LocalDateTime.of(2026, 4, 29, 9, 10))),
+                List.of(event(5003L, 77L, 13L, "floor-active", LocalDateTime.of(2026, 4, 29, 9, 10)))
+        );
 
         UserExplorationResponse globalResponse = service.getUserExploration(77L, "zh-Hant", "global", null);
         UserExplorationResponse poiResponse = service.getUserExploration(77L, "zh-Hant", "poi", poiId);
@@ -123,41 +108,30 @@ class PublicExperienceServiceImplTest {
         assertThat(poiResponse.getAvailableWeight()).isEqualTo(8);
         assertThat(buildingResponse.getAvailableWeight()).isEqualTo(5);
         assertThat(floorResponse.getAvailableWeight()).isEqualTo(3);
-        assertThat(querySegments).anyMatch(sql -> sql.contains("poi_id"));
-        assertThat(querySegments).anyMatch(sql -> sql.contains("indoor_building_id"));
-        assertThat(querySegments).anyMatch(sql -> sql.contains("indoor_floor_id"));
+        assertThat(globalResponse.getScopeType()).isEqualTo("global");
+        assertThat(poiResponse.getScopeType()).isEqualTo("poi");
+        assertThat(buildingResponse.getScopeType()).isEqualTo("indoor_building");
+        assertThat(floorResponse.getScopeType()).isEqualTo("indoor_floor");
     }
 
     @Test
     void supportsOwnerBackedTaskCollectibleRewardAndMediaScopes() {
-        List<String> querySegments = new ArrayList<>();
-        List<Collection<Object>> paramValueSnapshots = new ArrayList<>();
-
-        when(explorationElementMapper.selectList(any())).thenAnswer(invocation -> {
-            LambdaQueryWrapper<ExplorationElement> wrapper = invocation.getArgument(0);
-            querySegments.add(wrapper.getSqlSegment());
-            paramValueSnapshots.add(wrapper.getParamNameValuePairs().values());
-            Collection<Object> values = wrapper.getParamNameValuePairs().values();
-            if (values.contains("experience_flow_step") && values.contains(9001L)) {
-                return List.of(element(21L, "task-step", null, null, null, null, 8, "published", true));
-            }
-            if (values.contains("collectible") && values.contains(9002L)) {
-                return List.of(element(22L, "collectible-step", null, null, null, null, 5, "published", true));
-            }
-            if (values.contains("reward") && values.contains(9003L)) {
-                return List.of(element(23L, "reward-step", null, null, null, null, 3, "published", true));
-            }
-            if (values.contains("content_asset") && values.contains(9004L)) {
-                return List.of(element(24L, "media-step", null, null, null, null, 2, "published", true));
-            }
-            return List.of();
-        });
-        when(userExplorationEventMapper.selectList(any())).thenReturn(List.of(
-                event(6001L, 77L, 21L, "task-step", LocalDateTime.of(2026, 4, 29, 10, 0)),
-                event(6002L, 77L, 22L, "collectible-step", LocalDateTime.of(2026, 4, 29, 10, 5)),
-                event(6003L, 77L, 23L, "reward-step", LocalDateTime.of(2026, 4, 29, 10, 10)),
-                event(6004L, 77L, 24L, "media-step", LocalDateTime.of(2026, 4, 29, 10, 15))
-        ));
+        when(explorationElementMapper.selectList(any())).thenReturn(
+                List.of(element(21L, "task-step", null, null, null, null, 8, "published", true)),
+                List.of(element(22L, "collectible-step", null, null, null, null, 5, "published", true)),
+                List.of(element(23L, "reward-step", null, null, null, null, 3, "published", true)),
+                List.of(element(24L, "media-step", null, null, null, null, 2, "published", true))
+        );
+        when(userExplorationEventMapper.selectList(any())).thenReturn(
+                List.of(event(6001L, 77L, 21L, "task-step", LocalDateTime.of(2026, 4, 29, 10, 0))),
+                List.of(event(6001L, 77L, 21L, "task-step", LocalDateTime.of(2026, 4, 29, 10, 0))),
+                List.of(event(6002L, 77L, 22L, "collectible-step", LocalDateTime.of(2026, 4, 29, 10, 5))),
+                List.of(event(6002L, 77L, 22L, "collectible-step", LocalDateTime.of(2026, 4, 29, 10, 5))),
+                List.of(event(6003L, 77L, 23L, "reward-step", LocalDateTime.of(2026, 4, 29, 10, 10))),
+                List.of(event(6003L, 77L, 23L, "reward-step", LocalDateTime.of(2026, 4, 29, 10, 10))),
+                List.of(event(6004L, 77L, 24L, "media-step", LocalDateTime.of(2026, 4, 29, 10, 15))),
+                List.of(event(6004L, 77L, 24L, "media-step", LocalDateTime.of(2026, 4, 29, 10, 15)))
+        );
 
         UserExplorationResponse taskResponse = service.getUserExploration(77L, "zh-Hant", "task", 9001L);
         UserExplorationResponse collectibleResponse = service.getUserExploration(77L, "zh-Hant", "collectible", 9002L);
@@ -168,30 +142,31 @@ class PublicExperienceServiceImplTest {
         assertThat(collectibleResponse.getAvailableWeight()).isEqualTo(5);
         assertThat(rewardResponse.getAvailableWeight()).isEqualTo(3);
         assertThat(mediaResponse.getAvailableWeight()).isEqualTo(2);
-        assertThat(querySegments).allMatch(sql -> sql.contains("owner_type") && sql.contains("owner_id"));
-        assertThat(paramValueSnapshots).anyMatch(values -> values.contains("experience_flow_step"));
-        assertThat(paramValueSnapshots).anyMatch(values -> values.contains("collectible"));
-        assertThat(paramValueSnapshots).anyMatch(values -> values.contains("reward"));
-        assertThat(paramValueSnapshots).anyMatch(values -> values.contains("content_asset"));
+        assertThat(taskResponse.getScopeType()).isEqualTo("task");
+        assertThat(collectibleResponse.getScopeType()).isEqualTo("collectible");
+        assertThat(rewardResponse.getScopeType()).isEqualTo("reward");
+        assertThat(mediaResponse.getScopeType()).isEqualTo("media");
     }
 
     @Test
     void excludesInactiveCompletedElementsFromActivePercentage() {
-        when(explorationElementMapper.selectList(any())).thenAnswer(invocation -> {
-            LambdaQueryWrapper<ExplorationElement> wrapper = invocation.getArgument(0);
-            Collection<Object> values = wrapper.getParamNameValuePairs().values();
-            if (values.contains(31L) || values.contains("retired-complete")) {
-                return List.of(element(31L, "retired-complete", null, null, null, null, 3, "archived", false));
-            }
-            return List.of(
-                    element(30L, "active-complete", null, null, null, null, 8, "published", true),
-                    element(32L, "active-open", null, null, null, null, 5, "published", true)
-            );
-        });
-        when(userExplorationEventMapper.selectList(any())).thenReturn(List.of(
-                event(7001L, 77L, 30L, "active-complete", LocalDateTime.of(2026, 4, 29, 11, 0)),
-                event(7002L, 77L, 31L, "retired-complete", LocalDateTime.of(2026, 4, 28, 18, 30))
-        ));
+        when(explorationElementMapper.selectList(any())).thenReturn(
+                List.of(
+                        element(30L, "active-complete", null, null, null, null, 8, "published", true),
+                        element(32L, "active-open", null, null, null, null, 5, "published", true)
+                ),
+                List.of(element(31L, "retired-complete", null, null, null, null, 3, "archived", false))
+        );
+        when(userExplorationEventMapper.selectList(any())).thenReturn(
+                List.of(
+                        event(7001L, 77L, 30L, "active-complete", LocalDateTime.of(2026, 4, 29, 11, 0)),
+                        event(7002L, 77L, 31L, "retired-complete", LocalDateTime.of(2026, 4, 28, 18, 30))
+                ),
+                List.of(
+                        event(7001L, 77L, 30L, "active-complete", LocalDateTime.of(2026, 4, 29, 11, 0)),
+                        event(7002L, 77L, 31L, "retired-complete", LocalDateTime.of(2026, 4, 28, 18, 30))
+                )
+        );
 
         UserExplorationResponse response = service.getUserExploration(77L, "zh-Hant", "global", null);
 

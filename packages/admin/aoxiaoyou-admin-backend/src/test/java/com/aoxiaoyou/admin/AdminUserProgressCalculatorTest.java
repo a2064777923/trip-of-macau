@@ -38,9 +38,6 @@ class AdminUserProgressCalculatorTest {
         when(readMapper.selectUserEvents(77L)).thenReturn(List.of(
                 event(5001L, 10L, "active-complete", LocalDateTime.of(2026, 4, 29, 11, 0))
         ));
-        when(readMapper.selectElementsByIdsOrCodes(List.of(10L), List.of("active-complete"))).thenReturn(List.of(
-                element(10L, "active-complete", "published", true, 8)
-        ));
         when(readMapper.selectLastRecomputeTime(77L, "poi", 101L))
                 .thenReturn(LocalDateTime.of(2026, 4, 29, 11, 30));
 
@@ -63,9 +60,8 @@ class AdminUserProgressCalculatorTest {
                 event(5001L, 10L, "active-complete", LocalDateTime.of(2026, 4, 29, 11, 0)),
                 event(5002L, 12L, "retired-complete", LocalDateTime.of(2026, 4, 28, 18, 30))
         ));
-        when(readMapper.selectElementsByIdsOrCodes(List.of(10L, 12L), List.of("active-complete", "retired-complete")))
+        when(readMapper.selectElementsByIdsOrCodes(List.of(12L), List.of("retired-complete")))
                 .thenReturn(List.of(
-                        element(10L, "active-complete", "published", true, 8),
                         element(12L, "retired-complete", "archived", false, 3)
                 ));
         when(readMapper.selectLastRecomputeTime(77L, "poi", 101L))
@@ -89,9 +85,8 @@ class AdminUserProgressCalculatorTest {
                 event(5001L, 10L, "active-complete", LocalDateTime.of(2026, 4, 29, 11, 0)),
                 event(5002L, 12L, "retired-complete", LocalDateTime.of(2026, 4, 28, 18, 30))
         ));
-        when(readMapper.selectElementsByIdsOrCodes(List.of(10L, 12L), List.of("active-complete", "retired-complete")))
+        when(readMapper.selectElementsByIdsOrCodes(List.of(12L), List.of("retired-complete")))
                 .thenReturn(List.of(
-                        element(10L, "active-complete", "published", true, 8),
                         element(12L, "retired-complete", "archived", false, 3)
                 ));
         LocalDateTime recomputeTime = LocalDateTime.of(2026, 4, 29, 11, 45);

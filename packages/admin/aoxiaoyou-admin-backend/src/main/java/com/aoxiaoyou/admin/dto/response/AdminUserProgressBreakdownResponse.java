@@ -1,4 +1,4 @@
-package com.aoxiaoyou.tripofmacau.dto.response;
+package com.aoxiaoyou.admin.dto.response;
 
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class UserExplorationResponse {
+public class AdminUserProgressBreakdownResponse {
     private Long userId;
     private String scopeType;
     private Long scopeId;
@@ -16,12 +16,16 @@ public class UserExplorationResponse {
     private int availableWeight;
     private int completedElementCount;
     private int availableElementCount;
+    private int retiredCompletedWeight;
+    private int retiredCompletedCount;
     private double progressPercent;
-    private List<ElementProgress> elements;
+    private LocalDateTime lastRecomputeTime;
+    private List<ElementBreakdown> elements;
+    private List<ElementBreakdown> retiredElements;
 
     @Data
     @Builder
-    public static class ElementProgress {
+    public static class ElementBreakdown {
         private Long elementId;
         private String elementCode;
         private String elementType;

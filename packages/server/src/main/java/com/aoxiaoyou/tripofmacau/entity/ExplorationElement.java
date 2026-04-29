@@ -27,6 +27,12 @@ public class ExplorationElement extends BaseEntity {
     private Long cityId;
     @TableField("sub_map_id")
     private Long subMapId;
+    @TableField("poi_id")
+    private Long poiId;
+    @TableField("indoor_building_id")
+    private Long indoorBuildingId;
+    @TableField("indoor_floor_id")
+    private Long indoorFloorId;
     @TableField("storyline_id")
     private Long storylineId;
     @TableField("story_chapter_id")

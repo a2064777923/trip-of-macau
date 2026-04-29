@@ -61,7 +61,13 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
     private static final String BINDING_ROLE_DEFAULT_EXPERIENCE_FLOW = "default_experience_flow";
     private static final String OVERRIDE_MODE_APPEND = "append";
     private static final String OVERRIDE_MODE_DISABLE = "disable";
+    private static final String OVERRIDE_MODE_INHERIT = "inherit";
     private static final String OVERRIDE_MODE_REPLACE = "replace";
+    private static final String SCOPE_GLOBAL = "global";
+    private static final String OWNER_TYPE_EXPERIENCE_FLOW_STEP = "experience_flow_step";
+    private static final String OWNER_TYPE_COLLECTIBLE = "collectible";
+    private static final String OWNER_TYPE_REWARD = "reward";
+    private static final String OWNER_TYPE_CONTENT_ASSET = "content_asset";
     private static final Map<String, Integer> EXPLORATION_WEIGHT_VALUES = Map.of(
             "tiny", 1,
             "small", 2,
@@ -172,38 +178,46 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         if (userId == null) {
             throw new BusinessException(4010, "Unauthorized");
         }
-        List<ExplorationElement> elements = selectPublishedExplorationElements(scopeType, scopeId);
-        Set<Long> elementIds = elements.stream().map(ExplorationElement::getId).collect(Collectors.toCollection(LinkedHashSet::new));
-        Set<String> elementCodes = elements.stream().map(ExplorationElement::getElementCode).filter(StringUtils::hasText).collect(Collectors.toCollection(LinkedHashSet::new));
-        List<UserExplorationEvent> events = selectCompletedEventsForElements(userId, elementIds, elementCodes);
-        Set<Long> completedIds = events.stream().map(UserExplorationEvent::getElementId).filter(Objects::nonNull).collect(Collectors.toSet());
-        Set<String> completedCodes = events.stream().map(UserExplorationEvent::getElementCode).filter(StringUtils::hasText).collect(Collectors.toSet());
-        List<UserExplorationResponse.ElementProgress> elementProgress = elements.stream()
-                .map(element -> {
-                    boolean completed = completedIds.contains(element.getId()) || completedCodes.contains(element.getElementCode());
-                    return UserExplorationResponse.ElementProgress.builder()
-                            .elementId(element.getId())
-                            .elementCode(element.getElementCode())
-                            .elementType(element.getElementType())
-                            .title(localizedContentSupport.resolveText(localeHint, element.getTitleZh(), element.getTitleEn(), element.getTitleZht(), element.getTitlePt()))
-                            .weightLevel(element.getWeightLevel())
-                            .weightValue(resolveExplorationWeightValue(element.getWeightLevel(), element.getWeightValue()))
-                            .completed(completed)
-                            .build();
-                })
+        String normalizedScopeType = normalizeScopeType(scopeType);
+        List<ExplorationElement> activeElements = selectActiveExplorationElements(normalizedScopeType, scopeId);
+        Set<Long> activeElementIds = activeElements.stream()
+                .map(ExplorationElement::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<String> activeElementCodes = activeElements.stream()
+                .map(ExplorationElement::getElementCode)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        List<UserExplorationEvent> activeEvents = selectCompletedEventsForElements(userId, activeElementIds, activeElementCodes);
+        List<UserExplorationEvent> allEvents = mergeCompletionEvents(activeEvents, selectUserEvents(userId));
+        Map<String, UserExplorationEvent> completionEventsByKey = indexCompletionEvents(allEvents);
+
+        List<UserExplorationResponse.ElementProgress> activeProgress = activeElements.stream()
+                .map(element -> toElementProgress(element, completionEventsByKey, localeHint, true))
                 .toList();
-        int availableWeight = elementProgress.stream().mapToInt(UserExplorationResponse.ElementProgress::getWeightValue).sum();
-        int completedWeight = elementProgress.stream()
+        List<UserExplorationResponse.ElementProgress> retiredProgress = loadRetiredCompletedElements(activeElements, completionEventsByKey, normalizedScopeType, scopeId)
+                .stream()
+                .map(element -> toElementProgress(element, completionEventsByKey, localeHint, false))
+                .toList();
+        List<UserExplorationResponse.ElementProgress> elementProgress = Stream.concat(activeProgress.stream(), retiredProgress.stream()).toList();
+
+        int availableWeight = activeProgress.stream().mapToInt(UserExplorationResponse.ElementProgress::getWeightValue).sum();
+        int completedWeight = activeProgress.stream()
                 .filter(UserExplorationResponse.ElementProgress::isCompleted)
                 .mapToInt(UserExplorationResponse.ElementProgress::getWeightValue)
                 .sum();
+        int completedElementCount = (int) activeProgress.stream()
+                .filter(UserExplorationResponse.ElementProgress::isCompleted)
+                .count();
         double percent = availableWeight == 0 ? 0 : Math.round((completedWeight * 10000.0 / availableWeight)) / 100.0;
         return UserExplorationResponse.builder()
                 .userId(userId)
-                .scopeType(defaultText(scopeType, "global"))
+                .scopeType(normalizedScopeType)
                 .scopeId(scopeId)
                 .completedWeight(completedWeight)
                 .availableWeight(availableWeight)
+                .completedElementCount(completedElementCount)
+                .availableElementCount(activeProgress.size())
                 .progressPercent(percent)
                 .elements(elementProgress)
                 .build();
@@ -465,19 +479,44 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
             return null;
         }
         Map<String, Object> extra = new LinkedHashMap<>(raw);
-        extra.remove("schemaVersion");
-        extra.remove("hideUnrelatedContent");
-        extra.remove("nearbyRevealMeters");
-        extra.remove("currentRouteStyle");
-        extra.remove("inactiveRouteStyle");
-        extra.remove("exitResetsSessionProgress");
+        List.of(
+                "schemaVersion",
+                "hideUnrelatedContent",
+                "nearbyRevealEnabled",
+                "nearbyRevealRadiusMeters",
+                "nearbyRevealMeters",
+                "currentRouteHighlight",
+                "currentRouteStyle",
+                "inactiveRouteStyle",
+                "clearTemporaryProgressOnExit",
+                "exitResetsSessionProgress",
+                "preservePermanentEvents",
+                "branchSourceType",
+                "branchInsertPosition",
+                "branchSkippable",
+                "branchAffectsStoryProgress",
+                "manualBranchPoiIds"
+        ).forEach(extra::remove);
+        Integer nearbyRevealRadiusMeters = readInteger(firstNonNull(raw.get("nearbyRevealRadiusMeters"), raw.get("nearbyRevealMeters")));
+        String currentRouteHighlight = readString(firstNonNull(raw.get("currentRouteHighlight"), raw.get("currentRouteStyle")));
+        Boolean clearTemporaryProgressOnExit = readBoolean(firstNonNull(raw.get("clearTemporaryProgressOnExit"), raw.get("exitResetsSessionProgress")));
         return ExperienceRuntimeResponse.StoryModeConfig.builder()
                 .schemaVersion(readInteger(raw.get("schemaVersion")))
                 .hideUnrelatedContent(readBoolean(raw.get("hideUnrelatedContent")))
-                .nearbyRevealMeters(readInteger(raw.get("nearbyRevealMeters")))
-                .currentRouteStyle(readString(raw.get("currentRouteStyle")))
+                .nearbyRevealEnabled(readBoolean(raw.get("nearbyRevealEnabled")))
+                .nearbyRevealRadiusMeters(nearbyRevealRadiusMeters)
+                .nearbyRevealMeters(nearbyRevealRadiusMeters)
+                .currentRouteHighlight(currentRouteHighlight)
+                .currentRouteStyle(currentRouteHighlight)
                 .inactiveRouteStyle(readString(raw.get("inactiveRouteStyle")))
-                .exitResetsSessionProgress(readBoolean(raw.get("exitResetsSessionProgress")))
+                .clearTemporaryProgressOnExit(clearTemporaryProgressOnExit)
+                .exitResetsSessionProgress(clearTemporaryProgressOnExit)
+                .preservePermanentEvents(readBoolean(raw.get("preservePermanentEvents")))
+                .branchSourceType(readString(raw.get("branchSourceType")))
+                .branchInsertPosition(readString(raw.get("branchInsertPosition")))
+                .branchSkippable(readBoolean(raw.get("branchSkippable")))
+                .branchAffectsStoryProgress(readBoolean(raw.get("branchAffectsStoryProgress")))
+                .manualBranchPoiIds(readLongList(raw.get("manualBranchPoiIds")))
                 .extra(extra.isEmpty() ? Collections.emptyMap() : extra)
                 .build();
     }
@@ -509,23 +548,23 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
                 .orderByAsc(ExperienceFlowStep::getId));
     }
 
-    private List<ExplorationElement> selectPublishedExplorationElements(String scopeType, Long scopeId) {
-        String normalizedScopeType = normalizeToken(scopeType);
-        return explorationElementMapper.selectList(new LambdaQueryWrapper<ExplorationElement>()
+    private List<ExplorationElement> selectActiveExplorationElements(String scopeType, Long scopeId) {
+        LambdaQueryWrapper<ExplorationElement> query = new LambdaQueryWrapper<ExplorationElement>()
                 .eq(ExplorationElement::getStatus, STATUS_PUBLISHED)
-                .eq(ExplorationElement::getIncludeInExploration, true)
-                .eq("city".equals(normalizedScopeType) && scopeId != null, ExplorationElement::getCityId, scopeId)
-                .eq("sub_map".equals(normalizedScopeType) && scopeId != null, ExplorationElement::getSubMapId, scopeId)
-                .eq("storyline".equals(normalizedScopeType) && scopeId != null, ExplorationElement::getStorylineId, scopeId)
-                .eq("story_chapter".equals(normalizedScopeType) && scopeId != null, ExplorationElement::getStoryChapterId, scopeId)
+                .eq(ExplorationElement::getIncludeInExploration, true);
+        applyScopeFilter(query, scopeType, scopeId);
+        return explorationElementMapper.selectList(query
                 .orderByAsc(ExplorationElement::getSortOrder)
                 .orderByAsc(ExplorationElement::getId));
     }
 
     private List<UserExplorationEvent> selectCompletedEventsForElements(Long userId, Set<Long> elementIds, Set<String> elementCodes) {
+        if (elementIds.isEmpty() && elementCodes.isEmpty()) {
+            return Collections.emptyList();
+        }
         return userExplorationEventMapper.selectList(new LambdaQueryWrapper<UserExplorationEvent>()
                 .eq(UserExplorationEvent::getUserId, userId)
-                .and(!elementIds.isEmpty() || !elementCodes.isEmpty(), q -> {
+                .and(q -> {
                     if (!elementIds.isEmpty()) {
                         q.in(UserExplorationEvent::getElementId, elementIds);
                     }
@@ -536,6 +575,229 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
                         q.in(UserExplorationEvent::getElementCode, elementCodes);
                     }
                 }));
+    }
+
+    private List<UserExplorationEvent> selectUserEvents(Long userId) {
+        return userExplorationEventMapper.selectList(new LambdaQueryWrapper<UserExplorationEvent>()
+                .eq(UserExplorationEvent::getUserId, userId)
+                .orderByAsc(UserExplorationEvent::getOccurredAt)
+                .orderByAsc(UserExplorationEvent::getId));
+    }
+
+    private void applyScopeFilter(LambdaQueryWrapper<ExplorationElement> query, String scopeType, Long scopeId) {
+        if (scopeId == null || SCOPE_GLOBAL.equals(scopeType)) {
+            return;
+        }
+        switch (scopeType) {
+            case "city" -> query.eq(ExplorationElement::getCityId, scopeId);
+            case "sub_map" -> query.eq(ExplorationElement::getSubMapId, scopeId);
+            case "poi" -> query.eq(ExplorationElement::getPoiId, scopeId);
+            case "indoor_building" -> query.eq(ExplorationElement::getIndoorBuildingId, scopeId);
+            case "indoor_floor" -> query.eq(ExplorationElement::getIndoorFloorId, scopeId);
+            case "storyline" -> query.eq(ExplorationElement::getStorylineId, scopeId);
+            case "story_chapter" -> query.eq(ExplorationElement::getStoryChapterId, scopeId);
+            case "task" -> applyOwnerScopeFilter(query, OWNER_TYPE_EXPERIENCE_FLOW_STEP, scopeId);
+            case "collectible" -> applyOwnerScopeFilter(query, OWNER_TYPE_COLLECTIBLE, scopeId);
+            case "reward" -> applyOwnerScopeFilter(query, OWNER_TYPE_REWARD, scopeId);
+            case "media" -> applyOwnerScopeFilter(query, OWNER_TYPE_CONTENT_ASSET, scopeId);
+            default -> {
+            }
+        }
+    }
+
+    private void applyOwnerScopeFilter(LambdaQueryWrapper<ExplorationElement> query, String ownerType, Long scopeId) {
+        query.eq(ExplorationElement::getOwnerType, ownerType)
+                .eq(ExplorationElement::getOwnerId, scopeId);
+    }
+
+    private List<ExplorationElement> selectExplorationElementsByIdsOrCodes(Set<Long> elementIds, Set<String> elementCodes) {
+        if (elementIds.isEmpty() && elementCodes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return explorationElementMapper.selectList(new LambdaQueryWrapper<ExplorationElement>()
+                .and(query -> {
+                    if (!elementIds.isEmpty()) {
+                        query.in(ExplorationElement::getId, elementIds);
+                    }
+                    if (!elementCodes.isEmpty()) {
+                        if (!elementIds.isEmpty()) {
+                            query.or();
+                        }
+                        query.in(ExplorationElement::getElementCode, elementCodes);
+                    }
+                })
+                .orderByAsc(ExplorationElement::getSortOrder)
+                .orderByAsc(ExplorationElement::getId));
+    }
+
+    private List<ExplorationElement> loadRetiredCompletedElements(
+            List<ExplorationElement> activeElements,
+            Map<String, UserExplorationEvent> completionEventsByKey,
+            String scopeType,
+            Long scopeId) {
+        if (completionEventsByKey.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Set<String> activeKeys = activeElements.stream()
+                .flatMap(element -> streamElementKeys(element))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<Long> retiredIds = new LinkedHashSet<>();
+        Set<String> retiredCodes = new LinkedHashSet<>();
+        new LinkedHashSet<>(completionEventsByKey.values()).forEach(event -> {
+            boolean matchesActive = activeKeys.contains(eventIdentityKey(event.getElementId(), null))
+                    || activeKeys.contains(eventIdentityKey(null, event.getElementCode()));
+            if (!matchesActive) {
+                if (event.getElementId() != null) {
+                    retiredIds.add(event.getElementId());
+                }
+                if (StringUtils.hasText(event.getElementCode())) {
+                    retiredCodes.add(event.getElementCode().trim());
+                }
+            }
+        });
+        if (retiredIds.isEmpty() && retiredCodes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return selectExplorationElementsByIdsOrCodes(retiredIds, retiredCodes).stream()
+                .filter(element -> !activeKeys.contains(elementIdentityKey(element)))
+                .filter(element -> matchesScope(element, scopeType, scopeId))
+                .filter(element -> completionEventFor(element, completionEventsByKey) != null)
+                .filter(element -> !isActiveElement(element))
+                .toList();
+    }
+
+    private UserExplorationResponse.ElementProgress toElementProgress(
+            ExplorationElement element,
+            Map<String, UserExplorationEvent> completionEventsByKey,
+            String localeHint,
+            boolean includedInCurrentPercentage) {
+        UserExplorationEvent sourceEvent = completionEventFor(element, completionEventsByKey);
+        return UserExplorationResponse.ElementProgress.builder()
+                .elementId(element.getId())
+                .elementCode(element.getElementCode())
+                .elementType(element.getElementType())
+                .title(localizedContentSupport.resolveText(localeHint, element.getTitleZh(), element.getTitleEn(), element.getTitleZht(), element.getTitlePt()))
+                .weightLevel(element.getWeightLevel())
+                .weightValue(resolveExplorationWeightValue(element.getWeightLevel(), element.getWeightValue()))
+                .completed(sourceEvent != null)
+                .includedInCurrentPercentage(includedInCurrentPercentage)
+                .sourceEventId(sourceEvent == null ? null : sourceEvent.getId())
+                .eventOccurredAt(sourceEvent == null ? null : sourceEvent.getOccurredAt())
+                .build();
+    }
+
+    private Map<String, UserExplorationEvent> indexCompletionEvents(List<UserExplorationEvent> events) {
+        if (events == null || events.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        LinkedHashMap<String, UserExplorationEvent> indexed = new LinkedHashMap<>();
+        events.stream()
+                .filter(Objects::nonNull)
+                .sorted((left, right) -> {
+                    LocalDateTime leftTime = left.getOccurredAt() == null ? LocalDateTime.MIN : left.getOccurredAt();
+                    LocalDateTime rightTime = right.getOccurredAt() == null ? LocalDateTime.MIN : right.getOccurredAt();
+                    int timeCompare = leftTime.compareTo(rightTime);
+                    if (timeCompare != 0) {
+                        return timeCompare;
+                    }
+                    long leftId = left.getId() == null ? Long.MAX_VALUE : left.getId();
+                    long rightId = right.getId() == null ? Long.MAX_VALUE : right.getId();
+                    return Long.compare(leftId, rightId);
+                })
+                .forEach(event -> {
+                    String idKey = eventIdentityKey(event.getElementId(), null);
+                    if (idKey != null) {
+                        indexed.putIfAbsent(idKey, event);
+                    }
+                    String codeKey = eventIdentityKey(null, event.getElementCode());
+                    if (codeKey != null) {
+                        indexed.putIfAbsent(codeKey, event);
+                    }
+                });
+        return indexed;
+    }
+
+    private List<UserExplorationEvent> mergeCompletionEvents(List<UserExplorationEvent> first, List<UserExplorationEvent> second) {
+        LinkedHashMap<Long, UserExplorationEvent> merged = new LinkedHashMap<>();
+        Stream.of(first, second)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .filter(Objects::nonNull)
+                .forEach(event -> {
+                    Long eventId = event.getId();
+                    if (eventId != null) {
+                        merged.putIfAbsent(eventId, event);
+                    } else {
+                        merged.put((long) merged.size() + 1, event);
+                    }
+                });
+        return new ArrayList<>(merged.values());
+    }
+
+    private UserExplorationEvent completionEventFor(ExplorationElement element, Map<String, UserExplorationEvent> completionEventsByKey) {
+        UserExplorationEvent byId = completionEventsByKey.get(eventIdentityKey(element.getId(), null));
+        if (byId != null) {
+            return byId;
+        }
+        return completionEventsByKey.get(eventIdentityKey(null, element.getElementCode()));
+    }
+
+    private boolean matchesScope(ExplorationElement element, String scopeType, Long scopeId) {
+        if (scopeId == null || SCOPE_GLOBAL.equals(scopeType)) {
+            return true;
+        }
+        return switch (scopeType) {
+            case "city" -> Objects.equals(element.getCityId(), scopeId);
+            case "sub_map" -> Objects.equals(element.getSubMapId(), scopeId);
+            case "poi" -> Objects.equals(element.getPoiId(), scopeId);
+            case "indoor_building" -> Objects.equals(element.getIndoorBuildingId(), scopeId);
+            case "indoor_floor" -> Objects.equals(element.getIndoorFloorId(), scopeId);
+            case "storyline" -> Objects.equals(element.getStorylineId(), scopeId);
+            case "story_chapter" -> Objects.equals(element.getStoryChapterId(), scopeId);
+            case "task" -> matchesOwnerScope(element, OWNER_TYPE_EXPERIENCE_FLOW_STEP, scopeId);
+            case "collectible" -> matchesOwnerScope(element, OWNER_TYPE_COLLECTIBLE, scopeId);
+            case "reward" -> matchesOwnerScope(element, OWNER_TYPE_REWARD, scopeId);
+            case "media" -> matchesOwnerScope(element, OWNER_TYPE_CONTENT_ASSET, scopeId);
+            default -> false;
+        };
+    }
+
+    private boolean matchesOwnerScope(ExplorationElement element, String ownerType, Long scopeId) {
+        return ownerType.equals(normalizeToken(element.getOwnerType())) && Objects.equals(element.getOwnerId(), scopeId);
+    }
+
+    private boolean isActiveElement(ExplorationElement element) {
+        return isPublishedStatus(element.getStatus()) && Boolean.TRUE.equals(element.getIncludeInExploration());
+    }
+
+    private String normalizeScopeType(String scopeType) {
+        String normalized = normalizeToken(scopeType);
+        return StringUtils.hasText(normalized) ? normalized : SCOPE_GLOBAL;
+    }
+
+    private Stream<String> streamElementKeys(ExplorationElement element) {
+        return Stream.of(
+                eventIdentityKey(element.getId(), null),
+                eventIdentityKey(null, element.getElementCode()),
+                elementIdentityKey(element)
+        ).filter(StringUtils::hasText);
+    }
+
+    private String elementIdentityKey(ExplorationElement element) {
+        if (element.getId() != null) {
+            return eventIdentityKey(element.getId(), null);
+        }
+        return eventIdentityKey(null, element.getElementCode());
+    }
+
+    private String eventIdentityKey(Long elementId, String elementCode) {
+        if (elementId != null) {
+            return "id:" + elementId;
+        }
+        if (StringUtils.hasText(elementCode)) {
+            return "code:" + elementCode.trim();
+        }
+        return null;
     }
 
     private UserExplorationEvent findEventByClientEventId(Long userId, String clientEventId) {
@@ -568,6 +830,9 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
             if (targetIndex >= 0) {
                 compiled.remove(targetIndex);
             }
+            return;
+        }
+        if (OVERRIDE_MODE_INHERIT.equals(overrideMode)) {
             return;
         }
         if (!OVERRIDE_MODE_REPLACE.equals(overrideMode) && !OVERRIDE_MODE_APPEND.equals(overrideMode)) {
@@ -695,6 +960,33 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
             return stringValue.trim();
         }
         return value == null ? null : String.valueOf(value);
+    }
+
+    private Object firstNonNull(Object first, Object second) {
+        return first == null ? second : first;
+    }
+
+    private List<Long> readLongList(Object value) {
+        if (!(value instanceof List<?> list)) {
+            return Collections.emptyList();
+        }
+        return list.stream()
+                .map(item -> {
+                    if (item instanceof Number number) {
+                        return number.longValue();
+                    }
+                    if (item instanceof String stringValue && StringUtils.hasText(stringValue)) {
+                        try {
+                            return Long.parseLong(stringValue.trim());
+                        } catch (NumberFormatException ignored) {
+                            return null;
+                        }
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
     }
 
     private int resolveExplorationWeightValue(String weightLevel, Integer weightValue) {
