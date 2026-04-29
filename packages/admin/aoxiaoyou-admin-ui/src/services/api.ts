@@ -69,6 +69,18 @@ import type {
   AdminTranslationSettings,
   AdminTranslationSettingsUpdatePayload,
   AdminUserDetail,
+  AdminTravelerProgressWorkbench,
+  AdminTravelerProgressBreakdownQuery,
+  AdminTravelerTimelineEntry,
+  AdminTravelerTimelineQuery,
+  AdminUserProgressAuditEntry,
+  AdminUserProgressAuditQuery,
+  AdminUserProgressBreakdown,
+  AdminUserProgressOperationPreview,
+  AdminUserProgressOperationResult,
+  AdminUserProgressRecomputeConfirmPayload,
+  AdminUserProgressRecomputePreviewPayload,
+  AdminUserProgressRepairPayload,
   AdminUserListItem,
   AdminCityPayload,
   AdminCoordinatePreviewPayload,
@@ -128,6 +140,77 @@ export const updateAdminUserTestFlag = (
   data: { isTestAccount: boolean; reason?: string },
 ) => {
   return request.post<AdminUserListItem>(`/api/admin/v1/users/${userId}/test-flag`, data);
+};
+
+export const getAdminTravelerProgressWorkbench = (userId: number) => {
+  return request.get<AdminTravelerProgressWorkbench>(`/api/admin/v1/users/${userId}/progress-workbench`);
+};
+
+export const getAdminTravelerProgressBreakdown = (
+  userId: number,
+  params: AdminTravelerProgressBreakdownQuery,
+) => {
+  return request.get<AdminUserProgressBreakdown>(`/api/admin/v1/users/${userId}/progress-breakdown`, {
+    params,
+  });
+};
+
+export const getAdminTravelerTimeline = (userId: number, params?: AdminTravelerTimelineQuery) => {
+  return request.get<PaginationResponse<AdminTravelerTimelineEntry>>(
+    `/api/admin/v1/users/${userId}/timeline`,
+    {
+      params: {
+        ...params,
+        eventTypes: params?.eventTypes?.join(','),
+      },
+    },
+  );
+};
+
+export const previewAdminUserProgressRecompute = (
+  userId: number,
+  data: AdminUserProgressRecomputePreviewPayload,
+) => {
+  return request.post<AdminUserProgressOperationPreview>(
+    `/api/admin/v1/users/${userId}/progress-ops/recompute-preview`,
+    data,
+  );
+};
+
+export const confirmAdminUserProgressRecompute = (
+  userId: number,
+  data: AdminUserProgressRecomputeConfirmPayload,
+) => {
+  return request.post<AdminUserProgressOperationResult>(
+    `/api/admin/v1/users/${userId}/progress-ops/recompute-confirm`,
+    data,
+  );
+};
+
+export const previewAdminUserProgressRepair = (userId: number, data: AdminUserProgressRepairPayload) => {
+  return request.post<AdminUserProgressOperationPreview>(
+    `/api/admin/v1/users/${userId}/progress-ops/repair-preview`,
+    data,
+  );
+};
+
+export const applyAdminUserProgressRepair = (userId: number, data: AdminUserProgressRepairPayload) => {
+  return request.post<AdminUserProgressOperationResult>(
+    `/api/admin/v1/users/${userId}/progress-ops/repair-apply`,
+    data,
+  );
+};
+
+export const getAdminUserProgressAudits = (userId: number, params?: AdminUserProgressAuditQuery) => {
+  return request.get<PaginationResponse<AdminUserProgressAuditEntry>>(
+    `/api/admin/v1/users/${userId}/progress-ops/audits`,
+    {
+      params: {
+        ...params,
+        actionTypes: params?.actionTypes?.join(','),
+      },
+    },
+  );
 };
 
 export const getAdminPois = (params?: {

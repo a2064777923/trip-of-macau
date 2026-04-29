@@ -879,6 +879,303 @@ export interface AdminUserDetail {
   }>;
 }
 
+export type AdminTravelerProgressScopeType =
+  | 'global'
+  | 'city'
+  | 'sub_map'
+  | 'poi'
+  | 'indoor_building'
+  | 'indoor_floor'
+  | 'storyline'
+  | 'story_chapter'
+  | 'task'
+  | 'collectible'
+  | 'reward'
+  | 'media';
+
+export interface AdminUserProgressSummary {
+  userId: number;
+  scopeType: string;
+  scopeId?: number | null;
+  completedWeight: number;
+  availableWeight: number;
+  completedElementCount: number;
+  availableElementCount: number;
+  retiredCompletedWeight: number;
+  retiredCompletedCount: number;
+  progressPercent: number;
+  lastRecomputeTime?: string | null;
+}
+
+export interface AdminTravelerProgressIdentitySection {
+  userId: number;
+  openId: string;
+  nickname?: string | null;
+  avatarUrl?: string | null;
+  level?: number | null;
+  totalStamps?: number | null;
+  currentExp?: number | null;
+  nextLevelExp?: number | null;
+  currentLocaleCode?: string | null;
+  testAccount?: boolean | null;
+  currentCityId?: number | null;
+  currentCityName?: string | null;
+}
+
+export interface AdminTravelerProgressPreferenceSection {
+  interfaceMode?: string | null;
+  fontScale?: number | null;
+  highContrast?: boolean | null;
+  voiceGuideEnabled?: boolean | null;
+  seniorMode?: boolean | null;
+  localeCode?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  runtimeOverridesJson?: string | null;
+}
+
+export interface AdminTravelerLinkedScopeSummary {
+  scopeType: string;
+  scopeId?: number | null;
+  scopeName?: string | null;
+  relationLabel?: string | null;
+  source?: string | null;
+}
+
+export interface AdminTravelerScopedProgressSummary {
+  scopeType: string;
+  scopeId?: number | null;
+  scopeName?: string | null;
+  summary: AdminUserProgressSummary;
+}
+
+export interface AdminTravelerDynamicProgressSection {
+  globalSummary: AdminUserProgressSummary;
+  scopedSummaries: AdminTravelerScopedProgressSummary[];
+  breakdownEndpoint?: string | null;
+  comparisonHint?: string | null;
+}
+
+export interface AdminLegacyProgressSnapshot {
+  legacyScopeType?: string | null;
+  legacyScopeId?: number | null;
+  legacyScopeName?: string | null;
+  legacyPercentValue?: number | null;
+  activeStorylineId?: number | null;
+  completedStoryline?: boolean | null;
+  lastSeenAt?: string | null;
+  updatedAt?: string | null;
+  sourceTable?: string | null;
+  compatibilityOnly: boolean;
+  label?: string | null;
+}
+
+export interface AdminTravelerStorylineSessionSummary {
+  sessionId: string;
+  storylineId?: number | null;
+  storylineName?: string | null;
+  currentChapterId?: number | null;
+  status?: string | null;
+  startedAt?: string | null;
+  lastEventAt?: string | null;
+  exitedAt?: string | null;
+  eventCount?: number | null;
+  exitClearedTemporaryState?: boolean | null;
+  temporaryStepStateJson?: string | null;
+}
+
+export interface AdminTravelerRewardRedemptionSummary {
+  redemptionId: number;
+  rewardId?: number | null;
+  rewardName?: string | null;
+  redemptionStatus?: string | null;
+  stampCostSnapshot?: number | null;
+  redeemedAt?: string | null;
+  expiresAt?: string | null;
+}
+
+export interface AdminTravelerRouteTraceStatus {
+  sourceStatus?: string | null;
+  message?: string | null;
+}
+
+export interface AdminTravelerExplorationContext {
+  recentCheckinCount?: number | null;
+  recentExplorationEventCount?: number | null;
+  recentTriggerCount?: number | null;
+  routeTrace?: AdminTravelerRouteTraceStatus | null;
+}
+
+export interface AdminTravelerProgressWorkbench {
+  userId: number;
+  identity: AdminTravelerProgressIdentitySection;
+  preferences: AdminTravelerProgressPreferenceSection;
+  linkedScopes: AdminTravelerLinkedScopeSummary[];
+  dynamicProgress: AdminTravelerDynamicProgressSection;
+  legacyProgressSnapshot: AdminLegacyProgressSnapshot[];
+  storylineSessions: AdminTravelerStorylineSessionSummary[];
+  rewardRedemptions: AdminTravelerRewardRedemptionSummary[];
+  explorationContext?: AdminTravelerExplorationContext | null;
+}
+
+export interface AdminUserProgressBreakdownElement {
+  elementId: number;
+  elementCode: string;
+  elementType?: string | null;
+  title?: string | null;
+  weightLevel?: string | null;
+  weightValue: number;
+  completed: boolean;
+  includedInCurrentPercentage: boolean;
+  sourceEventId?: number | null;
+  eventOccurredAt?: string | null;
+}
+
+export interface AdminUserProgressBreakdown {
+  userId: number;
+  scopeType: string;
+  scopeId?: number | null;
+  completedWeight: number;
+  availableWeight: number;
+  completedElementCount: number;
+  availableElementCount: number;
+  retiredCompletedWeight: number;
+  retiredCompletedCount: number;
+  progressPercent: number;
+  lastRecomputeTime?: string | null;
+  elements: AdminUserProgressBreakdownElement[];
+  retiredElements: AdminUserProgressBreakdownElement[];
+}
+
+export interface AdminTravelerTimelineEntry {
+  entryId: string;
+  entryType: string;
+  sourceTable?: string | null;
+  sourceRecordId?: number | null;
+  userId?: number | null;
+  storylineId?: number | null;
+  storylineName?: string | null;
+  poiId?: number | null;
+  poiName?: string | null;
+  title?: string | null;
+  summary?: string | null;
+  payloadPreview?: string | null;
+  rawPayload?: string | null;
+  occurredAt?: string | null;
+}
+
+export interface AdminUserProgressOperationPreview {
+  userId: number;
+  scopeType: string;
+  scopeId?: number | null;
+  storylineId?: number | null;
+  from?: string | null;
+  to?: string | null;
+  actionType: string;
+  confirmationText: string;
+  previewHash: string;
+  confirmationToken?: string | null;
+  affectedUserCount?: number | null;
+  affectedScopeCount?: number | null;
+  matchingEventCount?: number | null;
+  availableElementCount?: number | null;
+  completedElementCount?: number | null;
+  previewSummary?: Record<string, unknown> | null;
+}
+
+export interface AdminUserProgressOperationResult {
+  userId: number;
+  scopeType: string;
+  scopeId?: number | null;
+  storylineId?: number | null;
+  from?: string | null;
+  to?: string | null;
+  actionType: string;
+  confirmationText: string;
+  previewHash?: string | null;
+  confirmationToken?: string | null;
+  status?: string | null;
+  writtenStateRows?: number | null;
+  mutatedEventRows?: number | null;
+  deletedEventRows?: number | null;
+  resultSummary?: Record<string, unknown> | null;
+}
+
+export interface AdminUserProgressAuditEntry {
+  id: number;
+  userId: number;
+  scopeType?: string | null;
+  scopeId?: number | null;
+  storylineId?: number | null;
+  actionType: string;
+  operatorId?: number | null;
+  operatorName?: string | null;
+  reason?: string | null;
+  requestIp?: string | null;
+  previewSummary?: Record<string, unknown> | null;
+  resultSummary?: Record<string, unknown> | null;
+  timestamp?: string | null;
+}
+
+export interface AdminTravelerProgressBreakdownQuery {
+  scopeType: string;
+  scopeId?: number;
+  includeInactiveElements?: boolean;
+}
+
+export interface AdminTravelerTimelineQuery {
+  pageNum?: number;
+  pageSize?: number;
+  eventTypes?: string[];
+  storylineId?: number;
+  from?: string;
+  to?: string;
+}
+
+export interface AdminUserProgressAuditQuery {
+  pageNum?: number;
+  pageSize?: number;
+  actionTypes?: string[];
+  scopeType?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface AdminUserProgressRecomputePreviewPayload {
+  userId: number;
+  scopeType: string;
+  scopeId?: number;
+  storylineId?: number;
+  from?: string;
+  to?: string;
+  reason: string;
+}
+
+export interface AdminUserProgressRecomputeConfirmPayload
+  extends AdminUserProgressRecomputePreviewPayload {
+  previewHash: string;
+  confirmationToken?: string;
+  confirmationText: 'RECOMPUTE';
+}
+
+export interface AdminUserProgressRepairPayload {
+  userId: number;
+  scopeType: string;
+  scopeId?: number;
+  storylineId?: number;
+  from?: string;
+  to?: string;
+  actionType: string;
+  targetEventId?: number;
+  replacementElementId?: number;
+  replacementElementCode?: string;
+  duplicateOfEventId?: number;
+  reason: string;
+  previewHash?: string;
+  confirmationToken?: string;
+  confirmationText?: 'REPAIR';
+}
+
 export interface CityItem {
   id: number;
   code: string;

@@ -127,11 +127,11 @@ public interface AdminTravelerProgressReadMapper {
     @Select({
             "SELECT",
             "  (SELECT COUNT(*) FROM user_checkins c WHERE c.user_id = #{userId}",
-            "     <if test='from != null'> AND c.checked_at &gt;= #{from}</if>) AS recentCheckinCount,",
+            "     AND (#{from} IS NULL OR c.checked_at >= #{from})) AS recentCheckinCount,",
             "  (SELECT COUNT(*) FROM user_exploration_events e WHERE e.user_id = #{userId}",
-            "     <if test='from != null'> AND e.occurred_at &gt;= #{from}</if>) AS recentExplorationEventCount,",
+            "     AND (#{from} IS NULL OR e.occurred_at >= #{from})) AS recentExplorationEventCount,",
             "  (SELECT COUNT(*) FROM trigger_logs t WHERE t.user_id = #{userId}",
-            "     <if test='from != null'> AND t.created_at &gt;= #{from}</if>) AS recentTriggerCount"
+            "     AND (#{from} IS NULL OR t.created_at >= #{from})) AS recentTriggerCount"
     })
     RecentContextCountsRow selectRecentContextCounts(
             @Param("userId") Long userId,

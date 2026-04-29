@@ -1,112 +1,115 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
-import { Avatar, Button, Drawer, Descriptions, Space, Switch, Tag, Typography, message } from 'antd';
-import { EyeOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns } from '@ant-design/pro-table';
-import { getAdminUserDetail, getAdminUsers, updateAdminUserTestFlag } from '../../services/api';
-import type { AdminUserDetail, AdminUserListItem } from '../../types/admin';
+import type { ProColumns } from '@ant-design/pro-table';
+import { Avatar, Button, Space, Switch, Tag, Typography, message } from 'antd';
+import { ArrowRightOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { getAdminUsers, updateAdminUserTestFlag } from '../../services/api';
+import type { AdminUserListItem } from '../../types/admin';
 
 const { Text } = Typography;
 
 const UserManagement: React.FC = () => {
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detail, setDetail] = useState<AdminUserDetail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const columns = useMemo<ProColumns<AdminUserListItem>[]>(() => [
-    {
-      title: '用户',
-      dataIndex: 'nickname',
-      render: (_, record) => (
-        <Space>
-          <Avatar src={record.avatarUrl}>{record.nickname?.[0]}</Avatar>
-          <div>
-            <div>{record.nickname || '未命名用户'}</div>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {record.openId}
-            </Text>
-          </div>
-        </Space>
-      ),
-    },
-    {
-      title: '测试账号',
-      dataIndex: 'isTestAccount',
-      valueType: 'select',
-      valueEnum: {
-        true: { text: '是' },
-        false: { text: '否' },
+  const columns = useMemo<ProColumns<AdminUserListItem>[]>(
+    () => [
+      {
+        title: '旅客',
+        dataIndex: 'nickname',
+        render: (_, record) => (
+          <Space>
+            <Avatar src={record.avatarUrl}>{record.nickname?.[0]}</Avatar>
+            <div>
+              <div>{record.nickname || '未命名旅客'}</div>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {record.openId}
+              </Text>
+            </div>
+          </Space>
+        ),
       },
-      render: (_, record) => (
-        <Switch
-          checked={record.isTestAccount}
-          checkedChildren="是"
-          unCheckedChildren="否"
-          onChange={async (checked) => {
-            try {
-              await updateAdminUserTestFlag(record.userId, { isTestAccount: checked, reason: '后台手动调整' });
-              message.success('测试账号标记已更新');
-            } catch (error) {
-              message.error('更新失败');
-            }
-          }}
-        />
-      ),
-    },
-    {
-      title: '等级',
-      dataIndex: 'level',
-      hideInSearch: true,
-      render: (_, record) => <Tag color="purple">Lv.{record.level}</Tag>,
-    },
-    {
-      title: '印章数',
-      dataIndex: 'totalStamps',
-      hideInSearch: true,
-    },
-    {
-      title: '状态',
-      dataIndex: 'accountStatus',
-      hideInSearch: true,
-      render: (value) => <Tag color={value === 'active' ? 'success' : 'default'}>{value}</Tag>,
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'createdAt',
-      valueType: 'dateTime',
-      hideInSearch: true,
-    },
-    {
-      title: '操作',
-      key: 'action',
-      valueType: 'option',
-      render: (_, record) => [
-        <Button
-          key="detail"
-          type="link"
-          icon={<EyeOutlined />}
-          onClick={async () => {
-            setDetailOpen(true);
-            setDetailLoading(true);
-            try {
-              const response = await getAdminUserDetail(record.userId);
-              if (response.success) {
-                setDetail(response.data);
+      {
+        title: '測試帳號',
+        dataIndex: 'isTestAccount',
+        valueType: 'select',
+        valueEnum: {
+          true: { text: '是' },
+          false: { text: '否' },
+        },
+        render: (_, record) => (
+          <Switch
+            checked={record.isTestAccount}
+            checkedChildren="是"
+            unCheckedChildren="否"
+            onChange={async (checked) => {
+              try {
+                const response = await updateAdminUserTestFlag(record.userId, {
+                  isTestAccount: checked,
+                  reason: '營運後台手動調整',
+                });
+                if (response.success) {
+                  message.success('測試帳號標記已更新');
+                } else {
+                  message.error(response.message || '更新失敗');
+                }
+              } catch (error) {
+                message.error('更新失敗');
               }
-            } finally {
-              setDetailLoading(false);
-            }
-          }}
-        >
-          查看详情
-        </Button>,
-      ],
-    },
-  ], []);
+            }}
+          />
+        ),
+      },
+      {
+        title: '等級',
+        dataIndex: 'level',
+        hideInSearch: true,
+        render: (_, record) => <Tag color="purple">Lv.{record.level}</Tag>,
+      },
+      {
+        title: '印章數',
+        dataIndex: 'totalStamps',
+        hideInSearch: true,
+      },
+      {
+        title: '帳號狀態',
+        dataIndex: 'accountStatus',
+        hideInSearch: true,
+        render: (value) => <Tag color={value === 'active' ? 'success' : 'default'}>{value || 'unknown'}</Tag>,
+      },
+      {
+        title: '建立時間',
+        dataIndex: 'createdAt',
+        valueType: 'dateTime',
+        hideInSearch: true,
+      },
+      {
+        title: '操作',
+        key: 'action',
+        valueType: 'option',
+        render: (_, record) => [
+          <Button
+            key="open-progress-workbench"
+            type="primary"
+            icon={<ArrowRightOutlined />}
+            onClick={() => {
+              navigate(`/users/progress/${record.userId}`);
+            }}
+          >
+            開啟旅客進度工作台
+          </Button>,
+        ],
+      },
+    ],
+    [navigate],
+  );
 
   return (
-    <PageContainer title="用户管理" subTitle="查看小程序用户、等级进度与测试账号标记">
+    <PageContainer
+      title="旅客管理"
+      subTitle="查看旅客名單、搜尋關鍵資料，並進入完整的進度工作台"
+    >
       <ProTable<AdminUserListItem>
         rowKey="userId"
         columns={columns}
@@ -115,7 +118,8 @@ const UserManagement: React.FC = () => {
             pageNum: params.current,
             pageSize: params.pageSize,
             keyword: params.nickname as string,
-            isTestAccount: typeof params.isTestAccount === 'boolean' ? params.isTestAccount : undefined,
+            isTestAccount:
+              typeof params.isTestAccount === 'boolean' ? params.isTestAccount : undefined,
           });
           return {
             data: response.data?.list || [],
@@ -125,34 +129,8 @@ const UserManagement: React.FC = () => {
         }}
         search={{ labelWidth: 'auto' }}
         pagination={{ pageSize: 10 }}
-        headerTitle="用户列表"
+        headerTitle="旅客名單"
       />
-
-      <Drawer
-        open={detailOpen}
-        onClose={() => setDetailOpen(false)}
-        width={560}
-        title="用户详情"
-        loading={detailLoading}
-      >
-        {detail && (
-          <Space direction="vertical" style={{ width: '100%' }} size="large">
-            <Descriptions title="基本信息" column={1} bordered>
-              <Descriptions.Item label="昵称">{detail.basicInfo.nickname}</Descriptions.Item>
-              <Descriptions.Item label="OpenID">{detail.basicInfo.openId}</Descriptions.Item>
-              <Descriptions.Item label="等级">Lv.{detail.basicInfo.level}</Descriptions.Item>
-              <Descriptions.Item label="印章数">{detail.basicInfo.totalStamps}</Descriptions.Item>
-              <Descriptions.Item label="测试账号">{detail.basicInfo.isTestAccount ? '是' : '否'}</Descriptions.Item>
-            </Descriptions>
-            <Descriptions title="进度概览" column={1} bordered>
-              <Descriptions.Item label="当前经验">{detail.progress.currentExp}</Descriptions.Item>
-              <Descriptions.Item label="下一级目标">{detail.progress.nextLevelExp}</Descriptions.Item>
-              <Descriptions.Item label="已解锁故事线">{detail.progress.unlockedStorylines}</Descriptions.Item>
-              <Descriptions.Item label="已完成故事线">{detail.progress.completedStorylines}</Descriptions.Item>
-            </Descriptions>
-          </Space>
-        )}
-      </Drawer>
     </PageContainer>
   );
 };

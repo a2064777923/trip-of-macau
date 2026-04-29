@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import POIManagement from './pages/POIManagement';
 import TestAccount from './pages/TestAccount';
 import UserManagement from './pages/UserManagement';
+import UserProgressWorkbench from './pages/UserManagement/UserProgressWorkbench';
 import StorylineManagement from './pages/StorylineManagement';
 import OperationsManagement from './pages/OperationsManagement';
 import ModulePlaceholder from './pages/ModulePlaceholder';
@@ -202,6 +203,7 @@ function App() {
           <Route path="collection/badges" element={<Navigate to="/collection/honors" replace />} />
 
           <Route path="users/progress" element={<UserManagement />} />
+          <Route path="users/progress/:userId" element={<UserProgressWorkbench />} />
           <Route
             path="users/story-progress"
             element={placeholder({
