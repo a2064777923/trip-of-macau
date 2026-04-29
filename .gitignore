@@ -66,6 +66,9 @@ output/
 tmp-admin-login.json
 phase*-cos-probe.txt
 
+# Local model/provider configuration with API keys
+.codebuddy/models.json
+
 # Ad-hoc generated local guides; canonical docs live in README.md, docs/, and .planning/
 README_QUICK.md
 START_HERE.md
