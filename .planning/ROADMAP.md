@@ -95,13 +95,15 @@
 3. Manual recompute or repair actions are explicit, safe, and audited.
 4. Content additions or lifecycle changes update percentages predictably without deleting completed user events.
 
-**Plans:** 4 plans
+**Plans:** 6 plans
 
 Plans:
 - [ ] `32-01-PLAN.md` — Canonical weighted progress engine and admin/public scope parity
-- [ ] `32-02-PLAN.md` — Durable storyline sessions, traveler workbench read model, and paginated timeline
-- [ ] `32-03-PLAN.md` — Preview-first recompute/repair operations and audit trail
+- [ ] `32-02-PLAN.md` — Durable storyline session persistence for the public runtime
+- [ ] `32-03-PLAN.md` — Preview-first recompute/repair core rebuild and audit persistence
 - [ ] `32-04-PLAN.md` — Traditional Chinese workbench UI, seeded traveler fixtures, and end-to-end smoke
+- [ ] `32-05-PLAN.md` — Traveler workbench read model and paginated timeline
+- [ ] `32-06-PLAN.md` — Admin progress-ops API surface and audit response contracts
 
 **Depends on:** Phases 28, 29, 30, and 31
 

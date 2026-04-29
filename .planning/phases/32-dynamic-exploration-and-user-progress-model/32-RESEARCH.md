@@ -369,12 +369,12 @@ sysOperationLogMapper.insert(log);
 
 All factual claims in this research were verified against repo files, prior phase artifacts, local runtime probes, or npm registry metadata in this session. No user-confirmation assumptions were required for the research conclusions.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Where do Phase 32 “movement or route traces” come from in the current stack?**
-   - What we know: The verified user-progress sources in current code paths are `traveler_checkins`, `trigger_logs`, `user_exploration_events`, public reward redemptions, and future durable story sessions; Mongo is configured for the admin backend, but no concrete traveler route-trace model was verified in the inspected Phase 32 paths. [VERIFIED: packages/admin/aoxiaoyou-admin-backend/src/main/java/com/aoxiaoyou/admin/service/impl/AdminUserServiceImpl.java; packages/server/src/main/java/com/aoxiaoyou/tripofmacau/entity/UserExplorationEvent.java; packages/server/src/main/java/com/aoxiaoyou/tripofmacau/entity/RewardRedemption.java; packages/admin/aoxiaoyou-admin-backend/src/main/resources/application.yml]
-   - What's unclear: Whether USER-03 expects an already-existing trace data source to be surfaced, or only the currently verified interaction sources. [VERIFIED: .planning/REQUIREMENTS.md]
-   - Recommendation: Plan the timeline around verified MySQL sources first, then add a narrowly scoped trace adapter only if a concrete storage model is found during planning or implementation. [VERIFIED: .planning/phases/32-dynamic-exploration-and-user-progress-model/32-CONTEXT.md]
+   - Resolution: No concrete route-trace storage model was verified in the current Phase 32 code paths. The only direct hits for route-trace terminology in this phase were planning artifacts, while the verified implementation-side user-progress sources remain `traveler_checkins`, `trigger_logs`, `user_exploration_events`, public reward redemptions, and durable story sessions added in this phase. [VERIFIED: packages/admin/aoxiaoyou-admin-backend/src/main/java/com/aoxiaoyou/admin/service/impl/AdminUserServiceImpl.java; packages/server/src/main/java/com/aoxiaoyou/tripofmacau/entity/UserExplorationEvent.java; packages/server/src/main/java/com/aoxiaoyou/tripofmacau/entity/RewardRedemption.java; .planning/phases/32-dynamic-exploration-and-user-progress-model/32-02-PLAN.md]
+   - Planning decision: Build the timeline around those verified MySQL sources and add a `RouteTraceSourceAdapter` plus `EmptyRouteTraceSourceAdapter` contract that reports `sourceStatus='unavailable'` until a real storage model is verified. Do not invent fake route traces or silently imply trace completeness. [VERIFIED: .planning/REQUIREMENTS.md; .planning/phases/32-dynamic-exploration-and-user-progress-model/32-CONTEXT.md]
+   - Execution consequence: Phase 32 smoke and UI plans must show explicit unavailable status for route traces, while keeping the design open for a future concrete adapter if a real trace store appears later. [VERIFIED: .planning/phases/32-dynamic-exploration-and-user-progress-model/32-05-PLAN.md; .planning/phases/32-dynamic-exploration-and-user-progress-model/32-04-PLAN.md]
 
 ## Environment Availability
 
