@@ -62,6 +62,11 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
     };
     private static final String STATUS_PUBLISHED = "published";
+    private static final String RUNTIME_VERSION = "v1";
+    private static final String RUNTIME_SOURCE = "public_runtime";
+    private static final String RUNTIME_STATUS_READY = "ready";
+    private static final String RUNTIME_STATUS_MISSING_FLOW = "missing_flow";
+    private static final String UNSUPPORTED_REASON = "這個互動玩法已由後台配置，將在後續小程序玩法版本中開放。";
     private static final String BINDING_ROLE_DEFAULT_EXPERIENCE_FLOW = "default_experience_flow";
     private static final String OVERRIDE_MODE_APPEND = "append";
     private static final String OVERRIDE_MODE_DISABLE = "disable";
@@ -76,6 +81,13 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
     private static final String OWNER_TYPE_CONTENT_ASSET = "content_asset";
     private static final String DEFAULT_SESSION_LOCALE = "zh-Hant";
     private static final String EMPTY_JSON_OBJECT = "{}";
+    private static final Set<String> UNSUPPORTED_GAMEPLAY_TYPES = Set.of(
+            "ar_checkin",
+            "voice_input",
+            "puzzle",
+            "cannon_defense",
+            "route_coverage",
+            "photo_recognition");
     private static final Map<String, Integer> EXPLORATION_WEIGHT_VALUES = Map.of(
             "tiny", 1,
             "small", 2,
@@ -121,6 +133,11 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
                 .findFirst()
                 .orElse(null);
         return ExperienceRuntimeResponse.StorylineRuntime.builder()
+                .runtimeVersion("v1")
+                .source("public_runtime")
+                .generatedAt(LocalDateTime.now().toString())
+                .publishedChapterCount(chapterRuntimes.size())
+                .unsupportedStepCount(countUnsupportedSteps(chapterRuntimes))
                 .storyline(storyline)
                 .storyModeConfig(storyModeConfig)
                 .chapters(chapterRuntimes)
@@ -270,9 +287,14 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
                 .orderByAsc(ExperienceOverride::getSortOrder)
                 .orderByAsc(ExperienceOverride::getId));
         List<ExperienceRuntimeResponse.Step> compiledSteps = compileSteps(inheritedFlow, chapterFlow, overrides, localeHint);
+        String runtimeStatus = compiledSteps.isEmpty() ? RUNTIME_STATUS_MISSING_FLOW : RUNTIME_STATUS_READY;
         return ExperienceRuntimeResponse.StoryChapterRuntime.builder()
                 .chapterId(chapter.getId())
                 .chapterOrder(chapter.getChapterOrder())
+                .runtimeStatus(runtimeStatus)
+                .runtimeStatusLabel(RUNTIME_STATUS_READY.equals(runtimeStatus) ? "可播放" : "缺少體驗流程")
+                .compiledStepCount(compiledSteps.size())
+                .unsupportedStepCount(countUnsupportedSteps(compiledSteps))
                 .anchorType(chapter.getAnchorType())
                 .anchorTargetId(chapter.getAnchorTargetId())
                 .anchorTargetCode(chapter.getAnchorTargetCode())
@@ -327,17 +349,30 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
             Map<Long, ContentAsset> assetsById,
             String localeHint) {
         ExperienceTemplate template = step.getTemplateId() == null ? null : templatesById.get(step.getTemplateId());
+        Map<String, Object> triggerConfig = readObjectJson(step.getTriggerConfigJson());
+        Map<String, Object> conditionConfig = readObjectJson(step.getConditionConfigJson());
+        Map<String, Object> effectConfig = readObjectJson(step.getEffectConfigJson());
+        String displayCategory = resolveDisplayCategory(step, template);
+        boolean unsupported = isUnsupportedStep(step, template, displayCategory);
         return ExperienceRuntimeResponse.Step.builder()
                 .id(step.getId())
                 .flowId(step.getFlowId())
                 .stepCode(step.getStepCode())
                 .stepType(step.getStepType())
+                .displayCategory(displayCategory)
+                .displayCategoryLabel(resolveDisplayCategoryLabel(displayCategory))
+                .unsupported(unsupported)
+                .unsupportedReason(unsupported ? UNSUPPORTED_REASON : null)
+                .travelerActionLabel(resolveTravelerActionLabel(displayCategory))
+                .eventType(resolveRuntimeEventType(step, template, displayCategory))
+                .elementCode(resolveExplorationElementCode(effectConfig, conditionConfig))
+                .elementId(resolveExplorationElementId(effectConfig, conditionConfig))
                 .name(localizedContentSupport.resolveText(localeHint, step.getStepNameZh(), step.getStepNameEn(), step.getStepNameZht(), step.getStepNamePt()))
                 .description(localizedContentSupport.resolveText(localeHint, step.getDescriptionZh(), step.getDescriptionEn(), step.getDescriptionZht(), step.getDescriptionPt()))
                 .triggerType(step.getTriggerType())
-                .triggerConfig(readObjectJson(step.getTriggerConfigJson()))
-                .conditionConfig(readObjectJson(step.getConditionConfigJson()))
-                .effectConfig(readObjectJson(step.getEffectConfigJson()))
+                .triggerConfig(triggerConfig)
+                .conditionConfig(conditionConfig)
+                .effectConfig(effectConfig)
                 .mediaAssetId(step.getMediaAssetId())
                 .mediaAsset(toStoryMediaAsset(assetsById.get(step.getMediaAssetId())))
                 .rewardRuleIds(readJsonValue(step.getRewardRuleIdsJson()))
@@ -361,6 +396,186 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
                 .config(readObjectJson(template.getConfigJson()))
                 .riskLevel(template.getRiskLevel())
                 .build();
+    }
+
+    private int countUnsupportedSteps(List<ExperienceRuntimeResponse.StoryChapterRuntime> chapterRuntimes) {
+        if (chapterRuntimes == null || chapterRuntimes.isEmpty()) {
+            return 0;
+        }
+        return chapterRuntimes.stream()
+                .map(ExperienceRuntimeResponse.StoryChapterRuntime::getUnsupportedStepCount)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
+    }
+
+    private int countUnsupportedSteps(Collection<ExperienceRuntimeResponse.Step> steps) {
+        if (steps == null || steps.isEmpty()) {
+            return 0;
+        }
+        return (int) steps.stream()
+                .filter(step -> Boolean.TRUE.equals(step.getUnsupported()))
+                .count();
+    }
+
+    private String resolveDisplayCategory(ExperienceFlowStep step, ExperienceTemplate template) {
+        Set<String> tokens = stepTokens(step, template);
+        if (containsAny(tokens, "full_screen_media", "story_media", "media", "video", "audio", "lottie", "content_read")) {
+            return "story_media";
+        }
+        if (containsAny(tokens, "route_guidance", "navigation", "route", "traffic", "destination_card")) {
+            return "route_guidance";
+        }
+        if (containsAny(tokens, "pickup", "collectible", "collect", "clue", "treasure")) {
+            return "pickup";
+        }
+        if (containsAny(tokens, "challenge", "quiz", "puzzle", "cannon_defense")) {
+            return "challenge";
+        }
+        if (containsAny(tokens, "reward", "badge", "title", "coin", "medal")) {
+            return "reward";
+        }
+        if (containsAny(tokens, "system", "session", "progress", "unlock")) {
+            return "system";
+        }
+        if (containsAny(tokens, "interaction", "interact", "click", "ar_checkin", "photo_recognition", "voice_input", "route_coverage")) {
+            return "interaction";
+        }
+        return "interaction";
+    }
+
+    private String resolveDisplayCategoryLabel(String displayCategory) {
+        return switch (defaultText(displayCategory, "unsupported")) {
+            case "story_media" -> "劇情播放";
+            case "route_guidance" -> "路線引導";
+            case "interaction" -> "地點互動";
+            case "pickup" -> "拾取線索";
+            case "challenge" -> "隱藏挑戰";
+            case "reward" -> "獎勵發放";
+            case "system" -> "系統流程";
+            default -> "稍後開放";
+        };
+    }
+
+    private String resolveTravelerActionLabel(String displayCategory) {
+        return switch (defaultText(displayCategory, "system")) {
+            case "story_media" -> "閱讀劇情";
+            case "route_guidance" -> "查看路線";
+            case "interaction" -> "開始互動";
+            case "pickup" -> "拾取線索";
+            case "challenge" -> "查看挑戰";
+            case "reward" -> "查看獎勵";
+            default -> "查看";
+        };
+    }
+
+    private boolean isUnsupportedStep(
+            ExperienceFlowStep step,
+            ExperienceTemplate template,
+            String displayCategory) {
+        Set<String> tokens = stepTokens(step, template);
+        if (containsAny(tokens, UNSUPPORTED_GAMEPLAY_TYPES)) {
+            return true;
+        }
+        String riskLevel = template == null ? "" : normalizeToken(template.getRiskLevel());
+        return "unsupported".equals(displayCategory) || "high".equals(riskLevel);
+    }
+
+    private String resolveRuntimeEventType(
+            ExperienceFlowStep step,
+            ExperienceTemplate template,
+            String displayCategory) {
+        Set<String> tokens = stepTokens(step, template);
+        if (containsAny(tokens, "chapter_open", "chapter_start")) {
+            return "chapter_open";
+        }
+        if ("story_media".equals(displayCategory) || containsAny(tokens, "content_read", "read")) {
+            return "content_read";
+        }
+        if ("interaction".equals(displayCategory) || "pickup".equals(displayCategory) || "challenge".equals(displayCategory)) {
+            return "interaction_view";
+        }
+        return "step_view";
+    }
+
+    private String resolveExplorationElementCode(Map<String, Object> effectConfig, Map<String, Object> conditionConfig) {
+        String value = firstTextValue(effectConfig, "elementCode", "explorationElementCode");
+        return StringUtils.hasText(value) ? value : firstTextValue(conditionConfig, "elementCode", "explorationElementCode");
+    }
+
+    private Long resolveExplorationElementId(Map<String, Object> effectConfig, Map<String, Object> conditionConfig) {
+        Long value = firstLongValue(effectConfig, "elementId", "explorationElementId");
+        return value == null ? firstLongValue(conditionConfig, "elementId", "explorationElementId") : value;
+    }
+
+    private String firstTextValue(Map<String, Object> source, String... keys) {
+        if (source == null || source.isEmpty()) {
+            return null;
+        }
+        for (String key : keys) {
+            String value = readString(source.get(key));
+            if (StringUtils.hasText(value)) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private Long firstLongValue(Map<String, Object> source, String... keys) {
+        if (source == null || source.isEmpty()) {
+            return null;
+        }
+        for (String key : keys) {
+            Long value = readLongValue(source.get(key));
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private Set<String> stepTokens(ExperienceFlowStep step, ExperienceTemplate template) {
+        LinkedHashSet<String> tokens = new LinkedHashSet<>();
+        if (step != null) {
+            addNormalizedToken(tokens, step.getStepType());
+            addNormalizedToken(tokens, step.getTriggerType());
+            addNormalizedToken(tokens, step.getStepCode());
+        }
+        if (template != null) {
+            addNormalizedToken(tokens, template.getTemplateType());
+            addNormalizedToken(tokens, template.getCategory());
+            addNormalizedToken(tokens, template.getCode());
+        }
+        return tokens;
+    }
+
+    private void addNormalizedToken(Set<String> tokens, String value) {
+        String normalized = normalizeToken(value);
+        if (!StringUtils.hasText(normalized)) {
+            return;
+        }
+        tokens.add(normalized);
+        Stream.of(normalized.split("[^a-z0-9_]+"))
+                .filter(StringUtils::hasText)
+                .forEach(tokens::add);
+    }
+
+    private boolean containsAny(Set<String> tokens, String... expected) {
+        return containsAny(tokens, Set.of(expected));
+    }
+
+    private boolean containsAny(Set<String> tokens, Set<String> expected) {
+        if (tokens == null || tokens.isEmpty() || expected == null || expected.isEmpty()) {
+            return false;
+        }
+        for (String token : tokens) {
+            for (String expectedToken : expected) {
+                if (token.equals(expectedToken) || token.contains(expectedToken)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private ExperienceRuntimeResponse.OverrideRule toOverrideResponse(ExperienceOverride override) {
@@ -442,6 +657,7 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
             return Collections.emptyMap();
         }
         return contentAssetMapper.selectBatchIds(normalizedIds).stream()
+                .filter(asset -> isPublishedStatus(asset.getStatus()))
                 .collect(Collectors.toMap(ContentAsset::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
     }
 
@@ -919,6 +1135,14 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
                 .flowId(step.getFlowId())
                 .stepCode(step.getStepCode())
                 .stepType(step.getStepType())
+                .displayCategory(step.getDisplayCategory())
+                .displayCategoryLabel(step.getDisplayCategoryLabel())
+                .unsupported(step.getUnsupported())
+                .unsupportedReason(step.getUnsupportedReason())
+                .travelerActionLabel(step.getTravelerActionLabel())
+                .eventType(step.getEventType())
+                .elementCode(step.getElementCode())
+                .elementId(step.getElementId())
                 .name(step.getName())
                 .description(step.getDescription())
                 .triggerType(step.getTriggerType())

@@ -80,6 +80,8 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class PublicCatalogServiceImpl implements PublicCatalogService {
 
+    private static final String STATUS_PUBLISHED = "published";
+
     private final CatalogFoundationService catalogFoundationService;
     private final RuntimeSettingsService runtimeSettingsService;
     private final LocalizedContentSupport localizedContentSupport;
@@ -171,11 +173,13 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
 
     @Override
     public List<StoryLineResponse> listStoryLines(String localeHint) {
+        // Public story entrypoints are published-only through CatalogFoundationService.
         return buildStorylineResponses(catalogFoundationService.listPublishedStoryLines(), localeHint);
     }
 
     @Override
     public StoryLineResponse getStoryLine(Long storyLineId, String localeHint) {
+        // Public story detail is published-only through CatalogFoundationService.
         StoryLine storyLine = catalogFoundationService.getPublishedStoryLine(storyLineId)
                 .orElseThrow(() -> new BusinessException(4042, "Storyline not found"));
         return buildStorylineResponses(List.of(storyLine), localeHint).stream()
@@ -787,6 +791,7 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
                             .cityBindings(cityBindings)
                             .subMapBindings(subMapBindings)
                             .code(storyLine.getCode())
+                            .status(STATUS_PUBLISHED)
                             .name(localizedContentSupport.resolveText(localeHint, storyLine.getNameZh(), storyLine.getNameEn(), storyLine.getNameZht(), storyLine.getNamePt()))
                             .nameEn(localizedContentSupport.firstNonBlank(storyLine.getNameEn(), storyLine.getNamePt(), storyLine.getNameZh(), storyLine.getNameZht()))
                             .description(localizedContentSupport.resolveText(localeHint, storyLine.getDescriptionZh(), storyLine.getDescriptionEn(), storyLine.getDescriptionZht(), storyLine.getDescriptionPt()))
@@ -816,6 +821,7 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
         return StoryChapterResponse.builder()
                 .id(chapter.getId())
                 .chapterOrder(chapter.getChapterOrder())
+                .status(STATUS_PUBLISHED)
                 .title(localizedContentSupport.resolveText(localeHint, chapter.getTitleZh(), chapter.getTitleEn(), chapter.getTitleZht(), chapter.getTitlePt()))
                 .summary(localizedContentSupport.resolveText(localeHint, chapter.getSummaryZh(), chapter.getSummaryEn(), chapter.getSummaryZht(), chapter.getSummaryPt()))
                 .detail(localizedContentSupport.resolveText(localeHint, chapter.getDetailZh(), chapter.getDetailEn(), chapter.getDetailZht(), chapter.getDetailPt()))

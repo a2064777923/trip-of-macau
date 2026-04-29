@@ -50,6 +50,14 @@ public class ExperienceRuntimeResponse {
         private Long flowId;
         private String stepCode;
         private String stepType;
+        private String displayCategory;
+        private String displayCategoryLabel;
+        private Boolean unsupported;
+        private String unsupportedReason;
+        private String travelerActionLabel;
+        private String eventType;
+        private String elementCode;
+        private Long elementId;
         private String name;
         private String description;
         private String triggerType;
@@ -98,6 +106,11 @@ public class ExperienceRuntimeResponse {
     @Data
     @Builder
     public static class StorylineRuntime {
+        private String runtimeVersion;
+        private String source;
+        private String generatedAt;
+        private Integer publishedChapterCount;
+        private Integer unsupportedStepCount;
         private StoryLineResponse storyline;
         private StoryModeConfig storyModeConfig;
         private List<StoryChapterRuntime> chapters;
@@ -108,6 +121,10 @@ public class ExperienceRuntimeResponse {
     public static class StoryChapterRuntime {
         private Long chapterId;
         private Integer chapterOrder;
+        private String runtimeStatus;
+        private String runtimeStatusLabel;
+        private Integer compiledStepCount;
+        private Integer unsupportedStepCount;
         private String anchorType;
         private Long anchorTargetId;
         private String anchorTargetCode;

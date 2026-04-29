@@ -9,6 +9,7 @@ public class StoryChapterResponse {
 
     private Long id;
     private Integer chapterOrder;
+    private String status;
     private String title;
     private String summary;
     private String detail;

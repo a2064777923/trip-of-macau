@@ -15,6 +15,7 @@ public class StoryLineResponse {
     private List<CatalogRelationBindingResponse> cityBindings;
     private List<CatalogRelationBindingResponse> subMapBindings;
     private String code;
+    private String status;
     private String name;
     private String nameEn;
     private String description;
