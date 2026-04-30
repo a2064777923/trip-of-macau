@@ -1,5 +1,42 @@
 # Milestones
 
+## v3.0 Admin Core Domain Completion and Control-Plane Linkage (Shipped: 2026-04-30)
+
+**Phases completed:** 8 phases, 33 plans, 54 tasks
+
+**Key accomplishments:**
+
+- Versioned admin experience orchestration plus published-only public runtime DTOs for POI defaults, story overrides, and dynamic exploration events
+- Admin experience orchestration workbench with Traditional Chinese routes, A-Ma Temple presets, shared media components, and chapter assembled preview
+- Protected POI default experience facade that atomically loads, saves, validates, and templates walk-in flows on top of the canonical experience model
+- Traditional Chinese POI 地點體驗工作台 with timeline presets, structured cards, template saving, route wiring, and validation feedback
+- A-Ma Temple default POI experience seed plus live admin/public smoke proving template reuse and published runtime alignment
+- Admin-only storyline mode facade over shared story chapter and experience-flow records
+- Mini-program-facing storyline runtime with route strategy, inherited flows, overrides, and compiled steps
+- Traditional Chinese three-panel storyline mode workbench for route strategy, chapter anchors, and override authoring
+- UTF-8 seeded first story-mode slice with live admin/public smoke coverage
+- Canonical weighted progress parity for public and admin services using published exploration elements, immutable completion events, and retired-element comparison data
+- Durable public story-session rows in MySQL with persistent start/event/exit lifecycle fields and immutable exploration-event separation
+- Preview-first admin progress repair engine with scoped recompute, immutable event annotation repairs, and dual audit persistence
+- Traditional Chinese traveler progress workbench with seeded fixtures and live public/admin smoke coverage
+- Authenticated admin traveler workbench and MySQL-backed timeline aggregation with dynamic progress summaries, legacy compatibility snapshots, and explicit route-trace unavailability
+- Admin-only traveler progress operations transport with typed preview confirmation, scoped repair DTOs, and paginated audit mapping over the Phase 32-03 core service
+- Story material package registry with admin-only CRUD, provenance item tracking, and compile-verified Spring/MyBatis integration
+- Traceable five-chapter material manifest with 54 planned assets, COS keys, provenance docs, and deterministic MySQL seed rows
+- Five-chapter `東西方文明的戰火與共生` story package seeded across story, content block, experience, reward, and dynamic exploration tables
+- Public storyline runtime now exposes versioned traveler-safe metadata, lifecycle-filtered chapters, and unsupported gameplay hints for mini-program consumption.
+- Mini-program story runtime contracts now map public compiled flows into story state with live/fallback status and auth-gated event helpers.
+- The mini-program story page now fetches public runtime data, renders compiled interaction flow cards, and degrades unsupported gameplay/media safely.
+- Phase 34 now has a repeatable public runtime smoke that proves the flagship story runtime, content blocks, compiled steps, and mini-program build baseline.
+
+**Accepted future scope:**
+
+- Full WeChat DevTools/device experiential acceptance and complex mini-program gameplay interactions.
+- Real material production from the Phase 33 manifest, including `image-2` generation, slicing, audio/video assembly, COS upload, and asset status promotion.
+- Full approval workflow beyond direct lifecycle controls.
+
+---
+
 ## v2.1 Interactive Rules Platform and AI Capability Center (Archived: 2026-04-19)
 
 **Phases executed:** 14 phases, 44 plans, 127 tasks

@@ -4,13 +4,13 @@ milestone: v3.0
 milestone_name: Admin Core Domain Completion and Control-Plane Linkage
 current_phase: 35
 current_plan: 4
-status: phase_complete
-stopped_at: Phase 35 complete; v3.0 ready for final milestone review
-last_updated: "2026-04-30T10:55:00+08:00"
-last_activity: 2026-04-30 -- Phase 35 lifecycle scheduling and dependency workbench verified
+status: completed
+stopped_at: v3.0 shipped and archived; ready to start next milestone
+last_updated: "2026-04-30T03:10:46.304Z"
+last_activity: 2026-04-30
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 33
   completed_plans: 33
   percent: 100
@@ -23,7 +23,7 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-29)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** v3.0 final milestone review after Phase 35 completion
+**Current focus:** Planning the next milestone
 
 ## Current Position
 
@@ -32,12 +32,12 @@ Plan: 4 of 4
 Milestone: `v3.0`
 Current Phase: 35
 Total Phases Planned: 8
-Status: Phase 35 complete
+Status: v3.0 shipped and archived
 Current Plan: 4
-Last activity: 2026-04-30 -- Phase 35 lifecycle scheduling and dependency workbench verified
-Last Activity Description: Phase 35 compile, admin UI build, and lifecycle smoke passed
+Last activity: 2026-04-30
+Last Activity Description: v3.0 milestone completed and archived
 
-Progress: [██████████] 100% of planned v3.0 phases complete; ready for final milestone review
+Progress: [██████████] 100% of planned v3.0 phases complete; milestone archived
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Progress: [██████████] 100% of planned v3.0 phases complete;
 - `v1.0`: 6 phases, 19 plans, live backend cutover shipped on 2026-04-13
 - `v2.0`: 6 executed phases, 15 plans, archived with accepted gaps on 2026-04-15
 - `v2.1`: 14 phases, 44 plans, archived with one accepted future slice on 2026-04-19
+- `v3.0`: 8 phases, 33 plans, admin core domain completion and control-plane linkage shipped on 2026-04-30
 
 ## Quick Tasks Completed
 
@@ -70,12 +71,12 @@ Progress: [██████████] 100% of planned v3.0 phases complete;
 
 ### Pending Todos
 
-- Run `/gsd-complete-milestone` when ready to archive v3.0 after final review.
+- Run `/gsd-new-milestone` to define the next milestone requirements and roadmap.
 - Plan the deferred mini-program experiential milestone when ready, including WeChat DevTools/device UAT, route drawing, current chapter map highlighting, and complex gameplay implementations.
+- Plan real material production when ready, including `image-2` generation, material-board slicing, CosyVoice narration/audio, still-image motion video assembly, COS upload, and asset status promotion.
 
 ### Blockers/Concerns
 
-- The repository remains dirty, so commits must stay scoped to intended files only.
 - COS secrets and provider secrets must continue to stay outside tracked files.
 - Local Mongo still emits a warning on this workstation, though the admin HTTP stack remains healthy for verified admin flows.
 - The deferred mini-program experiential acceptance slice remains intentionally out of scope for v3.0 and must be planned as future milestone work.
@@ -83,6 +84,6 @@ Progress: [██████████] 100% of planned v3.0 phases complete;
 
 ## Session Continuity
 
-Last session: 2026-04-30T10:55:00+08:00
-Stopped at: Phase 35 complete; v3.0 ready for final milestone review
-Resume file: .planning/phases/35-operations-lifecycle-scheduling-and-dependency-workbench/35-VERIFICATION.md
+Last session: 2026-04-30T11:10:46+08:00
+Stopped at: v3.0 shipped and archived; ready to start next milestone
+Resume file: .planning/ROADMAP.md

@@ -130,8 +130,53 @@
 - The payoff of the late reconciliation work is high: the milestone can now archive honestly instead of carrying silent ambiguity into the next cycle.
 - Future milestones should budget audit and closeout work upfront rather than adding a reconciliation phase at the very end.
 
+## Milestone: v3.0 - Admin Core Domain Completion and Control-Plane Linkage
+
+**Shipped:** 2026-04-30
+**Phases:** 8 | **Plans:** 33 | **Tasks:** 54 | **Status:** shipped with accepted future slices
+
+### What Was Built
+
+- Shared story-experience orchestration: templates, flows, bindings, overrides, Lottie-aware content/media, POI default experiences, storyline mode, chapter overrides, and governance.
+- Dynamic traveler progress: weighted exploration elements, durable story sessions, recompute/repair operations, audit records, and a Traditional Chinese traveler progress workbench.
+- The `東西方文明的戰火與共生` flagship package: five chapters, story content, rewards, exploration elements, and a traceable planned material manifest.
+- Public runtime and mini-program consumption baseline: compiled traveler-safe story runtime DTOs, content block rendering, Lottie/audio/video support, and unsupported gameplay degradation.
+- Operations lifecycle control: cross-domain status labels, dependency-aware preview, scheduled publish/unpublish/remove, run-due execution, audit/history, and public filtering verification.
+
+### What Worked
+
+- Treating story, user/progress, and operations as one linked milestone prevented another round of isolated CRUD pages.
+- Live smoke scripts gave concrete proof for admin/public integration and made lifecycle/progress regressions easier to catch.
+- Explicitly separating admin-authored configuration from public compiled runtime DTOs reduced mini-program complexity and kept future gameplay work bounded.
+
+### What Was Inefficient
+
+- Some validation artifacts lagged behind the actual verification evidence, especially around older Nyquist rows.
+- Real generated materials were deferred because the manifest, prompt, slicing, upload, and asset-promotion workflow needs its own external-service phase.
+- Full WeChat device acceptance remains outside the local smoke baseline and still needs a dedicated future milestone.
+
+### Patterns Established
+
+- Build reusable authoring substrates first, then expose dedicated workbenches over them.
+- Keep public runtime responses compiled and traveler-safe rather than exposing raw admin JSON.
+- Lifecycle changes should be preview-first, dependency-aware, auditable, and reversible where possible.
+- Material packages should carry provenance, COS keys, local paths, and status before real generation begins.
+
+### Key Lessons
+
+- A truthful planned-material manifest is better than pretending AI assets were generated; generation should be costed, reviewed, uploaded, and promoted as a separate production pipeline.
+- Dynamic exploration should be calculated from weighted elements, not hard-coded percentage increments.
+- Milestone audits are useful but should be kept clean from summary noise so accomplishments do not include bug-fix headings.
+
+### Cost Observations
+
+- `v3.0` carried heavy integration cost because it connected story authoring, progress, operations, public runtime, and mini-program baseline behavior.
+- Verification cost was justified: Phase 34 and 35 smoke checks found contract and lifecycle issues before closeout.
+- Future material-production work will likely spend more on external APIs and asset review than on schema/API scaffolding.
+
 ## Cross-Milestone Trends
 
 - v1.0 established the project's baseline pattern: phased delivery, admin/public contract discipline, and smoke-first verification.
 - v2.0 confirmed that larger control-plane milestones need explicit carryover handling and milestone-audit discipline, not just more implementation volume.
 - v2.1 established a stronger closure standard: late-phase verification, accepted-carryover discipline, and planning-state reconciliation are now part of milestone completion rather than optional cleanup.
+- v3.0 confirmed that the admin platform works best when domain workbenches sit on shared runtime models, and when deferred experiential/material work is named explicitly instead of hidden inside "complete" claims.
