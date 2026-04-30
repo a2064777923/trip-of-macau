@@ -35,11 +35,11 @@
 **Plans:** 5 plans
 
 Plans:
-- [ ] `36-01-PLAN.md` — Backend lineage schema, package-scoped production APIs, guarded promotion/rollback, and tests.
-- [ ] `36-02-PLAN.md` — Local UTF-8-safe still-image/audio production tooling, reward-cue gating, and board slicing.
-- [ ] `36-03-PLAN.md` — Package-scoped production/import/version actions inside the existing story material package page.
-- [ ] `36-04-PLAN.md` — Smoke verification, provider/COS/ffmpeg preflight, and truthful evidence/state updates.
-- [ ] `36-05-PLAN.md` — Dedicated ffmpeg-gated MAT-04 chapter video job definitions and import builder.
+- [x] `36-01-PLAN.md` — Backend lineage schema, package-scoped production APIs, guarded promotion/rollback, and tests.
+- [x] `36-02-PLAN.md` — Local UTF-8-safe still-image/audio production tooling, reward-cue gating, and board slicing.
+- [x] `36-03-PLAN.md` — Package-scoped production/import/version actions inside the existing story material package page.
+- [x] `36-04-PLAN.md` — Smoke verification, provider/COS/ffmpeg preflight, and truthful evidence/state updates.
+- [x] `36-05-PLAN.md` — Dedicated ffmpeg-gated MAT-04 chapter video job definitions and import builder.
 
 **Success criteria:**
 1. Operators can run explicit, logged generation/import flows for images, material boards, audio, and simple still-image motion videos without committing secrets.
@@ -160,4 +160,4 @@ Plans:
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
 | v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-35 | 33/33 | Shipped | 2026-04-30 |
-| v3.1 Material Production and Mini-program Experience Acceptance | 36-40 | 4/5 plans | Active | - |
+| v3.1 Material Production and Mini-program Experience Acceptance | 36-40 | 5/5 Phase 36 plans, requirements blocked | Active | - |

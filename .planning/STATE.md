@@ -4,16 +4,16 @@ milestone: v3.1
 milestone_name: Material Production and Mini-program Experience Acceptance
 current_phase: 36
 current_plan: 5
-status: executing
-stopped_at: Phase 36 Wave 3 completed
-last_updated: "2026-04-30T07:46:58.567Z"
-last_activity: 2026-04-30 -- Phase 36 Wave 3 ffmpeg-gated video jobs completed with local ffmpeg blocker recorded
+status: blocked
+stopped_at: Phase 36 plans executed; live material production smoke blocked
+last_updated: "2026-04-30T08:05:00.000Z"
+last_activity: 2026-04-30 -- Phase 36 smoke/handoff completed; live smoke blocked by missing admin token/provider/COS readiness/ffmpeg subtitle support
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -27,17 +27,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-30)
 
 ## Current Position
 
-Phase: 36 (material-production-pipeline-and-asset-promotion) — EXECUTING
+Phase: 36 (material-production-pipeline-and-asset-promotion) — BLOCKED
 Plan: 5 of 5
 Milestone: `v3.1`
 Current Phase: 36
 Total Phases Planned: 5
-Status: Executing Phase 36
+Status: Phase 36 implementation plans executed, but live requirement verification is blocked
 Current Plan: 5
-Last activity: 2026-04-30 -- Phase 36 Wave 3 ffmpeg-gated video jobs completed with local ffmpeg blocker recorded
-Last Activity Description: Phase 36-05 added concrete MAT-04 chapter video job definitions and a fail-closed ffmpeg subtitle/video import builder; live video output remains blocked until ffmpeg with subtitles support is available locally
+Last activity: 2026-04-30 -- Phase 36 smoke/handoff completed; live smoke blocked by missing admin token/provider/COS readiness/ffmpeg subtitle support
+Last Activity Description: Phase 36-04 added repeatable smoke verification and evidence docs. MAT-01..MAT-05 remain pending until live admin auth, provider/COS, imported asset versions, rollback smoke, and ffmpeg subtitle video generation are verified.
 
-Progress: [########--] 80% of planned v3.1 plans complete
+Progress: [##########] 100% of Phase 36 implementation plans executed; requirements remain blocked by live dependencies
 
 ## Performance Metrics
 
@@ -72,7 +72,7 @@ Progress: [########--] 80% of planned v3.1 plans complete
 
 ### Pending Todos
 
-- Continue Phase 36 Wave 4 smoke verification and handoff with `/gsd-execute-phase 36`.
+- Load live Phase 36 runtime dependencies, then rerun `scripts/local/smoke-phase-36-material-production.ps1`.
 - Keep provider and COS secrets outside tracked files while implementing real asset generation/upload.
 - Install or expose `ffmpeg` with subtitle filter support before claiming `MAT-04` complete.
 - Verify generated assets and package publish/rollback behavior on local services before marking Phase 36 complete.
@@ -80,6 +80,7 @@ Progress: [########--] 80% of planned v3.1 plans complete
 ### Blockers/Concerns
 
 - COS secrets and provider secrets must continue to stay outside tracked files.
+- Phase 36 is blocked on missing `PHASE36_ADMIN_BEARER_TOKEN`, missing `OPENAI_API_KEY`, unset `PHASE36_COS_READY`, missing imported/published asset versions, and missing `ffmpeg` subtitles support.
 - Real `image-2`, CosyVoice, and COS operations may incur external API cost and must remain explicit, logged, and reversible.
 - Local Mongo still emits a warning on this workstation, though the admin HTTP stack remains healthy for verified admin flows.
 - `spring-boot:run` currently needs `-Dmaven.test.skip=true` on this workstation because older server unit tests still reference stale constructor signatures, although `mvn -q -DskipTests compile -f packages/server/pom.xml` passes.
@@ -87,5 +88,5 @@ Progress: [########--] 80% of planned v3.1 plans complete
 ## Session Continuity
 
 Last session: 2026-04-30T04:03:38.191Z
-Stopped at: Phase 36 Wave 3 completed
-Resume file: .planning/phases/36-material-production-pipeline-and-asset-promotion/36-04-PLAN.md
+Stopped at: Phase 36 plans executed; live material production smoke blocked
+Resume file: .planning/phases/36-material-production-pipeline-and-asset-promotion/36-VERIFICATION.md
