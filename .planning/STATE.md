@@ -4,14 +4,14 @@ milestone: v3.1
 milestone_name: Material Production and Mini-program Experience Acceptance
 current_phase: 36
 current_plan: 0
-status: completed
+status: executing
 stopped_at: Phase 36 context gathered
-last_updated: "2026-04-30T04:03:38.195Z"
-last_activity: 2026-04-30 -- v3.1 milestone started from v3.0 accepted future scope
+last_updated: "2026-04-30T06:25:38.678Z"
+last_activity: 2026-04-30 -- Phase 36 planning complete
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
+  total_plans: 5
   completed_plans: 0
   percent: 0
 ---
@@ -27,15 +27,15 @@ See: `.planning/PROJECT.md` (updated 2026-04-30)
 
 ## Current Position
 
-Phase: 36 (material production pipeline and asset promotion) — NOT STARTED
-Plan: —
+Phase: 36 (material production pipeline and asset promotion) — PLANNED
+Plan: 36-01 pending execution
 Milestone: `v3.1`
 Current Phase: 36
 Total Phases Planned: 5
-Status: Defining requirements and roadmap completed
+Status: Ready to execute
 Current Plan: 0
-Last activity: 2026-04-30 -- v3.1 milestone started from v3.0 accepted future scope
-Last Activity Description: Created v3.1 requirements and roadmap for real generated assets plus mini-program story-mode acceptance
+Last activity: 2026-04-30 -- Phase 36 planning complete
+Last Activity Description: Phase 36 planning complete — 5 plans ready
 
 Progress: [----------] 0% of planned v3.1 phases complete
 
@@ -72,9 +72,10 @@ Progress: [----------] 0% of planned v3.1 phases complete
 
 ### Pending Todos
 
-- Start Phase 36 with `/gsd-discuss-phase 36` or `/gsd-plan-phase 36`.
+- Execute Phase 36 with `/gsd-execute-phase 36`.
 - Keep provider and COS secrets outside tracked files while implementing real asset generation/upload.
-- Verify generated assets and mini-program behavior on local services before marking phases complete.
+- Install or expose `ffmpeg` with subtitle filter support before claiming `MAT-04` complete.
+- Verify generated assets and package publish/rollback behavior on local services before marking Phase 36 complete.
 
 ### Blockers/Concerns
 
@@ -87,4 +88,4 @@ Progress: [----------] 0% of planned v3.1 phases complete
 
 Last session: 2026-04-30T04:03:38.191Z
 Stopped at: Phase 36 context gathered
-Resume file: .planning/phases/36-material-production-pipeline-and-asset-promotion/36-CONTEXT.md
+Resume file: .planning/phases/36-material-production-pipeline-and-asset-promotion/36-01-PLAN.md
