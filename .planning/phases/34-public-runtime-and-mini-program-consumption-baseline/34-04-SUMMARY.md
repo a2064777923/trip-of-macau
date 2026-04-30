@@ -76,7 +76,7 @@ completed: 2026-04-30
 ## Task Commits
 
 1. **Task 34-04-01: Public runtime smoke and seed audio coverage** - `3fc2259` (`feat`)
-2. **Tasks 34-04-02 and 34-04-03: Verification docs and traceability** - pending docs commit
+2. **Tasks 34-04-02 and 34-04-03: Verification docs and traceability** - `d4e07a7` (`docs`)
 
 ## Files Created/Modified
 
