@@ -548,6 +548,43 @@ INSERT INTO `story_content_blocks` (
   `primary_asset_id`, `style_preset`, `display_mode`, `visibility_json`, `config_json`,
   `status`, `sort_order`, `published_at`, `deleted`
 )
+SELECT CONCAT(`chapter_code`, '_narration_audio'), 'audio',
+  CONCAT(`title_zht`, '旁白'), CONCAT(`title_en`, ' narration'), CONCAT(`title_zht`, '旁白'), '',
+  '播放本章粵語繁體旁白與環境音，作為故事內容消費端的音頻積木。', 'Chapter narration audio.', '播放本章粵語繁體旁白與環境音，作為故事內容消費端的音頻積木。', '',
+  `summary_zht`, `summary_zht`, `summary_zht`, '',
+  `audio_asset_id`, 'ambient-audio', 'inline_audio', JSON_OBJECT('schemaVersion', 1, 'visibleInStoryMode', TRUE),
+  JSON_OBJECT('schemaVersion', 1, 'assetRole', 'chapter.narration', 'language', 'zh-Hant', 'scriptSource', 'phase33-story-script', 'autoplay', FALSE),
+  'published', 33000 + `chapter_order` * 10 + 3, NOW(), 0
+FROM `phase33_chapters`
+ON DUPLICATE KEY UPDATE
+  `block_type` = VALUES(`block_type`),
+  `title_zh` = VALUES(`title_zh`),
+  `title_en` = VALUES(`title_en`),
+  `title_zht` = VALUES(`title_zht`),
+  `summary_zh` = VALUES(`summary_zh`),
+  `summary_en` = VALUES(`summary_en`),
+  `summary_zht` = VALUES(`summary_zht`),
+  `body_zh` = VALUES(`body_zh`),
+  `body_en` = VALUES(`body_en`),
+  `body_zht` = VALUES(`body_zht`),
+  `primary_asset_id` = VALUES(`primary_asset_id`),
+  `style_preset` = VALUES(`style_preset`),
+  `display_mode` = VALUES(`display_mode`),
+  `visibility_json` = VALUES(`visibility_json`),
+  `config_json` = VALUES(`config_json`),
+  `status` = VALUES(`status`),
+  `sort_order` = VALUES(`sort_order`),
+  `published_at` = VALUES(`published_at`),
+  `deleted` = 0;
+
+INSERT INTO `story_content_blocks` (
+  `code`, `block_type`,
+  `title_zh`, `title_en`, `title_zht`, `title_pt`,
+  `summary_zh`, `summary_en`, `summary_zht`, `summary_pt`,
+  `body_zh`, `body_en`, `body_zht`, `body_pt`,
+  `primary_asset_id`, `style_preset`, `display_mode`, `visibility_json`, `config_json`,
+  `status`, `sort_order`, `published_at`, `deleted`
+)
 SELECT CONCAT(`chapter_code`, '_hero_media'), 'image',
   CONCAT(`location_zht`, '章節主視覺'), CONCAT(`title_en`, ' hero'), CONCAT(`location_zht`, '章節主視覺'), '',
   `summary_zht`, `summary_zht`, `summary_zht`, '',
@@ -620,14 +657,19 @@ JOIN `story_content_blocks` `b`
 WHERE `b`.`code` IN (
   'ch01_mirror_sea_clash_script',
   'ch01_mirror_sea_clash_hero_media',
+  'ch01_mirror_sea_clash_narration_audio',
   'ch02_south_bay_boundary_script',
   'ch02_south_bay_boundary_hero_media',
+  'ch02_south_bay_boundary_narration_audio',
   'ch03_hill_watch_script',
   'ch03_hill_watch_hero_media',
+  'ch03_hill_watch_narration_audio',
   'ch04_fortress_fire_script',
   'ch04_fortress_fire_hero_media',
+  'ch04_fortress_fire_narration_audio',
   'ch05_coexistence_finale_script',
   'ch05_coexistence_finale_hero_media',
+  'ch05_coexistence_finale_narration_audio',
   'ch05_final_mirror_lottie'
 );
 
@@ -664,10 +706,24 @@ INSERT INTO `story_chapter_block_links` (
   `display_condition_json`, `override_config_json`, `status`, `sort_order`, `deleted`
 )
 SELECT `sc`.`id`, `b`.`id`, NULL, NULL, NULL,
+  JSON_OBJECT('schemaVersion', 1, 'condition', 'after_intro'),
+  JSON_OBJECT('schemaVersion', 1, 'source', 'phase33-seed', 'assetRole', 'chapter.narration'),
+  'published',
+  30,
+  0
+FROM `phase33_chapters` `c`
+JOIN `story_chapters` `sc` ON `sc`.`storyline_id` = @storyline_east_west_id AND `sc`.`chapter_order` = `c`.`chapter_order` AND `sc`.`deleted` = 0
+JOIN `story_content_blocks` `b` ON `b`.`code` = CONCAT(`c`.`chapter_code`, '_narration_audio') AND `b`.`deleted` = 0;
+
+INSERT INTO `story_chapter_block_links` (
+  `chapter_id`, `block_id`, `override_title_json`, `override_summary_json`, `override_body_json`,
+  `display_condition_json`, `override_config_json`, `status`, `sort_order`, `deleted`
+)
+SELECT `sc`.`id`, `b`.`id`, NULL, NULL, NULL,
   JSON_OBJECT('schemaVersion', 1, 'condition', 'chapter_finale'),
   JSON_OBJECT('schemaVersion', 1, 'source', 'phase33-seed'),
   'published',
-  30,
+  40,
   0
 FROM `story_chapters` `sc`
 JOIN `story_content_blocks` `b` ON `b`.`code` = 'ch05_final_mirror_lottie' AND `b`.`deleted` = 0
