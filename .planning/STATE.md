@@ -4,9 +4,9 @@ milestone: v3.1
 milestone_name: Material Production and Mini-program Experience Acceptance
 current_phase: 36
 current_plan: 0
-status: defining_requirements
-stopped_at: v3.1 milestone initialized; requirements and roadmap created
-last_updated: "2026-04-30T11:20:00+08:00"
+status: completed
+stopped_at: Phase 36 context gathered
+last_updated: "2026-04-30T04:03:38.195Z"
 last_activity: 2026-04-30 -- v3.1 milestone started from v3.0 accepted future scope
 progress:
   total_phases: 5
@@ -85,6 +85,6 @@ Progress: [----------] 0% of planned v3.1 phases complete
 
 ## Session Continuity
 
-Last session: 2026-04-30T11:20:00+08:00
-Stopped at: v3.1 initialized; ready to discuss or plan Phase 36
-Resume file: .planning/ROADMAP.md
+Last session: 2026-04-30T04:03:38.191Z
+Stopped at: Phase 36 context gathered
+Resume file: .planning/phases/36-material-production-pipeline-and-asset-promotion/36-CONTEXT.md
