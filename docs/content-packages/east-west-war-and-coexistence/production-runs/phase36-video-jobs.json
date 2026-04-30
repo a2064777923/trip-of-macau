@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "packageCode": "east_west_war_and_coexistence_package",
+  "localRoot": "local-content/phase33/east-west-war-and-coexistence",
+  "productionReport": "docs/content-packages/east-west-war-and-coexistence/production-runs/phase36-production-report.json",
+  "jobs": [
+    {
+      "jobCode": "video_ch01_mirror_sea_clash",
+      "chapterCode": "ch01_mirror_sea_clash",
+      "heroImageItemKey": "hero_ch01_ama_coast",
+      "audioItemKey": "audio_ch01_narration",
+      "subtitleTextFile": "subtitles/ch01-mirror-sea-clash.zh-Hant.txt",
+      "outputRelativePath": "video/ch01-mirror-sea-clash.mp4",
+      "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/video/ch01-mirror-sea-clash.mp4",
+      "posterFallbackItemKey": "poster_video_fallback"
+    },
+    {
+      "jobCode": "video_ch02_south_bay_boundary",
+      "chapterCode": "ch02_south_bay_boundary",
+      "heroImageItemKey": "hero_ch02_lilau_boundary",
+      "audioItemKey": "audio_ch02_narration",
+      "subtitleTextFile": "subtitles/ch02-south-bay-boundary.zh-Hant.txt",
+      "outputRelativePath": "video/ch02-south-bay-boundary.mp4",
+      "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/video/ch02-south-bay-boundary.mp4",
+      "posterFallbackItemKey": "poster_video_fallback"
+    },
+    {
+      "jobCode": "video_ch03_hill_watch",
+      "chapterCode": "ch03_hill_watch",
+      "heroImageItemKey": "hero_ch03_hill_watch",
+      "audioItemKey": "audio_ch03_narration",
+      "subtitleTextFile": "subtitles/ch03-hill-watch.zh-Hant.txt",
+      "outputRelativePath": "video/ch03-hill-watch.mp4",
+      "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/video/ch03-hill-watch.mp4",
+      "posterFallbackItemKey": "poster_video_fallback"
+    },
+    {
+      "jobCode": "video_ch04_fortress_fire",
+      "chapterCode": "ch04_fortress_fire",
+      "heroImageItemKey": "hero_ch04_monte_fort",
+      "audioItemKey": "audio_ch04_narration",
+      "subtitleTextFile": "subtitles/ch04-fortress-fire.zh-Hant.txt",
+      "outputRelativePath": "video/ch04-fortress-fire.mp4",
+      "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/video/ch04-fortress-fire.mp4",
+      "posterFallbackItemKey": "poster_video_fallback"
+    },
+    {
+      "jobCode": "video_ch05_coexistence_finale",
+      "chapterCode": "ch05_coexistence_finale",
+      "heroImageItemKey": "hero_ch05_senado_coexistence",
+      "audioItemKey": "audio_ch05_narration",
+      "subtitleTextFile": "subtitles/ch05-coexistence-finale.zh-Hant.txt",
+      "outputRelativePath": "video/ch05-coexistence-finale.mp4",
+      "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/video/ch05-coexistence-finale.mp4",
+      "posterFallbackItemKey": "poster_video_fallback"
+    }
+  ]
+}
