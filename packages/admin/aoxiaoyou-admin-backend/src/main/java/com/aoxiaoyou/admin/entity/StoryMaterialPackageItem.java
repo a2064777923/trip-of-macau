@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDateTime;
+
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("story_material_package_items")
@@ -38,6 +40,15 @@ public class StoryMaterialPackageItem extends BaseEntity {
 
     @TableField("asset_id")
     private Long assetId;
+
+    @TableField("current_version_id")
+    private Long currentVersionId;
+
+    @TableField("current_version_no")
+    private Integer currentVersionNo;
+
+    @TableField("last_produced_at")
+    private LocalDateTime lastProducedAt;
 
     @TableField("local_path")
     private String localPath;

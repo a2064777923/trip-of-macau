@@ -4,11 +4,14 @@ import com.aoxiaoyou.admin.common.api.PageResponse;
 import com.aoxiaoyou.admin.common.exception.BusinessException;
 import com.aoxiaoyou.admin.dto.request.AdminStoryMaterialPackageRequest;
 import com.aoxiaoyou.admin.dto.response.AdminStoryMaterialPackageResponse;
+import com.aoxiaoyou.admin.dto.response.AdminStoryMaterialProductionResponse;
 import com.aoxiaoyou.admin.entity.ContentAsset;
 import com.aoxiaoyou.admin.entity.StoryMaterialPackage;
 import com.aoxiaoyou.admin.entity.StoryMaterialPackageItem;
+import com.aoxiaoyou.admin.entity.StoryMaterialPackageItemVersion;
 import com.aoxiaoyou.admin.mapper.ContentAssetMapper;
 import com.aoxiaoyou.admin.mapper.StoryMaterialPackageItemMapper;
+import com.aoxiaoyou.admin.mapper.StoryMaterialPackageItemVersionMapper;
 import com.aoxiaoyou.admin.mapper.StoryMaterialPackageMapper;
 import com.aoxiaoyou.admin.service.AdminStoryMaterialPackageService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -30,6 +34,7 @@ public class AdminStoryMaterialPackageServiceImpl implements AdminStoryMaterialP
 
     private final StoryMaterialPackageMapper packageMapper;
     private final StoryMaterialPackageItemMapper packageItemMapper;
+    private final StoryMaterialPackageItemVersionMapper versionMapper;
     private final ContentAssetMapper contentAssetMapper;
     private final ObjectMapper objectMapper;
 
@@ -182,6 +187,8 @@ public class AdminStoryMaterialPackageServiceImpl implements AdminStoryMaterialP
         item.setTargetId(request.getTargetId());
         item.setTargetCode(defaultText(request.getTargetCode()));
         item.setAssetId(request.getAssetId());
+        item.setCurrentVersionId(item.getCurrentVersionId());
+        item.setCurrentVersionNo(item.getCurrentVersionNo() == null ? 0 : item.getCurrentVersionNo());
         item.setLocalPath(defaultText(request.getLocalPath()));
         item.setCosObjectKey(defaultText(request.getCosObjectKey()));
         item.setCanonicalUrl(defaultText(request.getCanonicalUrl()));
@@ -337,6 +344,25 @@ public class AdminStoryMaterialPackageServiceImpl implements AdminStoryMaterialP
     }
 
     private AdminStoryMaterialPackageResponse.PackageItem toItem(StoryMaterialPackageItem item) {
+        List<StoryMaterialPackageItemVersion> versions = versionMapper.selectList(activeVersionQuery()
+                .eq(StoryMaterialPackageItemVersion::getPackageItemId, item.getId())
+                .orderByDesc(StoryMaterialPackageItemVersion::getVersionNo)
+                .orderByDesc(StoryMaterialPackageItemVersion::getId));
+        StoryMaterialPackageItemVersion currentVersion = versions.stream()
+                .filter(version -> version.getId() != null && version.getId().equals(item.getCurrentVersionId()))
+                .findFirst()
+                .orElse(versions.stream().findFirst().orElse(null));
+        Integer latestVersionNo = versions.stream()
+                .map(StoryMaterialPackageItemVersion::getVersionNo)
+                .filter(versionNo -> versionNo != null)
+                .max(Comparator.naturalOrder())
+                .orElse(item.getCurrentVersionNo() == null ? 0 : item.getCurrentVersionNo());
+        Long publishedVersionId = versions.stream()
+                .filter(version -> "published".equalsIgnoreCase(defaultText(version.getPromotionStatus())))
+                .sorted(Comparator.comparing(StoryMaterialPackageItemVersion::getVersionNo, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .map(StoryMaterialPackageItemVersion::getId)
+                .findFirst()
+                .orElse(null);
         return AdminStoryMaterialPackageResponse.PackageItem.builder()
                 .id(item.getId())
                 .packageId(item.getPackageId())
@@ -347,6 +373,12 @@ public class AdminStoryMaterialPackageServiceImpl implements AdminStoryMaterialP
                 .targetId(item.getTargetId())
                 .targetCode(item.getTargetCode())
                 .assetId(item.getAssetId())
+                .currentVersionId(item.getCurrentVersionId())
+                .currentVersionNo(item.getCurrentVersionNo())
+                .latestVersionNo(latestVersionNo)
+                .publishedVersionId(publishedVersionId)
+                .versionSummary(toVersionSummary(currentVersion))
+                .lastProducedAt(item.getLastProducedAt())
                 .localPath(item.getLocalPath())
                 .cosObjectKey(item.getCosObjectKey())
                 .canonicalUrl(item.getCanonicalUrl())
@@ -365,6 +397,52 @@ public class AdminStoryMaterialPackageServiceImpl implements AdminStoryMaterialP
                 .createdAt(item.getCreatedAt())
                 .updatedAt(item.getUpdatedAt())
                 .build();
+    }
+
+    private AdminStoryMaterialProductionResponse.PackageItemVersionResponse toVersionSummary(StoryMaterialPackageItemVersion version) {
+        if (version == null) {
+            return null;
+        }
+        return AdminStoryMaterialProductionResponse.PackageItemVersionResponse.builder()
+                .id(version.getId())
+                .packageItemId(version.getPackageItemId())
+                .versionNo(version.getVersionNo())
+                .versionStatus(version.getVersionStatus())
+                .promotionStatus(version.getPromotionStatus())
+                .contentAssetId(version.getContentAssetId())
+                .aiJobId(version.getAiJobId())
+                .aiCandidateId(version.getAiCandidateId())
+                .sourceType(version.getSourceType())
+                .providerName(version.getProviderName())
+                .modelCode(version.getModelCode())
+                .parentVersionId(version.getParentVersionId())
+                .parentItemKey(version.getParentItemKey())
+                .localPath(version.getLocalPath())
+                .cosObjectKey(version.getCosObjectKey())
+                .canonicalUrl(version.getCanonicalUrl())
+                .assetKind(version.getAssetKind())
+                .posterFallbackItemKey(version.getPosterFallbackItemKey())
+                .promptText(version.getPromptText())
+                .scriptText(version.getScriptText())
+                .provenanceJson(version.getProvenanceJson())
+                .cropMetadataJson(version.getCropMetadataJson())
+                .subtitleMetadataJson(version.getSubtitleMetadataJson())
+                .estimatedCost(version.getEstimatedCost())
+                .actualCost(version.getActualCost())
+                .currencyCode(version.getCurrencyCode())
+                .verifiedByAdminId(version.getVerifiedByAdminId())
+                .verifiedByAdminName(version.getVerifiedByAdminName())
+                .verifiedAt(version.getVerifiedAt())
+                .rollbackOfVersionId(version.getRollbackOfVersionId())
+                .createdByAdminId(version.getCreatedByAdminId())
+                .createdByAdminName(version.getCreatedByAdminName())
+                .createdAt(version.getCreatedAt())
+                .updatedAt(version.getUpdatedAt())
+                .build();
+    }
+
+    private LambdaQueryWrapper<StoryMaterialPackageItemVersion> activeVersionQuery() {
+        return new LambdaQueryWrapper<StoryMaterialPackageItemVersion>().eq(StoryMaterialPackageItemVersion::getDeleted, 0);
     }
 
     private String normalizeJson(String value, String fieldName) {

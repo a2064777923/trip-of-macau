@@ -3,8 +3,11 @@ package com.aoxiaoyou.admin.controller;
 import com.aoxiaoyou.admin.common.api.ApiResponse;
 import com.aoxiaoyou.admin.common.api.PageResponse;
 import com.aoxiaoyou.admin.dto.request.AdminStoryMaterialPackageRequest;
+import com.aoxiaoyou.admin.dto.request.AdminStoryMaterialProductionRequest;
 import com.aoxiaoyou.admin.dto.response.AdminStoryMaterialPackageResponse;
+import com.aoxiaoyou.admin.dto.response.AdminStoryMaterialProductionResponse;
 import com.aoxiaoyou.admin.service.AdminStoryMaterialPackageService;
+import com.aoxiaoyou.admin.service.AdminStoryMaterialProductionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +23,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
+import java.util.List;
+
 @Tag(name = "後台故事素材包管理")
 @RestController
 @RequiredArgsConstructor
@@ -27,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminStoryMaterialPackageController {
 
     private final AdminStoryMaterialPackageService storyMaterialPackageService;
+    private final AdminStoryMaterialProductionService storyMaterialProductionService;
 
     @Operation(summary = "分頁查詢故事素材包")
     @GetMapping
@@ -92,5 +99,103 @@ public class AdminStoryMaterialPackageController {
             @PathVariable Long itemId) {
         storyMaterialPackageService.deleteItem(packageId, itemId);
         return ApiResponse.success(Boolean.TRUE);
+    }
+
+    @Operation(summary = "素材包生產前檢查")
+    @PostMapping("/{packageId}/production/preflight")
+    public ApiResponse<AdminStoryMaterialProductionResponse.PreflightResponse> preflightProduction(
+            @PathVariable Long packageId,
+            @RequestBody(required = false) AdminStoryMaterialProductionRequest.PreflightRequest request,
+            HttpServletRequest httpRequest) {
+        return ApiResponse.success(storyMaterialProductionService.preflightPackage(
+                packageId,
+                request == null ? new AdminStoryMaterialProductionRequest.PreflightRequest() : request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername"),
+                readRoles(httpRequest)
+        ));
+    }
+
+    @Operation(summary = "從本地素材包導入並上傳素材")
+    @PostMapping("/{packageId}/items/{itemId}/production/import")
+    public ApiResponse<AdminStoryMaterialProductionResponse.PackageItemVersionResponse> importLocalAsset(
+            @PathVariable Long packageId,
+            @PathVariable Long itemId,
+            @Valid @RequestBody AdminStoryMaterialProductionRequest.LocalImportRequest request,
+            HttpServletRequest httpRequest) {
+        return ApiResponse.success(storyMaterialProductionService.importLocalAsset(
+                packageId,
+                itemId,
+                request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername"),
+                readRoles(httpRequest)
+        ));
+    }
+
+    @Operation(summary = "綁定已定稿 AI 候選素材")
+    @PostMapping("/{packageId}/items/{itemId}/production/bind-candidate")
+    public ApiResponse<AdminStoryMaterialProductionResponse.PackageItemVersionResponse> bindFinalizedCandidate(
+            @PathVariable Long packageId,
+            @PathVariable Long itemId,
+            @Valid @RequestBody AdminStoryMaterialProductionRequest.AiCandidateBindRequest request,
+            HttpServletRequest httpRequest) {
+        return ApiResponse.success(storyMaterialProductionService.bindFinalizedCandidate(
+                packageId,
+                itemId,
+                request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername"),
+                readRoles(httpRequest)
+        ));
+    }
+
+    @Operation(summary = "審批或發布素材版本")
+    @PostMapping("/{packageId}/items/{itemId}/production/promote")
+    public ApiResponse<AdminStoryMaterialProductionResponse.PromotionResult> promoteItemVersion(
+            @PathVariable Long packageId,
+            @PathVariable Long itemId,
+            @RequestBody(required = false) AdminStoryMaterialProductionRequest.PromoteRequest request,
+            HttpServletRequest httpRequest) {
+        return ApiResponse.success(storyMaterialProductionService.promoteItemVersion(
+                packageId,
+                itemId,
+                request == null ? new AdminStoryMaterialProductionRequest.PromoteRequest() : request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername"),
+                readRoles(httpRequest)
+        ));
+    }
+
+    @Operation(summary = "回滾素材項目到歷史版本")
+    @PostMapping("/{packageId}/items/{itemId}/production/rollback")
+    public ApiResponse<AdminStoryMaterialProductionResponse.RollbackResult> rollbackItemVersion(
+            @PathVariable Long packageId,
+            @PathVariable Long itemId,
+            @Valid @RequestBody AdminStoryMaterialProductionRequest.RollbackRequest request,
+            HttpServletRequest httpRequest) {
+        return ApiResponse.success(storyMaterialProductionService.rollbackItemVersion(
+                packageId,
+                itemId,
+                request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername"),
+                readRoles(httpRequest)
+        ));
+    }
+
+    @Operation(summary = "查詢素材項目版本歷史")
+    @GetMapping("/{packageId}/items/{itemId}/versions")
+    public ApiResponse<List<AdminStoryMaterialProductionResponse.PackageItemVersionResponse>> listVersions(
+            @PathVariable Long packageId,
+            @PathVariable Long itemId,
+            @ModelAttribute AdminStoryMaterialProductionRequest.VersionHistoryQuery query) {
+        return ApiResponse.success(storyMaterialProductionService.listVersions(packageId, itemId, query));
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> readRoles(HttpServletRequest request) {
+        Object roles = request.getAttribute("adminRoles");
+        return roles instanceof List<?> list ? (List<String>) list : Collections.emptyList();
     }
 }

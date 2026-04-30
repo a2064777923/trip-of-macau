@@ -82,6 +82,12 @@ public class AdminStoryMaterialPackageResponse {
         private Long targetId;
         private String targetCode;
         private Long assetId;
+        private Long currentVersionId;
+        private Integer currentVersionNo;
+        private Integer latestVersionNo;
+        private Long publishedVersionId;
+        private AdminStoryMaterialProductionResponse.PackageItemVersionResponse versionSummary;
+        private LocalDateTime lastProducedAt;
         private String localPath;
         private String cosObjectKey;
         private String canonicalUrl;
