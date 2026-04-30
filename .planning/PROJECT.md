@@ -25,17 +25,16 @@ Admins can configure the live mini-program experience end-to-end, and the mini-p
 
 ### Active
 
-No active milestone is open.
-
-The next requirements set should be created through `/gsd-new-milestone`.
+- `v3.1` must turn the Phase 33 planned material manifest into real reusable assets where feasible: generated images, sliced material boards, synthesized narration/audio, simple motion videos, COS uploads, QA/provenance, and published asset promotion.
+- `v3.1` must validate the mini-program story-mode experience on WeChat DevTools/device paths: route drawing, current chapter highlighting, content/media rendering, event reporting, pickups, baseline tasks, rewards, and clear degraded states for gameplay not yet implemented.
+- `v3.1` must keep admin/public/client contracts aligned so generated/published assets, story runtime DTOs, user events, and operational readiness checks describe the same state.
 
 ### Out of Scope Until Planned
 
-- Mini-program WeChat DevTools/device experiential acceptance and deeper traveler-facing interaction polish.
-- Real AI material production from the Phase 33 manifest, including `image-2` image generation, material-board slicing, CosyVoice narration/audio, still-image motion video assembly, COS upload, and asset status promotion.
 - Full publish approval workflow beyond direct lifecycle controls.
 - End-user AI runtime feature pages beyond the existing admin AI capability center.
-- `.lottie` packages, sprite sheets, sequence-frame animation systems, and complex AR/speech/puzzle gameplay implementations.
+- Full production-grade AR recognition, speech-input gameplay, and complex puzzle engines beyond baseline placeholders.
+- `.lottie` packages, sprite sheets, and sequence-frame animation systems.
 
 ## Context
 
@@ -48,6 +47,8 @@ This project began from an existing codebase, not a greenfield build.
 `v2.1` absorbed those accepted gaps and pushed further into indoor interaction rules, a dedicated workbench and governance center, AI capability orchestration, reward-domain restructuring, and milestone-close verification.
 
 `v3.0` completed the remaining admin core domains the user called out: story/content management, user/progress management, testing/operations management, and cross-domain linkage. It intentionally deferred full WeChat device experiential UAT and real generated material production.
+
+`v3.1` starts from those deferred slices: it promotes the flagship story material package from planned records toward real generated/uploaded assets, and it validates the mini-program story-mode experience against the live public runtime.
 
 ## Constraints
 
@@ -67,8 +68,17 @@ This project began from an existing codebase, not a greenfield build.
 - `v2.0 Admin Control-Plane Reconstruction` archived on 2026-04-15 with accepted gaps.
 - `v2.1 Interactive Rules Platform and AI Capability Center` archived on 2026-04-19 with one accepted future slice.
 - `v3.0 Admin Core Domain Completion and Control-Plane Linkage` shipped on 2026-04-30.
-- No active milestone is currently open.
-- The truthful next workflow step is `/gsd-new-milestone`.
+- `v3.1 Material Production and Mini-program Experience Acceptance` is now the active milestone.
+- The truthful next workflow step is `/gsd-discuss-phase 36` or `/gsd-plan-phase 36`.
+
+## Current Milestone: v3.1 Material Production and Mini-program Experience Acceptance
+
+**Goal:** Produce and govern real flagship story media assets, then validate the mini-program story-mode runtime against those assets and the live public backend.
+
+**Target features:**
+- AI-assisted material production from the Phase 33 manifest: `image-2` stills/material boards, slicing, CosyVoice narration/audio, simple still-image motion videos, COS upload, and asset promotion.
+- Mini-program story-mode runtime acceptance: route drawing, current chapter highlighting, media/Lottie/audio/video rendering, event reporting, pickups, baseline tasks, rewards, and graceful fallbacks.
+- Operator readiness and UAT: asset QA, provenance, rollback/restore, WeChat DevTools/device checklist, public runtime smoke, and release readiness dashboard.
 
 ## Key Decisions
 
@@ -82,6 +92,7 @@ This project began from an existing codebase, not a greenfield build.
 | Treat story, user, and operations as linked domains | These domains were incomplete when isolated as CRUD pages | `v3.0` shipped them as connected control-plane systems. |
 | Defer mini-program experiential UAT beyond `v3.0` | The user explicitly postponed that slice | `v3.0` validates contracts and baseline rendering, not full device gameplay. |
 | Keep generated materials as planned until a dedicated production phase | Real generation touches external API cost, asset selection, slicing, upload, and DB promotion | Phase 33 records prompts, COS keys, and asset IDs; actual `image-2`/audio/video production remains future scope. |
+| Use `v3.1` for material production and mini-program acceptance | This is a bounded follow-on to v3.0 rather than a new platform rewrite | Phase numbering continues at 36 and targets the planned-material and WeChat-experience slices. |
 
 ## Evolution
 
@@ -98,4 +109,4 @@ This document evolves at phase transitions and milestone boundaries.
 3. Refresh the current-state and milestone sections before reopening planning.
 
 ---
-*Last updated: 2026-04-30 after shipping v3.0*
+*Last updated: 2026-04-30 after starting v3.1*

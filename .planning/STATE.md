@@ -1,43 +1,43 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.0
-milestone_name: Admin Core Domain Completion and Control-Plane Linkage
-current_phase: 35
-current_plan: 4
-status: completed
-stopped_at: v3.0 shipped and archived; ready to start next milestone
-last_updated: "2026-04-30T03:10:46.304Z"
-last_activity: 2026-04-30
+milestone: v3.1
+milestone_name: Material Production and Mini-program Experience Acceptance
+current_phase: 36
+current_plan: 0
+status: defining_requirements
+stopped_at: v3.1 milestone initialized; requirements and roadmap created
+last_updated: "2026-04-30T11:20:00+08:00"
+last_activity: 2026-04-30 -- v3.1 milestone started from v3.0 accepted future scope
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 33
-  completed_plans: 33
-  percent: 100
+  total_phases: 5
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-29)
+See: `.planning/PROJECT.md` (updated 2026-04-30)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Planning the next milestone
+**Current focus:** v3.1 material production and mini-program experience acceptance
 
 ## Current Position
 
-Phase: 35 (operations-lifecycle-scheduling-and-dependency-workbench) — COMPLETE
-Plan: 4 of 4
-Milestone: `v3.0`
-Current Phase: 35
-Total Phases Planned: 8
-Status: v3.0 shipped and archived
-Current Plan: 4
-Last activity: 2026-04-30
-Last Activity Description: v3.0 milestone completed and archived
+Phase: 36 (material production pipeline and asset promotion) — NOT STARTED
+Plan: —
+Milestone: `v3.1`
+Current Phase: 36
+Total Phases Planned: 5
+Status: Defining requirements and roadmap completed
+Current Plan: 0
+Last activity: 2026-04-30 -- v3.1 milestone started from v3.0 accepted future scope
+Last Activity Description: Created v3.1 requirements and roadmap for real generated assets plus mini-program story-mode acceptance
 
-Progress: [██████████] 100% of planned v3.0 phases complete; milestone archived
+Progress: [----------] 0% of planned v3.1 phases complete
 
 ## Performance Metrics
 
@@ -68,22 +68,23 @@ Progress: [██████████] 100% of planned v3.0 phases complete;
 - Complete story/content, user/progress, and operations/testing as linked domains rather than isolated CRUD pages.
 - Phase 34 public runtime smoke is the v3.0 closure evidence for public-runtime linkage, not a substitute for full WeChat device journey UAT.
 - Future material production can assemble video from one or several `image-2` stills with pan/zoom/motion and narration/audio stitching; keep using material boards and local slicing to save generation cost.
+- v3.1 adopts that future scope as active work: real generated assets, asset QA/promotion, and mini-program story-mode acceptance.
 
 ### Pending Todos
 
-- Run `/gsd-new-milestone` to define the next milestone requirements and roadmap.
-- Plan the deferred mini-program experiential milestone when ready, including WeChat DevTools/device UAT, route drawing, current chapter map highlighting, and complex gameplay implementations.
-- Plan real material production when ready, including `image-2` generation, material-board slicing, CosyVoice narration/audio, still-image motion video assembly, COS upload, and asset status promotion.
+- Start Phase 36 with `/gsd-discuss-phase 36` or `/gsd-plan-phase 36`.
+- Keep provider and COS secrets outside tracked files while implementing real asset generation/upload.
+- Verify generated assets and mini-program behavior on local services before marking phases complete.
 
 ### Blockers/Concerns
 
 - COS secrets and provider secrets must continue to stay outside tracked files.
+- Real `image-2`, CosyVoice, and COS operations may incur external API cost and must remain explicit, logged, and reversible.
 - Local Mongo still emits a warning on this workstation, though the admin HTTP stack remains healthy for verified admin flows.
-- The deferred mini-program experiential acceptance slice remains intentionally out of scope for v3.0 and must be planned as future milestone work.
 - `spring-boot:run` currently needs `-Dmaven.test.skip=true` on this workstation because older server unit tests still reference stale constructor signatures, although `mvn -q -DskipTests compile -f packages/server/pom.xml` passes.
 
 ## Session Continuity
 
-Last session: 2026-04-30T11:10:46+08:00
-Stopped at: v3.0 shipped and archived; ready to start next milestone
+Last session: 2026-04-30T11:20:00+08:00
+Stopped at: v3.1 initialized; ready to discuss or plan Phase 36
 Resume file: .planning/ROADMAP.md
