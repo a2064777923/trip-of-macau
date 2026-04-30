@@ -23,7 +23,7 @@
 | 31 | Interaction/Task Template Library and Governance Center | Complete on 2026-04-29 (4/4 plans); reusable interaction/task templates, governance filters, usage tracing, and conflict checks delivered | `OPS-01`, `OPS-03`, `LINK-01` |
 | 32 | Dynamic Exploration and User Progress Model | Complete on 2026-04-29 (6/6 plans); weighted exploration engine, durable story sessions, repair/audit core, admin workbench, and live smoke verification delivered | `USER-01`, `USER-02`, `USER-03`, `USER-04`, `LINK-03` |
 | 33 | Complete Flagship Story Content/Material Package | Complete on 2026-04-29 (4/4 plans); five-chapter flagship story package, manifest traceability, admin material package inspection route, and live smoke verification delivered | `STORY-03`, `VER-02` |
-| 34 | Public Runtime and Mini-program Consumption Baseline | Align public compiled runtime DTOs and mini-program story consumption baseline with the admin-authored experience model | `OPS-02`, `OPS-04`, `LINK-02`, `VER-01` |
+| 34 | Public Runtime and Mini-program Consumption Baseline | Complete on 2026-04-30 (4/4 plans); public compiled runtime DTOs, mini-program story consumption baseline, Phase 34 smoke verification, and truthful deferred WeChat acceptance evidence delivered | `OPS-02`, `OPS-04`, `LINK-02`, `VER-01` |
 
 ## Phase Details
 
@@ -131,7 +131,7 @@ Plans:
 
 ### Phase 34: Public Runtime and Mini-program Consumption Baseline
 
-**Goal:** Align public runtime contracts and the mini-program story consumption baseline with the admin-authored experience model.
+**Goal:** Complete on 2026-04-30 (4/4 plans); align public runtime contracts and the mini-program story consumption baseline with the admin-authored experience model.
 
 **Requirements:** `OPS-02`, `OPS-04`, `LINK-02`, `VER-01`
 
@@ -142,6 +142,16 @@ Plans:
 4. The local stack can verify the admin/public/mini-program baseline while keeping full WeChat experiential acceptance as future scope when explicitly deferred.
 
 **Depends on:** Phases 28, 29, 30, 31, 32, and 33
+
+**Plans:** 4 plans
+
+Plans:
+- [x] `34-01-PLAN.md` — Traveler-safe public runtime metadata and lifecycle filtering
+- [x] `34-02-PLAN.md` — Mini-program runtime API mapping and anonymous-safe event helpers
+- [x] `34-03-PLAN.md` — Story page runtime rendering and unsupported gameplay degradation
+- [x] `34-04-PLAN.md` — Repeatable public runtime smoke, verification docs, and traceability
+
+**Verification evidence:** `34-VERIFICATION.md` records successful backend compile, WeApp build, and `smoke-phase-34-public-runtime.ps1`. Stateful smoke was skipped in this run because `PHASE34_TRAVELER_BEARER_TOKEN` was not set. Full WeChat DevTools experiential acceptance remains deferred.
 
 ## Archived Milestones
 
@@ -184,4 +194,4 @@ Plans:
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
-| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-34 | Phases 28-33 complete (25/25 executed plans); 6/7 phases complete | Active | In progress |
+| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-34 | 29/29 executed plans complete; all 7 phases complete for admin/public runtime scope | Ready for milestone review | 2026-04-30 |

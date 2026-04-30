@@ -22,19 +22,19 @@
 ### Testing, Operations, and Lifecycle Control
 
 - [ ] **OPS-01**: Operators can manage test and operations surfaces for runtime health, key smoke actions, and recent failure visibility without relying on placeholder consoles.
-- [ ] **OPS-02**: Operators can schedule publish, unpublish, and remove actions for content-bearing entities with dependency awareness and impact preview.
+- [ ] **OPS-02**: Operators can schedule publish, unpublish, and remove actions for content-bearing entities with dependency awareness and impact preview. Phase 34 verified only the public-runtime lifecycle/status subset and documented the broader publish scheduling gap.
 - [ ] **OPS-03**: Operators can inspect operational dashboards for content inventory, traveler activity, media and AI pipeline health, and domain-level exceptions.
-- [ ] **OPS-04**: Operators can review domain status lifecycles consistently across maps, sub-maps, POIs, indoor entities, stories, chapters, and reward-bearing content.
+- [ ] **OPS-04**: Operators can review domain status lifecycles consistently across maps, sub-maps, POIs, indoor entities, stories, chapters, and reward-bearing content. Phase 34 verified published traveler-eligible runtime filtering; broader cross-domain lifecycle operations remain incomplete.
 
 ### Cross-domain Linkage and Runtime Alignment
 
 - [ ] **LINK-01**: Story, user, operations, map, POI, indoor, reward, media, and AI domains share canonical bindings and selectors instead of duplicated local-only models.
-- [ ] **LINK-02**: The admin backend and public backend expose aligned contracts for story, progress, and lifecycle data where live runtime consumption depends on those domains.
+- [x] **LINK-02**: The admin backend and public backend expose aligned contracts for story, progress, and lifecycle data where live runtime consumption depends on those domains. Phase 34 completed the public runtime contract and mini-program consumption baseline for the flagship story.
 - [x] **LINK-03**: Derived availability and traveler progress update predictably when source content changes, without hidden manual patching or stale counters.
 
 ### Verification and Seeded Acceptance
 
-- [ ] **VER-01**: `v3.0` domains are verified end to end on the live local admin/public stack with milestone-grade evidence, excluding the explicitly deferred mini-program frontend acceptance slice.
+- [x] **VER-01**: `v3.0` domains are verified end to end on the live local admin/public stack with milestone-grade evidence, excluding the explicitly deferred mini-program frontend acceptance slice. Phase 34 evidence includes backend compile, WeApp build, and public runtime smoke; stateful smoke is available when a traveler token is provided.
 - [x] **VER-02**: The completed `v3.0` domains ship with meaningful seeded examples so operators can validate real story, user-progress, and operations flows without blank states.
 
 ## Future Requirements
@@ -66,13 +66,13 @@
 | USER-03 | Phase 32 | Complete |
 | USER-04 | Phase 32 | Complete |
 | OPS-01 | Phase 31 | Planned |
-| OPS-02 | Phase 34 | Planned |
+| OPS-02 | Phase 34 | Partial - runtime lifecycle/status subset verified; broader publish scheduling remains future gap |
 | OPS-03 | Phase 31 | Planned |
-| OPS-04 | Phase 34 | Planned |
+| OPS-04 | Phase 34 | Partial - public runtime published filtering verified; broader lifecycle workbench consistency remains future gap |
 | LINK-01 | Phase 28 foundation; Phase 29 POI integration; Phase 31 governance | In progress |
-| LINK-02 | Phase 28 foundation; Phase 30 story runtime contract; Phase 34 runtime baseline | In progress |
+| LINK-02 | Phase 28 foundation; Phase 30 story runtime contract; Phase 34 runtime baseline | Complete |
 | LINK-03 | Phase 32 | Complete |
-| VER-01 | Phase 34 | Planned |
+| VER-01 | Phase 34 | Complete |
 | VER-02 | Phase 33 | Complete |
 
 **Coverage:**
@@ -82,4 +82,4 @@
 
 ---
 *Requirements defined: 2026-04-19*
-*Last updated: 2026-04-29 after completing Phase 33 flagship story content/material package*
+*Last updated: 2026-04-30 after completing Phase 34 public runtime and mini-program consumption baseline*

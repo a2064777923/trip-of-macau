@@ -1,9 +1,9 @@
 ---
 phase: 34
 slug: public-runtime-and-mini-program-consumption-baseline
-status: draft
+status: complete
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-04-30
 ---
 
@@ -33,14 +33,14 @@ created: 2026-04-30
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 34-01-01 | 01 | 1 | LINK-02 | T34-01 | Public runtime exposes traveler-safe compiled DTOs, not admin raw payloads | compile | `mvn -q -DskipTests compile -f packages/server/pom.xml` | W0 | pending |
-| 34-01-02 | 01 | 1 | OPS-04 | T34-02 | Public runtime filters to published/traveler-eligible lifecycle state | compile + smoke | `scripts/local/smoke-phase-34-public-runtime.ps1` | W0 | pending |
-| 34-02-01 | 02 | 2 | LINK-02 | T34-03 | Mini-program API helpers centralize auth and runtime calls | build | `npm run build:weapp --prefix packages/client` | W0 | pending |
-| 34-02-02 | 02 | 2 | VER-01 | T34-04 | Runtime mapping preserves fallback data and avoids mock-only truth | build | `npm run build:weapp --prefix packages/client` | W0 | pending |
-| 34-03-01 | 03 | 3 | VER-01 | T34-05 | Story page degrades unsupported gameplay and failed media without blank-screening | build | `npm run build:weapp --prefix packages/client` | W0 | pending |
-| 34-03-02 | 03 | 3 | LINK-02 | T34-06 | Auth-gated event reporting uses existing token/guard behavior | build + smoke | `scripts/local/smoke-phase-34-public-runtime.ps1` | W0 | pending |
-| 34-04-01 | 04 | 4 | VER-01 | T34-07 | Smoke uses env-backed credentials and creates no tracked secrets | smoke | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-34-public-runtime.ps1` | W0 | pending |
-| 34-04-02 | 04 | 4 | OPS-02 | T34-08 | Runtime lifecycle evidence documents publish-status behavior and deferred approval scope | docs | `Select-String` doc checks | W0 | pending |
+| 34-01-01 | 01 | 1 | LINK-02 | T34-01 | Public runtime exposes traveler-safe compiled DTOs, not admin raw payloads | compile | `mvn -q -DskipTests compile -f packages/server/pom.xml` | W0 | status: complete |
+| 34-01-02 | 01 | 1 | OPS-04 | T34-02 | Public runtime filters to published/traveler-eligible lifecycle state | compile + smoke | `scripts/local/smoke-phase-34-public-runtime.ps1` | W0 | status: complete |
+| 34-02-01 | 02 | 2 | LINK-02 | T34-03 | Mini-program API helpers centralize auth and runtime calls | build | `npm run build:weapp --prefix packages/client` | W0 | status: complete |
+| 34-02-02 | 02 | 2 | VER-01 | T34-04 | Runtime mapping preserves fallback data and avoids mock-only truth | build | `npm run build:weapp --prefix packages/client` | W0 | status: complete |
+| 34-03-01 | 03 | 3 | VER-01 | T34-05 | Story page degrades unsupported gameplay and failed media without blank-screening | build | `npm run build:weapp --prefix packages/client` | W0 | status: complete |
+| 34-03-02 | 03 | 3 | LINK-02 | T34-06 | Auth-gated event reporting uses existing token/guard behavior | build + smoke | `scripts/local/smoke-phase-34-public-runtime.ps1` | W0 | status: complete |
+| 34-04-01 | 04 | 4 | VER-01 | T34-07 | Smoke uses env-backed credentials and creates no tracked secrets | smoke | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-34-public-runtime.ps1` | W0 | status: complete |
+| 34-04-02 | 04 | 4 | OPS-02 | T34-08 | Runtime lifecycle evidence documents publish-status behavior and deferred approval scope | docs | `Select-String` doc checks | W0 | status: complete |
 
 ## Wave 0 Requirements
 
@@ -60,11 +60,20 @@ created: 2026-04-30
 
 ## Validation Sign-Off
 
-- [ ] All tasks have automated verification or explicit smoke/manual coverage.
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify.
-- [ ] Wave 0 covers credentials, SQL import, and service prerequisites.
-- [ ] No watch-mode flags.
-- [ ] Feedback latency target < 300s after services are running.
+- [x] All tasks have automated verification or explicit smoke/manual coverage.
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify.
+- [x] Wave 0 covers credentials, SQL import, and service prerequisites.
+- [x] No watch-mode flags.
+- [x] Feedback latency target < 300s after services are running.
 - [x] `nyquist_compliant: true` set in frontmatter.
 
-**Approval:** pending execution.
+## Execution Evidence
+
+- `mvn -q -DskipTests compile -f packages/server/pom.xml` exited `0`.
+- `npm run build:weapp --prefix packages/client` exited `0`.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-34-public-runtime.ps1` exited `0`.
+- Smoke success line: `Phase 34 public runtime smoke passed`.
+- Authenticated section skip recorded: `Skipping authenticated Phase 34 checks because PHASE34_TRAVELER_BEARER_TOKEN is not set`.
+- Full WeChat DevTools experiential acceptance remains deferred.
+
+**Approval:** complete for Phase 34 public-runtime and mini-program build baseline.

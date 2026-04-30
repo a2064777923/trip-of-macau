@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Admin Core Domain Completion and Control-Plane Linkage
 current_phase: 34
-current_plan: 1
-status: executing
-stopped_at: Phase 34 context gathered
-last_updated: "2026-04-29T23:47:56.082Z"
-last_activity: 2026-04-29
+current_plan: 4
+status: ready_for_milestone_review
+stopped_at: Phase 34 completed; v3.0 ready for milestone review
+last_updated: "2026-04-30T08:02:00+08:00"
+last_activity: 2026-04-30
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 29
-  completed_plans: 27
-  percent: 93
+  completed_plans: 29
+  percent: 100
 ---
 
 # Project State
@@ -23,21 +23,21 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-29)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Phase 34 — public-runtime-and-mini-program-consumption-baseline
+**Current focus:** Phase 34 — public-runtime-and-mini-program-consumption-baseline completed; v3.0 ready for milestone review
 
 ## Current Position
 
-Phase: 34 (public-runtime-and-mini-program-consumption-baseline) — EXECUTING
-Plan: 3 of 4
+Phase: 34 (public-runtime-and-mini-program-consumption-baseline) — COMPLETE
+Plan: 4 of 4
 Milestone: `v3.0`
 Current Phase: 34
 Total Phases Planned: 7
-Status: Ready to execute
-Current Plan: 1
-Last activity: 2026-04-29
-Last Activity Description: Phase 34 execution started
+Status: Ready for milestone review
+Current Plan: 4
+Last activity: 2026-04-30
+Last Activity Description: Phase 34 completed with backend compile, WeApp build, and public runtime smoke verification
 
-Progress: [████████░░] 86% of planned v3.0 plans complete; Phase 34 has 4 plans ready for execution
+Progress: [██████████] 100% of planned v3.0 plans complete for admin/public runtime scope
 
 ## Performance Metrics
 
@@ -65,21 +65,24 @@ Progress: [████████░░] 86% of planned v3.0 plans complete; P
 - Preserve explicit carryover instead of faking milestone closure.
 - Treat the deferred mini-program frontend acceptance work as future scope rather than forcing it into `v3.0`.
 - Complete story/content, user/progress, and operations/testing as linked domains rather than isolated CRUD pages.
+- Phase 34 public runtime smoke is the v3.0 closure evidence for public-runtime linkage, not a substitute for full WeChat device journey UAT.
+- Future material production can assemble video from one or several `image-2` stills with pan/zoom/motion and narration/audio stitching; keep using material boards and local slicing to save generation cost.
 
 ### Pending Todos
 
-- Complete the testing and operations management domain.
-- Finish cross-domain linkage and milestone-grade verification for `v3.0`.
+- Review and decide whether to archive `v3.0` with explicit accepted residual gaps for broader OPS publish scheduling/lifecycle workbench coverage.
+- Plan the deferred mini-program experiential milestone when ready, including WeChat DevTools/device UAT, route drawing, current chapter map highlighting, and complex gameplay implementations.
 
 ### Blockers/Concerns
 
 - The repository remains dirty, so commits must stay scoped to intended files only.
 - COS secrets and provider secrets must continue to stay outside tracked files.
 - Local Mongo still emits a warning on this workstation, though the admin HTTP stack remains healthy for verified admin flows.
-- The deferred mini-program experiential acceptance slice is intentionally out of scope for this milestone and must not silently leak back in.
+- The deferred mini-program experiential acceptance slice remains intentionally out of scope for v3.0 and must be planned as future milestone work.
+- `spring-boot:run` currently needs `-Dmaven.test.skip=true` on this workstation because older server unit tests still reference stale constructor signatures, although `mvn -q -DskipTests compile -f packages/server/pom.xml` passes.
 
 ## Session Continuity
 
-Last session: 2026-04-29T23:05:37.616Z
-Stopped at: Phase 34 context gathered
-Resume file: .planning/phases/34-public-runtime-and-mini-program-consumption-baseline/34-CONTEXT.md
+Last session: 2026-04-30T08:02:00+08:00
+Stopped at: Phase 34 complete; v3.0 ready for milestone review
+Resume file: .planning/phases/34-public-runtime-and-mini-program-consumption-baseline/34-HANDOFF.md
