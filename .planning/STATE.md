@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Admin Core Domain Completion and Control-Plane Linkage
-current_phase: 34
-current_plan: 4
-status: ready_for_milestone_review
-stopped_at: Phase 34 completed; v3.0 ready for milestone review
-last_updated: "2026-04-30T08:02:00+08:00"
+current_phase: 35
+current_plan: 0
+status: gap_closure_planned
+stopped_at: Phase 35 added to close v3.0 OPS-02 and OPS-04 milestone audit gaps
+last_updated: "2026-04-30T09:05:00+08:00"
 last_activity: 2026-04-30
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 7
   total_plans: 29
   completed_plans: 29
-  percent: 100
+  percent: 88
 ---
 
 # Project State
@@ -23,21 +23,21 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-29)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Phase 34 — public-runtime-and-mini-program-consumption-baseline completed; v3.0 ready for milestone review
+**Current focus:** Phase 35 — operations lifecycle scheduling and dependency workbench gap closure
 
 ## Current Position
 
-Phase: 34 (public-runtime-and-mini-program-consumption-baseline) — COMPLETE
-Plan: 4 of 4
+Phase: 35 (operations-lifecycle-scheduling-and-dependency-workbench) — READY TO PLAN
+Plan: 0
 Milestone: `v3.0`
-Current Phase: 34
-Total Phases Planned: 7
-Status: Ready for milestone review
-Current Plan: 4
+Current Phase: 35
+Total Phases Planned: 8
+Status: Gap closure phase planned
+Current Plan: 0
 Last activity: 2026-04-30
-Last Activity Description: Phase 34 completed with backend compile, WeApp build, and public runtime smoke verification
+Last Activity Description: Phase 35 added from milestone audit gaps to close OPS-02 and OPS-04 operations lifecycle requirements
 
-Progress: [██████████] 100% of planned v3.0 plans complete for admin/public runtime scope
+Progress: [████████░░] 88% of planned v3.0 phases complete; Phase 35 pending plan/execution
 
 ## Performance Metrics
 
@@ -70,7 +70,7 @@ Progress: [██████████] 100% of planned v3.0 plans complete f
 
 ### Pending Todos
 
-- Review and decide whether to archive `v3.0` with explicit accepted residual gaps for broader OPS publish scheduling/lifecycle workbench coverage.
+- Run `/gsd-plan-phase 35` to plan the operations lifecycle scheduling and dependency workbench gap closure.
 - Plan the deferred mini-program experiential milestone when ready, including WeChat DevTools/device UAT, route drawing, current chapter map highlighting, and complex gameplay implementations.
 
 ### Blockers/Concerns
@@ -84,5 +84,5 @@ Progress: [██████████] 100% of planned v3.0 plans complete f
 ## Session Continuity
 
 Last session: 2026-04-30T08:02:00+08:00
-Stopped at: Phase 34 complete; v3.0 ready for milestone review
-Resume file: .planning/phases/34-public-runtime-and-mini-program-consumption-baseline/34-HANDOFF.md
+Stopped at: Phase 35 added; ready to plan operations lifecycle gap closure
+Resume file: .planning/v3.0-MILESTONE-AUDIT.md

@@ -13,7 +13,7 @@
 
 **Scope note:** The mini-program WeChat DevTools and broader frontend experiential acceptance slice remains intentionally deferred beyond `v3.0`.
 
-**Coverage:** 7 phases, 17 requirements, 17 mapped, 0 unmapped
+**Coverage:** 8 phases, 17 requirements, 17 mapped, 0 unmapped
 
 | # | Phase | Goal | Requirements |
 |---|-------|------|--------------|
@@ -24,6 +24,7 @@
 | 32 | Dynamic Exploration and User Progress Model | Complete on 2026-04-29 (6/6 plans); weighted exploration engine, durable story sessions, repair/audit core, admin workbench, and live smoke verification delivered | `USER-01`, `USER-02`, `USER-03`, `USER-04`, `LINK-03` |
 | 33 | Complete Flagship Story Content/Material Package | Complete on 2026-04-29 (4/4 plans); five-chapter flagship story package, manifest traceability, admin material package inspection route, and live smoke verification delivered | `STORY-03`, `VER-02` |
 | 34 | Public Runtime and Mini-program Consumption Baseline | Complete on 2026-04-30 (4/4 plans); public compiled runtime DTOs, mini-program story consumption baseline, Phase 34 smoke verification, and truthful deferred WeChat acceptance evidence delivered | `OPS-02`, `OPS-04`, `LINK-02`, `VER-01` |
+| 35 | Operations Lifecycle Scheduling and Dependency Workbench | Gap closure phase added from v3.0 milestone audit; complete publish/unpublish/remove scheduling, dependency impact preview, and cross-domain lifecycle review for content-bearing entities | `OPS-02`, `OPS-04` |
 
 ## Phase Details
 
@@ -153,6 +154,23 @@ Plans:
 
 **Verification evidence:** `34-VERIFICATION.md` records successful backend compile, WeApp build, and `smoke-phase-34-public-runtime.ps1`. Stateful smoke was skipped in this run because `PHASE34_TRAVELER_BEARER_TOKEN` was not set. Full WeChat DevTools experiential acceptance remains deferred.
 
+### Phase 35: Operations Lifecycle Scheduling and Dependency Workbench
+
+**Goal:** Close the v3.0 milestone audit gaps for operations lifecycle control by giving admins a dependency-aware workbench to schedule publish, unpublish, and remove actions across content-bearing domains and review consistent lifecycle state.
+
+**Requirements:** `OPS-02`, `OPS-04`
+
+**Gap Closure:** Closes gaps from `.planning/v3.0-MILESTONE-AUDIT.md`.
+
+**Success criteria:**
+1. Operators can schedule publish, unpublish, and remove actions for maps, sub-maps, POIs, indoor buildings/floors/nodes, storylines, chapters, rewards, collectibles, and experience-flow-backed content.
+2. Every lifecycle action has a preview-first dependency impact summary showing inbound bindings, downstream children, public runtime effects, and explorer/progress implications before confirmation.
+3. Lifecycle status labels and allowed transitions are consistent across the supported domains, including `editing`, `reviewing`, `published`, `unpublished`, and `deleted` where the underlying entity supports them.
+4. Scheduled and immediate actions produce audit records and can be inspected from an operations lifecycle history view.
+5. Public runtime filtering remains aligned after lifecycle transitions, and smoke verification covers at least one publish/unpublish/remove flow with dependency preview.
+
+**Depends on:** Phases 28, 29, 30, 31, 32, 33, and 34
+
 ## Archived Milestones
 
 <details>
@@ -194,4 +212,4 @@ Plans:
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
-| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-34 | 29/29 executed plans complete; all 7 phases complete for admin/public runtime scope | Ready for milestone review | 2026-04-30 |
+| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-35 | 29/29 executed plans complete; Phase 35 added for milestone audit gap closure | Gap closure planned | - |

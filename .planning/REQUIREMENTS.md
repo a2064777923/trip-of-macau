@@ -10,7 +10,7 @@
 - [x] **STORY-01**: Operators have a canonical foundation for storylines and location experiences that bind maps, sub-maps, POIs, indoor entities, rewards, and interaction rules through shared selectors, relation links, and default experience flows. Phase 29 completes the dedicated POI default experience workbench.
 - [x] **STORY-02**: Operators have a canonical foundation for chapters that bind POI, task, marker, overlay, indoor, or manual anchors and inherit, disable, replace, or append target experience flows through structured versioned payloads. Phase 30 completes the storyline mode and chapter override workbench.
 - [x] **STORY-03**: Operators can manage reusable story content blocks and Lottie-aware media assets as the shared content substrate; Phase 33 completes the full flagship story content/material package and exposes it through the admin `故事素材包` page.
-- [ ] **STORY-04**: Phase 28-owned story, experience, content-block, and media surfaces no longer route to placeholders or reused pages; Phase 29 through Phase 31 split the specialized workbenches.
+- [x] **STORY-04**: Phase 28-owned story, experience, content-block, and media surfaces no longer route to placeholders or reused pages; Phase 29 through Phase 31 split the specialized workbenches.
 
 ### User and Progress Intelligence
 
@@ -21,14 +21,14 @@
 
 ### Testing, Operations, and Lifecycle Control
 
-- [ ] **OPS-01**: Operators can manage test and operations surfaces for runtime health, key smoke actions, and recent failure visibility without relying on placeholder consoles.
-- [ ] **OPS-02**: Operators can schedule publish, unpublish, and remove actions for content-bearing entities with dependency awareness and impact preview. Phase 34 verified only the public-runtime lifecycle/status subset and documented the broader publish scheduling gap.
-- [ ] **OPS-03**: Operators can inspect operational dashboards for content inventory, traveler activity, media and AI pipeline health, and domain-level exceptions.
-- [ ] **OPS-04**: Operators can review domain status lifecycles consistently across maps, sub-maps, POIs, indoor entities, stories, chapters, and reward-bearing content. Phase 34 verified published traveler-eligible runtime filtering; broader cross-domain lifecycle operations remain incomplete.
+- [x] **OPS-01**: Operators can manage test and operations surfaces for runtime health, key smoke actions, and recent failure visibility without relying on placeholder consoles.
+- [ ] **OPS-02**: Operators can schedule publish, unpublish, and remove actions for content-bearing entities with dependency awareness and impact preview. Phase 35 closes the gap left after Phase 34 verified only the public-runtime lifecycle/status subset.
+- [x] **OPS-03**: Operators can inspect operational dashboards for content inventory, traveler activity, media and AI pipeline health, and domain-level exceptions.
+- [ ] **OPS-04**: Operators can review domain status lifecycles consistently across maps, sub-maps, POIs, indoor entities, stories, chapters, and reward-bearing content. Phase 35 closes the broader cross-domain lifecycle operations gap left after Phase 34 verified published traveler-eligible runtime filtering.
 
 ### Cross-domain Linkage and Runtime Alignment
 
-- [ ] **LINK-01**: Story, user, operations, map, POI, indoor, reward, media, and AI domains share canonical bindings and selectors instead of duplicated local-only models.
+- [x] **LINK-01**: Story, user, operations, map, POI, indoor, reward, media, and AI domains share canonical bindings and selectors instead of duplicated local-only models.
 - [x] **LINK-02**: The admin backend and public backend expose aligned contracts for story, progress, and lifecycle data where live runtime consumption depends on those domains. Phase 34 completed the public runtime contract and mini-program consumption baseline for the flagship story.
 - [x] **LINK-03**: Derived availability and traveler progress update predictably when source content changes, without hidden manual patching or stale counters.
 
@@ -60,16 +60,16 @@
 | STORY-01 | Phase 28 foundation; Phase 29 completion | Complete |
 | STORY-02 | Phase 28 foundation; Phase 30 completion | Complete |
 | STORY-03 | Phase 28 foundation; Phase 33 completion | Complete |
-| STORY-04 | Phase 28 foundation; Phase 29-30 workbenches; Phase 31 specialized governance | In progress |
+| STORY-04 | Phase 28 foundation; Phase 29-30 workbenches; Phase 31 specialized governance | Complete |
 | USER-01 | Phase 32 | Complete |
 | USER-02 | Phase 32 | Complete |
 | USER-03 | Phase 32 | Complete |
 | USER-04 | Phase 32 | Complete |
-| OPS-01 | Phase 31 | Planned |
-| OPS-02 | Phase 34 | Partial - runtime lifecycle/status subset verified; broader publish scheduling remains future gap |
-| OPS-03 | Phase 31 | Planned |
-| OPS-04 | Phase 34 | Partial - public runtime published filtering verified; broader lifecycle workbench consistency remains future gap |
-| LINK-01 | Phase 28 foundation; Phase 29 POI integration; Phase 31 governance | In progress |
+| OPS-01 | Phase 31 | Complete |
+| OPS-02 | Phase 34 runtime lifecycle subset; Phase 35 gap closure | Pending |
+| OPS-03 | Phase 31 | Complete |
+| OPS-04 | Phase 34 public runtime filtering; Phase 35 gap closure | Pending |
+| LINK-01 | Phase 28 foundation; Phase 29 POI integration; Phase 31 governance | Complete |
 | LINK-02 | Phase 28 foundation; Phase 30 story runtime contract; Phase 34 runtime baseline | Complete |
 | LINK-03 | Phase 32 | Complete |
 | VER-01 | Phase 34 | Complete |
@@ -82,4 +82,4 @@
 
 ---
 *Requirements defined: 2026-04-19*
-*Last updated: 2026-04-30 after completing Phase 34 public runtime and mini-program consumption baseline*
+*Last updated: 2026-04-30 after adding Phase 35 milestone gap closure for operations lifecycle control*
