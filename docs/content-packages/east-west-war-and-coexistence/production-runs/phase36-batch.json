@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "packageCode": "east_west_war_and_coexistence_package",
+  "currencyCode": "CNY",
+  "batchCostCeiling": "180.00",
+  "dailyCostCeiling": "360.00",
+  "workItems": [
+    {
+      "itemKey": "story_cover_copper_mirror",
+      "providerName": "openai",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "6.00",
+      "size": "1024x1536"
+    },
+    {
+      "itemKey": "story_banner_route_map",
+      "providerName": "openai",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "6.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "hero_ch01_ama_coast",
+      "providerName": "openai",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "hero_ch02_lilau_boundary",
+      "providerName": "openai",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "hero_ch03_hill_watch",
+      "providerName": "openai",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "hero_ch04_monte_fort",
+      "providerName": "openai",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "hero_ch05_senado_coexistence",
+      "providerName": "openai",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "poster_video_fallback",
+      "providerName": "openai",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "4.00",
+      "size": "1024x1536"
+    },
+    {
+      "itemKey": "pickup_ming_coastal_token",
+      "boardKey": "pickup_ch01_board",
+      "providerName": "openai",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "0.00"
+    },
+    {
+      "itemKey": "title_harbour_witness_final",
+      "boardKey": "title_badge_board",
+      "providerName": "openai",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "0.00"
+    },
+    {
+      "itemKey": "audio_ch01_narration",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v2",
+      "estimatedCost": "2.50",
+      "languageCode": "zh-Hans"
+    },
+    {
+      "itemKey": "audio_ch02_narration",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v2",
+      "estimatedCost": "2.50",
+      "languageCode": "zh-Hans"
+    },
+    {
+      "itemKey": "audio_ch03_narration",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v2",
+      "estimatedCost": "2.50",
+      "languageCode": "zh-Hans"
+    },
+    {
+      "itemKey": "audio_ch04_narration",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v2",
+      "estimatedCost": "2.50",
+      "languageCode": "zh-Hans"
+    },
+    {
+      "itemKey": "audio_ch05_narration",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v2",
+      "estimatedCost": "2.50",
+      "languageCode": "zh-Hans"
+    },
+    {
+      "itemKey": "sfx_reward_unlock",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v2",
+      "estimatedCost": "1.00",
+      "languageCode": "zh-Hans"
+    }
+  ]
+}

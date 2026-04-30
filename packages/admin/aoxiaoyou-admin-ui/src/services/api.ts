@@ -48,6 +48,8 @@ import type {
   AdminStorylineModeOverrideStepPayload,
   AdminStorylineModeRuntimePreview,
   AdminStorylineModeSnapshot,
+  StoryMaterialCandidateBindRequest,
+  StoryMaterialLocalImportRequest,
   AdminIndoorBuildingDetail,
   AdminIndoorBuildingItem,
   AdminIndoorBuildingPayload,
@@ -130,6 +132,11 @@ import type {
   DashboardStats,
   PaginationResponse,
   CityItem,
+  StoryMaterialProductionPreflightRequest,
+  StoryMaterialProductionPreflightResponse,
+  StoryMaterialPromoteRequest,
+  StoryMaterialRollbackRequest,
+  StoryMaterialVersionRecord,
 } from '../types/admin';
 
 export type { CityItem, AdminSubMapItem };
@@ -467,6 +474,12 @@ export interface StoryMaterialPackageItem {
   targetId?: number | null;
   targetCode?: string;
   assetId?: number | null;
+  currentVersionId?: number | null;
+  currentVersionNo?: number;
+  latestVersionNo?: number;
+  publishedVersionId?: number | null;
+  versionSummary?: StoryMaterialVersionRecord | null;
+  lastProducedAt?: string;
   localPath?: string;
   cosObjectKey?: string;
   canonicalUrl?: string;
@@ -582,6 +595,71 @@ export const updateStoryMaterialPackageItem = (
 
 export const deleteStoryMaterialPackageItem = (packageId: number, itemId: number) => {
   return request.delete<boolean>(`/api/admin/v1/content/material-packages/${packageId}/items/${itemId}`);
+};
+
+export const previewStoryMaterialProduction = (
+  packageId: number,
+  data: StoryMaterialProductionPreflightRequest,
+) => {
+  return request.post<StoryMaterialProductionPreflightResponse>(
+    `/api/admin/v1/content/material-packages/${packageId}/production/preflight`,
+    data,
+  );
+};
+
+export const importStoryMaterialItemAsset = (
+  packageId: number,
+  itemId: number,
+  data: StoryMaterialLocalImportRequest,
+) => {
+  return request.post<StoryMaterialVersionRecord>(
+    `/api/admin/v1/content/material-packages/${packageId}/items/${itemId}/production/import`,
+    data,
+  );
+};
+
+export const bindStoryMaterialItemCandidate = (
+  packageId: number,
+  itemId: number,
+  data: StoryMaterialCandidateBindRequest,
+) => {
+  return request.post<StoryMaterialVersionRecord>(
+    `/api/admin/v1/content/material-packages/${packageId}/items/${itemId}/production/bind-candidate`,
+    data,
+  );
+};
+
+export const promoteStoryMaterialItem = (
+  packageId: number,
+  itemId: number,
+  data: StoryMaterialPromoteRequest,
+) => {
+  return request.post<{ version?: StoryMaterialVersionRecord; itemStatus?: string; targetStatus?: string }>(
+    `/api/admin/v1/content/material-packages/${packageId}/items/${itemId}/production/promote`,
+    data,
+  );
+};
+
+export const rollbackStoryMaterialItemVersion = (
+  packageId: number,
+  itemId: number,
+  data: StoryMaterialRollbackRequest,
+) => {
+  return request.post<{ version?: StoryMaterialVersionRecord; itemStatus?: string; currentVersionId?: number }>(
+    `/api/admin/v1/content/material-packages/${packageId}/items/${itemId}/production/rollback`,
+    data,
+  );
+};
+
+export const getStoryMaterialItemVersions = (
+  packageId: number,
+  itemId: number,
+  params?: { pageNum?: number; pageSize?: number; promotionStatus?: string },
+) => {
+  return request.get<StoryMaterialVersionRecord[]>(
+    `/api/admin/v1/content/material-packages/${packageId}/items/${itemId}/versions`,
+    { params },
+  );
 };
 
 export const getAdminStoryContentBlocks = (params?: {

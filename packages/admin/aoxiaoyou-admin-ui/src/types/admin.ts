@@ -2216,6 +2216,137 @@ export interface AdminStorylineModeRuntimePreview {
   validationFindings?: AdminStorylineModeValidationFinding[];
 }
 
+export interface StoryMaterialProductionRiskItem {
+  itemKey?: string;
+  assetKind?: string;
+  estimatedCost?: number | string;
+  riskCode?: string;
+  message?: string;
+  requiresSuperAdminConfirmation?: boolean;
+}
+
+export interface StoryMaterialProductionPreflightRequest {
+  itemKeys?: string[];
+  targetAssetKinds?: string[];
+  estimatedTotalCost?: number | string;
+  dailyCostCeiling?: number | string;
+  batchCostCeiling?: number | string;
+  confirmCostOverride?: boolean;
+  verificationNote?: string;
+}
+
+export interface StoryMaterialProductionPreflightResponse {
+  packageId: number;
+  itemCount?: number;
+  targetAssetKinds?: string[];
+  estimatedTotalCost?: number | string;
+  dailyCostCeiling?: number | string;
+  batchCostCeiling?: number | string;
+  requiresSuperAdminConfirmation?: boolean;
+  verificationNote?: string;
+  risks?: StoryMaterialProductionRiskItem[];
+}
+
+export interface StoryMaterialCropRect {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+}
+
+export interface StoryMaterialLocalImportRequest {
+  relativeLocalPath: string;
+  forcedCosObjectKey?: string;
+  parentVersionId?: number | null;
+  cropRect?: StoryMaterialCropRect | null;
+  subtitlePath?: string;
+  providerName?: string;
+  modelCode?: string;
+  estimatedCost?: number | string;
+  actualCost?: number | string;
+  currencyCode?: string;
+  promptText?: string;
+  scriptText?: string;
+  assetKind?: string;
+  subtitleMetadataJson?: string;
+  posterFallbackItemKey?: string;
+  verificationNote?: string;
+  localeCode?: string;
+}
+
+export interface StoryMaterialCandidateBindRequest {
+  aiCandidateId: number;
+  parentVersionId?: number | null;
+  cropRect?: StoryMaterialCropRect | null;
+  subtitlePath?: string;
+  providerName?: string;
+  modelCode?: string;
+  estimatedCost?: number | string;
+  actualCost?: number | string;
+  currencyCode?: string;
+  promptText?: string;
+  scriptText?: string;
+  assetKind?: string;
+  subtitleMetadataJson?: string;
+  posterFallbackItemKey?: string;
+  verificationNote?: string;
+}
+
+export interface StoryMaterialPromoteRequest {
+  versionId?: number;
+  targetStatus?: string;
+  verificationNote?: string;
+  superAdminConfirmation?: boolean;
+}
+
+export interface StoryMaterialRollbackRequest {
+  rollbackVersionId: number;
+  verificationNote?: string;
+  superAdminConfirmation?: boolean;
+}
+
+export interface StoryMaterialVersionRecord {
+  id: number;
+  packageItemId: number;
+  versionNo?: number;
+  versionStatus?: string;
+  promotionStatus?: string;
+  contentAssetId?: number | null;
+  aiJobId?: number | null;
+  aiCandidateId?: number | null;
+  sourceType?: string;
+  providerName?: string;
+  modelCode?: string;
+  parentVersionId?: number | null;
+  parentItemKey?: string;
+  localPath?: string;
+  cosObjectKey?: string;
+  canonicalUrl?: string;
+  assetKind?: string;
+  posterFallbackItemKey?: string;
+  promptText?: string;
+  scriptText?: string;
+  provenanceJson?: string;
+  cropMetadataJson?: string;
+  subtitleMetadataJson?: string;
+  estimatedCost?: number | string;
+  actualCost?: number | string;
+  currencyCode?: string;
+  verifiedByAdminId?: number | null;
+  verifiedByAdminName?: string;
+  verifiedAt?: string;
+  rollbackOfVersionId?: number | null;
+  createdByAdminId?: number | null;
+  createdByAdminName?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface StoryMaterialVersionPage {
+  list?: StoryMaterialVersionRecord[];
+  total?: number;
+}
+
 export interface AdminExplorationElementItem {
   id: number;
   elementCode: string;

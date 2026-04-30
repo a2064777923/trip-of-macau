@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 1,
+  "results": [
+    {
+      "boardKey": "pickup_ch01_board",
+      "parentItemKey": "pickup_ch01_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_ming_coastal_token",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch01-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch01_board",
+      "parentItemKey": "pickup_ch01_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_fisher_net_fragment",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch01-board.png",
+      "cropRect": {
+        "x": 512,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch01_board",
+      "parentItemKey": "pickup_ch01_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_tax_contract_page",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch01-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch01_board",
+      "parentItemKey": "pickup_ch01_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_ama_mirror_fragment",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch01-board.png",
+      "cropRect": {
+        "x": 512,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch02_board",
+      "parentItemKey": "pickup_ch02_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_boundary_rubbing",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch02-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch02_board",
+      "parentItemKey": "pickup_ch02_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_fort_design_page",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch02-board.png",
+      "cropRect": {
+        "x": 512,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch02_board",
+      "parentItemKey": "pickup_ch02_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_garrison_flask",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch02-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch02_board",
+      "parentItemKey": "pickup_ch02_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_south_bay_mirror_fragment",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch02-board.png",
+      "cropRect": {
+        "x": 512,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch03_board",
+      "parentItemKey": "pickup_ch03_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_patrol_record",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch03-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch03_board",
+      "parentItemKey": "pickup_ch03_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_mission_military_letter",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch03-board.png",
+      "cropRect": {
+        "x": 512,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch03_board",
+      "parentItemKey": "pickup_ch03_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_hill_defense_sketch",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch03-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch03_board",
+      "parentItemKey": "pickup_ch03_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_hill_mirror_fragment",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch03-board.png",
+      "cropRect": {
+        "x": 512,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch04_board",
+      "parentItemKey": "pickup_ch04_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_cannonball_fragment",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch04-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch04_board",
+      "parentItemKey": "pickup_ch04_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_defender_diary",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch04-board.png",
+      "cropRect": {
+        "x": 512,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch04_board",
+      "parentItemKey": "pickup_ch04_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_dutch_fleet_map",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch04-board.png",
+      "cropRect": {
+        "x": 1024,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch04_board",
+      "parentItemKey": "pickup_ch04_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_guardian_oath",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch04-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch04_board",
+      "parentItemKey": "pickup_ch04_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_fortress_mirror_fragment",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch04-board.png",
+      "cropRect": {
+        "x": 512,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch05_board",
+      "parentItemKey": "pickup_ch05_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_coexistence_declaration",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch05-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch05_board",
+      "parentItemKey": "pickup_ch05_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_time_witness_pass",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch05-board.png",
+      "cropRect": {
+        "x": 512,
+        "y": 0,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "pickup_ch05_board",
+      "parentItemKey": "pickup_ch05_board",
+      "parentVersionId": null,
+      "itemKey": "pickup_complete_copper_mirror",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch05-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 512,
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "boardKey": "title_badge_board",
+      "parentItemKey": "title_badge_board",
+      "parentVersionId": null,
+      "itemKey": "title_first_harbour_witness",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\title-badge-board.png",
+      "cropRect": {
+        "x": 0,
+        "y": 0,
+        "width": 384,
+        "height": 384
+      }
+    },
+    {
+      "boardKey": "title_badge_board",
+      "parentItemKey": "title_badge_board",
+      "parentVersionId": null,
+      "itemKey": "title_mirror_sea_explorer",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\title-badge-board.png",
+      "cropRect": {
+        "x": 384,
+        "y": 0,
+        "width": 384,
+        "height": 384
+      }
+    },
+    {
+      "boardKey": "title_badge_board",
+      "parentItemKey": "title_badge_board",
+      "parentVersionId": null,
+      "itemKey": "title_harbour_witness_final",
+      "status": "board_missing",
+      "boardLocalPath": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\title-badge-board.png",
+      "cropRect": {
+        "x": 768,
+        "y": 1536,
+        "width": 384,
+        "height": 384
+      }
+    }
+  ]
+}

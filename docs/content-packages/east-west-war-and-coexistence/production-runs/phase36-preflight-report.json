@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "packageCode": "east_west_war_and_coexistence_package",
+  "manifestPath": "docs\\content-packages\\east-west-war-and-coexistence\\content-manifest.json",
+  "batchPath": "docs\\content-packages\\east-west-war-and-coexistence\\production-runs\\phase36-batch.json",
+  "itemCount": 16,
+  "targetAssetKinds": [
+    "audio",
+    "icon",
+    "image"
+  ],
+  "assetKindCounts": {
+    "image": 8,
+    "icon": 2,
+    "audio": 6
+  },
+  "chapterCounts": {
+    "storyline": 2,
+    "ch01_mirror_sea_clash": 3,
+    "ch02_south_bay_boundary": 2,
+    "ch03_hill_watch": 2,
+    "ch04_fortress_fire": 2,
+    "ch05_coexistence_finale": 3,
+    "global": 2
+  },
+  "usageTargetCounts": {
+    "storyline.cover": 1,
+    "storyline.banner": 1,
+    "chapter.hero": 5,
+    "media.poster-fallback": 1,
+    "pickup.icon": 1,
+    "title.icon": 1,
+    "chapter.narration": 5,
+    "reward.unlock-sfx": 1
+  },
+  "groups": [
+    {
+      "groupKey": "audio::ch01_mirror_sea_clash::chapter.narration",
+      "itemKeys": [
+        "audio_ch01_narration"
+      ]
+    },
+    {
+      "groupKey": "audio::ch02_south_bay_boundary::chapter.narration",
+      "itemKeys": [
+        "audio_ch02_narration"
+      ]
+    },
+    {
+      "groupKey": "audio::ch03_hill_watch::chapter.narration",
+      "itemKeys": [
+        "audio_ch03_narration"
+      ]
+    },
+    {
+      "groupKey": "audio::ch04_fortress_fire::chapter.narration",
+      "itemKeys": [
+        "audio_ch04_narration"
+      ]
+    },
+    {
+      "groupKey": "audio::ch05_coexistence_finale::chapter.narration",
+      "itemKeys": [
+        "audio_ch05_narration"
+      ]
+    },
+    {
+      "groupKey": "audio::global::reward.unlock-sfx",
+      "itemKeys": [
+        "sfx_reward_unlock"
+      ]
+    },
+    {
+      "groupKey": "icon::ch01_mirror_sea_clash::pickup.icon",
+      "itemKeys": [
+        "pickup_ming_coastal_token"
+      ]
+    },
+    {
+      "groupKey": "icon::ch05_coexistence_finale::title.icon",
+      "itemKeys": [
+        "title_harbour_witness_final"
+      ]
+    },
+    {
+      "groupKey": "image::ch01_mirror_sea_clash::chapter.hero",
+      "itemKeys": [
+        "hero_ch01_ama_coast"
+      ]
+    },
+    {
+      "groupKey": "image::ch02_south_bay_boundary::chapter.hero",
+      "itemKeys": [
+        "hero_ch02_lilau_boundary"
+      ]
+    },
+    {
+      "groupKey": "image::ch03_hill_watch::chapter.hero",
+      "itemKeys": [
+        "hero_ch03_hill_watch"
+      ]
+    },
+    {
+      "groupKey": "image::ch04_fortress_fire::chapter.hero",
+      "itemKeys": [
+        "hero_ch04_monte_fort"
+      ]
+    },
+    {
+      "groupKey": "image::ch05_coexistence_finale::chapter.hero",
+      "itemKeys": [
+        "hero_ch05_senado_coexistence"
+      ]
+    },
+    {
+      "groupKey": "image::global::media.poster-fallback",
+      "itemKeys": [
+        "poster_video_fallback"
+      ]
+    },
+    {
+      "groupKey": "image::storyline::storyline.banner",
+      "itemKeys": [
+        "story_banner_route_map"
+      ]
+    },
+    {
+      "groupKey": "image::storyline::storyline.cover",
+      "itemKeys": [
+        "story_cover_copper_mirror"
+      ]
+    }
+  ],
+  "estimatedTotalCost": "54.50",
+  "currencyCode": "CNY",
+  "dailyCostCeiling": "360.00",
+  "batchCostCeiling": "180.00",
+  "requiresSuperAdminConfirmation": false,
+  "riskSummary": [],
+  "utf8SourceStats": {
+    "imagePromptsChars": 1208,
+    "audioScriptsChars": 1052
+  },
+  "dryRun": true
+}

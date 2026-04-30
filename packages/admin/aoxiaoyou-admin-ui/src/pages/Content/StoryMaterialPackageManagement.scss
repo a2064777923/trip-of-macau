@@ -30,3 +30,23 @@
 .story-material-package__item-key {
   max-width: 210px;
 }
+
+.story-material-package__production {
+  border-color: rgba(42, 93, 179, 0.18);
+  background:
+    linear-gradient(135deg, rgba(250, 252, 255, 0.96), rgba(245, 249, 255, 0.92)),
+    radial-gradient(circle at 12% 15%, rgba(58, 141, 255, 0.12), transparent 32%);
+}
+
+.story-material-package__preflight-form {
+  margin-top: 14px;
+}
+
+.story-material-package__version-drawer .ant-drawer-body {
+  background: #f7f9fc;
+}
+
+.story-material-package__version-drawer .ant-table-wrapper {
+  border-radius: 16px;
+  overflow: hidden;
+}
