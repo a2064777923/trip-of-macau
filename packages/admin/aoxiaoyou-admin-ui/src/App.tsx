@@ -13,6 +13,7 @@ import UserProgressWorkbench from './pages/UserManagement/UserProgressWorkbench'
 import StorylineManagement from './pages/StorylineManagement';
 import StorylineModeWorkbench from './pages/StorylineModeWorkbench';
 import OperationsManagement from './pages/OperationsManagement';
+import OperationsLifecycleWorkbench from './pages/OperationsLifecycle/OperationsLifecycleWorkbench';
 import ModulePlaceholder from './pages/ModulePlaceholder';
 import MediaLibraryManagement from './pages/Content/MediaLibraryManagement';
 import StoryChapterWorkbench from './pages/Content/StoryChapterWorkbench';
@@ -216,6 +217,7 @@ function App() {
 
           <Route path="ops/test-console" element={<TestAccount />} />
           <Route path="ops/activities" element={<OperationsManagement />} />
+          <Route path="ops/lifecycle" element={<OperationsLifecycleWorkbench />} />
           <Route
             path="ops/sandbox"
             element={placeholder({

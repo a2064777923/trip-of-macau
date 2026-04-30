@@ -112,6 +112,167 @@ export interface PaginationResponse<T> {
   list: T[];
 }
 
+export interface AdminLifecycleStatus {
+  status: string;
+  canonicalStatus: string;
+  label: string;
+  travelerVisible?: boolean;
+  terminalDeleted?: boolean;
+}
+
+export interface AdminLifecycleTargetType {
+  targetType: string;
+  label: string;
+  tableName?: string;
+  statusMutable?: boolean;
+  publicRuntimeRelevant?: boolean;
+  supportedActions?: string[];
+  childTargetTypes?: string[];
+}
+
+export interface AdminLifecycleTargetSummary {
+  targetType: string;
+  targetTypeLabel: string;
+  targetId: number;
+  targetCode?: string;
+  targetName?: string;
+  status?: string;
+  canonicalStatus?: string;
+  statusLabel?: string;
+  travelerVisible?: boolean;
+  statusMutable?: boolean;
+  publicRuntimeRelevant?: boolean;
+  dependencyCount?: number;
+  supportedActions?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string;
+}
+
+export interface AdminLifecycleTargetQuery {
+  pageNum?: number;
+  pageSize?: number;
+  keyword?: string;
+  targetType?: string;
+  status?: string;
+  cityId?: number;
+  subMapId?: number;
+  storylineId?: number;
+  publishedOnly?: boolean;
+  withDependenciesOnly?: boolean;
+}
+
+export interface AdminLifecycleImpact {
+  id?: number;
+  impactType: string;
+  impactTypeLabel?: string;
+  severity: 'blocking' | 'warning' | 'info' | string;
+  severityLabel?: string;
+  sourceType?: string;
+  sourceId?: number;
+  sourceCode?: string;
+  sourceName?: string;
+  relationType?: string;
+  targetType?: string;
+  targetId?: number;
+  targetCode?: string;
+  targetName?: string;
+  impactSummary?: string;
+  metadata?: Record<string, any>;
+  sortOrder?: number;
+}
+
+export interface AdminLifecyclePreviewRequest {
+  targetType: string;
+  targetId?: number;
+  targetCode?: string;
+  action: string;
+  executionMode?: string;
+  cascade?: boolean;
+  metadata?: Record<string, any>;
+}
+
+export interface AdminLifecyclePreviewResponse {
+  targetType: string;
+  targetTypeLabel?: string;
+  targetId: number;
+  targetCode?: string;
+  targetName?: string;
+  action: string;
+  actionLabel?: string;
+  currentStatus?: string;
+  currentStatusLabel?: string;
+  targetStatus?: string;
+  targetStatusLabel?: string;
+  allowedTransition?: boolean;
+  hasBlockingImpacts?: boolean;
+  previewHash?: string;
+  impactCounters?: Record<string, number>;
+  impacts?: AdminLifecycleImpact[];
+}
+
+export interface AdminLifecycleOperationRequest {
+  targetType: string;
+  targetId?: number;
+  targetCode?: string;
+  action: string;
+  executionMode: string;
+  scheduledAt?: string;
+  reason?: string;
+  previewHash?: string;
+  confirmedImpact: boolean;
+  cascade?: boolean;
+  metadata?: Record<string, any>;
+}
+
+export interface AdminLifecycleOperationSummary {
+  id: number;
+  operationCode: string;
+  targetType: string;
+  targetTypeLabel?: string;
+  targetId?: number;
+  targetCode?: string;
+  targetName?: string;
+  action: string;
+  actionLabel?: string;
+  fromStatus?: string;
+  fromStatusLabel?: string;
+  toStatus?: string;
+  toStatusLabel?: string;
+  operationStatus?: string;
+  operationStatusLabel?: string;
+  previewHash?: string;
+  impactCount?: number;
+  blockingImpactCount?: number;
+  requestedBy?: number;
+  requestedByName?: string;
+  reason?: string;
+  scheduledAt?: string;
+  appliedAt?: string;
+  cancelledAt?: string;
+  failedAt?: string;
+  errorMessage?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AdminLifecycleOperationDetail {
+  summary: AdminLifecycleOperationSummary;
+  impacts?: AdminLifecycleImpact[];
+  preview?: Record<string, any>;
+  request?: Record<string, any>;
+  result?: Record<string, any>;
+}
+
+export interface AdminLifecycleOperationQuery {
+  pageNum?: number;
+  pageSize?: number;
+  targetType?: string;
+  action?: string;
+  operationStatus?: string;
+  keyword?: string;
+}
+
 export type CoordinateSystem = 'GCJ02' | 'WGS84' | 'BD09' | 'UNKNOWN';
 export type SpatialEntityType = 'city' | 'sub_map' | 'poi';
 export type SpatialAssetUsageType = 'cover' | 'gallery' | 'popup' | 'audio' | 'video' | 'map-icon';

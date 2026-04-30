@@ -95,6 +95,7 @@ function resolveSelectedKey(pathname: string) {
     '/users/story-progress',
     '/ops/test-console',
     '/ops/activities',
+    '/ops/lifecycle',
     '/ops/sandbox',
     '/system/admins',
     '/system/roles',
@@ -322,6 +323,11 @@ const DefaultLayout: React.FC = () => {
             key: '/ops/activities',
             icon: <NotificationOutlined />,
             label: <Link to="/ops/activities">營運活動</Link>,
+          },
+          {
+            key: '/ops/lifecycle',
+            icon: <AuditOutlined />,
+            label: <Link to="/ops/lifecycle">生命週期與發布排程</Link>,
           },
           {
             key: '/ops/sandbox',

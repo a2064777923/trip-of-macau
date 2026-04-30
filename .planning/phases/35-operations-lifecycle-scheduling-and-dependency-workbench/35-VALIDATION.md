@@ -1,7 +1,7 @@
 ---
 phase: 35
 slug: operations-lifecycle-scheduling-and-dependency-workbench
-status: planned
+status: complete
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-04-30
@@ -34,17 +34,17 @@ created: 2026-04-30
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 35-01-01 | 01 | 1 | OPS-04 | T35-01 | Canonical lifecycle statuses and compatibility mappings prevent inconsistent public visibility states | compile | `mvn -q -DskipTests compile -f packages/admin/aoxiaoyou-admin-backend/pom.xml` | W0 | status: pending |
-| 35-01-02 | 01 | 1 | OPS-02 | T35-02 | Operation and impact tables persist audit/history without tracked secrets | compile + SQL import | `scripts/local/mysql/init/50-phase-35-lifecycle-operations.sql` | W0 | status: pending |
-| 35-01-03 | 01 | 1 | OPS-02 | T35-03 | DTOs require structured action/target data and versioned preview payloads | compile | `mvn -q -DskipTests compile -f packages/admin/aoxiaoyou-admin-backend/pom.xml` | W0 | status: pending |
-| 35-02-01 | 02 | 2 | OPS-04 | T35-04 | Target registry normalizes cross-domain lifecycle labels and allowed transitions | compile | `mvn -q -DskipTests compile -f packages/admin/aoxiaoyou-admin-backend/pom.xml` | W0 | status: pending |
-| 35-02-02 | 02 | 2 | OPS-02 | T35-05 | Preview-first dependency impact calculation prevents blind destructive changes | compile + smoke | `scripts/local/smoke-phase-35-lifecycle.ps1` | W0 | status: pending |
-| 35-02-03 | 02 | 2 | OPS-02 | T35-06 | Immediate/scheduled operations create auditable records and impacts | compile + smoke | `scripts/local/smoke-phase-35-lifecycle.ps1` | W0 | status: pending |
-| 35-03-01 | 03 | 3 | OPS-04 | T35-07 | Admin UI exposes visible Traditional Chinese status/action controls | build | `npm run build --prefix packages/admin/aoxiaoyou-admin-ui` | W0 | status: pending |
-| 35-03-02 | 03 | 3 | OPS-02 | T35-08 | UI blocks apply/schedule until preview and confirmation are present | build + manual | `npm run build --prefix packages/admin/aoxiaoyou-admin-ui` | W0 | status: pending |
-| 35-04-01 | 04 | 4 | OPS-02 | T35-09 | Smoke uses env-backed auth and does not hardcode credentials | smoke | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-35-lifecycle.ps1` | W0 | status: pending |
-| 35-04-02 | 04 | 4 | OPS-04 | T35-10 | Public runtime filtering remains aligned after lifecycle status changes | smoke | `scripts/local/smoke-phase-35-lifecycle.ps1` | W0 | status: pending |
-| 35-04-03 | 04 | 4 | OPS-02/OPS-04 | T35-11 | Requirements and roadmap traceability are updated only after verified behavior | docs | `Select-String` doc checks | W0 | status: pending |
+| 35-01-01 | 01 | 1 | OPS-04 | T35-01 | Canonical lifecycle statuses and compatibility mappings prevent inconsistent public visibility states | compile | `mvn -q -DskipTests compile -f packages/admin/aoxiaoyou-admin-backend/pom.xml` | W0 | status: complete |
+| 35-01-02 | 01 | 1 | OPS-02 | T35-02 | Operation and impact tables persist audit/history without tracked secrets | compile + SQL import | `scripts/local/mysql/init/50-phase-35-lifecycle-operations.sql` | W0 | status: complete |
+| 35-01-03 | 01 | 1 | OPS-02 | T35-03 | DTOs require structured action/target data and versioned preview payloads | compile | `mvn -q -DskipTests compile -f packages/admin/aoxiaoyou-admin-backend/pom.xml` | W0 | status: complete |
+| 35-02-01 | 02 | 2 | OPS-04 | T35-04 | Target registry normalizes cross-domain lifecycle labels and allowed transitions | compile | `mvn -q -DskipTests compile -f packages/admin/aoxiaoyou-admin-backend/pom.xml` | W0 | status: complete |
+| 35-02-02 | 02 | 2 | OPS-02 | T35-05 | Preview-first dependency impact calculation prevents blind destructive changes | compile + smoke | `scripts/local/smoke-phase-35-lifecycle.ps1` | W0 | status: complete |
+| 35-02-03 | 02 | 2 | OPS-02 | T35-06 | Immediate/scheduled operations create auditable records and impacts | compile + smoke | `scripts/local/smoke-phase-35-lifecycle.ps1` | W0 | status: complete |
+| 35-03-01 | 03 | 3 | OPS-04 | T35-07 | Admin UI exposes visible Traditional Chinese status/action controls | build | `npm run build --prefix packages/admin/aoxiaoyou-admin-ui` | W0 | status: complete |
+| 35-03-02 | 03 | 3 | OPS-02 | T35-08 | UI blocks apply/schedule until preview and confirmation are present | build + manual | `npm run build --prefix packages/admin/aoxiaoyou-admin-ui` | W0 | status: complete |
+| 35-04-01 | 04 | 4 | OPS-02 | T35-09 | Smoke uses env-backed auth and does not hardcode credentials | smoke | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-35-lifecycle.ps1` | W0 | status: complete |
+| 35-04-02 | 04 | 4 | OPS-04 | T35-10 | Public runtime filtering remains aligned after lifecycle status changes | smoke | `scripts/local/smoke-phase-35-lifecycle.ps1` | W0 | status: complete |
+| 35-04-03 | 04 | 4 | OPS-02/OPS-04 | T35-11 | Requirements and roadmap traceability are updated only after verified behavior | docs | `Select-String` doc checks | W0 | status: complete |
 
 ## Wave 0 Requirements
 
@@ -66,12 +66,12 @@ created: 2026-04-30
 
 ## Validation Sign-Off Criteria
 
-- [ ] All tasks have automated verification or explicit smoke/manual coverage.
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify.
-- [ ] Wave 0 covers credentials, SQL import, and service prerequisites.
-- [ ] No watch-mode flags.
-- [ ] Feedback latency target < 300s after services are running.
-- [ ] `nyquist_compliant: true` remains set in frontmatter.
+- [x] All tasks have automated verification or explicit smoke/manual coverage.
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify.
+- [x] Wave 0 covers credentials, SQL import, and service prerequisites.
+- [x] No watch-mode flags.
+- [x] Feedback latency target < 300s after services are running.
+- [x] `nyquist_compliant: true` remains set in frontmatter.
 
 ## Expected Final Evidence
 
@@ -80,3 +80,10 @@ created: 2026-04-30
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-35-lifecycle.ps1` exits `0`.
 - Smoke success line: `Phase 35 lifecycle smoke passed`.
 - `35-VERIFICATION.md` records any public backend smoke prerequisites or skipped checks explicitly.
+
+## Final Evidence
+
+- `mvn -q -DskipTests compile -f packages/admin/aoxiaoyou-admin-backend/pom.xml` exited `0`.
+- `npm run build --prefix packages/admin/aoxiaoyou-admin-ui` exited `0`.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-35-lifecycle.ps1` exited `0`.
+- Public backend filtering check was executed because `http://127.0.0.1:8080` was reachable.

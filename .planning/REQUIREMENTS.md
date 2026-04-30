@@ -22,9 +22,9 @@
 ### Testing, Operations, and Lifecycle Control
 
 - [x] **OPS-01**: Operators can manage test and operations surfaces for runtime health, key smoke actions, and recent failure visibility without relying on placeholder consoles.
-- [ ] **OPS-02**: Operators can schedule publish, unpublish, and remove actions for content-bearing entities with dependency awareness and impact preview. Phase 35 closes the gap left after Phase 34 verified only the public-runtime lifecycle/status subset.
+- [x] **OPS-02**: Operators can schedule publish, unpublish, and remove actions for content-bearing entities with dependency awareness and impact preview. Phase 35 closes the gap left after Phase 34 verified only the public-runtime lifecycle/status subset; verification covers preview, scheduled apply, run-due, audit/history detail, and public filtering restore for `east_west_war_and_coexistence`.
 - [x] **OPS-03**: Operators can inspect operational dashboards for content inventory, traveler activity, media and AI pipeline health, and domain-level exceptions.
-- [ ] **OPS-04**: Operators can review domain status lifecycles consistently across maps, sub-maps, POIs, indoor entities, stories, chapters, and reward-bearing content. Phase 35 closes the broader cross-domain lifecycle operations gap left after Phase 34 verified published traveler-eligible runtime filtering.
+- [x] **OPS-04**: Operators can review domain status lifecycles consistently across maps, sub-maps, POIs, indoor entities, stories, chapters, and reward-bearing content. Phase 35 closes the broader cross-domain lifecycle operations gap with canonical status labels, transition helpers, a cross-domain target registry, and `/admin/#/ops/lifecycle`.
 
 ### Cross-domain Linkage and Runtime Alignment
 
@@ -66,9 +66,9 @@
 | USER-03 | Phase 32 | Complete |
 | USER-04 | Phase 32 | Complete |
 | OPS-01 | Phase 31 | Complete |
-| OPS-02 | Phase 34 runtime lifecycle subset; Phase 35 gap closure | Pending |
+| OPS-02 | Phase 34 runtime lifecycle subset; Phase 35 gap closure | Complete |
 | OPS-03 | Phase 31 | Complete |
-| OPS-04 | Phase 34 public runtime filtering; Phase 35 gap closure | Pending |
+| OPS-04 | Phase 34 public runtime filtering; Phase 35 gap closure | Complete |
 | LINK-01 | Phase 28 foundation; Phase 29 POI integration; Phase 31 governance | Complete |
 | LINK-02 | Phase 28 foundation; Phase 30 story runtime contract; Phase 34 runtime baseline | Complete |
 | LINK-03 | Phase 32 | Complete |
@@ -82,4 +82,4 @@
 
 ---
 *Requirements defined: 2026-04-19*
-*Last updated: 2026-04-30 after adding Phase 35 milestone gap closure for operations lifecycle control*
+*Last updated: 2026-04-30 after verified Phase 35 operations lifecycle gap closure*

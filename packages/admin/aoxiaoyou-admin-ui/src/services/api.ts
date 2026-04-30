@@ -68,6 +68,16 @@ import type {
   AdminIndoorRuleStatusUpdateResult,
   AdminIndoorRuleValidationResponse,
   AdminIndoorTilePreview,
+  AdminLifecycleOperationDetail,
+  AdminLifecycleOperationQuery,
+  AdminLifecycleOperationRequest,
+  AdminLifecycleOperationSummary,
+  AdminLifecyclePreviewRequest,
+  AdminLifecyclePreviewResponse,
+  AdminLifecycleStatus,
+  AdminLifecycleTargetQuery,
+  AdminLifecycleTargetSummary,
+  AdminLifecycleTargetType,
   AdminRewardItem,
   AdminRuntimeSettingItem,
   AdminStampItem,
@@ -2355,3 +2365,41 @@ export const getAiPlatformSettings = () =>
 
 export const updateAiPlatformSettings = (data: AiPlatformSettingsPayload) =>
   request.put<AiPlatformSettings>('/api/admin/v1/ai/platform-settings', data);
+
+const lifecycleBase = '/api/admin/v1/operations/lifecycle';
+
+export const getLifecycleTargetTypes = () =>
+  request.get<AdminLifecycleTargetType[]>(`${lifecycleBase}/target-types`);
+
+export const getLifecycleStatuses = () =>
+  request.get<AdminLifecycleStatus[]>(`${lifecycleBase}/statuses`);
+
+export const getLifecycleTargets = (params?: AdminLifecycleTargetQuery) =>
+  request.get<PaginationResponse<AdminLifecycleTargetSummary>>(`${lifecycleBase}/targets`, {
+    params,
+  });
+
+export const previewLifecycleOperation = (data: AdminLifecyclePreviewRequest) =>
+  request.post<AdminLifecyclePreviewResponse>(`${lifecycleBase}/preview`, data);
+
+export const createLifecycleOperation = (data: AdminLifecycleOperationRequest) =>
+  request.post<AdminLifecycleOperationSummary>(`${lifecycleBase}/operations`, data);
+
+export const applyLifecycleOperation = (
+  operationId: number,
+  data?: { reason?: string; previewHash?: string; confirmedImpact?: boolean },
+) => request.post<AdminLifecycleOperationSummary>(`${lifecycleBase}/operations/${operationId}/apply`, data || {});
+
+export const cancelLifecycleOperation = (operationId: number, data?: { reason?: string }) =>
+  request.post<AdminLifecycleOperationSummary>(`${lifecycleBase}/operations/${operationId}/cancel`, data || {});
+
+export const runDueLifecycleOperations = () =>
+  request.post<AdminLifecycleOperationSummary[]>(`${lifecycleBase}/operations/run-due`);
+
+export const getLifecycleOperations = (params?: AdminLifecycleOperationQuery) =>
+  request.get<PaginationResponse<AdminLifecycleOperationSummary>>(`${lifecycleBase}/operations`, {
+    params,
+  });
+
+export const getLifecycleOperation = (operationId: number) =>
+  request.get<AdminLifecycleOperationDetail>(`${lifecycleBase}/operations/${operationId}`);

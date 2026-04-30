@@ -1,0 +1,100 @@
+.operations-lifecycle {
+  .operations-lifecycle__hero {
+    margin-bottom: 18px;
+    border: 1px solid rgba(49, 65, 96, 0.1);
+    background:
+      radial-gradient(circle at 12% 8%, rgba(72, 120, 255, 0.16), transparent 28%),
+      linear-gradient(135deg, #f7f3e8 0%, #eef5f1 46%, #edf2ff 100%);
+  }
+
+  .operations-lifecycle__summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .operations-lifecycle__filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 12px;
+    align-items: end;
+  }
+
+  .operations-lifecycle__filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .operations-lifecycle__ellipsis {
+    display: inline-block;
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+    white-space: nowrap;
+  }
+
+  .operations-lifecycle__preview-section {
+    margin-bottom: 16px;
+  }
+
+  .operations-lifecycle__impact-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  .operations-lifecycle__impact-card {
+    border: 1px solid rgba(49, 65, 96, 0.1);
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .operations-lifecycle__impact-card--blocking {
+    border-color: rgba(207, 19, 34, 0.3);
+    background: #fff1f0;
+  }
+
+  .operations-lifecycle__impact-card--warning {
+    border-color: rgba(212, 136, 6, 0.32);
+    background: #fffbe6;
+  }
+
+  .operations-lifecycle__impact-card--info {
+    border-color: rgba(22, 119, 255, 0.24);
+    background: #f0f7ff;
+  }
+
+  .operations-lifecycle__drawer-footer {
+    position: sticky;
+    bottom: 0;
+    margin: 20px -24px -24px;
+    padding: 14px 24px;
+    border-top: 1px solid rgba(5, 5, 5, 0.06);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .operations-lifecycle {
+    .operations-lifecycle__summary-grid,
+    .operations-lifecycle__filter-grid,
+    .operations-lifecycle__impact-grid {
+      grid-template-columns: repeat(2, minmax(160px, 1fr));
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .operations-lifecycle {
+    .operations-lifecycle__summary-grid,
+    .operations-lifecycle__filter-grid,
+    .operations-lifecycle__impact-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
