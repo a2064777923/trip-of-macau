@@ -24,7 +24,7 @@
 | 32 | Dynamic Exploration and User Progress Model | Complete on 2026-04-29 (6/6 plans); weighted exploration engine, durable story sessions, repair/audit core, admin workbench, and live smoke verification delivered | `USER-01`, `USER-02`, `USER-03`, `USER-04`, `LINK-03` |
 | 33 | Complete Flagship Story Content/Material Package | Complete on 2026-04-29 (4/4 plans); five-chapter flagship story package, manifest traceability, admin material package inspection route, and live smoke verification delivered | `STORY-03`, `VER-02` |
 | 34 | Public Runtime and Mini-program Consumption Baseline | Complete on 2026-04-30 (4/4 plans); public compiled runtime DTOs, mini-program story consumption baseline, Phase 34 smoke verification, and truthful deferred WeChat acceptance evidence delivered | `OPS-02`, `OPS-04`, `LINK-02`, `VER-01` |
-| 35 | Operations Lifecycle Scheduling and Dependency Workbench | Gap closure phase added from v3.0 milestone audit; complete publish/unpublish/remove scheduling, dependency impact preview, and cross-domain lifecycle review for content-bearing entities | `OPS-02`, `OPS-04` |
+| 35 | Operations Lifecycle Scheduling and Dependency Workbench | Planned on 2026-04-30 (4/4 plans ready); close publish/unpublish/remove scheduling, dependency impact preview, and cross-domain lifecycle review gaps | `OPS-02`, `OPS-04` |
 
 ## Phase Details
 
@@ -171,6 +171,13 @@ Plans:
 
 **Depends on:** Phases 28, 29, 30, 31, 32, 33, and 34
 
+**Plans:** 4 plans
+
+- [x] `35-01-PLAN.md` - Lifecycle schema, canonical statuses, entities, mappers, and DTO contracts
+- [x] `35-02-PLAN.md` - Backend lifecycle target registry, dependency preview, apply/schedule, due runner, and history
+- [x] `35-03-PLAN.md` - Admin Traditional Chinese lifecycle workbench UI and route/sidebar/API wiring
+- [x] `35-04-PLAN.md` - Repeatable lifecycle smoke, verification docs, and milestone traceability
+
 ## Archived Milestones
 
 <details>
@@ -212,4 +219,4 @@ Plans:
 | v1.0 Live Backend Cutover | 1-6 | 19/19 | Complete | 2026-04-13 |
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
-| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-35 | 29/29 executed plans complete; Phase 35 added for milestone audit gap closure | Gap closure planned | - |
+| v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-35 | 29/33 executed plans complete; Phase 35 planned with 4 gap-closure plans | Ready to execute Phase 35 | - |
