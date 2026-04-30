@@ -5,15 +5,15 @@ milestone_name: Material Production and Mini-program Experience Acceptance
 current_phase: 36
 current_plan: 5
 status: executing
-stopped_at: Phase 36 Wave 2 completed
-last_updated: "2026-04-30T10:20:00.000Z"
-last_activity: 2026-04-30 -- Phase 36 Wave 2 tooling and package UI completed
+stopped_at: Phase 36 Wave 3 completed
+last_updated: "2026-04-30T07:46:58.567Z"
+last_activity: 2026-04-30 -- Phase 36 Wave 3 ffmpeg-gated video jobs completed with local ffmpeg blocker recorded
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
-  percent: 60
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State
@@ -34,10 +34,10 @@ Current Phase: 36
 Total Phases Planned: 5
 Status: Executing Phase 36
 Current Plan: 5
-Last activity: 2026-04-30 -- Phase 36 Wave 2 tooling and package UI completed
-Last Activity Description: Phase 36-02 and 36-03 added local production tooling, board slicing config, package-scoped production UI, and version/publish/rollback controls
+Last activity: 2026-04-30 -- Phase 36 Wave 3 ffmpeg-gated video jobs completed with local ffmpeg blocker recorded
+Last Activity Description: Phase 36-05 added concrete MAT-04 chapter video job definitions and a fail-closed ffmpeg subtitle/video import builder; live video output remains blocked until ffmpeg with subtitles support is available locally
 
-Progress: [######----] 60% of planned v3.1 plans complete
+Progress: [########--] 80% of planned v3.1 plans complete
 
 ## Performance Metrics
 
@@ -72,7 +72,7 @@ Progress: [######----] 60% of planned v3.1 plans complete
 
 ### Pending Todos
 
-- Continue Phase 36 Wave 2 local tooling and admin UI execution with `/gsd-execute-phase 36`.
+- Continue Phase 36 Wave 4 smoke verification and handoff with `/gsd-execute-phase 36`.
 - Keep provider and COS secrets outside tracked files while implementing real asset generation/upload.
 - Install or expose `ffmpeg` with subtitle filter support before claiming `MAT-04` complete.
 - Verify generated assets and package publish/rollback behavior on local services before marking Phase 36 complete.
@@ -87,5 +87,5 @@ Progress: [######----] 60% of planned v3.1 plans complete
 ## Session Continuity
 
 Last session: 2026-04-30T04:03:38.191Z
-Stopped at: Phase 36 Wave 2 completed
-Resume file: .planning/phases/36-material-production-pipeline-and-asset-promotion/36-05-PLAN.md
+Stopped at: Phase 36 Wave 3 completed
+Resume file: .planning/phases/36-material-production-pipeline-and-asset-promotion/36-04-PLAN.md
