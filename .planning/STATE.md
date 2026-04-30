@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Material Production and Mini-program Experience Acceptance
 current_phase: 36
-current_plan: 0
+current_plan: 1
 status: executing
 stopped_at: Phase 36 context gathered
-last_updated: "2026-04-30T06:25:38.678Z"
-last_activity: 2026-04-30 -- Phase 36 planning complete
+last_updated: "2026-04-30T06:35:57.003Z"
+last_activity: 2026-04-30 -- Phase 36 execution started
 progress:
   total_phases: 5
   completed_phases: 0
@@ -23,19 +23,19 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-04-30)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** v3.1 material production and mini-program experience acceptance
+**Current focus:** Phase 36 — material-production-pipeline-and-asset-promotion
 
 ## Current Position
 
-Phase: 36 (material production pipeline and asset promotion) — PLANNED
-Plan: 36-01 pending execution
+Phase: 36 (material-production-pipeline-and-asset-promotion) — EXECUTING
+Plan: 1 of 5
 Milestone: `v3.1`
 Current Phase: 36
 Total Phases Planned: 5
-Status: Ready to execute
-Current Plan: 0
-Last activity: 2026-04-30 -- Phase 36 planning complete
-Last Activity Description: Phase 36 planning complete — 5 plans ready
+Status: Executing Phase 36
+Current Plan: 1
+Last activity: 2026-04-30 -- Phase 36 execution started
+Last Activity Description: Phase 36 execution started
 
 Progress: [----------] 0% of planned v3.1 phases complete
 
