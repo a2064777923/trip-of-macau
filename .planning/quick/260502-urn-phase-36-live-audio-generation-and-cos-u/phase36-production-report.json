@@ -1,0 +1,340 @@
+{
+  "schemaVersion": 1,
+  "packageCode": "east_west_war_and_coexistence_package",
+  "liveUpload": true,
+  "promote": "published",
+  "rows": [
+    {
+      "itemKey": "audio_ch01_narration",
+      "localPath": "audio/ch01-narration.mp3",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "2.50",
+      "actualCost": "0",
+      "assetKind": "audio",
+      "status": "published",
+      "audioGenerationStatus": "bound",
+      "manualImportRequired": false,
+      "errorMessage": null,
+      "candidateId": 34,
+      "candidateStorageUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-63-58eb87d3fdc3.mp3",
+      "voice": {
+        "providerId": 4,
+        "providerName": "dashscope-tts",
+        "inventoryCode": "voice-cosyvoice-v3-flash-longanhuan",
+        "voiceCode": "longanhuan",
+        "parentModelCode": "cosyvoice-v3-flash",
+        "displayName": "龙安欢",
+        "languageCodes": [
+          "zh",
+          "en"
+        ]
+      },
+      "job": {
+        "id": 63,
+        "capabilityCode": "admin_tts_generation",
+        "providerId": 4,
+        "inventoryId": 239,
+        "generationType": "audio",
+        "jobStatus": "completed",
+        "latestCandidateId": 34,
+        "finalizedCandidateId": null,
+        "errorMessage": null
+      },
+      "finalizedAssetId": 333062,
+      "versionId": 64,
+      "assetId": 333062,
+      "promotionStatus": "published",
+      "cosObjectKey": "miniapp/assets/audio/2026/05/02/zh-Hant/job-63-58eb87d3fdc3.mp3",
+      "canonicalUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-63-58eb87d3fdc3.mp3",
+      "urlCheck": {
+        "ok": true,
+        "status": 200,
+        "contentType": "audio/mpeg",
+        "contentLength": "661531"
+      }
+    },
+    {
+      "itemKey": "audio_ch02_narration",
+      "localPath": "audio/ch02-narration.mp3",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "2.50",
+      "actualCost": "0",
+      "assetKind": "audio",
+      "status": "published",
+      "audioGenerationStatus": "bound",
+      "manualImportRequired": false,
+      "errorMessage": null,
+      "candidateId": 35,
+      "candidateStorageUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-64-bf0409a8fb7d.mp3",
+      "voice": {
+        "providerId": 4,
+        "providerName": "dashscope-tts",
+        "inventoryCode": "voice-cosyvoice-v3-flash-longanhuan",
+        "voiceCode": "longanhuan",
+        "parentModelCode": "cosyvoice-v3-flash",
+        "displayName": "龙安欢",
+        "languageCodes": [
+          "zh",
+          "en"
+        ]
+      },
+      "job": {
+        "id": 64,
+        "capabilityCode": "admin_tts_generation",
+        "providerId": 4,
+        "inventoryId": 239,
+        "generationType": "audio",
+        "jobStatus": "completed",
+        "latestCandidateId": 35,
+        "finalizedCandidateId": null,
+        "errorMessage": null
+      },
+      "finalizedAssetId": 333063,
+      "versionId": 65,
+      "assetId": 333063,
+      "promotionStatus": "published",
+      "cosObjectKey": "miniapp/assets/audio/2026/05/02/zh-Hant/job-64-bf0409a8fb7d.mp3",
+      "canonicalUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-64-bf0409a8fb7d.mp3",
+      "urlCheck": {
+        "ok": true,
+        "status": 200,
+        "contentType": "audio/mpeg",
+        "contentLength": "522811"
+      }
+    },
+    {
+      "itemKey": "audio_ch03_narration",
+      "localPath": "audio/ch03-narration.mp3",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "2.50",
+      "actualCost": "0",
+      "assetKind": "audio",
+      "status": "published",
+      "audioGenerationStatus": "bound",
+      "manualImportRequired": false,
+      "errorMessage": null,
+      "candidateId": 36,
+      "candidateStorageUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-65-ea0ca37286db.mp3",
+      "voice": {
+        "providerId": 4,
+        "providerName": "dashscope-tts",
+        "inventoryCode": "voice-cosyvoice-v3-flash-longanhuan",
+        "voiceCode": "longanhuan",
+        "parentModelCode": "cosyvoice-v3-flash",
+        "displayName": "龙安欢",
+        "languageCodes": [
+          "zh",
+          "en"
+        ]
+      },
+      "job": {
+        "id": 65,
+        "capabilityCode": "admin_tts_generation",
+        "providerId": 4,
+        "inventoryId": 239,
+        "generationType": "audio",
+        "jobStatus": "completed",
+        "latestCandidateId": 36,
+        "finalizedCandidateId": null,
+        "errorMessage": null
+      },
+      "finalizedAssetId": 333064,
+      "versionId": 66,
+      "assetId": 333064,
+      "promotionStatus": "published",
+      "cosObjectKey": "miniapp/assets/audio/2026/05/02/zh-Hant/job-65-ea0ca37286db.mp3",
+      "canonicalUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-65-ea0ca37286db.mp3",
+      "urlCheck": {
+        "ok": true,
+        "status": 200,
+        "contentType": "audio/mpeg",
+        "contentLength": "527611"
+      }
+    },
+    {
+      "itemKey": "audio_ch04_narration",
+      "localPath": "audio/ch04-narration.mp3",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "2.50",
+      "actualCost": "0",
+      "assetKind": "audio",
+      "status": "published",
+      "audioGenerationStatus": "bound",
+      "manualImportRequired": false,
+      "errorMessage": null,
+      "candidateId": 37,
+      "candidateStorageUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-66-8bccab207e25.mp3",
+      "voice": {
+        "providerId": 4,
+        "providerName": "dashscope-tts",
+        "inventoryCode": "voice-cosyvoice-v3-flash-longanhuan",
+        "voiceCode": "longanhuan",
+        "parentModelCode": "cosyvoice-v3-flash",
+        "displayName": "龙安欢",
+        "languageCodes": [
+          "zh",
+          "en"
+        ]
+      },
+      "job": {
+        "id": 66,
+        "capabilityCode": "admin_tts_generation",
+        "providerId": 4,
+        "inventoryId": 239,
+        "generationType": "audio",
+        "jobStatus": "completed",
+        "latestCandidateId": 37,
+        "finalizedCandidateId": null,
+        "errorMessage": null
+      },
+      "finalizedAssetId": 333065,
+      "versionId": 67,
+      "assetId": 333065,
+      "promotionStatus": "published",
+      "cosObjectKey": "miniapp/assets/audio/2026/05/02/zh-Hant/job-66-8bccab207e25.mp3",
+      "canonicalUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-66-8bccab207e25.mp3",
+      "urlCheck": {
+        "ok": true,
+        "status": 200,
+        "contentType": "audio/mpeg",
+        "contentLength": "502651"
+      }
+    },
+    {
+      "itemKey": "audio_ch05_narration",
+      "localPath": "audio/ch05-narration.mp3",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "2.50",
+      "actualCost": "0",
+      "assetKind": "audio",
+      "status": "published",
+      "audioGenerationStatus": "bound",
+      "manualImportRequired": false,
+      "errorMessage": null,
+      "candidateId": 38,
+      "candidateStorageUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-67-1caf90767e76.mp3",
+      "voice": {
+        "providerId": 4,
+        "providerName": "dashscope-tts",
+        "inventoryCode": "voice-cosyvoice-v3-flash-longanhuan",
+        "voiceCode": "longanhuan",
+        "parentModelCode": "cosyvoice-v3-flash",
+        "displayName": "龙安欢",
+        "languageCodes": [
+          "zh",
+          "en"
+        ]
+      },
+      "job": {
+        "id": 67,
+        "capabilityCode": "admin_tts_generation",
+        "providerId": 4,
+        "inventoryId": 239,
+        "generationType": "audio",
+        "jobStatus": "completed",
+        "latestCandidateId": 38,
+        "finalizedCandidateId": null,
+        "errorMessage": null
+      },
+      "finalizedAssetId": 333066,
+      "versionId": 68,
+      "assetId": 333066,
+      "promotionStatus": "published",
+      "cosObjectKey": "miniapp/assets/audio/2026/05/02/zh-Hant/job-67-1caf90767e76.mp3",
+      "canonicalUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-67-1caf90767e76.mp3",
+      "urlCheck": {
+        "ok": true,
+        "status": 200,
+        "contentType": "audio/mpeg",
+        "contentLength": "518491"
+      }
+    },
+    {
+      "itemKey": "sfx_reward_unlock",
+      "localPath": "audio/sfx-reward-unlock.mp3",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "1.00",
+      "actualCost": "0",
+      "assetKind": "audio",
+      "status": "published",
+      "audioGenerationStatus": "bound",
+      "manualImportRequired": false,
+      "errorMessage": null,
+      "candidateId": 39,
+      "candidateStorageUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-68-416e460d5707.mp3",
+      "voice": {
+        "providerId": 4,
+        "providerName": "dashscope-tts",
+        "inventoryCode": "voice-cosyvoice-v3-flash-longanhuan",
+        "voiceCode": "longanhuan",
+        "parentModelCode": "cosyvoice-v3-flash",
+        "displayName": "龙安欢",
+        "languageCodes": [
+          "zh",
+          "en"
+        ]
+      },
+      "job": {
+        "id": 68,
+        "capabilityCode": "admin_tts_generation",
+        "providerId": 4,
+        "inventoryId": 239,
+        "generationType": "audio",
+        "jobStatus": "completed",
+        "latestCandidateId": 39,
+        "finalizedCandidateId": null,
+        "errorMessage": null
+      },
+      "finalizedAssetId": 333067,
+      "versionId": 69,
+      "assetId": 333067,
+      "promotionStatus": "published",
+      "cosObjectKey": "miniapp/assets/audio/2026/05/02/zh-Hant/job-68-416e460d5707.mp3",
+      "canonicalUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-68-416e460d5707.mp3",
+      "urlCheck": {
+        "ok": true,
+        "status": 200,
+        "contentType": "audio/mpeg",
+        "contentLength": "259291"
+      }
+    }
+  ],
+  "verificationItems": [
+    {
+      "itemKey": "audio_ch01_narration",
+      "versionId": 64,
+      "assetId": 333062,
+      "promotionStatus": "published",
+      "localPath": "audio/ch01-narration.mp3",
+      "cosObjectKey": "miniapp/assets/audio/2026/05/02/zh-Hant/job-63-58eb87d3fdc3.mp3",
+      "canonicalUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-63-58eb87d3fdc3.mp3",
+      "urlCheck": {
+        "ok": true,
+        "status": 200,
+        "contentType": "audio/mpeg",
+        "contentLength": "661531"
+      }
+    },
+    {
+      "itemKey": "sfx_reward_unlock",
+      "versionId": 69,
+      "assetId": 333067,
+      "promotionStatus": "published",
+      "localPath": "audio/sfx-reward-unlock.mp3",
+      "cosObjectKey": "miniapp/assets/audio/2026/05/02/zh-Hant/job-68-416e460d5707.mp3",
+      "canonicalUrl": "https://tripofmacau-1301163924.cos.ap-hongkong.myqcloud.com/miniapp/assets/audio/2026/05/02/zh-Hant/job-68-416e460d5707.mp3",
+      "urlCheck": {
+        "ok": true,
+        "status": 200,
+        "contentType": "audio/mpeg",
+        "contentLength": "259291"
+      }
+    }
+  ]
+}

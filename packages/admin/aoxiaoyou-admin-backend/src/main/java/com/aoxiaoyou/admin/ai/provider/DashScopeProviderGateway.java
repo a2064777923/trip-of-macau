@@ -545,6 +545,10 @@ public class DashScopeProviderGateway {
         );
     }
 
+    public String normalizeProviderAssetUrl(AiProviderConfig provider, String rawUrl) {
+        return normalizeDashScopeAssetUrl(provider, rawUrl);
+    }
+
     public byte[] downloadBinary(AiProviderConfig provider, String url, Integer timeoutMs) {
         try {
             String requestUrl = StringUtils.hasText(url) ? url.trim() : url;

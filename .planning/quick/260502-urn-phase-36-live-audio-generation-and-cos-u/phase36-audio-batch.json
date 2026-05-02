@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "packageCode": "east_west_war_and_coexistence_package",
+  "currencyCode": "CNY",
+  "batchCostCeiling": "20.00",
+  "dailyCostCeiling": "80.00",
+  "workItems": [
+    {
+      "itemKey": "audio_ch01_narration",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "2.50",
+      "languageCode": "zh-Hans"
+    },
+    {
+      "itemKey": "audio_ch02_narration",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "2.50",
+      "languageCode": "zh-Hans"
+    },
+    {
+      "itemKey": "audio_ch03_narration",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "2.50",
+      "languageCode": "zh-Hans"
+    },
+    {
+      "itemKey": "audio_ch04_narration",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "2.50",
+      "languageCode": "zh-Hans"
+    },
+    {
+      "itemKey": "audio_ch05_narration",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "2.50",
+      "languageCode": "zh-Hans"
+    },
+    {
+      "itemKey": "sfx_reward_unlock",
+      "providerName": "bailian",
+      "modelCode": "cosyvoice-v3-flash",
+      "estimatedCost": "1.00",
+      "languageCode": "zh-Hans"
+    }
+  ]
+}

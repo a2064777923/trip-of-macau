@@ -15,6 +15,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from http.client import HTTPResponse
 from urllib.parse import urlparse
 from pathlib import Path
 from typing import Any
@@ -108,7 +109,7 @@ def section_text(markdown: str, ref: str | None) -> str:
             heading = stripped[3:].strip().lower().replace(" ", "-")
             if capturing:
                 break
-            capturing = heading == anchor
+            capturing = heading == anchor or heading.startswith(anchor + "-")
         elif capturing:
             captured.append(line)
     return "\n".join(captured).strip()
@@ -139,6 +140,115 @@ def api_request(method: str, backend: str, path: str, token: str, payload: dict[
     if envelope.get("code") not in (0, 200, None) and envelope.get("success") is not True:
         raise RuntimeError(f"API failed for {method} {path}: {envelope}")
     return envelope.get("data", envelope)
+
+
+def finalize_candidate(backend: str, token: str, candidate_id: int, asset_kind: str) -> dict[str, Any]:
+    return api_request(
+        "POST",
+        backend,
+        f"/api/admin/v1/ai/generation-candidates/{candidate_id}/finalize",
+        token,
+        {
+            "assetKind": asset_kind,
+            "localeCode": "zh-Hant",
+            "status": "published",
+        },
+    )
+
+
+def bind_candidate_version(
+    backend: str,
+    token: str,
+    package_id: int,
+    item_id: int,
+    candidate_id: int,
+    payload: dict[str, Any],
+    promote: str | None,
+) -> dict[str, Any]:
+    version = api_request(
+        "POST",
+        backend,
+        f"/api/admin/v1/content/material-packages/{package_id}/items/{item_id}/production/bind-candidate",
+        token,
+        {"aiCandidateId": candidate_id, **payload},
+    )
+    if promote:
+        promoted = api_request(
+            "POST",
+            backend,
+            f"/api/admin/v1/content/material-packages/{package_id}/items/{item_id}/production/promote",
+            token,
+            {
+                "versionId": version.get("id"),
+                "targetStatus": promote,
+                "verificationNote": "Phase 36 live AI candidate production verification",
+                "superAdminConfirmation": True,
+            },
+        )
+        version = promoted.get("version", version)
+    return version
+
+
+def verify_public_url(url: str | None) -> dict[str, Any] | None:
+    if not url:
+        return None
+    request = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "phase36-material-smoke/1.0"})
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            return response_summary(response)
+    except urllib.error.HTTPError as exc:
+        if exc.code not in (403, 405):
+            return {"ok": False, "status": exc.code, "error": exc.reason}
+    except Exception as exc:
+        return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+    try:
+        range_request = urllib.request.Request(
+            url,
+            method="GET",
+            headers={"User-Agent": "phase36-material-smoke/1.0", "Range": "bytes=0-0"},
+        )
+        with urllib.request.urlopen(range_request, timeout=20) as response:
+            return response_summary(response)
+    except urllib.error.HTTPError as exc:
+        return {"ok": False, "status": exc.code, "error": exc.reason}
+    except Exception as exc:
+        return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+
+
+def response_summary(response: HTTPResponse) -> dict[str, Any]:
+    status = getattr(response, "status", response.getcode())
+    return {
+        "ok": 200 <= status < 400,
+        "status": status,
+        "contentType": response.headers.get("Content-Type"),
+        "contentLength": response.headers.get("Content-Length"),
+    }
+
+
+def compact_voice_summary(voice: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "providerId": voice.get("providerId"),
+        "providerName": voice.get("providerName"),
+        "inventoryCode": voice.get("inventoryCode"),
+        "voiceCode": voice.get("voiceCode"),
+        "parentModelCode": voice.get("parentModelCode"),
+        "displayName": voice.get("displayName"),
+        "languageCodes": voice.get("languageCodes"),
+    }
+
+
+def compact_job_summary(job: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": job.get("id"),
+        "capabilityCode": job.get("capabilityCode"),
+        "providerId": job.get("providerId"),
+        "inventoryId": job.get("inventoryId"),
+        "generationType": job.get("generationType"),
+        "jobStatus": job.get("jobStatus"),
+        "latestCandidateId": job.get("latestCandidateId"),
+        "finalizedCandidateId": job.get("finalizedCandidateId"),
+        "errorMessage": job.get("errorMessage"),
+    }
 
 
 def maybe_generate_openai_image(item: dict[str, Any], prompt_text: str, output_path: Path, args: argparse.Namespace) -> str:
@@ -216,24 +326,41 @@ def package_detail(backend: str, token: str, package_code: str) -> dict[str, Any
 
 def run_audio_job(backend: str, token: str, item: dict[str, Any], script_text: str) -> dict[str, Any]:
     # Uses existing admin AI endpoints; provider credentials stay backend-side.
-    voices = api_request("GET", backend, "/api/admin/v1/ai/voices?languageCode=zh-Hans", token)
-    voice = next((row for row in voices if row.get("availabilityStatus") in (None, "available")), None)
+    voices = api_request("GET", backend, "/api/admin/v1/ai/voices?modelCode=cosyvoice-v3-flash&languageCode=zh", token)
+    voice = next(
+        (
+            row for row in voices
+            if row.get("availabilityStatus") in (None, "available")
+            and row.get("providerName") == "dashscope-tts"
+            and row.get("voiceCode")
+        ),
+        None,
+    )
+    if not voice:
+        voice = next((row for row in voices if row.get("availabilityStatus") in (None, "available") and row.get("voiceCode")), None)
     if not voice:
         return {"audioGenerationStatus": "manual_import_required", "manualImportRequired": True, "errorMessage": "No available Mandarin voice"}
+    language_code = item.get("languageCode") or "zh-Hans"
+    request_payload = {
+        "voice": voice.get("voiceCode"),
+        "format": "mp3",
+        "sampleRate": 24000,
+        "languageCode": language_code,
+    }
     job = api_request(
         "POST",
         backend,
         AI_JOB_ROUTE,
         token,
         {
-            "capabilityCode": "admin_voice_synthesis",
+            "capabilityCode": "admin_tts_generation",
             "providerId": voice.get("providerId"),
-            "inventoryId": voice.get("inventoryId"),
             "generationType": "audio",
             "sourceScope": "story_material_package",
             "promptTitle": item.get("itemKey"),
             "promptText": script_text,
-            "promptVariablesJson": json.dumps({"voiceCode": voice.get("voiceCode"), "languageCode": "zh-Hans"}, ensure_ascii=False),
+            "promptVariablesJson": json.dumps({"voiceCode": voice.get("voiceCode"), "languageCode": language_code}, ensure_ascii=False),
+            "requestPayloadJson": json.dumps(request_payload, ensure_ascii=False),
         },
     )
     for _ in range(5):
@@ -246,7 +373,13 @@ def run_audio_job(backend: str, token: str, item: dict[str, Any], script_text: s
     if not candidate:
         status = "retry_required" if job.get("jobStatus") == "failed" else "manual_import_required"
         return {"audioGenerationStatus": status, "manualImportRequired": status == "manual_import_required", "errorMessage": job.get("errorMessage")}
-    return {"audioGenerationStatus": "ready_to_bind", "candidateId": candidate.get("id"), "voice": voice, "job": job}
+    return {
+        "audioGenerationStatus": "ready_to_bind",
+        "candidateId": candidate.get("id"),
+        "candidateStorageUrl": candidate.get("storageUrl"),
+        "voice": compact_voice_summary(voice),
+        "job": compact_job_summary(job),
+    }
 
 
 def main() -> int:
@@ -355,8 +488,53 @@ def main() -> int:
                     "promotionStatus": version.get("promotionStatus"),
                     "cosObjectKey": version.get("cosObjectKey"),
                     "canonicalUrl": version.get("canonicalUrl"),
+                    "urlCheck": verify_public_url(version.get("canonicalUrl")),
                     "status": version.get("promotionStatus") or row["status"],
                 })
+        if args.upload and package and asset_kind == "audio" and row.get("candidateId"):
+            item_row = next((item for item in package.get("items", []) if item.get("itemKey") == item_key), None)
+            if item_row:
+                try:
+                    finalized_job = finalize_candidate(args.backend, args.token, int(row["candidateId"]), "audio")
+                    finalized_candidate = next(
+                        (
+                            candidate for candidate in finalized_job.get("candidates", [])
+                            if int(candidate.get("id")) == int(row.get("candidateId"))
+                        ),
+                        None,
+                    )
+                    version = bind_candidate_version(
+                        args.backend,
+                        args.token,
+                        package["id"],
+                        item_row["id"],
+                        int(row["candidateId"]),
+                        {
+                            "providerName": entry.get("providerName"),
+                            "modelCode": entry.get("modelCode"),
+                            "estimatedCost": entry.get("estimatedCost", "0"),
+                            "assetKind": "audio",
+                            "promptText": script_text,
+                            "scriptText": script_text,
+                            "verificationNote": "Phase 36 generated audio candidate import",
+                        },
+                        args.promote,
+                    )
+                    row.update({
+                        "audioGenerationStatus": "bound",
+                        "finalizedAssetId": finalized_candidate.get("finalizedAssetId") if finalized_candidate else None,
+                        "versionId": version.get("id"),
+                        "assetId": version.get("contentAssetId"),
+                        "promotionStatus": version.get("promotionStatus"),
+                        "cosObjectKey": version.get("cosObjectKey"),
+                        "canonicalUrl": version.get("canonicalUrl"),
+                        "urlCheck": verify_public_url(version.get("canonicalUrl")),
+                        "status": version.get("promotionStatus") or "uploaded",
+                    })
+                except Exception as exc:
+                    row["status"] = "retry_required"
+                    row["audioGenerationStatus"] = "bind_failed"
+                    row["errorMessage"] = str(exc)
         if item_key == REWARD_CUE_ITEM_KEY and row.get("audioGenerationStatus") not in ("ready_to_bind", "dry_run"):
             row["manualImportRequired"] = row.get("audioGenerationStatus") == "manual_import_required"
         rows.append(row)
@@ -376,7 +554,7 @@ def main() -> int:
         "promote": args.promote,
         "rows": rows,
         "verificationItems": [
-            {k: row.get(k) for k in ("itemKey", "versionId", "assetId", "promotionStatus", "localPath", "cosObjectKey", "canonicalUrl")}
+            {k: row.get(k) for k in ("itemKey", "versionId", "assetId", "promotionStatus", "localPath", "cosObjectKey", "canonicalUrl", "urlCheck")}
             for row in rows
             if row.get("itemKey") in required_verify
         ],

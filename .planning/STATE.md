@@ -4,10 +4,10 @@ milestone: v3.1
 milestone_name: Material Production and Mini-program Experience Acceptance
 current_phase: 36
 current_plan: 5
-status: blocked
-stopped_at: Phase 36 plans executed; live material production smoke blocked
-last_updated: "2026-05-02T12:35:00.000Z"
-last_activity: 2026-05-02 -- Phase 36 UAT completed and security gate verified with publish/rollback role fix
+status: partially_unblocked
+stopped_at: Phase 36 live audio/COS smoke completed; image/video blockers remain
+last_updated: "2026-05-02T14:45:00.000Z"
+last_activity: 2026-05-02 -- Phase 36 live audio generation, COS upload, candidate binding, and published material versions verified
 progress:
   total_phases: 5
   completed_phases: 0
@@ -27,17 +27,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-30)
 
 ## Current Position
 
-Phase: 36 (material-production-pipeline-and-asset-promotion) — BLOCKED
+Phase: 36 (material-production-pipeline-and-asset-promotion) — PARTIALLY UNBLOCKED
 Plan: 5 of 5
 Milestone: `v3.1`
 Current Phase: 36
 Total Phases Planned: 5
-Status: Phase 36 implementation plans executed, but live requirement verification is blocked
+Status: Phase 36 implementation plans executed; live audio/COS path verified, image/video representative smoke still open
 Current Plan: 5
-Last activity: 2026-05-02 -- Phase 36 UAT completed and security gate verified with publish/rollback role fix
-Last Activity Description: Phase 36 UAT is complete at 6/6 passed. Security audit `36-SECURITY.md` closes 25/25 threats and fixed publish/rollback authorization so both super-admin role and explicit confirmation are required. MAT-01..MAT-05 remain pending until live admin auth, provider/COS, imported asset versions, rollback smoke, and ffmpeg subtitle video generation are verified.
+Last activity: 2026-05-02 -- Phase 36 live audio generation, COS upload, candidate binding, and published material versions verified
+Last Activity Description: Phase 36 UAT is complete at 6/6 passed. Security audit `36-SECURITY.md` closes 25/25 threats and fixed publish/rollback authorization so both super-admin role and explicit confirmation are required. The live audio slice is now verified with 百煉 CosyVoice, backend COS storage, finalized content assets, published material package versions, and COS URL checks. MAT-01/MAT-02 image/board and MAT-04 subtitle video remain open.
 
-Progress: [##########] 100% of Phase 36 implementation plans executed; requirements remain blocked by live dependencies
+Progress: [##########] 100% of Phase 36 implementation plans executed; audio/COS live dependency cleared, image/board/video smoke remains
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [##########] 100% of Phase 36 implementation plans executed; requireme
 | 2026-05-02 | `260502-p19` | Clarified material asset usability states, repaired media preview/error states, and browser-fixed story/experience IA/layout issues. |
 | 2026-05-02 | Phase 36 UAT/security | Completed 6/6 UAT checkpoints, created `36-SECURITY.md`, and tightened publish/rollback super-admin authorization. |
 | 2026-05-02 | `260502-so0` | Added env-backed custom image endpoint support, generated 37 local PNG story assets, and recorded remaining live COS/audio/video blockers. |
+| 2026-05-02 | `260502-urn` | Verified live 百煉 audio generation, backend COS upload, finalized content assets, and published material package versions for 6 Phase 36 audio items. |
 
 ## Accumulated Context
 
@@ -76,7 +77,7 @@ Progress: [##########] 100% of Phase 36 implementation plans executed; requireme
 
 ### Pending Todos
 
-- Load live Phase 36 runtime dependencies, then rerun `scripts/local/smoke-phase-36-material-production.ps1`.
+- Rerun Phase 36 representative smoke for image/board/video assets after required local PNG and subtitle-capable ffmpeg dependencies are available.
 - Keep provider and COS secrets outside tracked files while implementing real asset generation/upload.
 - Install or expose `ffmpeg` with subtitle filter support before claiming `MAT-04` complete.
 - Verify generated assets and package publish/rollback behavior on local services before marking Phase 36 complete.
@@ -84,7 +85,7 @@ Progress: [##########] 100% of Phase 36 implementation plans executed; requireme
 ### Blockers/Concerns
 
 - COS secrets and provider secrets must continue to stay outside tracked files.
-- Phase 36 is blocked on missing `PHASE36_ADMIN_BEARER_TOKEN`, missing `OPENAI_API_KEY`, unset `PHASE36_COS_READY`, missing imported/published asset versions, and missing `ffmpeg` subtitles support.
+- Phase 36 audio/COS is verified. Remaining blockers are image/board representative imports when local PNGs are missing and `ffmpeg` subtitles support for video output.
 - Real `image-2`, CosyVoice, and COS operations may incur external API cost and must remain explicit, logged, and reversible.
 - Local Mongo still emits a warning on this workstation, though the admin HTTP stack remains healthy for verified admin flows.
 - `spring-boot:run` currently needs `-Dmaven.test.skip=true` on this workstation because older server unit tests still reference stale constructor signatures, although `mvn -q -DskipTests compile -f packages/server/pom.xml` passes.

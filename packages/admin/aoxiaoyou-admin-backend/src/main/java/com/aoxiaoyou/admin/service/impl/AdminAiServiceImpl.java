@@ -2557,7 +2557,8 @@ public class AdminAiServiceImpl implements AdminAiService {
                     provider, apiKey, job.getPromptText(), modelOverride, job.getRequestPayloadJson()
             );
             byte[] bytes = dashScopeProviderGateway.downloadBinary(provider, result.assetUrl(), provider.getRequestTimeoutMs());
-            AiGenerationCandidate candidate = persistBinaryCandidate(job, "audio", result.assetUrl(), bytes, "job-" + job.getId() + ".mp3",
+            String normalizedProviderAssetUrl = dashScopeProviderGateway.normalizeProviderAssetUrl(provider, result.assetUrl());
+            AiGenerationCandidate candidate = persistBinaryCandidate(job, "audio", normalizedProviderAssetUrl, bytes, "job-" + job.getId() + ".mp3",
                     "audio/mpeg", result.metadataJson(), trimTo(job.getPromptText(), 255), null);
             job.setLatestCandidateId(candidate.getId());
             job.setResultSummary(defaultString(candidate.getStorageUrl(), candidate.getPreviewText()));
