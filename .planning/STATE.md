@@ -6,8 +6,8 @@ current_phase: 36
 current_plan: 5
 status: blocked
 stopped_at: Phase 36 plans executed; live material production smoke blocked
-last_updated: "2026-04-30T08:05:00.000Z"
-last_activity: 2026-04-30 -- Phase 36 smoke/handoff completed; live smoke blocked by missing admin token/provider/COS readiness/ffmpeg subtitle support
+last_updated: "2026-05-02T12:35:00.000Z"
+last_activity: 2026-05-02 -- Phase 36 UAT completed and security gate verified with publish/rollback role fix
 progress:
   total_phases: 5
   completed_phases: 0
@@ -34,8 +34,8 @@ Current Phase: 36
 Total Phases Planned: 5
 Status: Phase 36 implementation plans executed, but live requirement verification is blocked
 Current Plan: 5
-Last activity: 2026-04-30 -- Phase 36 smoke/handoff completed; live smoke blocked by missing admin token/provider/COS readiness/ffmpeg subtitle support
-Last Activity Description: Phase 36-04 added repeatable smoke verification and evidence docs. MAT-01..MAT-05 remain pending until live admin auth, provider/COS, imported asset versions, rollback smoke, and ffmpeg subtitle video generation are verified.
+Last activity: 2026-05-02 -- Phase 36 UAT completed and security gate verified with publish/rollback role fix
+Last Activity Description: Phase 36 UAT is complete at 6/6 passed. Security audit `36-SECURITY.md` closes 25/25 threats and fixed publish/rollback authorization so both super-admin role and explicit confirmation are required. MAT-01..MAT-05 remain pending until live admin auth, provider/COS, imported asset versions, rollback smoke, and ffmpeg subtitle video generation are verified.
 
 Progress: [##########] 100% of Phase 36 implementation plans executed; requirements remain blocked by live dependencies
 
@@ -55,6 +55,8 @@ Progress: [##########] 100% of Phase 36 implementation plans executed; requireme
 | 2026-04-29 | `260429-ocp` | Cleaned local verification artifacts, documented admin IA, removed confirmed dead admin entry points, and browser-verified the retained admin control plane. |
 | Phase 33 P33-03 | 55 min | 2 tasks | 2 files |
 | Phase 33 P33-04 | 35 min | 4 tasks | Admin story material package page, route/sidebar, smoke script, and handoff docs |
+| 2026-05-02 | `260502-p19` | Clarified material asset usability states, repaired media preview/error states, and browser-fixed story/experience IA/layout issues. |
+| 2026-05-02 | Phase 36 UAT/security | Completed 6/6 UAT checkpoints, created `36-SECURITY.md`, and tightened publish/rollback super-admin authorization. |
 
 ## Accumulated Context
 
@@ -69,6 +71,7 @@ Progress: [##########] 100% of Phase 36 implementation plans executed; requireme
 - Phase 34 public runtime smoke is the v3.0 closure evidence for public-runtime linkage, not a substitute for full WeChat device journey UAT.
 - Future material production can assemble video from one or several `image-2` stills with pan/zoom/motion and narration/audio stitching; keep using material boards and local slicing to save generation cost.
 - v3.1 adopts that future scope as active work: real generated assets, asset QA/promotion, and mini-program story-mode acceptance.
+- Phase 36 publish/rollback operations require both `SUPER_ADMIN` / `ROLE_SUPER_ADMIN` and an explicit confirmation flag; a confirmation boolean alone is not authorization.
 
 ### Pending Todos
 

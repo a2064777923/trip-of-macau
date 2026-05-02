@@ -201,6 +201,7 @@ class AdminStoryMaterialProductionServiceTest {
 
         AdminStoryMaterialProductionRequest.RollbackRequest request = new AdminStoryMaterialProductionRequest.RollbackRequest();
         request.setRollbackVersionId(901L);
+        request.setSuperAdminConfirmation(true);
 
         AdminStoryMaterialProductionResponse.RollbackResult result = service.rollbackItemVersion(
                 36L,
@@ -241,6 +242,19 @@ class AdminStoryMaterialProductionServiceTest {
                 36L,
                 101L,
                 new AdminStoryMaterialProductionRequest.PromoteRequest(),
+                7L,
+                "editor",
+                List.of("OPERATOR")
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Super admin confirmation");
+
+        AdminStoryMaterialProductionRequest.PromoteRequest forgedConfirmation = new AdminStoryMaterialProductionRequest.PromoteRequest();
+        forgedConfirmation.setSuperAdminConfirmation(true);
+        assertThatThrownBy(() -> service.promoteItemVersion(
+                36L,
+                101L,
+                forgedConfirmation,
                 7L,
                 "editor",
                 List.of("OPERATOR")
@@ -348,6 +362,7 @@ class AdminStoryMaterialProductionServiceTest {
         when(contentAssetMapper.selectById(801L)).thenReturn(asset(801L, "miniapp/assets/asset.png", "https://cos.example.com/asset.png"));
         AdminStoryMaterialProductionRequest.PromoteRequest request = new AdminStoryMaterialProductionRequest.PromoteRequest();
         request.setTargetStatus("published");
+        request.setSuperAdminConfirmation(true);
 
         AdminStoryMaterialProductionResponse.PromotionResult result = service.promoteItemVersion(
                 36L,

@@ -275,7 +275,7 @@ public class AdminStoryMaterialProductionServiceImpl implements AdminStoryMateri
             String adminUsername,
             List<String> roles
     ) {
-        if (!isSuperAdmin(roles) && !Boolean.TRUE.equals(request == null ? null : request.getSuperAdminConfirmation())) {
+        if (!Boolean.TRUE.equals(request == null ? null : request.getSuperAdminConfirmation()) || !isSuperAdmin(roles)) {
             throw new BusinessException(4036, "Super admin confirmation is required for material publish actions");
         }
         StoryMaterialPackageItem item = requireItem(packageId, itemId);
@@ -317,7 +317,7 @@ public class AdminStoryMaterialProductionServiceImpl implements AdminStoryMateri
             String adminUsername,
             List<String> roles
     ) {
-        if (!isSuperAdmin(roles) && !Boolean.TRUE.equals(request == null ? null : request.getSuperAdminConfirmation())) {
+        if (!Boolean.TRUE.equals(request == null ? null : request.getSuperAdminConfirmation()) || !isSuperAdmin(roles)) {
             throw new BusinessException(4036, "Super admin confirmation is required for material rollback actions");
         }
         if (request == null || request.getRollbackVersionId() == null) {
