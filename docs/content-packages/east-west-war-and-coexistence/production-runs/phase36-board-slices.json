@@ -204,10 +204,94 @@
           "cropRect": { "x": 384, "y": 0, "width": 384, "height": 384 }
         },
         {
+          "itemKey": "title_coast_guardian",
+          "chapterCode": "ch01_mirror_sea_clash",
+          "outputLocalPath": "icons/titles/title-coast-guardian.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-coast-guardian.png",
+          "cropRect": { "x": 768, "y": 0, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_south_bay_wayfarer",
+          "chapterCode": "ch02_south_bay_boundary",
+          "outputLocalPath": "icons/titles/title-south-bay-wayfarer.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-south-bay-wayfarer.png",
+          "cropRect": { "x": 0, "y": 384, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_boundary_recorder",
+          "chapterCode": "ch02_south_bay_boundary",
+          "outputLocalPath": "icons/titles/title-boundary-recorder.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-boundary-recorder.png",
+          "cropRect": { "x": 384, "y": 384, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_silent_frontier_soldier",
+          "chapterCode": "ch02_south_bay_boundary",
+          "outputLocalPath": "icons/titles/title-silent-frontier-soldier.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-silent-frontier-soldier.png",
+          "cropRect": { "x": 768, "y": 384, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_hill_climber",
+          "chapterCode": "ch03_hill_watch",
+          "outputLocalPath": "icons/titles/title-hill-climber.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-hill-climber.png",
+          "cropRect": { "x": 0, "y": 768, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_hidden_sentry_finder",
+          "chapterCode": "ch03_hill_watch",
+          "outputLocalPath": "icons/titles/title-hidden-sentry-finder.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-hidden-sentry-finder.png",
+          "cropRect": { "x": 384, "y": 768, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_panorama_witness",
+          "chapterCode": "ch03_hill_watch",
+          "outputLocalPath": "icons/titles/title-panorama-witness.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-panorama-witness.png",
+          "cropRect": { "x": 768, "y": 768, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_fortress_visitor",
+          "chapterCode": "ch04_fortress_fire",
+          "outputLocalPath": "icons/titles/title-fortress-visitor.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-fortress-visitor.png",
+          "cropRect": { "x": 0, "y": 1152, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_battle_restorer",
+          "chapterCode": "ch04_fortress_fire",
+          "outputLocalPath": "icons/titles/title-battle-restorer.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-battle-restorer.png",
+          "cropRect": { "x": 384, "y": 1152, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_harbour_guardian_deity",
+          "chapterCode": "ch04_fortress_fire",
+          "outputLocalPath": "icons/titles/title-harbour-guardian-deity.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-harbour-guardian-deity.png",
+          "cropRect": { "x": 768, "y": 1152, "width": 384, "height": 384 }
+        },
+        {
           "itemKey": "title_harbour_witness_final",
           "chapterCode": "ch05_coexistence_finale",
           "outputLocalPath": "icons/titles/title-harbour-witness-final.png",
           "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-harbour-witness-final.png",
+          "cropRect": { "x": 0, "y": 1536, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_history_restoration_master",
+          "chapterCode": "ch05_coexistence_finale",
+          "outputLocalPath": "icons/titles/title-history-restoration-master.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-history-restoration-master.png",
+          "cropRect": { "x": 384, "y": 1536, "width": 384, "height": 384 }
+        },
+        {
+          "itemKey": "title_harbour_history_grandmaster",
+          "chapterCode": "ch05_coexistence_finale",
+          "outputLocalPath": "icons/titles/title-harbour-history-grandmaster.png",
+          "forcedCosObjectKey": "miniapp/assets/phase33/east-west-war-and-coexistence/icons/titles/title-harbour-history-grandmaster.png",
           "cropRect": { "x": 768, "y": 1536, "width": 384, "height": 384 }
         }
       ]

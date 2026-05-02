@@ -64,11 +64,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MAT-01 | Phase 36 | Pending |
-| MAT-02 | Phase 36 | Pending |
-| MAT-03 | Phase 36 | Pending |
-| MAT-04 | Phase 36 | Pending |
-| MAT-05 | Phase 36 | Pending |
+| MAT-01 | Phase 36 | Complete |
+| MAT-02 | Phase 36 | Complete |
+| MAT-03 | Phase 36 | Complete |
+| MAT-04 | Phase 36 | Complete: five chapter MP4s were assembled from generated stills plus narration, promoted to COS as `video/mp4`, and retain UTF-8 caption metadata; burned-in subtitles degraded to external captions on this workstation |
+| MAT-05 | Phase 36 | Complete: image, board-slice, audio, video, publish, rollback, version-history, and COS evidence pass |
 | QA-01 | Phase 37 | Pending |
 | QA-02 | Phase 37 | Pending |
 | QA-03 | Phase 37 | Pending |
@@ -94,4 +94,4 @@
 
 ---
 *Requirements defined: 2026-04-30*
-*Last updated: 2026-04-30 after v3.1 initialization*
+*Last updated: 2026-05-03 after Phase 36 live image/board/audio/video COS verification*

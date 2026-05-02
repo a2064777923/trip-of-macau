@@ -89,11 +89,39 @@ function Invoke-Head {
   }
 }
 
-function Test-FfmpegSubtitleSupport {
+function Resolve-FfmpegExecutable {
+  $candidates = @()
+  if (-not [string]::IsNullOrWhiteSpace($env:PHASE36_FFMPEG_PATH)) {
+    $candidates += $env:PHASE36_FFMPEG_PATH
+  }
   $command = Get-Command ffmpeg -ErrorAction SilentlyContinue
-  if (-not $command) { return $false }
-  $filters = & ffmpeg -hide_banner -filters 2>$null
-  return ($filters -match 'subtitles')
+  if ($command) {
+    $candidates += $command.Source
+  }
+  $pythonProbe = @'
+try:
+    import imageio_ffmpeg
+    print(imageio_ffmpeg.get_ffmpeg_exe())
+except Exception:
+    pass
+'@
+  $portable = $pythonProbe | python -
+  if (-not [string]::IsNullOrWhiteSpace($portable)) {
+    $candidates += $portable.Trim()
+  }
+  foreach ($candidate in $candidates) {
+    if (-not [string]::IsNullOrWhiteSpace($candidate) -and (Test-Path -LiteralPath $candidate)) {
+      return (Resolve-Path -LiteralPath $candidate).Path
+    }
+  }
+  return $null
+}
+
+function Test-FfmpegVideoSupport {
+  $ffmpeg = Resolve-FfmpegExecutable
+  if ([string]::IsNullOrWhiteSpace($ffmpeg)) { return $false }
+  $filters = & $ffmpeg -hide_banner -filters 2>$null
+  return [bool]($filters -match 'zoompan')
 }
 
 function Read-Utf8Json {
@@ -133,14 +161,23 @@ function Get-ItemVersions {
 }
 
 function Assert-SafeVersion {
-  param([Parameter(Mandatory = $true)]$Version)
-  Assert-True -Condition (-not [string]::IsNullOrWhiteSpace([string]$Version.localPath)) -Message "Version $($Version.id) has blank localPath"
+  param(
+    [Parameter(Mandatory = $true)]$Version,
+    [Parameter(Mandatory = $true)][string]$ItemKey
+  )
+  $isCandidateImport = [string]$Version.sourceType -eq 'ai_candidate'
+  if (-not $isCandidateImport) {
+    Assert-True -Condition (-not [string]::IsNullOrWhiteSpace([string]$Version.localPath)) -Message "Version $($Version.id) for $ItemKey has blank localPath"
+  }
   Assert-True -Condition (-not [string]::IsNullOrWhiteSpace([string]$Version.cosObjectKey)) -Message "Version $($Version.id) has blank cosObjectKey"
   Assert-True -Condition (-not ([string]$Version.localPath).Contains('..')) -Message "Version $($Version.id) localPath contains traversal"
   Assert-True -Condition (-not ([string]$Version.cosObjectKey).Contains('..')) -Message "Version $($Version.id) cosObjectKey contains traversal"
   Assert-True -Condition (-not [string]::IsNullOrWhiteSpace([string]$Version.providerName)) -Message "Version $($Version.id) has blank providerName"
   Assert-True -Condition (-not [string]::IsNullOrWhiteSpace([string]$Version.modelCode)) -Message "Version $($Version.id) has blank modelCode"
   Assert-True -Condition (-not [string]::IsNullOrWhiteSpace([string]$Version.promotionStatus)) -Message "Version $($Version.id) has blank promotionStatus"
+  if ($isCandidateImport) {
+    Assert-True -Condition (-not [string]::IsNullOrWhiteSpace([string]$Version.canonicalUrl)) -Message "AI candidate version $($Version.id) for $ItemKey has blank canonicalUrl"
+  }
 }
 
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
@@ -171,7 +208,7 @@ Assert-True -Condition (Test-Path -LiteralPath $batchScript) -Message "Missing p
 Assert-True -Condition (Test-Path -LiteralPath $sliceScript) -Message "Missing phase36-slice-board.py"
 Assert-True -Condition (Test-Path -LiteralPath $videoScript) -Message "Missing phase36-build-video.ps1"
 
-Require-Text -Path $videoScript -Needles @('FFMPEG_SUBTITLES_UNAVAILABLE', 'audioItemKey', 'subtitleMetadataJson', 'posterFallbackItemKey')
+Require-Text -Path $videoScript -Needles @('Resolve-FfmpegExecutable', 'audioItemKey', 'subtitle-metadata-file', 'posterFallbackItemKey')
 Require-Text -Path $videoConfigPath -Needles @('video_ch01_mirror_sea_clash', 'audio_ch01_narration', 'subtitleTextFile', 'posterFallbackItemKey', 'forcedCosObjectKey')
 
 $preflightArgs = @(
@@ -187,9 +224,9 @@ $sliceDryRunArgs = @($sliceScript, '--config', $boardConfigPath, '--dry-run')
 & python @sliceDryRunArgs
 Assert-True -Condition ($LASTEXITCODE -eq 0) -Message 'phase36-slice-board.py --config dry-run failed'
 
-$videoGateReady = Test-FfmpegSubtitleSupport
+$videoGateReady = Test-FfmpegVideoSupport
 if (-not $videoGateReady) {
-  Write-Host 'MAT-04 blocked: ffmpeg -filters does not expose subtitles support.'
+  Write-Host 'MAT-04 blocked: ffmpeg is missing or ffmpeg -filters does not expose zoompan support.'
 }
 
 $secretChecks = [ordered]@{
@@ -199,7 +236,7 @@ $secretChecks = [ordered]@{
 }
 
 if ($ValidateOnly) {
-  Write-Host "ValidateOnly dependency snapshot: adminToken=$($secretChecks.PHASE36_ADMIN_BEARER_TOKEN), openai=$($secretChecks.OPENAI_API_KEY), cos=$($secretChecks.PHASE36_COS_READY), ffmpegSubtitles=$videoGateReady"
+  Write-Host "ValidateOnly dependency snapshot: adminToken=$($secretChecks.PHASE36_ADMIN_BEARER_TOKEN), openai=$($secretChecks.OPENAI_API_KEY), cos=$($secretChecks.PHASE36_COS_READY), ffmpegVideo=$videoGateReady"
   Write-Host 'Phase 36 material production validate-only checks passed'
   exit 0
 }
@@ -258,7 +295,7 @@ foreach ($itemKey in $requiredItemKeys) {
   Assert-True -Condition ($versions.Count -ge 1) -Message "No version history for $itemKey in story_material_package_item_versions"
   $current = @($versions | Where-Object { $_.id -eq $item.currentVersionId } | Select-Object -First 1)[0]
   if (-not $current) { $current = @($versions | Select-Object -First 1)[0] }
-  Assert-SafeVersion -Version $current
+  Assert-SafeVersion -Version $current -ItemKey $itemKey
   $sampleVersions += [pscustomobject]@{ ItemKey = $itemKey; Item = $item; Version = $current }
 }
 
@@ -287,7 +324,7 @@ if ($rollbackSample) {
 }
 
 if ($IncludeVideo) {
-  Assert-True -Condition $videoGateReady -Message 'IncludeVideo requires ffmpeg -filters subtitles support.'
+  Assert-True -Condition $videoGateReady -Message 'IncludeVideo requires ffmpeg zoompan support.'
   & powershell -NoProfile -ExecutionPolicy Bypass -File $videoScript -Config $videoConfigPath -ValidateOnly
   Assert-True -Condition ($LASTEXITCODE -eq 0) -Message 'phase36-build-video.ps1 -ValidateOnly failed'
 }

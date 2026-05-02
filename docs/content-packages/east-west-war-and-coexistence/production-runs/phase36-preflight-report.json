@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "packageCode": "east_west_war_and_coexistence_package",
-  "manifestPath": "docs\\content-packages\\east-west-war-and-coexistence\\content-manifest.json",
-  "batchPath": "docs\\content-packages\\east-west-war-and-coexistence\\production-runs\\phase36-batch.json",
+  "manifestPath": "D:\\Archive\\trip-of-macau\\docs\\content-packages\\east-west-war-and-coexistence\\content-manifest.json",
+  "batchPath": "D:\\Archive\\trip-of-macau\\docs\\content-packages\\east-west-war-and-coexistence\\production-runs\\phase36-batch.json",
   "itemCount": 16,
   "targetAssetKinds": [
     "audio",

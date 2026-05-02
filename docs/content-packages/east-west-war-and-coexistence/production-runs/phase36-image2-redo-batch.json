@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "packageCode": "east_west_war_and_coexistence_package",
+  "currencyCode": "CNY",
+  "batchCostCeiling": "120.00",
+  "dailyCostCeiling": "360.00",
+  "notes": [
+    "Use PHASE36_IMAGE_BASE_URL / PHASE36_IMAGE_API_KEY at runtime; do not store secrets here.",
+    "The supplied image-2 compatible endpoint rejected model=image-2 during live probe, so the executable run may override PHASE36_IMAGE_MODEL to the accepted image model while still using the supplied base URL."
+  ],
+  "workItems": [
+    {
+      "itemKey": "story_cover_copper_mirror",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "6.00",
+      "size": "1024x1536"
+    },
+    {
+      "itemKey": "story_banner_route_map",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "6.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "hero_ch01_ama_coast",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "hero_ch02_lilau_boundary",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "hero_ch03_hill_watch",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "hero_ch04_monte_fort",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "hero_ch05_senado_coexistence",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024"
+    },
+    {
+      "itemKey": "poster_video_fallback",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "4.00",
+      "size": "1024x1536"
+    },
+    {
+      "itemKey": "pickup_ch01_board",
+      "assetKind": "image",
+      "localPath": "boards/pickup-ch01-board.png",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "4.00",
+      "size": "1024x1024",
+      "promptText": "第一章拾取物素材板，2x2 grid, transparent background, no text, no watermark. Top-left: Ming coastal defense bronze token. Top-right: Macau fisherman's defensive fishing-net fragment. Bottom-left: Portuguese trade tax contract torn page. Bottom-right: A-Ma battlefire copper mirror fragment. Same polished cultural-travel mobile game icon style, copper glow, strong silhouette, each object centered in its own equal cell with clear spacing for later slicing."
+    },
+    {
+      "itemKey": "pickup_ch02_board",
+      "assetKind": "image",
+      "localPath": "boards/pickup-ch02-board.png",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "4.00",
+      "size": "1024x1024",
+      "promptText": "第二章拾取物素材板，2x2 grid, transparent background, no text, no watermark. Top-left: Ming-Portuguese boundary stele rubbing. Top-right: South Bay fortification design torn page. Bottom-left: old garrison water flask fragment beside a well. Bottom-right: South Bay boundary copper mirror fragment. Same polished cultural-travel mobile game icon style, retro stone and copper palette, each object centered in its own equal cell with clear spacing for later slicing."
+    },
+    {
+      "itemKey": "pickup_ch03_board",
+      "assetKind": "image",
+      "localPath": "boards/pickup-ch03-board.png",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "4.00",
+      "size": "1024x1024",
+      "promptText": "第三章拾取物素材板，2x2 grid, transparent background, no text, no watermark. Top-left: lookout patrol record torn page. Top-right: Far East mission and military secret letter with wax seal. Bottom-left: hand-drawn hill defense sketch map. Bottom-right: hill watch copper mirror fragment. Same polished cultural-travel mobile game icon style, blue-gold night watch palette, each object centered in its own equal cell with clear spacing for later slicing."
+    },
+    {
+      "itemKey": "pickup_ch04_board",
+      "assetKind": "image",
+      "localPath": "boards/pickup-ch04-board.png",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "5.00",
+      "size": "1536x1024",
+      "promptText": "第四章拾取物素材板，3 columns x 2 rows grid, transparent background, no text, no watermark. Top-left: Dutch-Macau battle cannonball fragment. Top-center: defenders' battle diary torn page. Top-right: Dutch fleet operation map. Bottom-left: Sino-Western defenders' joint oath scroll. Bottom-center: fortress smoke copper mirror fragment. Bottom-right: keep empty transparent spacing. Same polished cultural-travel mobile game icon style, fortress iron, smoke and copper glow, each object centered in its own equal cell with clear spacing for later slicing."
+    },
+    {
+      "itemKey": "pickup_ch05_board",
+      "assetKind": "image",
+      "localPath": "boards/pickup-ch05-board.png",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "4.00",
+      "size": "1024x1024",
+      "promptText": "第五章拾取物素材板，2x2 grid, transparent background, no text, no watermark. Top-left: Declaration of Macau civilizational coexistence parchment. Top-right: time witness pass with copper route seal. Bottom-left: completed repaired Macau warfire copper mirror, ultimate treasure. Bottom-right: keep empty transparent spacing. Same polished cultural-travel mobile game icon style, warmer finale palette, each object centered in its own equal cell with clear spacing for later slicing."
+    },
+    {
+      "itemKey": "title_badge_board",
+      "assetKind": "image",
+      "localPath": "boards/title-badge-board.png",
+      "providerName": "suqis-compatible",
+      "modelCode": "gpt-image-1",
+      "estimatedCost": "8.00",
+      "size": "1024x1536",
+      "promptText": "榮譽稱號與勳章素材板，3 columns x 5 rows grid, transparent background, no text, no watermark. Fixed order left-to-right top-to-bottom: Harbour First Witness, Mirror Sea Explorer, Coast Guardian, South Bay Wayfarer, Boundary Recorder, Silent Frontier Soldier, Hill Climber, Hidden Sentry Finder, Panorama Witness, Fortress Visitor, Battle Restorer, Harbour Guardian Deity, Harbour Witness Finale, History Restoration Master, Harbour History Grandmaster. Use copper mirror, fort, sea wave, boundary line, hill watch, cannon smoke and Senado pavement motifs. Mobile game badge icon style, each badge centered in an equal cell with clear spacing for 384px slicing."
+    }
+  ]
+}

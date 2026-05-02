@@ -22,6 +22,12 @@ def read_json(path: Path) -> dict[str, Any]:
         return json.load(handle)
 
 
+def read_text(path: Path | None) -> str | None:
+    if path is None:
+        return None
+    return path.read_text(encoding="utf-8-sig")
+
+
 def api_request(method: str, backend: str, path: str, token: str, payload: dict[str, Any] | None = None) -> Any:
     body = None if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
     request = urllib.request.Request(
@@ -102,7 +108,7 @@ def import_item(args: argparse.Namespace) -> dict[str, Any]:
         "modelCode": args.model_code,
         "estimatedCost": args.estimated_cost,
         "assetKind": args.asset_kind or manifest_item.get("assetKind"),
-        "subtitleMetadataJson": args.subtitle_metadata_json,
+        "subtitleMetadataJson": read_text(args.subtitle_metadata_file) or args.subtitle_metadata_json,
         "posterFallbackItemKey": args.poster_fallback_item_key or manifest_item.get("fallbackItemKey"),
         "verificationNote": args.verification_note,
         "localeCode": args.locale_code,
@@ -157,6 +163,7 @@ def main() -> int:
     parser.add_argument("--estimated-cost", default="0")
     parser.add_argument("--asset-kind")
     parser.add_argument("--subtitle-metadata-json")
+    parser.add_argument("--subtitle-metadata-file", type=Path)
     parser.add_argument("--poster-fallback-item-key")
     parser.add_argument("--verification-note", default="Phase 36 local import")
     parser.add_argument("--locale-code", default="zh-Hant")
