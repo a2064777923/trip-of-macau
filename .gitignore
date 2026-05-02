@@ -62,6 +62,7 @@ admin-frontend/
 .playwright-cli/*.log
 .playwright-cli/page-*.png
 .playwright-cli/page-*.yml
+local-content/
 output/
 tmp-admin-login.json
 phase*-cos-probe.txt

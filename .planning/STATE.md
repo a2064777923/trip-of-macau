@@ -57,6 +57,7 @@ Progress: [##########] 100% of Phase 36 implementation plans executed; requireme
 | Phase 33 P33-04 | 35 min | 4 tasks | Admin story material package page, route/sidebar, smoke script, and handoff docs |
 | 2026-05-02 | `260502-p19` | Clarified material asset usability states, repaired media preview/error states, and browser-fixed story/experience IA/layout issues. |
 | 2026-05-02 | Phase 36 UAT/security | Completed 6/6 UAT checkpoints, created `36-SECURITY.md`, and tightened publish/rollback super-admin authorization. |
+| 2026-05-02 | `260502-so0` | Added env-backed custom image endpoint support, generated 37 local PNG story assets, and recorded remaining live COS/audio/video blockers. |
 
 ## Accumulated Context
 

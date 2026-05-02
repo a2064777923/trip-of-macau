@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "providerName": "suqis-compatible",
+  "modelCode": "gpt-image-1",
+  "rows": [
+    {
+      "boardKey": "pickup_ch01_board",
+      "path": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch01-board.png",
+      "size": "1024x1024",
+      "status": "generated",
+      "header": "png",
+      "bytes": 1722956
+    },
+    {
+      "boardKey": "pickup_ch02_board",
+      "path": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch02-board.png",
+      "size": "1024x1024",
+      "status": "generated",
+      "header": "png",
+      "bytes": 1922054
+    },
+    {
+      "boardKey": "pickup_ch03_board",
+      "path": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch03-board.png",
+      "size": "1024x1024",
+      "status": "generated",
+      "header": "png",
+      "bytes": 1992410
+    },
+    {
+      "boardKey": "pickup_ch04_board",
+      "path": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch04-board.png",
+      "size": "1536x1024",
+      "status": "generated",
+      "header": "png",
+      "bytes": 2489503
+    },
+    {
+      "boardKey": "pickup_ch05_board",
+      "path": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\pickup-ch05-board.png",
+      "size": "1024x1024",
+      "status": "generated",
+      "header": "png",
+      "bytes": 1691681
+    },
+    {
+      "boardKey": "title_badge_board",
+      "path": "local-content\\phase33\\east-west-war-and-coexistence\\boards\\title-badge-board.png",
+      "size": "1024x1536",
+      "status": "generated",
+      "header": "png",
+      "bytes": 3807915
+    }
+  ]
+}

@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 1,
+  "packageCode": "east_west_war_and_coexistence_package",
+  "source": "local-content validation after custom image endpoint generation",
+  "liveUpload": false,
+  "secretPersisted": false,
+  "fileCount": 37,
+  "pngCount": 37,
+  "totalBytes": 46521102,
+  "sizeCounts": {
+    "1024x1024": 4,
+    "1536x1024": 7,
+    "1152x1920": 1,
+    "512x512": 20,
+    "384x384": 3,
+    "1024x1536": 2
+  },
+  "rows": [
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/boards/pickup-ch01-board.png",
+      "bytes": 1722956,
+      "width": 1024,
+      "height": 1024,
+      "sha256": "37e62e9aac59e805d5551a6c26ed07521343c1bdff9591164a92093c36132d9b",
+      "lastWriteTime": 1777727722.6901145
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/boards/pickup-ch02-board.png",
+      "bytes": 1922054,
+      "width": 1024,
+      "height": 1024,
+      "sha256": "10149f8266b949135a6f2d61c4c06ace2a219cc01ef12d47fc762aee4553f635",
+      "lastWriteTime": 1777727796.6047199
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/boards/pickup-ch03-board.png",
+      "bytes": 1992410,
+      "width": 1024,
+      "height": 1024,
+      "sha256": "9ea96f2136b2459a9f696b22c173346659be87e00b058ce9bba340a9d59907b7",
+      "lastWriteTime": 1777727864.0668015
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/boards/pickup-ch04-board.png",
+      "bytes": 2489503,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "1079790ec2db4c0332c5ce347d2010dbde017467fad17311e7fd131d97022eed",
+      "lastWriteTime": 1777727922.867828
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/boards/pickup-ch05-board.png",
+      "bytes": 1691681,
+      "width": 1024,
+      "height": 1024,
+      "sha256": "d9bc242eac5cc87026a31ed88c550b8784e0c3e1d168e5305805b45724b5bd58",
+      "lastWriteTime": 1777727994.6428368
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/boards/title-badge-board.png",
+      "bytes": 3807915,
+      "width": 1152,
+      "height": 1920,
+      "sha256": "3532b4e57a6d6cf949faea410d5e6557a8937b64df2029621eb93e2b3a681f7f",
+      "lastWriteTime": 1777728075.7163286
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch01-ama-mirror-fragment.png",
+      "bytes": 390390,
+      "width": 512,
+      "height": 512,
+      "sha256": "cc4ba64554520a548084eaf7252739d7b05aaf2fb0958c1a788a5a9be400404d",
+      "lastWriteTime": 1777728118.7383578
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch01-fisher-net-fragment.png",
+      "bytes": 345157,
+      "width": 512,
+      "height": 512,
+      "sha256": "cc463d3154098539a5c210ad28e38fba1d6eeec8d3a7aec5f0d1f558d78c4c22",
+      "lastWriteTime": 1777728118.631844
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch01-ming-coastal-token.png",
+      "bytes": 368758,
+      "width": 512,
+      "height": 512,
+      "sha256": "61a2c9789500d11d1d96334a217be8f7da638c8e8a0a0af64fd77ab53e45f761",
+      "lastWriteTime": 1777728118.5679135
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch01-tax-contract-page.png",
+      "bytes": 402095,
+      "width": 512,
+      "height": 512,
+      "sha256": "69142f6d36e9230d76f3a5aef5d1f43c5de99ba7a0ed5b36bc88a9940085ddfe",
+      "lastWriteTime": 1777728118.6859648
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch02-boundary-rubbing.png",
+      "bytes": 453477,
+      "width": 512,
+      "height": 512,
+      "sha256": "9d3fa8a22d0abcc4af80076547ec5aff630d278dbe9fbf21a9707e0983b18e0b",
+      "lastWriteTime": 1777728118.8096843
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch02-fort-design-page.png",
+      "bytes": 459666,
+      "width": 512,
+      "height": 512,
+      "sha256": "7932d16d1274a61fa2eab17d3634b42f56c60d0027ee10c0a00ad3f1194ad27d",
+      "lastWriteTime": 1777728118.857744
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch02-garrison-flask.png",
+      "bytes": 363834,
+      "width": 512,
+      "height": 512,
+      "sha256": "de6947777fef7df1fd002da9cf6934f08949b37eb718fbade241d034fb0c85b2",
+      "lastWriteTime": 1777728118.9104164
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch02-south-bay-mirror-fragment.png",
+      "bytes": 394920,
+      "width": 512,
+      "height": 512,
+      "sha256": "1d4f7caf1eb162f51ffa7a95248d190c528e2f4f5e835d882d628ca887dda2c3",
+      "lastWriteTime": 1777728118.9627805
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch03-hill-defense-sketch.png",
+      "bytes": 476611,
+      "width": 512,
+      "height": 512,
+      "sha256": "810c1774671af3fabde6260960dbbbb81b7e4b035ebf5930bf4edb1732bc6e7a",
+      "lastWriteTime": 1777728119.1356826
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch03-hill-mirror-fragment.png",
+      "bytes": 432550,
+      "width": 512,
+      "height": 512,
+      "sha256": "10bc9186ea2c3b58a975c33d546cfe0e29b84a2371ed181cb931d860ddf7a1b6",
+      "lastWriteTime": 1777728119.187747
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch03-mission-military-letter.png",
+      "bytes": 433482,
+      "width": 512,
+      "height": 512,
+      "sha256": "523bfa9df47642151759f6d2e3d9c6d783a9fdeea9fd2866b13fe7bde170b66a",
+      "lastWriteTime": 1777728119.08776
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch03-patrol-record.png",
+      "bytes": 422208,
+      "width": 512,
+      "height": 512,
+      "sha256": "62f11d1142453b31d9b8cd379cd10ed4aaceb79121ae38388340c8fa04f71140",
+      "lastWriteTime": 1777728119.038376
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch04-cannonball-fragment.png",
+      "bytes": 316127,
+      "width": 512,
+      "height": 512,
+      "sha256": "8f4bebd7c6a029ff4ac1488ba5537cb2f5246f6d02a68a782b5da12b4b98eaf8",
+      "lastWriteTime": 1777728119.2738953
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch04-defender-diary.png",
+      "bytes": 387504,
+      "width": 512,
+      "height": 512,
+      "sha256": "b2fa8f477900e3ac54981a212b828cb35af62c2b6f2871e8af0866d4e25ade2b",
+      "lastWriteTime": 1777728119.3212626
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch04-dutch-fleet-map.png",
+      "bytes": 425240,
+      "width": 512,
+      "height": 512,
+      "sha256": "af07d2506f8034ee385adc9830a51f5177bbc8f6833f16844e1cb07d98040058",
+      "lastWriteTime": 1777728119.3691936
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch04-fortress-mirror-fragment.png",
+      "bytes": 329966,
+      "width": 512,
+      "height": 512,
+      "sha256": "cda1ab9a83a83ab0e6eee7e0df7ff3da3a6fd047173df14cc841cfbee4442cb2",
+      "lastWriteTime": 1777728119.4728837
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch04-guardian-oath.png",
+      "bytes": 390534,
+      "width": 512,
+      "height": 512,
+      "sha256": "51a87026961f09fae2de72dee5a0fd0e3c20e3440f3f177802fd7c8e519af622",
+      "lastWriteTime": 1777728119.4162533
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch05-coexistence-declaration.png",
+      "bytes": 433849,
+      "width": 512,
+      "height": 512,
+      "sha256": "108bc7048cc9efe57b756847b41cf2bc305b5dc75a0eaeec69f9418523b4fbea",
+      "lastWriteTime": 1777728119.559979
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch05-complete-copper-mirror.png",
+      "bytes": 426792,
+      "width": 512,
+      "height": 512,
+      "sha256": "4343e2ae7cc91df0acb97ee3613428f35a7ddfc5cf3d369416c024903c0f0a54",
+      "lastWriteTime": 1777728119.681658
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/pickups/ch05-time-witness-pass.png",
+      "bytes": 375683,
+      "width": 512,
+      "height": 512,
+      "sha256": "0a68d2a08062d5319758debd35fd2ca03365dd7da49fd342459752ae046f876b",
+      "lastWriteTime": 1777728119.6214907
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/titles/title-first-harbour-witness.png",
+      "bytes": 260750,
+      "width": 384,
+      "height": 384,
+      "sha256": "d931e124ade09cd08ac183fd91c23774e9d8f515adcd2fe4342d15e2e9dd77eb",
+      "lastWriteTime": 1777728119.7696807
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/titles/title-harbour-witness-final.png",
+      "bytes": 141377,
+      "width": 384,
+      "height": 384,
+      "sha256": "deb6a305cc8f1c7e33ee55c2c2121fe9e25563c96a1d66e50f828b1ea4d7b35f",
+      "lastWriteTime": 1777728119.8254924
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/icons/titles/title-mirror-sea-explorer.png",
+      "bytes": 272905,
+      "width": 384,
+      "height": 384,
+      "sha256": "100b1e0fb5d613a9aec46eba32979a537779f69c528a84038e2026700e72670e",
+      "lastWriteTime": 1777728119.8064642
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/images/heroes/ch01-ama-coast.png",
+      "bytes": 3209692,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "bcc14b726ddde2cf16840d2aa2ac6f14c44f7d485475150838ac5732bac4f52d",
+      "lastWriteTime": 1777728929.7771752
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/images/heroes/ch02-lilau-boundary.png",
+      "bytes": 3181370,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "c4c10707e53d67bf9973ffeea1a4afe80d48f96dda0688061b91a03138cb3578",
+      "lastWriteTime": 1777729087.287489
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/images/heroes/ch03-hill-watch.png",
+      "bytes": 3120856,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "73c7f43dc2bedb0e265d1ad0287838d9d9b5115f08c9293ed2e2879edcf22b83",
+      "lastWriteTime": 1777729247.1580617
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/images/heroes/ch04-monte-fort.png",
+      "bytes": 3080153,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "848e75b8de1cf2ba1fa906545f4f3f2f8d4214597e6ff2c26c7aece0050c6246",
+      "lastWriteTime": 1777729421.5500233
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/images/heroes/ch05-senado-coexistence.png",
+      "bytes": 3275555,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "8ee1967644d570e7d4e263d6dd60c8f27d6da01a0bc15c6814abac6cc07d5aa7",
+      "lastWriteTime": 1777727291.444405
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/images/poster-video-fallback.png",
+      "bytes": 2531682,
+      "width": 1024,
+      "height": 1536,
+      "sha256": "4483317435e1047480369cecde7f790b97ffd0119b9e98b63171556a4c1ccd1d",
+      "lastWriteTime": 1777727350.0990126
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/images/story-banner-route-map.png",
+      "bytes": 2638731,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "e39f8e2a45c2e3b4f957b83c385a64bf80705b8848de67e00059ffd8e71d321a",
+      "lastWriteTime": 1777728764.954773
+    },
+    {
+      "relativePath": "local-content/phase33/east-west-war-and-coexistence/images/story-cover-copper-mirror.png",
+      "bytes": 3152669,
+      "width": 1024,
+      "height": 1536,
+      "sha256": "a564e3ed1206a87928c39610c9bec29b47946a10c3e8d7daa55a7367bc6dabf6",
+      "lastWriteTime": 1777728651.4510071
+    }
+  ],
+  "remainingBlockers": [
+    "PHASE36_ADMIN_BEARER_TOKEN required for admin import/publish smoke",
+    "COS upload and rollback smoke not executed in this local-only run",
+    "Audio generation remains dry-run",
+    "ffmpeg subtitle video assembly remains unavailable"
+  ]
+}

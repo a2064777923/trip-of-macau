@@ -15,6 +15,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from urllib.parse import urlparse
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,62 @@ from typing import Any
 AI_JOB_ROUTE = "/api/admin/v1/ai/generation-jobs"
 REWARD_CUE_ITEM_KEY = "sfx_reward_unlock"
 DEFAULT_BACKEND = "http://localhost:8081"
+
+
+def image_generation_endpoint(item: dict[str, Any]) -> str:
+    endpoint = (
+        os.environ.get("PHASE36_IMAGE_GENERATIONS_URL")
+        or os.environ.get("PHASE36_IMAGE_BASE_URL")
+        or item.get("openaiImagesEndpoint")
+        or "https://api.openai.com/v1/images/generations"
+    ).strip()
+    if endpoint.endswith("/"):
+        endpoint = endpoint[:-1]
+    if endpoint.endswith("/images"):
+        return endpoint + "/generations"
+    if endpoint.endswith("/images/generations"):
+        return endpoint
+    parsed = urlparse(endpoint)
+    if parsed.path in ("", "/"):
+        return endpoint + "/v1/images/generations"
+    return endpoint
+
+
+def image_api_key() -> str | None:
+    return os.environ.get("PHASE36_IMAGE_API_KEY") or os.environ.get("OPENAI_API_KEY")
+
+
+def image_model(item: dict[str, Any]) -> str:
+    return os.environ.get("PHASE36_IMAGE_MODEL") or item.get("modelCode") or "gpt-image-1"
+
+
+def extract_image_payload(data: dict[str, Any]) -> tuple[str | None, str | None]:
+    candidates = data.get("data")
+    if candidates is None:
+        candidates = data.get("images") or data.get("result") or data.get("output")
+    if isinstance(candidates, dict):
+        candidates = [candidates]
+    if not isinstance(candidates, list):
+        candidates = [data]
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        b64 = (
+            candidate.get("b64_json")
+            or candidate.get("base64")
+            or candidate.get("image_base64")
+            or candidate.get("image")
+        )
+        url = candidate.get("url") or candidate.get("image_url")
+        if b64 or url:
+            return b64, url
+    return None, None
+
+
+def download_binary(url: str) -> bytes:
+    request = urllib.request.Request(url, method="GET", headers={"Accept": "image/*,*/*"})
+    with urllib.request.urlopen(request, timeout=180) as response:
+        return response.read()
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -85,20 +142,20 @@ def api_request(method: str, backend: str, path: str, token: str, payload: dict[
 
 
 def maybe_generate_openai_image(item: dict[str, Any], prompt_text: str, output_path: Path, args: argparse.Namespace) -> str:
-    api_key = os.environ.get("OPENAI_API_KEY")
+    api_key = image_api_key()
     if not api_key:
-        return "blocked_missing_OPENAI_API_KEY"
+        return "blocked_missing_image_api_key"
     if output_path.exists() and not args.overwrite:
         return "ready_existing"
     payload = {
-        "model": item.get("modelCode") or "gpt-image-1",
+        "model": image_model(item),
         "prompt": prompt_text,
         "size": item.get("size", "1024x1024"),
         "quality": item.get("quality", "auto"),
         "n": 1,
     }
     request = urllib.request.Request(
-        item.get("openaiImagesEndpoint", "https://api.openai.com/v1/images/generations"),
+        image_generation_endpoint(item),
         data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
         method="POST",
         headers={
@@ -108,13 +165,16 @@ def maybe_generate_openai_image(item: dict[str, Any], prompt_text: str, output_p
     )
     with urllib.request.urlopen(request, timeout=180) as response:
         data = json.loads(response.read().decode("utf-8"))
-    first = data.get("data", [{}])[0]
-    b64 = first.get("b64_json")
+    b64, url = extract_image_payload(data)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if b64:
+        output_path.write_bytes(base64.b64decode(b64))
+        return "generated"
+    if url:
+        output_path.write_bytes(download_binary(url))
+        return "generated"
     if not b64:
         return "retry_required"
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_bytes(base64.b64decode(b64))
-    return "generated"
 
 
 def import_and_promote(backend: str, token: str, package_id: int, item_id: int, payload: dict[str, Any], promote: str | None) -> dict[str, Any]:
@@ -246,7 +306,11 @@ def main() -> int:
         }
         if asset_kind in ("image", "icon"):
             if args.confirm_production:
-                status = maybe_generate_openai_image(manifest_item, prompt_text, output_path, args)
+                try:
+                    status = maybe_generate_openai_image(manifest_item, prompt_text, output_path, args)
+                except Exception as exc:
+                    status = "retry_required"
+                    row["errorMessage"] = str(exc)
             else:
                 status = "dry_run"
             row["status"] = status
