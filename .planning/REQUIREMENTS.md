@@ -23,10 +23,10 @@
 
 ### Public Runtime Asset Consumption
 
-- [ ] **RUN-01**: Public story runtime APIs return published generated assets, posters, fallbacks, Lottie metadata, audio/video metadata, and manifest usage hints without exposing admin-only prompt, local path, or provider-secret data.
-- [ ] **RUN-02**: Public runtime gracefully handles missing, unpublished, or rejected generated assets by falling back to poster/fallback assets or clear unsupported-media placeholders.
-- [ ] **RUN-03**: Public event endpoints can record story media read/play completion, pickup interaction, task baseline completion, and reward acquisition events needed by dynamic exploration progress.
-- [ ] **RUN-04**: Public runtime smoke verifies the flagship story can load generated/published assets and that lifecycle filtering still hides unpublished content.
+- [x] **RUN-01**: Public story runtime APIs return published generated assets, posters, fallbacks, Lottie metadata, audio/video metadata, and manifest usage hints without exposing admin-only prompt, local path, or provider-secret data.
+- [x] **RUN-02**: Public runtime gracefully handles missing, unpublished, or rejected generated assets by falling back to poster/fallback assets or clear unsupported-media placeholders.
+- [x] **RUN-03**: Public event endpoints can record story media read/play completion, pickup interaction, task baseline completion, and reward acquisition events needed by dynamic exploration progress.
+- [x] **RUN-04**: Public runtime smoke verifies the flagship story can load generated/published assets and that lifecycle filtering still hides unpublished content.
 
 ### Mini-program Story Experience Acceptance
 
@@ -73,10 +73,10 @@
 | QA-02 | Phase 37 | Complete |
 | QA-03 | Phase 37 | Complete |
 | QA-04 | Phase 37 | Pending |
-| RUN-01 | Phase 38 | Pending |
-| RUN-02 | Phase 38 | Pending |
-| RUN-03 | Phase 38 | Pending |
-| RUN-04 | Phase 38 | Pending |
+| RUN-01 | Phase 38 | Complete |
+| RUN-02 | Phase 38 | Complete |
+| RUN-03 | Phase 38 | Complete |
+| RUN-04 | Phase 38 | Complete |
 | MP-01 | Phase 39 | Pending |
 | MP-02 | Phase 39 | Pending |
 | MP-03 | Phase 39 | Pending |
@@ -94,4 +94,4 @@
 
 ---
 *Requirements defined: 2026-04-30*
-*Last updated: 2026-05-03 after Phase 36 live image/board/audio/video COS verification*
+*Last updated: 2026-05-03 after Phase 38 public runtime asset and authenticated event smoke verification*

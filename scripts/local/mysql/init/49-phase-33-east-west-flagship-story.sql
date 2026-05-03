@@ -650,6 +650,42 @@ INSERT INTO `story_content_blocks` (
   `published_at` = VALUES(`published_at`),
   `deleted` = 0;
 
+INSERT INTO `story_content_blocks` (
+  `code`, `block_type`,
+  `title_zh`, `title_en`, `title_zht`, `title_pt`,
+  `summary_zh`, `summary_en`, `summary_zht`, `summary_pt`,
+  `body_zh`, `body_en`, `body_zht`, `body_pt`,
+  `primary_asset_id`, `style_preset`, `display_mode`, `visibility_json`, `config_json`,
+  `status`, `sort_order`, `published_at`, `deleted`
+) VALUES (
+  'ch05_finale_recap_video', 'video',
+  '全線路線回顧混剪', 'Final route recap video', '全線路線回顧混剪', '',
+  '終章播放全線路線回顧影片；未正式發佈時，公開端以不可播放媒體物件安全降級。', 'Final recap video with safe runtime fallback.', '終章播放全線路線回顧影片；未正式發佈時，公開端以不可播放媒體物件安全降級。', '',
+  '從媽閣廟、亞婆井前地、崗頂前地、大炮台到議事亭前地，回看戰火與共生的完整路線。', 'Recap of the full route from conflict to coexistence.', '從媽閣廟、亞婆井前地、崗頂前地、大炮台到議事亭前地，回看戰火與共生的完整路線。', '',
+  333008, 'fullscreen-recap', 'video_player', JSON_OBJECT('schemaVersion', 1, 'visibleInStoryMode', TRUE),
+  JSON_OBJECT('schemaVersion', 1, 'assetKind', 'video', 'posterAssetId', 333007, 'fallbackAssetId', 333007),
+  'published', 33100, NOW(), 0
+) ON DUPLICATE KEY UPDATE
+  `block_type` = VALUES(`block_type`),
+  `title_zh` = VALUES(`title_zh`),
+  `title_en` = VALUES(`title_en`),
+  `title_zht` = VALUES(`title_zht`),
+  `summary_zh` = VALUES(`summary_zh`),
+  `summary_en` = VALUES(`summary_en`),
+  `summary_zht` = VALUES(`summary_zht`),
+  `body_zh` = VALUES(`body_zh`),
+  `body_en` = VALUES(`body_en`),
+  `body_zht` = VALUES(`body_zht`),
+  `primary_asset_id` = VALUES(`primary_asset_id`),
+  `style_preset` = VALUES(`style_preset`),
+  `display_mode` = VALUES(`display_mode`),
+  `visibility_json` = VALUES(`visibility_json`),
+  `config_json` = VALUES(`config_json`),
+  `status` = VALUES(`status`),
+  `sort_order` = VALUES(`sort_order`),
+  `published_at` = VALUES(`published_at`),
+  `deleted` = 0;
+
 DELETE `l`
 FROM `story_chapter_block_links` `l`
 JOIN `story_content_blocks` `b`
@@ -670,7 +706,8 @@ WHERE `b`.`code` IN (
   'ch05_coexistence_finale_script',
   'ch05_coexistence_finale_hero_media',
   'ch05_coexistence_finale_narration_audio',
-  'ch05_final_mirror_lottie'
+  'ch05_final_mirror_lottie',
+  'ch05_finale_recap_video'
 );
 
 INSERT INTO `story_chapter_block_links` (
@@ -727,6 +764,20 @@ SELECT `sc`.`id`, `b`.`id`, NULL, NULL, NULL,
   0
 FROM `story_chapters` `sc`
 JOIN `story_content_blocks` `b` ON `b`.`code` = 'ch05_final_mirror_lottie' AND `b`.`deleted` = 0
+WHERE `sc`.`storyline_id` = @storyline_east_west_id AND `sc`.`chapter_order` = 5 AND `sc`.`deleted` = 0;
+
+INSERT INTO `story_chapter_block_links` (
+  `chapter_id`, `block_id`, `override_title_json`, `override_summary_json`, `override_body_json`,
+  `display_condition_json`, `override_config_json`, `status`, `sort_order`, `deleted`
+)
+SELECT `sc`.`id`, `b`.`id`, NULL, NULL, NULL,
+  JSON_OBJECT('schemaVersion', 1, 'condition', 'chapter_finale'),
+  JSON_OBJECT('schemaVersion', 1, 'source', 'phase33-seed', 'assetRole', 'finale.recap_video'),
+  'published',
+  50,
+  0
+FROM `story_chapters` `sc`
+JOIN `story_content_blocks` `b` ON `b`.`code` = 'ch05_finale_recap_video' AND `b`.`deleted` = 0
 WHERE `sc`.`storyline_id` = @storyline_east_west_id AND `sc`.`chapter_order` = 5 AND `sc`.`deleted` = 0;
 
 DROP TEMPORARY TABLE IF EXISTS `phase33_pickups`;
