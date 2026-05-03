@@ -4,13 +4,13 @@ milestone: v3.1
 milestone_name: Material Production and Mini-program Experience Acceptance
 current_phase: 36
 current_plan: 5
-status: phase_36_complete
+status: completed
 stopped_at: Phase 36 live image/board/audio/video/COS smoke completed
-last_updated: "2026-05-02T16:25:00.000Z"
+last_updated: "2026-05-03T00:27:03.116Z"
 last_activity: 2026-05-03 -- Phase 36 live chapter videos generated from stills plus narration, imported through backend APIs, published to COS, and smoke verified
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
   completed_plans: 5
   percent: 100
@@ -32,7 +32,7 @@ Plan: 5 of 5
 Milestone: `v3.1`
 Current Phase: 36
 Total Phases Planned: 5
-Status: Phase 36 implementation plans executed; live image/board/audio/video/COS path verified
+Status: Phase 36 complete; live image/board/audio/video/COS path passed
 Current Plan: 5
 Last activity: 2026-05-03 -- Phase 36 live chapter videos generated from stills plus narration, imported through backend APIs, published to COS, and smoke verified
 Last Activity Description: Phase 36 UAT is complete at 6/6 passed. Security audit `36-SECURITY.md` closes 25/25 threats and fixed publish/rollback authorization so both super-admin role and explicit confirmation are required. Live image, board-slice, audio, and video assets are now verified with backend COS storage, published material package versions, COS URL checks, version history, and rollback smoke. MAT-01 through MAT-05 are complete; chapter MP4s use external UTF-8 caption metadata because burned-in subtitles degraded on this workstation.
