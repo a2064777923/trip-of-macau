@@ -262,8 +262,20 @@ public class AdminAiController {
             @RequestParam(defaultValue = "10") long pageSize,
             @RequestParam(required = false) String capabilityCode,
             @RequestParam(required = false) Integer success,
-            @RequestParam(required = false) Long providerId) {
-        return ApiResponse.success(adminAiService.pageLogs(pageNum, pageSize, capabilityCode, success, providerId));
+            @RequestParam(required = false) Long providerId,
+            @RequestParam(required = false) String requestType,
+            @RequestParam(required = false) Long adminOwnerId,
+            @RequestParam(required = false) String inventoryCode) {
+        return ApiResponse.success(adminAiService.pageLogs(
+                pageNum,
+                pageSize,
+                capabilityCode,
+                success,
+                providerId,
+                requestType,
+                adminOwnerId,
+                inventoryCode
+        ));
     }
 
     @GetMapping("/prompt-templates")

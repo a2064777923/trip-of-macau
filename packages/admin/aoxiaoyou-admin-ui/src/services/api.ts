@@ -2315,6 +2315,14 @@ export interface AiGenerationJobItem {
   providerRequestId?: string;
   resultSummary?: string;
   errorMessage?: string;
+  costLabel?: string;
+  costType?: 'estimated' | 'actual' | 'provider_unavailable' | string;
+  safePromptSummary?: string;
+  safeRequestSummary?: string;
+  candidateCount?: number;
+  latestAssetUrl?: string;
+  latestAssetKind?: string;
+  latestAssetName?: string;
   latestCandidateId?: number;
   finalizedCandidateId?: number;
   createdAt?: string;
@@ -2352,6 +2360,7 @@ export interface AiLogItem {
   capabilityCode?: string;
   inventoryId?: number;
   inventoryCode?: string;
+  modelCode?: string;
   adminOwnerId?: number;
   adminOwnerName?: string;
   userOpenid?: string;
@@ -2361,11 +2370,14 @@ export interface AiLogItem {
   latencyMs?: number;
   tokensUsed?: number;
   costUsd?: number;
+  costLabel?: string;
+  costType?: 'estimated' | 'actual' | 'provider_unavailable' | string;
   success: number;
   fallbackTriggered?: number;
   blockedReason?: string;
   traceId?: string;
   errorMessage?: string;
+  safeOutputSummary?: string;
   createdAt?: string;
 }
 
@@ -2473,6 +2485,9 @@ export const getAiLogs = (params?: {
   capabilityCode?: string;
   success?: number;
   providerId?: number;
+  requestType?: string;
+  adminOwnerId?: number;
+  inventoryCode?: string;
 }) => request.get<PaginationResponse<AiLogItem>>('/api/admin/v1/ai/logs', { params });
 
 export const getAiPromptTemplates = (params?: { capabilityCode?: string; templateType?: string }) =>

@@ -102,7 +102,14 @@ public interface AdminAiService {
 
     void deleteQuotaRule(Long id);
 
-    PageResponse<AdminAiLogResponse> pageLogs(long pageNum, long pageSize, String capabilityCode, Integer success, Long providerId);
+    PageResponse<AdminAiLogResponse> pageLogs(long pageNum,
+                                              long pageSize,
+                                              String capabilityCode,
+                                              Integer success,
+                                              Long providerId,
+                                              String requestType,
+                                              Long adminOwnerId,
+                                              String inventoryCode);
 
     List<AdminAiPromptTemplateResponse> listPromptTemplates(String capabilityCode, String templateType);
 

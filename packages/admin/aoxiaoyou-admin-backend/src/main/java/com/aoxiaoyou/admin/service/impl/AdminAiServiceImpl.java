@@ -835,7 +835,14 @@ public class AdminAiServiceImpl implements AdminAiService {
     }
 
     @Override
-    public PageResponse<AdminAiLogResponse> pageLogs(long pageNum, long pageSize, String capabilityCode, Integer success, Long providerId) {
+    public PageResponse<AdminAiLogResponse> pageLogs(long pageNum,
+                                                     long pageSize,
+                                                     String capabilityCode,
+                                                     Integer success,
+                                                     Long providerId,
+                                                     String requestType,
+                                                     Long adminOwnerId,
+                                                     String inventoryCode) {
         List<AiProviderConfig> providers = aiProviderConfigMapper.selectList(null);
         Map<Long, AiCapabilityPolicy> policyMap = aiCapabilityPolicyMapper.selectList(null).stream()
                 .collect(Collectors.toMap(AiCapabilityPolicy::getId, item -> item, (left, right) -> left));
@@ -845,6 +852,9 @@ public class AdminAiServiceImpl implements AdminAiService {
                         .eq(providerId != null, AiRequestLog::getProviderId, providerId)
                         .eq(success != null, AiRequestLog::getSuccess, success)
                         .eq(StringUtils.hasText(capabilityCode), AiRequestLog::getCapabilityCode, capabilityCode)
+                        .eq(StringUtils.hasText(requestType), AiRequestLog::getRequestType, requestType)
+                        .eq(adminOwnerId != null, AiRequestLog::getAdminOwnerId, adminOwnerId)
+                        .eq(StringUtils.hasText(inventoryCode), AiRequestLog::getInventoryCode, inventoryCode)
                         .orderByDesc(AiRequestLog::getCreatedAt)
                         .orderByDesc(AiRequestLog::getId)
         );
@@ -2146,6 +2156,7 @@ public class AdminAiServiceImpl implements AdminAiService {
         AiPromptTemplate promptTemplate = templateMap.get(job.getPromptTemplateId());
         AiProviderConfig provider = providerMap.get(job.getProviderId());
         AiProviderInventory inventory = inventoryMap.get(job.getInventoryId());
+        AiGenerationCandidate latestCandidate = resolveLatestCandidate(job, candidates);
         return AdminAiGenerationJobResponse.builder()
                 .id(job.getId())
                 .capabilityId(job.getCapabilityId())
@@ -2173,6 +2184,14 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .providerRequestId(job.getProviderRequestId())
                 .resultSummary(job.getResultSummary())
                 .errorMessage(job.getErrorMessage())
+                .costLabel("供應商未返回")
+                .costType("provider_unavailable")
+                .safePromptSummary(trimTo(defaultString(job.getPromptTitle(), defaultString(job.getResultSummary(), job.getGenerationType())), 180))
+                .safeRequestSummary(trimTo(defaultString(job.getResultSummary(), job.getErrorMessage()), 180))
+                .candidateCount(candidates == null ? 0 : candidates.size())
+                .latestAssetUrl(latestCandidate == null ? null : latestCandidate.getStorageUrl())
+                .latestAssetKind(latestCandidate == null ? null : resolveAssetKind(null, latestCandidate.getCandidateType()))
+                .latestAssetName(latestCandidate == null ? null : resolveOriginalFilename(latestCandidate.getStorageObjectKey()))
                 .latestCandidateId(job.getLatestCandidateId())
                 .finalizedCandidateId(job.getFinalizedCandidateId())
                 .createdAt(job.getCreatedAt())
@@ -2211,6 +2230,7 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .providerName(log.getProviderId() == null ? null : providerMap.get(log.getProviderId()) == null ? null : providerMap.get(log.getProviderId()).getDisplayName())
                 .inventoryId(log.getInventoryId())
                 .inventoryCode(log.getInventoryCode())
+                .modelCode(log.getInventoryCode())
                 .policyId(log.getPolicyId())
                 .policyName(policy == null ? null : policy.getPolicyName())
                 .capabilityCode(log.getCapabilityCode())
@@ -2223,13 +2243,34 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .latencyMs(log.getLatencyMs())
                 .tokensUsed(log.getTokensUsed())
                 .costUsd(log.getCostUsd())
+                .costLabel(formatCostLabel(log.getCostUsd()))
+                .costType(log.getCostUsd() == null ? "provider_unavailable" : "estimated")
                 .success(log.getSuccess())
                 .fallbackTriggered(log.getFallbackTriggered())
                 .blockedReason(log.getBlockedReason())
                 .traceId(log.getTraceId())
                 .errorMessage(log.getErrorMessage())
+                .safeOutputSummary(trimTo(defaultString(log.getOutputSummary(), log.getErrorMessage()), 180))
                 .createdAt(log.getCreatedAt())
                 .build();
+    }
+
+    private AiGenerationCandidate resolveLatestCandidate(AiGenerationJob job, List<AiGenerationCandidate> candidates) {
+        if (job == null || candidates == null || candidates.isEmpty()) {
+            return null;
+        }
+        if (job.getLatestCandidateId() != null) {
+            for (AiGenerationCandidate candidate : candidates) {
+                if (Objects.equals(candidate.getId(), job.getLatestCandidateId())) {
+                    return candidate;
+                }
+            }
+        }
+        return candidates.get(candidates.size() - 1);
+    }
+
+    private String formatCostLabel(BigDecimal costUsd) {
+        return costUsd == null ? "供應商未返回" : "US$" + costUsd.stripTrailingZeros().toPlainString();
     }
 
     private boolean canAccessJob(AiGenerationJob job, Long currentAdminId, List<String> roles) {

@@ -177,6 +177,26 @@ function Ensure-Success {
   return $Response
 }
 
+function Get-PageRows {
+  param($PageData)
+  if ($null -eq $PageData) { return @() }
+  if ($PageData.PSObject.Properties.Name -contains 'list') { return @($PageData.list) }
+  if ($PageData.PSObject.Properties.Name -contains 'records') { return @($PageData.records) }
+  return @()
+}
+
+function Assert-RowHasAnyField {
+  param(
+    [Parameter(Mandatory = $true)]$Row,
+    [Parameter(Mandatory = $true)][string[]]$Names,
+    [Parameter(Mandatory = $true)][string]$Context
+  )
+  foreach ($name in $Names) {
+    if ($Row.PSObject.Properties.Name -contains $name) { return }
+  }
+  throw "$Context missing expected field: $($Names -join ' or ')"
+}
+
 function Normalize-BearerToken {
   param([string]$Token)
   if ([string]::IsNullOrWhiteSpace($Token)) { return $null }
@@ -244,13 +264,32 @@ function Test-AiObservabilityApi {
     $logs = Ensure-Success -Context 'ai logs' -Response (
       Invoke-JsonRequest -Method GET -Url "$baseUrl/api/admin/v1/ai/logs?pageNum=1&pageSize=5" -Token $token
     )
+    $jobRows = Get-PageRows -PageData $jobs
+    $logRows = Get-PageRows -PageData $logs
+    if ($jobRows.Count -gt 0) {
+      $jobRow = $jobRows[0]
+      Assert-RowHasAnyField -Row $jobRow -Names @('jobStatus') -Context 'generation job row'
+      Assert-RowHasAnyField -Row $jobRow -Names @('ownerAdminName') -Context 'generation job row'
+      Assert-RowHasAnyField -Row $jobRow -Names @('costType') -Context 'generation job row'
+      Assert-RowHasAnyField -Row $jobRow -Names @('safePromptSummary') -Context 'generation job row'
+      Assert-RowHasAnyField -Row $jobRow -Names @('safeRequestSummary') -Context 'generation job row'
+    }
+    if ($logRows.Count -gt 0) {
+      $logRow = $logRows[0]
+      Assert-RowHasAnyField -Row $logRow -Names @('success') -Context 'ai log row'
+      Assert-RowHasAnyField -Row $logRow -Names @('costLabel', 'costUsd') -Context 'ai log row'
+      Assert-RowHasAnyField -Row $logRow -Names @('costType') -Context 'ai log row'
+      Assert-RowHasAnyField -Row $logRow -Names @('safeOutputSummary') -Context 'ai log row'
+    }
     $summary = @{
       overviewPresent = $null -ne $overview
-      jobRows = @($jobs.list).Count
-      logRows = @($logs.list).Count
+      jobRows = $jobRows.Count
+      logRows = $logRows.Count
+      safeJobShapeChecked = $jobRows.Count -gt 0
+      safeLogShapeChecked = $logRows.Count -gt 0
     } | ConvertTo-Json -Depth 5 -Compress
     Assert-NoSecretText -Text $summary -Context 'admin ai observability summary'
-    Add-Result -Area 'admin ai' -Check 'observability API' -Status 'PASS' -Evidence "Overview available; jobs=$(@($jobs.list).Count); logs=$(@($logs.list).Count)."
+    Add-Result -Area 'admin ai' -Check 'observability API' -Status 'PASS' -Evidence "Overview available; jobs=$($jobRows.Count); logs=$($logRows.Count); safe fields checked."
   } catch {
     $message = $_.Exception.Message
     Assert-NoSecretText -Text $message -Context 'admin ai blocked message'

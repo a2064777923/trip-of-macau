@@ -14,6 +14,7 @@ public class AdminAiLogResponse {
     private String providerName;
     private Long inventoryId;
     private String inventoryCode;
+    private String modelCode;
     private Long policyId;
     private String policyName;
     private String capabilityCode;
@@ -26,10 +27,13 @@ public class AdminAiLogResponse {
     private Integer latencyMs;
     private Integer tokensUsed;
     private BigDecimal costUsd;
+    private String costLabel;
+    private String costType;
     private Integer success;
     private Integer fallbackTriggered;
     private String blockedReason;
     private String traceId;
     private String errorMessage;
+    private String safeOutputSummary;
     private LocalDateTime createdAt;
 }

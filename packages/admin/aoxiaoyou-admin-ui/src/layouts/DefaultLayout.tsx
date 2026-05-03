@@ -194,7 +194,7 @@ const DefaultLayout: React.FC = () => {
           {
             key: '/ai/observability',
             icon: <AuditOutlined />,
-            label: <Link to="/ai/observability">監控與用量</Link>,
+            label: <Link to="/ai/observability">監控與成本</Link>,
           },
           {
             key: '/ai/settings',

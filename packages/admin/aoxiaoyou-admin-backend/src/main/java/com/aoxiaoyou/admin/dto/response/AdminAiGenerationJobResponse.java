@@ -36,6 +36,14 @@ public class AdminAiGenerationJobResponse {
     private String providerRequestId;
     private String resultSummary;
     private String errorMessage;
+    private String costLabel;
+    private String costType;
+    private String safePromptSummary;
+    private String safeRequestSummary;
+    private Integer candidateCount;
+    private String latestAssetUrl;
+    private String latestAssetKind;
+    private String latestAssetName;
     private Long latestCandidateId;
     private Long finalizedCandidateId;
     private LocalDateTime createdAt;
