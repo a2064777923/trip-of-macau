@@ -29,6 +29,7 @@ import com.aoxiaoyou.tripofmacau.mapper.ExplorationElementMapper;
 import com.aoxiaoyou.tripofmacau.mapper.UserExplorationEventMapper;
 import com.aoxiaoyou.tripofmacau.mapper.UserStorylineSessionMapper;
 import com.aoxiaoyou.tripofmacau.service.PublicExperienceService;
+import com.aoxiaoyou.tripofmacau.service.PublicRuntimeAssetService;
 import com.aoxiaoyou.tripofmacau.service.StoryLineService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -105,6 +106,7 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
     private final UserExplorationEventMapper userExplorationEventMapper;
     private final ContentAssetMapper contentAssetMapper;
     private final LocalizedContentSupport localizedContentSupport;
+    private final PublicRuntimeAssetService publicRuntimeAssetService;
     private final ObjectMapper objectMapper;
     private UserStorylineSessionMapper userStorylineSessionMapper;
 
@@ -329,7 +331,7 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
     private ExperienceRuntimeResponse.Flow toRuntimeFlow(ExperienceFlow flow, String localeHint) {
         List<ExperienceFlowStep> steps = selectPublishedFlowSteps(flow.getId());
         Map<Long, ExperienceTemplate> templatesById = loadTemplatesById(steps.stream().map(ExperienceFlowStep::getTemplateId).toList());
-        Map<Long, ContentAsset> assetsById = loadAssetsById(steps.stream().map(ExperienceFlowStep::getMediaAssetId).toList());
+        Map<Long, ContentAsset> assetsById = loadAssetsWithFallbacks(steps.stream().map(ExperienceFlowStep::getMediaAssetId).toList());
         return ExperienceRuntimeResponse.Flow.builder()
                 .id(flow.getId())
                 .code(flow.getCode())
@@ -374,7 +376,7 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
                 .conditionConfig(conditionConfig)
                 .effectConfig(effectConfig)
                 .mediaAssetId(step.getMediaAssetId())
-                .mediaAsset(toStoryMediaAsset(assetsById.get(step.getMediaAssetId())))
+                .mediaAsset(publicRuntimeAssetService.toPublicAsset(step.getMediaAssetId(), assetsById))
                 .rewardRuleIds(readJsonValue(step.getRewardRuleIdsJson()))
                 .explorationWeightLevel(step.getExplorationWeightLevel())
                 .explorationWeightValue(resolveExplorationWeightValue(step.getExplorationWeightLevel(), null))
@@ -657,28 +659,23 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
             return Collections.emptyMap();
         }
         return contentAssetMapper.selectBatchIds(normalizedIds).stream()
-                .filter(asset -> isPublishedStatus(asset.getStatus()))
                 .collect(Collectors.toMap(ContentAsset::getId, Function.identity(), (left, right) -> left, LinkedHashMap::new));
     }
 
-    private StoryMediaAssetResponse toStoryMediaAsset(ContentAsset asset) {
-        if (asset == null) {
-            return null;
+    private Map<Long, ContentAsset> loadAssetsWithFallbacks(Collection<Long> ids) {
+        Map<Long, ContentAsset> assets = new LinkedHashMap<>(loadAssetsById(ids));
+        if (assets.isEmpty()) {
+            return assets;
         }
-        return StoryMediaAssetResponse.builder()
-                .id(asset.getId())
-                .assetKind(asset.getAssetKind())
-                .url(asset.getCanonicalUrl())
-                .mimeType(asset.getMimeType())
-                .originalFilename(asset.getOriginalFilename())
-                .widthPx(asset.getWidthPx())
-                .heightPx(asset.getHeightPx())
-                .animationSubtype(asset.getAnimationSubtype())
-                .defaultLoop(asset.getDefaultLoop())
-                .defaultAutoplay(asset.getDefaultAutoplay())
-                .posterAssetId(asset.getPosterAssetId())
-                .fallbackAssetId(asset.getFallbackAssetId())
-                .build();
+        LinkedHashSet<Long> fallbackIds = assets.values().stream()
+                .flatMap(asset -> Stream.of(asset.getFallbackAssetId(), asset.getPosterAssetId()))
+                .filter(Objects::nonNull)
+                .filter(id -> !assets.containsKey(id))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        if (!fallbackIds.isEmpty()) {
+            assets.putAll(loadAssetsById(fallbackIds));
+        }
+        return assets;
     }
 
     private Map<String, Object> readObjectJson(String json) {

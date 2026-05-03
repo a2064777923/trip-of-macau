@@ -20,4 +20,23 @@ public class StoryMediaAssetResponse {
     private String posterUrl;
     private Long fallbackAssetId;
     private String fallbackUrl;
+    private String availability;
+    private String unavailableReason;
+    private boolean fallbackUsed;
+    private String runtimeKind;
+    private Long fileSizeBytes;
+    private Integer durationMs;
+    private UsageHint usageHint;
+
+    @Data
+    @Builder
+    public static class UsageHint {
+        private String materialItemKey;
+        private String usageTarget;
+        private String chapterCode;
+        private String targetType;
+        private String targetCode;
+        private String displayRole;
+        private String sourceScope;
+    }
 }

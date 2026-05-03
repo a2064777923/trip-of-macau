@@ -87,6 +87,8 @@ public interface CatalogFoundationService {
 
     List<Notification> listPublishedNotifications();
 
+    Map<Long, ContentAsset> getAssetsByIds(Collection<Long> assetIds);
+
     Map<Long, ContentAsset> getPublishedAssetsByIds(Collection<Long> assetIds);
 
     Map<Long, IndoorBuilding> getPublishedIndoorBuildingsByIds(Collection<Long> buildingIds);

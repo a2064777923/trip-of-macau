@@ -54,6 +54,7 @@ import com.aoxiaoyou.tripofmacau.entity.SubMap;
 import com.aoxiaoyou.tripofmacau.entity.TipArticle;
 import com.aoxiaoyou.tripofmacau.service.CatalogFoundationService;
 import com.aoxiaoyou.tripofmacau.service.PublicCatalogService;
+import com.aoxiaoyou.tripofmacau.service.PublicRuntimeAssetService;
 import com.aoxiaoyou.tripofmacau.service.RuntimeSettingsService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -85,6 +86,7 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
     private final CatalogFoundationService catalogFoundationService;
     private final RuntimeSettingsService runtimeSettingsService;
     private final LocalizedContentSupport localizedContentSupport;
+    private final PublicRuntimeAssetService publicRuntimeAssetService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -798,8 +800,8 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
                             .estimatedMinutes(storyLine.getEstimatedMinutes())
                             .difficulty(storyLine.getDifficulty())
                             .rewardBadge(localizedContentSupport.resolveText(localeHint, storyLine.getRewardBadgeZh(), storyLine.getRewardBadgeEn(), storyLine.getRewardBadgeZht(), storyLine.getRewardBadgePt()))
-                            .coverImageUrl(localizedContentSupport.resolveAssetUrl(assets, storyLine.getCoverAssetId()))
-                            .bannerImageUrl(localizedContentSupport.resolveAssetUrl(assets, storyLine.getBannerAssetId()))
+                            .coverImageUrl(toPublicAssetUrl(storyLine.getCoverAssetId(), assets))
+                            .bannerImageUrl(toPublicAssetUrl(storyLine.getBannerAssetId(), assets))
                             .attachmentAssets(toStoryMediaAssetsFromRelationLinks(attachmentLinksByStoryline.get(storyLine.getId()), assets))
                             .totalChapters(chapterResponses.size())
                             .sortOrder(storyLine.getSortOrder())
@@ -959,42 +961,29 @@ public class PublicCatalogServiceImpl implements PublicCatalogService {
         if (directIds.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<Long, ContentAsset> assets = new LinkedHashMap<>(catalogFoundationService.getPublishedAssetsByIds(directIds));
+        Map<Long, ContentAsset> assets = new LinkedHashMap<>(catalogFoundationService.getAssetsByIds(directIds));
         LinkedHashSet<Long> fallbackIds = assets.values().stream()
                 .flatMap(asset -> Stream.of(asset.getPosterAssetId(), asset.getFallbackAssetId()))
                 .filter(Objects::nonNull)
                 .filter(id -> !assets.containsKey(id))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         if (!fallbackIds.isEmpty()) {
-            assets.putAll(catalogFoundationService.getPublishedAssetsByIds(fallbackIds));
+            assets.putAll(catalogFoundationService.getAssetsByIds(fallbackIds));
         }
         return assets;
     }
 
+    private String toPublicAssetUrl(Long assetId, Map<Long, ContentAsset> assets) {
+        StoryMediaAssetResponse asset = publicRuntimeAssetService.toPublicAsset(assetId, assets);
+        return asset == null ? "" : localizedContentSupport.firstNonBlank(asset.getUrl(), "");
+    }
+
     private StoryMediaAssetResponse toStoryMediaAssetResponse(Long assetId, Map<Long, ContentAsset> assets) {
-        return assetId == null ? null : toStoryMediaAssetResponse(assets.get(assetId), assets);
+        return publicRuntimeAssetService.toPublicAsset(assetId, assets);
     }
 
     private StoryMediaAssetResponse toStoryMediaAssetResponse(ContentAsset asset, Map<Long, ContentAsset> assets) {
-        if (asset == null) {
-            return null;
-        }
-        return StoryMediaAssetResponse.builder()
-                .id(asset.getId())
-                .assetKind(asset.getAssetKind())
-                .url(asset.getCanonicalUrl())
-                .mimeType(asset.getMimeType())
-                .originalFilename(asset.getOriginalFilename())
-                .widthPx(asset.getWidthPx())
-                .heightPx(asset.getHeightPx())
-                .animationSubtype(asset.getAnimationSubtype())
-                .defaultLoop(asset.getDefaultLoop())
-                .defaultAutoplay(asset.getDefaultAutoplay())
-                .posterAssetId(asset.getPosterAssetId())
-                .posterUrl(localizedContentSupport.resolveAssetUrl(assets, asset.getPosterAssetId()))
-                .fallbackAssetId(asset.getFallbackAssetId())
-                .fallbackUrl(localizedContentSupport.resolveAssetUrl(assets, asset.getFallbackAssetId()))
-                .build();
+        return publicRuntimeAssetService.toPublicAsset(asset, assets);
     }
 
     private List<StoryMediaAssetResponse> toStoryMediaAssetsFromRelationLinks(

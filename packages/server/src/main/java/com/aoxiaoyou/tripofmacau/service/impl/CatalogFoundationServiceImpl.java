@@ -417,6 +417,17 @@ public class CatalogFoundationServiceImpl implements CatalogFoundationService {
     }
 
     @Override
+    public Map<Long, ContentAsset> getAssetsByIds(Collection<Long> assetIds) {
+        if (assetIds == null || assetIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return contentAssetMapper.selectList(new LambdaQueryWrapper<ContentAsset>()
+                        .in(ContentAsset::getId, assetIds))
+                .stream()
+                .collect(Collectors.toMap(ContentAsset::getId, asset -> asset, (left, right) -> left));
+    }
+
+    @Override
     public Map<Long, ContentAsset> getPublishedAssetsByIds(Collection<Long> assetIds) {
         if (assetIds == null || assetIds.isEmpty()) {
             return Collections.emptyMap();
