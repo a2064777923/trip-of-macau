@@ -4,10 +4,13 @@ import com.aoxiaoyou.admin.common.api.ApiResponse;
 import com.aoxiaoyou.admin.common.api.PageResponse;
 import com.aoxiaoyou.admin.dto.request.AdminStoryMaterialPackageRequest;
 import com.aoxiaoyou.admin.dto.request.AdminStoryMaterialProductionRequest;
+import com.aoxiaoyou.admin.dto.request.AdminStoryMaterialQaRequest;
 import com.aoxiaoyou.admin.dto.response.AdminStoryMaterialPackageResponse;
 import com.aoxiaoyou.admin.dto.response.AdminStoryMaterialProductionResponse;
+import com.aoxiaoyou.admin.dto.response.AdminStoryMaterialQaResponse;
 import com.aoxiaoyou.admin.service.AdminStoryMaterialPackageService;
 import com.aoxiaoyou.admin.service.AdminStoryMaterialProductionService;
+import com.aoxiaoyou.admin.service.AdminStoryMaterialQaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,6 +37,7 @@ public class AdminStoryMaterialPackageController {
 
     private final AdminStoryMaterialPackageService storyMaterialPackageService;
     private final AdminStoryMaterialProductionService storyMaterialProductionService;
+    private final AdminStoryMaterialQaService storyMaterialQaService;
 
     @Operation(summary = "分頁查詢故事素材包")
     @GetMapping
@@ -191,6 +195,92 @@ public class AdminStoryMaterialPackageController {
             @PathVariable Long itemId,
             @ModelAttribute AdminStoryMaterialProductionRequest.VersionHistoryQuery query) {
         return ApiResponse.success(storyMaterialProductionService.listVersions(packageId, itemId, query));
+    }
+
+    @Operation(summary = "查詢故事素材包 QA 總覽")
+    @GetMapping("/{packageId}/qa/overview")
+    public ApiResponse<AdminStoryMaterialQaResponse.QaOverview> qaOverview(
+            @PathVariable Long packageId,
+            @ModelAttribute AdminStoryMaterialQaRequest.QaItemQuery query) {
+        return ApiResponse.success(storyMaterialQaService.overview(packageId, query));
+    }
+
+    @Operation(summary = "分頁查詢故事素材 QA 項目")
+    @GetMapping("/{packageId}/qa/items")
+    public ApiResponse<PageResponse<AdminStoryMaterialQaResponse.QaItem>> qaItems(
+            @PathVariable Long packageId,
+            @ModelAttribute AdminStoryMaterialQaRequest.QaItemQuery query) {
+        return ApiResponse.success(storyMaterialQaService.pageItems(packageId, query));
+    }
+
+    @Operation(summary = "查詢故事素材 QA 項目詳情")
+    @GetMapping("/{packageId}/qa/items/{itemId}")
+    public ApiResponse<AdminStoryMaterialQaResponse.QaDetail> qaItemDetail(
+            @PathVariable Long packageId,
+            @PathVariable Long itemId) {
+        return ApiResponse.success(storyMaterialQaService.detail(packageId, itemId));
+    }
+
+    @Operation(summary = "拒絕故事素材版本")
+    @PostMapping("/{packageId}/qa/items/{itemId}/reject")
+    public ApiResponse<AdminStoryMaterialQaResponse.QaActionResult> rejectQaItem(
+            @PathVariable Long packageId,
+            @PathVariable Long itemId,
+            @Valid @RequestBody AdminStoryMaterialQaRequest.QaActionRequest request,
+            HttpServletRequest httpRequest) {
+        return ApiResponse.success(storyMaterialQaService.reject(
+                packageId,
+                itemId,
+                request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername"),
+                readRoles(httpRequest)
+        ));
+    }
+
+    @Operation(summary = "批准故事素材版本")
+    @PostMapping("/{packageId}/qa/items/{itemId}/approve")
+    public ApiResponse<AdminStoryMaterialQaResponse.QaActionResult> approveQaItem(
+            @PathVariable Long packageId,
+            @PathVariable Long itemId,
+            @RequestBody(required = false) AdminStoryMaterialQaRequest.QaActionRequest request,
+            HttpServletRequest httpRequest) {
+        return ApiResponse.success(storyMaterialQaService.approve(
+                packageId,
+                itemId,
+                request == null ? new AdminStoryMaterialQaRequest.QaActionRequest() : request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername"),
+                readRoles(httpRequest)
+        ));
+    }
+
+    @Operation(summary = "替換故事素材版本")
+    @PostMapping("/{packageId}/qa/items/{itemId}/replace")
+    public ApiResponse<AdminStoryMaterialQaResponse.QaActionResult> replaceQaItem(
+            @PathVariable Long packageId,
+            @PathVariable Long itemId,
+            @Valid @RequestBody AdminStoryMaterialQaRequest.ReplaceRequest request,
+            HttpServletRequest httpRequest) {
+        return ApiResponse.success(storyMaterialQaService.replace(
+                packageId,
+                itemId,
+                request,
+                (Long) httpRequest.getAttribute("adminUserId"),
+                (String) httpRequest.getAttribute("adminUsername"),
+                readRoles(httpRequest)
+        ));
+    }
+
+    @Operation(summary = "執行故事素材包一致性檢查")
+    @PostMapping("/{packageId}/qa/consistency-check")
+    public ApiResponse<AdminStoryMaterialQaResponse.ConsistencyReport> runQaConsistencyCheck(
+            @PathVariable Long packageId,
+            @RequestBody(required = false) AdminStoryMaterialQaRequest.ConsistencyCheckRequest request) {
+        return ApiResponse.success(storyMaterialQaService.runConsistencyCheck(
+                packageId,
+                request == null ? new AdminStoryMaterialQaRequest.ConsistencyCheckRequest() : request
+        ));
     }
 
     @SuppressWarnings("unchecked")

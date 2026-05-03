@@ -16,9 +16,9 @@
 
 ### Admin Material QA and Reuse
 
-- [ ] **QA-01**: Operators can inspect generated images, sliced child assets, Lottie files, audio, and videos in one Traditional Chinese material production workspace with status, provenance, dimensions, duration, file size, cost, and usage targets.
-- [ ] **QA-02**: Operators can reject, regenerate, replace, or approve generated assets without breaking existing story, content block, reward, or runtime bindings.
-- [ ] **QA-03**: Operators can compare planned manifest entries against actual local files, COS objects, `content_assets`, and story package item rows, with warnings for missing, stale, oversized, or wrong-kind assets.
+- [x] **QA-01**: Operators can inspect generated images, sliced child assets, Lottie files, audio, and videos in one Traditional Chinese material production workspace with status, provenance, dimensions, duration, file size, cost, and usage targets.
+- [x] **QA-02**: Operators can reject, regenerate, replace, or approve generated assets without breaking existing story, content block, reward, or runtime bindings.
+- [x] **QA-03**: Operators can compare planned manifest entries against actual local files, COS objects, `content_assets`, and story package item rows, with warnings for missing, stale, oversized, or wrong-kind assets.
 - [ ] **QA-04**: Operators can reuse approved assets from the story material package in content blocks, rewards, pickups, POI/story overlays, and public runtime DTOs through the existing media picker components.
 
 ### Public Runtime Asset Consumption
@@ -69,9 +69,9 @@
 | MAT-03 | Phase 36 | Complete |
 | MAT-04 | Phase 36 | Complete: five chapter MP4s were assembled from generated stills plus narration, promoted to COS as `video/mp4`, and retain UTF-8 caption metadata; burned-in subtitles degraded to external captions on this workstation |
 | MAT-05 | Phase 36 | Complete: image, board-slice, audio, video, publish, rollback, version-history, and COS evidence pass |
-| QA-01 | Phase 37 | Pending |
-| QA-02 | Phase 37 | Pending |
-| QA-03 | Phase 37 | Pending |
+| QA-01 | Phase 37 | Complete |
+| QA-02 | Phase 37 | Complete |
+| QA-03 | Phase 37 | Complete |
 | QA-04 | Phase 37 | Pending |
 | RUN-01 | Phase 38 | Pending |
 | RUN-02 | Phase 38 | Pending |
