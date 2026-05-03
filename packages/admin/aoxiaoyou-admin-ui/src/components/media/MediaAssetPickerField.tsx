@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FileOutlined } from '@ant-design/icons';
-import { Alert, App as AntdApp, Button, Card, Empty, Form, Select, Space, Typography, Upload } from 'antd';
+import { Alert, App as AntdApp, Button, Card, Empty, Form, Select, Space, Tag, Typography, Upload } from 'antd';
 import type { NamePath } from 'antd/es/form/interface';
 import type { UploadRequestOption } from 'rc-upload/lib/interface';
 import AiCreativeWorkbenchModal from '../ai/AiCreativeWorkbenchModal';
@@ -95,6 +95,53 @@ function mergeAssets(currentAssets: AdminContentAssetItem[], incomingAssets: Adm
     }
   });
   return Array.from(merged.values()).sort((left, right) => right.id - left.id);
+}
+
+function isRejectedMaterialAsset(asset: AdminContentAssetItem) {
+  return asset.materialPromotionStatus === 'rejected' || asset.materialItemStatus === 'rejected';
+}
+
+function materialSearchText(asset: AdminContentAssetItem) {
+  return [
+    asset.id,
+    assetTitle(asset),
+    asset.originalFilename,
+    asset.objectKey,
+    asset.canonicalUrl,
+    asset.clientRelativePath,
+    asset.materialPackageCode,
+    asset.materialPackageTitleZht,
+    asset.materialItemKey,
+    asset.materialPromotionStatus,
+    asset.materialItemStatus,
+    asset.usageTarget,
+    asset.chapterCode,
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+function materialOptionLabel(asset: AdminContentAssetItem) {
+  return (
+    <Space direction="vertical" size={2} style={{ width: '100%', minWidth: 0 }}>
+      <Space wrap size={[4, 4]}>
+        <Text strong>{`#${asset.id}`}</Text>
+        <Text ellipsis style={{ maxWidth: 260 }}>
+          {assetTitle(asset)}
+        </Text>
+      </Space>
+      <Space wrap size={[4, 4]}>
+        {asset.materialPackageCode ? <Tag color="geekblue">{asset.materialPackageCode}</Tag> : null}
+        {asset.materialItemKey ? <Tag color="blue">{asset.materialItemKey}</Tag> : null}
+        {asset.materialPromotionStatus ? (
+          <Tag color={isRejectedMaterialAsset(asset) ? 'red' : asset.materialPromotionStatus === 'published' ? 'green' : 'gold'}>
+            {asset.materialPromotionStatus}
+          </Tag>
+        ) : null}
+        {asset.chapterCode ? <Tag>{asset.chapterCode}</Tag> : null}
+      </Space>
+    </Space>
+  );
 }
 
 const assetRowStyle: React.CSSProperties = {
@@ -252,10 +299,23 @@ const MediaAssetPickerField: React.FC<MediaAssetPickerFieldProps> = ({
     () =>
       assets
         .filter((asset) => valueMode === 'asset-id' || !!asset.canonicalUrl)
+        .sort((left, right) => {
+          const leftRejected = isRejectedMaterialAsset(left) ? 1 : 0;
+          const rightRejected = isRejectedMaterialAsset(right) ? 1 : 0;
+          if (leftRejected !== rightRejected) {
+            return leftRejected - rightRejected;
+          }
+          const leftPublished = left.materialPromotionStatus === 'published' || left.status === 'published' ? 0 : 1;
+          const rightPublished = right.materialPromotionStatus === 'published' || right.status === 'published' ? 0 : 1;
+          if (leftPublished !== rightPublished) {
+            return leftPublished - rightPublished;
+          }
+          return right.id - left.id;
+        })
         .map((asset) => ({
-          label: `#${asset.id} | ${assetTitle(asset)}`,
+          label: materialOptionLabel(asset),
           value: toOptionValue(asset, valueMode)!,
-          searchText: `${asset.id} ${assetTitle(asset)} ${asset.originalFilename || ''} ${asset.objectKey || ''}`,
+          searchText: materialSearchText(asset),
         })),
     [assets, valueMode],
   );
@@ -436,6 +496,15 @@ const MediaAssetPickerField: React.FC<MediaAssetPickerFieldProps> = ({
                     <MediaAssetPreview asset={asset} size={72} />
                     <div style={compactMetaContainerStyle}>
                       <MediaAssetMeta asset={asset} />
+                      <Space wrap size={[4, 4]}>
+                        {asset.materialPackageCode ? <Tag color="geekblue">{asset.materialPackageCode}</Tag> : null}
+                        {asset.materialItemKey ? <Tag color="blue">{asset.materialItemKey}</Tag> : null}
+                        {asset.materialPromotionStatus ? (
+                          <Tag color={isRejectedMaterialAsset(asset) ? 'red' : 'gold'}>
+                            {asset.materialPromotionStatus}
+                          </Tag>
+                        ) : null}
+                      </Space>
                       {asset.canonicalUrl ? (
                         <Link href={asset.canonicalUrl} target="_blank">
                           開啟資源
@@ -452,6 +521,17 @@ const MediaAssetPickerField: React.FC<MediaAssetPickerFieldProps> = ({
                 <MediaAssetPreview asset={selectedAssets[0]} size={96} />
                 <div style={compactMetaContainerStyle}>
                   <MediaAssetMeta asset={selectedAssets[0]} />
+                  <Space wrap size={[4, 4]}>
+                    {selectedAssets[0].materialPackageCode ? (
+                      <Tag color="geekblue">{selectedAssets[0].materialPackageCode}</Tag>
+                    ) : null}
+                    {selectedAssets[0].materialItemKey ? <Tag color="blue">{selectedAssets[0].materialItemKey}</Tag> : null}
+                    {selectedAssets[0].materialPromotionStatus ? (
+                      <Tag color={isRejectedMaterialAsset(selectedAssets[0]) ? 'red' : 'gold'}>
+                        {selectedAssets[0].materialPromotionStatus}
+                      </Tag>
+                    ) : null}
+                  </Space>
                   {selectedAssets[0].canonicalUrl ? (
                     <Link href={selectedAssets[0].canonicalUrl} target="_blank">
                       開啟資源

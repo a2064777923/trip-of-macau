@@ -37,6 +37,16 @@ public class AdminContentAssetResponse {
     private String processingStatus;
     private String processingNote;
     private String status;
+    private Long materialPackageId;
+    private String materialPackageCode;
+    private String materialPackageTitleZht;
+    private Long materialItemId;
+    private String materialItemKey;
+    private String materialItemStatus;
+    private Long materialVersionId;
+    private String materialPromotionStatus;
+    private String usageTarget;
+    private String chapterCode;
     private LocalDateTime publishedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -39,6 +39,31 @@ interface FilterState {
   processingStatus?: string;
 }
 
+function isMaterialAsset(asset: AdminContentAssetItem) {
+  return !!(asset.materialPackageCode || asset.materialItemKey || asset.materialPackageId || asset.materialItemId);
+}
+
+function isRejectedMaterialAsset(asset: AdminContentAssetItem) {
+  return asset.materialPromotionStatus === 'rejected' || asset.materialItemStatus === 'rejected';
+}
+
+function assetHealth(asset: AdminContentAssetItem) {
+  if (!asset.canonicalUrl) {
+    return {
+      label: asset.objectKey || asset.clientRelativePath ? '待公開連結' : '疑似缺失',
+      color: asset.objectKey || asset.clientRelativePath ? 'orange' : 'red',
+      description: asset.objectKey || asset.clientRelativePath
+        ? '已有路徑但缺少 canonicalUrl，需重新同步 COS 或補公開 URL。'
+        : '沒有公開 URL、objectKey 或本地路徑，這筆資產大概率只是殘留記錄。',
+    };
+  }
+  return {
+    label: '可開啟',
+    color: 'green',
+    description: '已有 canonicalUrl，可在新視窗打開或被小程序消費。',
+  };
+}
+
 const MediaLibraryManagement: React.FC = () => {
   const [filterForm] = Form.useForm<FilterState>();
   const [assets, setAssets] = useState<AdminContentAssetItem[]>([]);
@@ -110,6 +135,8 @@ const MediaLibraryManagement: React.FC = () => {
       video: assets.filter((asset) => asset.assetKind === 'video').length,
       lottie: assets.filter((asset) => isLottieAsset(asset)).length,
       published: assets.filter((asset) => asset.status === 'published').length,
+      noPublicUrl: assets.filter((asset) => !asset.canonicalUrl).length,
+      materialPackage: assets.filter((asset) => isMaterialAsset(asset)).length,
     }),
     [assets],
   );
@@ -161,6 +188,12 @@ const MediaLibraryManagement: React.FC = () => {
                 <Col span={12}>
                   <Statistic title="Lottie 動畫" value={currentPageStats.lottie} />
                 </Col>
+                <Col span={12}>
+                  <Statistic title="素材包資源" value={currentPageStats.materialPackage} />
+                </Col>
+                <Col span={12}>
+                  <Statistic title="本頁無公開連結" value={currentPageStats.noPublicUrl} valueStyle={{ color: '#fa8c16' }} />
+                </Col>
               </Row>
             </Card>
           </Col>
@@ -177,7 +210,7 @@ const MediaLibraryManagement: React.FC = () => {
             <Row gutter={[16, 16]}>
               <Col xs={24} md={8}>
                 <Form.Item name="keyword" label="關鍵字">
-                  <Input placeholder="檔名、路徑、物件鍵、上傳者" />
+                  <Input placeholder="檔名、路徑、素材包、素材項目、物件鍵、上傳者" />
                 </Form.Item>
               </Col>
               <Col xs={12} md={4}>
@@ -245,6 +278,32 @@ const MediaLibraryManagement: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+              <Col xs={24} md={8}>
+                <Form.Item label="素材包">
+                  <Input.Group compact>
+                    <Input
+                      style={{ width: '50%' }}
+                      placeholder="素材包代碼"
+                      value={filterForm.getFieldValue('keyword')}
+                      onChange={(event) => filterForm.setFieldValue('keyword', event.target.value)}
+                    />
+                    <Button onClick={() => void loadAssets(1, pageSize)}>搜尋素材包</Button>
+                  </Input.Group>
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={8}>
+                <Form.Item label="素材項目">
+                  <Input.Group compact>
+                    <Input
+                      style={{ width: '50%' }}
+                      placeholder="itemKey / usageTarget / chapterCode"
+                      value={filterForm.getFieldValue('keyword')}
+                      onChange={(event) => filterForm.setFieldValue('keyword', event.target.value)}
+                    />
+                    <Button onClick={() => void loadAssets(1, pageSize)}>搜尋項目</Button>
+                  </Input.Group>
+                </Form.Item>
+              </Col>
             </Row>
             <Space>
               <Button type="primary" htmlType="submit">
@@ -279,58 +338,73 @@ const MediaLibraryManagement: React.FC = () => {
             }}
             renderItem={(asset) => (
               <List.Item>
-                <Card
-                  hoverable
-                  onClick={() => {
-                    setSelectedAsset(asset);
-                    setDrawerOpen(true);
-                  }}
-                  styles={{ body: { padding: 16 } }}
-                  actions={[
-                    <Button
-                      key="detail"
-                      type="link"
-                      onClick={(event) => {
-                        event.stopPropagation();
+                {(() => {
+                  const health = assetHealth(asset);
+                  return (
+                    <Card
+                      hoverable
+                      onClick={() => {
                         setSelectedAsset(asset);
                         setDrawerOpen(true);
                       }}
+                      styles={{ body: { padding: 16 } }}
+                      actions={[
+                        <Button
+                          key="detail"
+                          type="link"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSelectedAsset(asset);
+                            setDrawerOpen(true);
+                          }}
+                        >
+                          詳情
+                        </Button>,
+                        asset.canonicalUrl ? (
+                          <Link
+                            key="open"
+                            href={asset.canonicalUrl}
+                            target="_blank"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            開啟
+                          </Link>
+                        ) : (
+                          <Text key="disabled" type="secondary">
+                            無連結
+                          </Text>
+                        ),
+                      ]}
                     >
-                      詳情
-                    </Button>,
-                    asset.canonicalUrl ? (
-                      <Link
-                        key="open"
-                        href={asset.canonicalUrl}
-                        target="_blank"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        開啟
-                      </Link>
-                    ) : (
-                      <Text key="disabled" type="secondary">
-                        無連結
-                      </Text>
-                    ),
-                  ]}
-                >
-                  <Space direction="vertical" size={12} style={{ width: '100%' }}>
-                    <MediaAssetPreview asset={asset} size={168} />
-                    <MediaAssetMeta asset={asset} />
-                    <Space wrap size={[4, 4]}>
-                      {asset.status ? (
-                        <Tag color={asset.status === 'published' ? 'success' : 'default'}>{asset.status}</Tag>
-                      ) : null}
-                      {asset.uploadedByAdminName ? <Tag color="cyan">{asset.uploadedByAdminName}</Tag> : null}
-                    </Space>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {asset.fileSizeBytes ? `${(asset.fileSizeBytes / 1024).toFixed(1)} KB` : '大小未提供'}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 12 }} ellipsis>
-                      {assetTitle(asset)}
-                    </Text>
-                  </Space>
-                </Card>
+                      <Space direction="vertical" size={12} style={{ width: '100%', minWidth: 0 }}>
+                        <MediaAssetPreview asset={asset} size={168} />
+                        <MediaAssetMeta asset={asset} />
+                        <Space wrap size={[4, 4]}>
+                          <Tag color={health.color}>{health.label}</Tag>
+                          {asset.status ? (
+                            <Tag color={asset.status === 'published' ? 'success' : 'default'}>{asset.status}</Tag>
+                          ) : null}
+                          {asset.materialPackageCode ? <Tag color="geekblue">{`素材包 ${asset.materialPackageCode}`}</Tag> : null}
+                          {asset.materialItemKey ? <Tag color="blue">{`素材項目 ${asset.materialItemKey}`}</Tag> : null}
+                          {asset.materialPromotionStatus ? (
+                            <Tag color={isRejectedMaterialAsset(asset) ? 'red' : asset.materialPromotionStatus === 'published' ? 'green' : 'gold'}>
+                              {`發布狀態 ${asset.materialPromotionStatus}`}
+                            </Tag>
+                          ) : null}
+                          {asset.usageTarget ? <Tag color="purple">{asset.usageTarget}</Tag> : null}
+                          {asset.chapterCode ? <Tag>{asset.chapterCode}</Tag> : null}
+                          {asset.uploadedByAdminName ? <Tag color="cyan">{asset.uploadedByAdminName}</Tag> : null}
+                        </Space>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {asset.fileSizeBytes ? `${(asset.fileSizeBytes / 1024).toFixed(1)} KB` : '大小未提供'}
+                        </Text>
+                        <Text type="secondary" style={{ display: 'block', width: '100%', minWidth: 0, fontSize: 12 }} ellipsis={{ tooltip: assetTitle(asset) }}>
+                          {assetTitle(asset)}
+                        </Text>
+                      </Space>
+                    </Card>
+                  );
+                })()}
               </List.Item>
             )}
           />

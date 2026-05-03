@@ -31,6 +31,9 @@ import com.aoxiaoyou.admin.entity.Stamp;
 import com.aoxiaoyou.admin.entity.StoryChapter;
 import com.aoxiaoyou.admin.entity.StoryContentBlock;
 import com.aoxiaoyou.admin.entity.StoryLine;
+import com.aoxiaoyou.admin.entity.StoryMaterialPackage;
+import com.aoxiaoyou.admin.entity.StoryMaterialPackageItem;
+import com.aoxiaoyou.admin.entity.StoryMaterialPackageItemVersion;
 import com.aoxiaoyou.admin.entity.SubMap;
 import com.aoxiaoyou.admin.entity.TipArticle;
 import com.aoxiaoyou.admin.mapper.AppRuntimeSettingMapper;
@@ -47,6 +50,9 @@ import com.aoxiaoyou.admin.mapper.StampMapper;
 import com.aoxiaoyou.admin.mapper.StoryChapterMapper;
 import com.aoxiaoyou.admin.mapper.StoryContentBlockMapper;
 import com.aoxiaoyou.admin.mapper.StoryLineMapper;
+import com.aoxiaoyou.admin.mapper.StoryMaterialPackageItemMapper;
+import com.aoxiaoyou.admin.mapper.StoryMaterialPackageItemVersionMapper;
+import com.aoxiaoyou.admin.mapper.StoryMaterialPackageMapper;
 import com.aoxiaoyou.admin.mapper.SubMapMapper;
 import com.aoxiaoyou.admin.mapper.TipArticleMapper;
 import com.aoxiaoyou.admin.media.CosAssetStorageService;
@@ -61,7 +67,10 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -79,6 +88,9 @@ public class AdminContentManagementServiceImpl implements AdminContentManagement
     private final StoryLineMapper storyLineMapper;
     private final StoryChapterMapper storyChapterMapper;
     private final StoryContentBlockMapper storyContentBlockMapper;
+    private final StoryMaterialPackageMapper storyMaterialPackageMapper;
+    private final StoryMaterialPackageItemMapper storyMaterialPackageItemMapper;
+    private final StoryMaterialPackageItemVersionMapper storyMaterialPackageItemVersionMapper;
     private final RewardMapper rewardMapper;
     private final CollectibleMapper collectibleMapper;
     private final BadgeMapper badgeMapper;
@@ -137,6 +149,7 @@ public class AdminContentManagementServiceImpl implements AdminContentManagement
             String processingStatus,
             String keyword) {
         final Long keywordAssetId = parseKeywordAssetId(keyword);
+        final List<Long> materialAssetIds = searchMaterialAssetIds(keyword);
 
         Page<ContentAsset> page = contentAssetMapper.selectPage(new Page<>(pageNum, pageSize),
                 new LambdaQueryWrapper<ContentAsset>()
@@ -152,7 +165,8 @@ public class AdminContentManagementServiceImpl implements AdminContentManagement
                                 .or().like(ContentAsset::getBucketName, keyword)
                                 .or().like(ContentAsset::getOriginalFilename, keyword)
                                 .or().like(ContentAsset::getClientRelativePath, keyword)
-                                .or().like(ContentAsset::getUploadedByAdminName, keyword))
+                                .or().like(ContentAsset::getUploadedByAdminName, keyword)
+                                .or(materialAssetIds != null && !materialAssetIds.isEmpty(), nested -> nested.in(ContentAsset::getId, materialAssetIds)))
                         .orderByDesc(ContentAsset::getUpdatedAt)
                         .orderByDesc(ContentAsset::getId));
         Page<AdminContentAssetResponse> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
@@ -169,6 +183,69 @@ public class AdminContentManagementServiceImpl implements AdminContentManagement
         } catch (NumberFormatException ignored) {
             return null;
         }
+    }
+
+    private List<Long> searchMaterialAssetIds(String keyword) {
+        if (!StringUtils.hasText(keyword)) {
+            return List.of();
+        }
+
+        String normalizedKeyword = keyword.trim();
+        Set<Long> assetIds = new LinkedHashSet<>();
+        List<Long> packageIds = storyMaterialPackageMapper.selectList(new LambdaQueryWrapper<StoryMaterialPackage>()
+                        .eq(StoryMaterialPackage::getDeleted, 0)
+                        .and(q -> q
+                                .like(StoryMaterialPackage::getCode, normalizedKeyword)
+                                .or().like(StoryMaterialPackage::getTitleZht, normalizedKeyword)
+                                .or().like(StoryMaterialPackage::getTitleZh, normalizedKeyword)
+                                .or().like(StoryMaterialPackage::getTitleEn, normalizedKeyword)
+                                .or().like(StoryMaterialPackage::getTitlePt, normalizedKeyword)))
+                .stream()
+                .map(StoryMaterialPackage::getId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<StoryMaterialPackageItem> matchedItems = storyMaterialPackageItemMapper.selectList(new LambdaQueryWrapper<StoryMaterialPackageItem>()
+                .eq(StoryMaterialPackageItem::getDeleted, 0)
+                .and(q -> {
+                    if (!packageIds.isEmpty()) {
+                        q.in(StoryMaterialPackageItem::getPackageId, packageIds).or();
+                    }
+                    q.like(StoryMaterialPackageItem::getItemKey, normalizedKeyword)
+                        .or().like(StoryMaterialPackageItem::getUsageTarget, normalizedKeyword)
+                        .or().like(StoryMaterialPackageItem::getChapterCode, normalizedKeyword)
+                        .or().like(StoryMaterialPackageItem::getTargetCode, normalizedKeyword)
+                        .or().like(StoryMaterialPackageItem::getCosObjectKey, normalizedKeyword)
+                        .or().like(StoryMaterialPackageItem::getCanonicalUrl, normalizedKeyword);
+                }));
+        List<Long> matchedItemIds = matchedItems.stream()
+                .map(StoryMaterialPackageItem::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        matchedItems.stream()
+                .map(StoryMaterialPackageItem::getAssetId)
+                .filter(Objects::nonNull)
+                .forEach(assetIds::add);
+
+        List<StoryMaterialPackageItemVersion> matchedVersions = storyMaterialPackageItemVersionMapper.selectList(new LambdaQueryWrapper<StoryMaterialPackageItemVersion>()
+                .eq(StoryMaterialPackageItemVersion::getDeleted, 0)
+                .and(q -> {
+                    if (!matchedItemIds.isEmpty()) {
+                        q.in(StoryMaterialPackageItemVersion::getPackageItemId, matchedItemIds).or();
+                    }
+                    q.like(StoryMaterialPackageItemVersion::getCosObjectKey, normalizedKeyword)
+                        .or().like(StoryMaterialPackageItemVersion::getCanonicalUrl, normalizedKeyword)
+                        .or().like(StoryMaterialPackageItemVersion::getParentItemKey, normalizedKeyword)
+                        .or().like(StoryMaterialPackageItemVersion::getPosterFallbackItemKey, normalizedKeyword)
+                        .or().like(StoryMaterialPackageItemVersion::getModelCode, normalizedKeyword)
+                        .or().like(StoryMaterialPackageItemVersion::getProviderName, normalizedKeyword);
+                }));
+        matchedVersions.stream()
+                .map(StoryMaterialPackageItemVersion::getContentAssetId)
+                .filter(Objects::nonNull)
+                .forEach(assetIds::add);
+
+        return new ArrayList<>(assetIds);
     }
 
     @Override
@@ -905,6 +982,7 @@ public class AdminContentManagementServiceImpl implements AdminContentManagement
     }
 
     private AdminContentAssetResponse toContentAssetResponse(ContentAsset item) {
+        MaterialAssetContext materialContext = materialContextForAsset(item.getId());
         return AdminContentAssetResponse.builder()
                 .id(item.getId())
                 .assetKind(item.getAssetKind())
@@ -935,10 +1013,88 @@ public class AdminContentManagementServiceImpl implements AdminContentManagement
                 .processingStatus(item.getProcessingStatus())
                 .processingNote(item.getProcessingNote())
                 .status(item.getStatus())
+                .materialPackageId(materialContext == null ? null : materialContext.packageId())
+                .materialPackageCode(materialContext == null ? null : materialContext.packageCode())
+                .materialPackageTitleZht(materialContext == null ? null : materialContext.packageTitleZht())
+                .materialItemId(materialContext == null ? null : materialContext.itemId())
+                .materialItemKey(materialContext == null ? null : materialContext.itemKey())
+                .materialItemStatus(materialContext == null ? null : materialContext.itemStatus())
+                .materialVersionId(materialContext == null ? null : materialContext.versionId())
+                .materialPromotionStatus(materialContext == null ? null : materialContext.promotionStatus())
+                .usageTarget(materialContext == null ? null : materialContext.usageTarget())
+                .chapterCode(materialContext == null ? null : materialContext.chapterCode())
                 .publishedAt(item.getPublishedAt())
                 .createdAt(item.getCreatedAt())
                 .updatedAt(item.getUpdatedAt())
                 .build();
+    }
+
+    private MaterialAssetContext materialContextForAsset(Long assetId) {
+        if (assetId == null) {
+            return null;
+        }
+
+        StoryMaterialPackageItemVersion version = storyMaterialPackageItemVersionMapper.selectOne(
+                new LambdaQueryWrapper<StoryMaterialPackageItemVersion>()
+                        .eq(StoryMaterialPackageItemVersion::getDeleted, 0)
+                        .eq(StoryMaterialPackageItemVersion::getContentAssetId, assetId)
+                        .orderByDesc(StoryMaterialPackageItemVersion::getPromotionStatus)
+                        .orderByDesc(StoryMaterialPackageItemVersion::getVersionNo)
+                        .orderByDesc(StoryMaterialPackageItemVersion::getId)
+                        .last("limit 1"));
+
+        StoryMaterialPackageItem packageItem = null;
+        if (version != null && version.getPackageItemId() != null) {
+            packageItem = storyMaterialPackageItemMapper.selectOne(new LambdaQueryWrapper<StoryMaterialPackageItem>()
+                    .eq(StoryMaterialPackageItem::getDeleted, 0)
+                    .eq(StoryMaterialPackageItem::getId, version.getPackageItemId())
+                    .last("limit 1"));
+        }
+        if (packageItem == null) {
+            packageItem = storyMaterialPackageItemMapper.selectOne(new LambdaQueryWrapper<StoryMaterialPackageItem>()
+                    .eq(StoryMaterialPackageItem::getDeleted, 0)
+                    .eq(StoryMaterialPackageItem::getAssetId, assetId)
+                    .orderByDesc(StoryMaterialPackageItem::getUpdatedAt)
+                    .orderByDesc(StoryMaterialPackageItem::getId)
+                    .last("limit 1"));
+        }
+        if (packageItem == null) {
+            return null;
+        }
+
+        StoryMaterialPackage materialPackage = packageItem.getPackageId() == null
+                ? null
+                : storyMaterialPackageMapper.selectOne(new LambdaQueryWrapper<StoryMaterialPackage>()
+                .eq(StoryMaterialPackage::getDeleted, 0)
+                .eq(StoryMaterialPackage::getId, packageItem.getPackageId())
+                .last("limit 1"));
+
+        return new MaterialAssetContext(
+                materialPackage == null ? null : materialPackage.getId(),
+                materialPackage == null ? null : materialPackage.getCode(),
+                materialPackage == null ? null : firstText(materialPackage.getTitleZht(), materialPackage.getTitleZh(), materialPackage.getTitleEn(), materialPackage.getCode()),
+                packageItem.getId(),
+                packageItem.getItemKey(),
+                packageItem.getStatus(),
+                version == null ? packageItem.getCurrentVersionId() : version.getId(),
+                version == null ? packageItem.getStatus() : version.getPromotionStatus(),
+                packageItem.getUsageTarget(),
+                packageItem.getChapterCode()
+        );
+    }
+
+    private record MaterialAssetContext(
+            Long packageId,
+            String packageCode,
+            String packageTitleZht,
+            Long itemId,
+            String itemKey,
+            String itemStatus,
+            Long versionId,
+            String promotionStatus,
+            String usageTarget,
+            String chapterCode
+    ) {
     }
 
     private AdminTipArticleResponse toTipArticleResponse(TipArticle item) {

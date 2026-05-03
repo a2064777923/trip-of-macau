@@ -2759,6 +2759,16 @@ export interface AdminContentAssetItem {
   processingStatus?: string;
   processingNote?: string;
   status?: string;
+  materialPackageId?: number | null;
+  materialPackageCode?: string;
+  materialPackageTitleZht?: string;
+  materialItemId?: number | null;
+  materialItemKey?: string;
+  materialItemStatus?: string;
+  materialVersionId?: number | null;
+  materialPromotionStatus?: string;
+  usageTarget?: string;
+  chapterCode?: string;
   publishedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
