@@ -24,6 +24,7 @@ export interface AppUserProfile {
 
 export interface PoiItem {
   id: number
+  code?: string
   name: string
   subtitle: string
   icon: string
@@ -271,6 +272,33 @@ export interface StoryModeSessionState {
   lastEventAt?: string
   exitedAt?: string
   statusText?: string
+}
+
+export interface StoryModeRouteChapter {
+  chapterId: number
+  chapterOrder: number
+  title: string
+  summary?: string
+  locationName?: string
+  anchorType?: string
+  anchorTargetId?: number
+  anchorTargetCode?: string
+  status: 'completed' | 'current' | 'inactive' | 'locked'
+}
+
+export interface StoryModeRouteContext {
+  storylineId: number
+  storylineName: string
+  sessionId?: string
+  currentChapterId?: number
+  currentChapterTitle?: string
+  currentDestinationName?: string
+  currentAnchorType?: string
+  currentAnchorTargetId?: number
+  currentAnchorTargetCode?: string
+  chapters: StoryModeRouteChapter[]
+  source: 'story_page'
+  savedAt: string
 }
 
 export interface StoryExplorationSummaryItem {

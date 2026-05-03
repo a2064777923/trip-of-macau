@@ -5,6 +5,7 @@ import LottieAssetPlayer from '../../components/LottieAssetPlayer'
 import PageShell from '../../components/PageShell'
 import StoryContentBlockRenderer from '../../components/StoryContentBlockRenderer'
 import {
+  buildStoryModeRouteContext,
   exitStoryModeSession,
   getActiveStoryModeSession,
   isAuthRequiredError,
@@ -13,12 +14,15 @@ import {
   refreshPublicContent,
   refreshStoryExplorationSummary,
   refreshStorylineRuntime,
+  resolveStoryRouteDestination,
+  saveStoryModeRouteContext,
   startStoryModeSession,
 } from '../../services/gameService'
 import type {
   StoryChapterItem,
   StoryExplorationSummaryItem,
   StoryMediaAssetItem,
+  StoryModeRouteChapter,
   StorylineItem,
   StoryModeSessionState,
   StoryRuntimeEventType,
@@ -246,6 +250,19 @@ function getStepButtonText(step: StoryRuntimeStepItem) {
   }
 }
 
+function getRouteStatusText(status: StoryModeRouteChapter['status']) {
+  switch (status) {
+    case 'current':
+      return '目前章節'
+    case 'completed':
+      return '已完成章節'
+    case 'locked':
+      return '尚未解鎖'
+    default:
+      return '待前往'
+  }
+}
+
 function renderRuntimeFlow({
   chapter,
   storyModeSession,
@@ -355,6 +372,18 @@ export default function StoryPage() {
     () => activeStory?.chapters?.find((chapter) => !chapter.locked) || activeStory?.chapters?.[0] || null,
     [activeStory?.chapters],
   )
+  const routeContext = useMemo(
+    () => (activeStory
+      ? buildStoryModeRouteContext(activeStory, expandedChapterId || undefined, storyModeSession?.sessionId)
+      : null),
+    [activeStory, expandedChapterId, storyModeSession?.sessionId],
+  )
+  const routeDestination = useMemo(() => resolveStoryRouteDestination(routeContext), [routeContext])
+  const currentRouteChapter = routeContext?.chapters.find((chapter) => chapter.status === 'current')
+    || routeContext?.chapters.find((chapter) => chapter.status !== 'locked')
+  const nextRouteChapter = routeContext?.chapters
+    .filter((chapter) => chapter.status !== 'locked')
+    .find((chapter) => (chapter.chapterOrder || 0) > (currentRouteChapter?.chapterOrder || 0))
 
   useEffect(() => {
     let cancelled = false
@@ -555,6 +584,38 @@ export default function StoryPage() {
         }
       })
     }
+  }
+
+  const handleSelectRouteChapter = (chapter: StoryModeRouteChapter) => {
+    if (chapter.status === 'locked') {
+      Taro.showToast({ title: '請先完成前置章節或條件', icon: 'none' })
+      return
+    }
+    const willBecomeCurrent = expandedChapterId !== chapter.chapterId
+    setExpandedChapterId(chapter.chapterId)
+    if (willBecomeCurrent) {
+      void reportStoryEvent({
+        eventType: 'chapter_started',
+        chapterId: chapter.chapterId,
+        elementCode: chapter.anchorTargetCode || `story_chapter_${chapter.chapterId}`,
+        elementId: chapter.anchorTargetId || chapter.chapterId,
+        idempotencyScope: `route:${chapter.chapterId}`,
+      }).catch((error) => {
+        if (!isAuthRequiredError(error)) {
+          console.warn('Failed to report route chapter start.', error)
+        }
+      })
+    }
+  }
+
+  const handleOpenStoryMap = (chapter: StoryChapterItem) => {
+    if (!activeStory?.id) {
+      return
+    }
+    const context = buildStoryModeRouteContext(activeStory, chapter.id, storyModeSession?.sessionId)
+    saveStoryModeRouteContext(context)
+    void Taro.switchTab({ url: '/pages/map/index' })
+    Taro.showToast({ title: '已切換至故事地圖', icon: 'success' })
   }
 
   const getActionStateKey = (chapter: StoryChapterItem, step: StoryRuntimeStepItem) => (
@@ -878,6 +939,63 @@ export default function StoryPage() {
                     </View>
                   </View>
 
+                  {routeContext ? (
+                    <View className='story-route-panel'>
+                      <View className='story-route-panel__header'>
+                        <View>
+                          <Text className='story-route-panel__eyebrow'>主線路線</Text>
+                          <Text className='story-route-panel__title'>
+                            目前章節：{currentRouteChapter?.title || '尚未選定'}
+                          </Text>
+                        </View>
+                        <Text className='story-route-panel__status'>支線稍後開放</Text>
+                      </View>
+                      <View className='story-route-panel__metaGrid'>
+                        <View className='story-route-panel__metaItem'>
+                          <Text className='story-route-panel__metaLabel'>下一站</Text>
+                          <Text className='story-route-panel__metaValue'>
+                            {nextRouteChapter?.locationName || nextRouteChapter?.title || '已到達目前終點'}
+                          </Text>
+                        </View>
+                        <View className='story-route-panel__metaItem'>
+                          <Text className='story-route-panel__metaLabel'>目前目的地</Text>
+                          <Text className='story-route-panel__metaValue'>
+                            {currentRouteChapter?.locationName || routeDestination?.name || '尚未配置'}
+                          </Text>
+                        </View>
+                        <View className='story-route-panel__metaItem'>
+                          <Text className='story-route-panel__metaLabel'>錨點類型</Text>
+                          <Text className='story-route-panel__metaValue'>{currentRouteChapter?.anchorType || '未指定'}</Text>
+                        </View>
+                        <View className='story-route-panel__metaItem'>
+                          <Text className='story-route-panel__metaLabel'>目的地代碼</Text>
+                          <Text className='story-route-panel__metaValue'>
+                            {currentRouteChapter?.anchorTargetCode || currentRouteChapter?.anchorTargetId || '未指定'}
+                          </Text>
+                        </View>
+                      </View>
+                      {!routeDestination ? (
+                        <Text className='story-route-panel__fallback'>
+                          目前未配置精準路線座標，先依章節順序前往下一站。
+                        </Text>
+                      ) : null}
+                      <ScrollView className='story-route-strip' scrollX>
+                        {(routeContext.chapters || []).map((chapter) => (
+                          <View
+                            key={chapter.chapterId}
+                            className={`story-route-step story-route-step--${chapter.status}`}
+                            onClick={() => handleSelectRouteChapter(chapter)}
+                          >
+                            <Text className='story-route-step__order'>第 {chapter.chapterOrder} 章</Text>
+                            <Text className='story-route-step__title'>{chapter.title}</Text>
+                            <Text className='story-route-step__place'>{chapter.locationName || '手動錨點'}</Text>
+                            <Text className='story-route-step__status'>{getRouteStatusText(chapter.status)}</Text>
+                          </View>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  ) : null}
+
                   <View className='chapter-list'>
                     <Text className='chapter-list__title'>章節工作台</Text>
                     {(activeStory.chapters || []).map((chapter, index) => {
@@ -943,7 +1061,7 @@ export default function StoryPage() {
                               />
 
                               <View className='chapter-card__actions'>
-                                <Button className='chapter-card__primary' onClick={() => Taro.switchTab({ url: '/pages/map/index' })}>
+                                <Button className='chapter-card__primary' onClick={() => handleOpenStoryMap(chapter)}>
                                   前往地圖
                                 </Button>
                                 <Button className='chapter-card__secondary' onClick={() => Taro.navigateTo({ url: '/pages/stamps/index' })}>

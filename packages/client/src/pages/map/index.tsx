@@ -12,25 +12,29 @@ import {
 } from '../../services/poiTriggerService'
 import {
   CheckinResult,
+  clearStoryModeRouteContext,
   getArrivalExperience,
   getCities,
   getCitySubMaps,
   getEmergencyContact,
   getNearbyPois,
   getPoiSearchTips,
+  getStoryModeRouteContext,
   getStoryById,
   getWalkingRouteSummary,
   loadGameState,
   performMockCheckin,
   refreshPublicContent,
   registerCityVisitByLocation,
+  resolveStoryRouteDestination,
   switchCurrentCity,
   switchCurrentSubMap,
 } from '../../services/gameService'
-import type { CityProgressItem, PoiItem, SubMapProgressItem } from '../../types/game'
+import type { CityProgressItem, PoiItem, StoryModeRouteContext, SubMapProgressItem } from '../../types/game'
 import './index.scss'
 
 const isFiniteCoord = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
+const isPositiveFiniteId = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0
 
 const fallbackLocation = {
   latitude: 22.1987,
@@ -116,6 +120,8 @@ export default function MapPage() {
   const [inRegion, setInRegion] = useState(true)
   const [heading, setHeading] = useState(0)
   const [userPulseRadius, setUserPulseRadius] = useState(22)
+  const [storyModeRouteContext, setStoryModeRouteContext] = useState<StoryModeRouteContext | null>(null)
+  const [storyModeDestination, setStoryModeDestination] = useState<PoiItem | null>(null)
   
   // 测试模式状态
   const [isTestAccount, setIsTestAccount] = useState(false)
@@ -141,10 +147,20 @@ export default function MapPage() {
     [cities, currentCityId, currentSubMapId, subMaps],
   )
 
-  const refreshNearby = useCallback((lat: number, lng: number, accuracy: number, cityId = currentCityId, subMapId = currentSubMapId) => {
+  const refreshNearby = useCallback((
+    lat: number,
+    lng: number,
+    accuracy: number,
+    cityId = currentCityId,
+    subMapId = currentSubMapId,
+    preferredPoiId?: number,
+  ) => {
     const nearby = getNearbyPois(lat, lng, accuracy, cityId, subMapId)
     setRawPois(nearby)
-    const nextSelectedPoi = nearby.find((poi) => poi.id === selectedPoiId) || nearby[0] || null
+    const nextSelectedPoi = (preferredPoiId ? nearby.find((poi) => poi.id === preferredPoiId) : null)
+      || nearby.find((poi) => poi.id === selectedPoiId)
+      || nearby[0]
+      || null
     setSelectedPoiId(nextSelectedPoi?.id || null)
     if (nextSelectedPoi) {
       setRouteSummary(getWalkingRouteSummary(nextSelectedPoi, { latitude: lat, longitude: lng }))
@@ -164,6 +180,17 @@ export default function MapPage() {
   const relatedStory = useMemo(() => (selectedPoi?.storyLineId ? getStoryById(selectedPoi.storyLineId) : null), [selectedPoi?.storyLineId, state.completedStoryIds])
   const arrivalExperience = useMemo(() => (selectedPoi ? getArrivalExperience(selectedPoi.id) : null), [selectedPoi?.id])
   const emergencyContact = useMemo(() => getEmergencyContact(), [])
+  const storyCurrentChapter = useMemo(
+    () => storyModeRouteContext?.chapters.find((chapter) => chapter.status === 'current')
+      || storyModeRouteContext?.chapters.find((chapter) => chapter.status !== 'locked'),
+    [storyModeRouteContext],
+  )
+  const storyNextChapter = useMemo(
+    () => storyModeRouteContext?.chapters
+      .filter((chapter) => chapter.status !== 'locked')
+      .find((chapter) => (chapter.chapterOrder || 0) > (storyCurrentChapter?.chapterOrder || 0)),
+    [storyModeRouteContext, storyCurrentChapter],
+  )
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -289,7 +316,23 @@ export default function MapPage() {
       setSubMaps(latestSubMaps)
       setCurrentSubMapId(latestSubMapId)
       setLocation(nextLocation)
-      refreshNearby(nextLocation.latitude, nextLocation.longitude, nextLocation.accuracy, latestCityId, latestSubMapId)
+      const storyContext = getStoryModeRouteContext()
+      const storyDestination = resolveStoryRouteDestination(storyContext)
+      setStoryModeRouteContext(storyContext)
+      setStoryModeDestination(storyDestination)
+      if (storyDestination) {
+        setSelectedPoiId(storyDestination.id)
+        setKeyword(storyDestination.name)
+        setRouteSummary(getWalkingRouteSummary(storyDestination, nextLocation))
+      }
+      refreshNearby(
+        nextLocation.latitude,
+        nextLocation.longitude,
+        nextLocation.accuracy,
+        latestCityId,
+        latestSubMapId,
+        storyDestination?.id,
+      )
     } finally {
       setLoading(false)
     }
@@ -334,6 +377,25 @@ export default function MapPage() {
     setKeyword(poi.name)
     setTips([])
     setRouteSummary(getWalkingRouteSummary(poi, location))
+  }
+
+  const handleReturnToStory = () => {
+    if (!storyModeRouteContext || !isPositiveFiniteId(storyModeRouteContext.storylineId)) {
+      Taro.navigateTo({ url: '/pages/story/index' })
+      return
+    }
+    const params = [`storyId=${encodeURIComponent(String(storyModeRouteContext.storylineId))}`]
+    if (storyModeRouteContext.currentChapterId && isPositiveFiniteId(storyModeRouteContext.currentChapterId)) {
+      params.push(`chapterId=${encodeURIComponent(String(storyModeRouteContext.currentChapterId))}`)
+    }
+    Taro.navigateTo({ url: `/pages/story/index?${params.join('&')}` })
+  }
+
+  const handleClearStoryRoute = () => {
+    clearStoryModeRouteContext()
+    setStoryModeRouteContext(null)
+    setStoryModeDestination(null)
+    Taro.showToast({ title: '已清除本次故事路線強調', icon: 'success' })
   }
 
   const handleSwitchCity = async (cityId: string) => {
@@ -513,6 +575,49 @@ export default function MapPage() {
           </ScrollView>
         ) : null}
 
+        {storyModeRouteContext ? (
+          <View className='story-route-panel story-route-panel--map'>
+            <View className='story-route-panel__header'>
+              <View>
+                <Text className='story-route-panel__eyebrow'>故事模式地圖</Text>
+                <Text className='story-route-panel__title'>{storyModeRouteContext.storylineName}</Text>
+              </View>
+              <Text className='story-route-panel__status'>支線稍後開放</Text>
+            </View>
+            <View className='story-route-panel__metaGrid'>
+              <View className='story-route-panel__metaItem'>
+                <Text className='story-route-panel__metaLabel'>目前章節</Text>
+                <Text className='story-route-panel__metaValue'>{storyCurrentChapter?.title || '尚未選定'}</Text>
+              </View>
+              <View className='story-route-panel__metaItem'>
+                <Text className='story-route-panel__metaLabel'>下一站</Text>
+                <Text className='story-route-panel__metaValue'>
+                  {storyNextChapter?.locationName || storyNextChapter?.title || '已到達目前終點'}
+                </Text>
+              </View>
+            </View>
+            {!storyModeDestination ? (
+              <Text className='story-route-panel__fallback'>
+                目前未配置精準路線座標，先依章節順序前往下一站。
+              </Text>
+            ) : null}
+            <Text className='story-route-panel__sectionTitle'>主線路線</Text>
+            <ScrollView className='story-route-strip' scrollX>
+              {storyModeRouteContext.chapters.map((chapter) => (
+                <View key={chapter.chapterId} className={`story-route-step story-route-step--${chapter.status}`}>
+                  <Text className='story-route-step__order'>第 {chapter.chapterOrder} 章</Text>
+                  <Text className='story-route-step__title'>{chapter.title}</Text>
+                  <Text className='story-route-step__place'>{chapter.locationName || '手動錨點'}</Text>
+                </View>
+              ))}
+            </ScrollView>
+            <View className='story-route-panel__actions'>
+              <Button className='story-route-panel__primary' onClick={handleReturnToStory}>返回故事</Button>
+              <Button className='story-route-panel__secondary' onClick={handleClearStoryRoute}>退出故事路線</Button>
+            </View>
+          </View>
+        ) : null}
+
         <View className='map-card'>
           <View className='map-toolbar'>
             <View className='map-search'>
@@ -636,14 +741,20 @@ export default function MapPage() {
             </View>
             <ScrollView scrollY className='poi-scroll'>
               {pois.map((poi) => (
-                <View key={poi.id} className={`poi-card ${selectedPoi?.id === poi.id ? 'poi-card--active' : ''}`} onClick={() => handleSelectPoi(poi.id)}>
+                <View
+                  key={poi.id}
+                  className={`poi-card ${selectedPoi?.id === poi.id ? 'poi-card--active' : ''} ${storyModeDestination?.id === poi.id ? 'poi-card--story-current' : ''}`}
+                  onClick={() => handleSelectPoi(poi.id)}
+                >
                   <View className='poi-card__cover' style={{ background: poi.coverColor }}>
                     <Text className='poi-card__emoji'>{poi.icon}</Text>
                   </View>
                   <View className='poi-card__body'>
                     <View className='poi-card__top'>
                       <Text className='poi-card__name'>{poi.name}</Text>
-                      <Text className={`poi-card__badge ${poi.inRange ? 'ready' : ''}`}>{poi.inRange ? '可打卡' : poi.distanceText}</Text>
+                      <Text className={`poi-card__badge ${poi.inRange ? 'ready' : ''}`}>
+                        {storyModeDestination?.id === poi.id ? '目前故事目的地' : poi.inRange ? '可打卡' : poi.distanceText}
+                      </Text>
                     </View>
                     <Text className='poi-card__subtitle'>{poi.subtitle}</Text>
                     <Text className='poi-card__meta'>{poi.subMapName || poi.district} · 建議停留 {poi.staySeconds}s</Text>
@@ -664,6 +775,9 @@ export default function MapPage() {
                   <View className='selected-poi__hero' style={{ background: selectedPoi.coverColor }}>
                     <Text className='selected-poi__icon'>{selectedPoi.icon}</Text>
                     <View>
+                      {storyModeDestination?.id === selectedPoi.id ? (
+                        <Text className='selected-poi__storyBadge'>目前故事目的地</Text>
+                      ) : null}
                       <Text className='selected-poi__name'>{selectedPoi.name}</Text>
                       <Text className='selected-poi__subtitle'>{selectedPoi.subtitle}</Text>
                     </View>

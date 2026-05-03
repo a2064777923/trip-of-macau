@@ -14,6 +14,8 @@ import {
   StoryChapterRuntimeItem,
   StoryExplorationSummaryItem,
   StoryMediaAssetItem,
+  StoryModeRouteChapter,
+  StoryModeRouteContext,
   StoryModeSessionState,
   StoryRuntimeEventType,
   StoryRuntimeStepItem,
@@ -66,6 +68,7 @@ const EMERGENCY_CONTACT_KEY = 'trip-of-macau-emergency-contact'
 const PUBLIC_CONTENT_KEY = 'trip-of-macau-public-content'
 const DEV_BYPASS_IDENTITY_KEY = 'trip-of-macau-dev-bypass-identity'
 const STORY_MODE_SESSION_KEY = 'trip-of-macau-story-mode-session'
+const STORY_MODE_ROUTE_CONTEXT_KEY = 'trip-of-macau-story-mode-route-context'
 const PROFILE_AUTH_WALL_PATH = '/pages/profile/index'
 
 const DEFAULT_UNLOCKED_CITY_ID = 'macau'
@@ -825,6 +828,7 @@ function getPoiCatalog() {
       const relatedStamp = selectStampForPoi(dto.id, dto.storylineId)
       return {
         id: dto.id,
+        code: dto.code,
         name,
         subtitle: buildPoiSubtitle(dto),
         icon: resolvePoiIcon(dto.categoryCode),
@@ -1643,6 +1647,187 @@ export function saveActiveStoryModeSession(session: StoryModeSessionState | null
   }
   Taro.setStorageSync(STORY_MODE_SESSION_KEY, session)
   return session
+}
+
+function toPositiveInteger(value: unknown): number | undefined {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) {
+    return undefined
+  }
+  const integer = Math.trunc(numeric)
+  return integer > 0 ? integer : undefined
+}
+
+function readText(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length ? value.trim() : undefined
+}
+
+function sanitizeStoryModeRouteChapter(value: unknown): StoryModeRouteChapter | null {
+  const raw = value as Partial<StoryModeRouteChapter> | null | undefined
+  const chapterId = toPositiveInteger(raw?.chapterId)
+  const chapterOrder = toPositiveInteger(raw?.chapterOrder) || chapterId
+  const title = readText(raw?.title)
+  if (!chapterId || !title) {
+    return null
+  }
+  const status = raw?.status === 'completed' || raw?.status === 'current' || raw?.status === 'locked'
+    ? raw.status
+    : 'inactive'
+  return {
+    chapterId,
+    chapterOrder,
+    title,
+    summary: readText(raw?.summary),
+    locationName: readText(raw?.locationName),
+    anchorType: readText(raw?.anchorType),
+    anchorTargetId: toPositiveInteger(raw?.anchorTargetId),
+    anchorTargetCode: readText(raw?.anchorTargetCode),
+    status,
+  }
+}
+
+function sanitizeStoryModeRouteContext(value: unknown): StoryModeRouteContext | null {
+  const raw = value as Partial<StoryModeRouteContext> | null | undefined
+  const storylineId = toPositiveInteger(raw?.storylineId)
+  const storylineName = readText(raw?.storylineName)
+  if (!storylineId || !storylineName || raw?.source !== 'story_page' || !Array.isArray(raw?.chapters)) {
+    return null
+  }
+  const chapters = raw.chapters
+    .map((chapter) => sanitizeStoryModeRouteChapter(chapter))
+    .filter(Boolean) as StoryModeRouteChapter[]
+  if (!chapters.length) {
+    return null
+  }
+  const currentChapterId = toPositiveInteger(raw.currentChapterId)
+  const currentChapter = chapters.find((chapter) => chapter.chapterId === currentChapterId)
+    || chapters.find((chapter) => chapter.status === 'current')
+    || chapters.find((chapter) => chapter.status !== 'locked')
+    || chapters[0]
+  return {
+    storylineId,
+    storylineName,
+    sessionId: readText(raw.sessionId),
+    currentChapterId: currentChapter?.chapterId,
+    currentChapterTitle: readText(raw.currentChapterTitle) || currentChapter?.title,
+    currentDestinationName: readText(raw.currentDestinationName) || currentChapter?.locationName,
+    currentAnchorType: readText(raw.currentAnchorType) || currentChapter?.anchorType,
+    currentAnchorTargetId: toPositiveInteger(raw.currentAnchorTargetId) || currentChapter?.anchorTargetId,
+    currentAnchorTargetCode: readText(raw.currentAnchorTargetCode) || currentChapter?.anchorTargetCode,
+    chapters,
+    source: 'story_page',
+    savedAt: readText(raw.savedAt) || new Date().toISOString(),
+  }
+}
+
+export function buildStoryModeRouteContext(
+  story: StorylineItem,
+  currentChapterId?: number,
+  sessionId?: string,
+): StoryModeRouteContext {
+  const state = loadGameState()
+  const completedChapterIds = new Set(state.completedChapterIds || [])
+  const safeStorylineId = toPositiveInteger(story.id) || 0
+  const safeCurrentChapterId = toPositiveInteger(currentChapterId)
+  const sortedChapters = (story.chapters || [])
+    .slice()
+    .sort((left, right) => {
+      const leftOrder = toPositiveInteger(left.runtime?.chapterOrder) || toPositiveInteger(left.id) || 0
+      const rightOrder = toPositiveInteger(right.runtime?.chapterOrder) || toPositiveInteger(right.id) || 0
+      return leftOrder - rightOrder
+    })
+  const fallbackCurrent = sortedChapters.find((chapter) => !chapter.locked) || sortedChapters[0]
+  const selectedChapterId = safeCurrentChapterId || toPositiveInteger(fallbackCurrent?.id)
+  const chapters = sortedChapters
+    .map((chapter, index) => {
+      const chapterId = toPositiveInteger(chapter.id)
+      if (!chapterId) {
+        return null
+      }
+      const chapterOrder = toPositiveInteger(chapter.runtime?.chapterOrder) || index + 1
+      const runtimeAnchorTargetId = toPositiveInteger(chapter.runtime?.anchorTargetId)
+      const chapterAnchorTargetId = toPositiveInteger(chapter.anchorTargetId)
+      const status: StoryModeRouteChapter['status'] = chapter.locked
+        ? 'locked'
+        : chapterId === selectedChapterId
+          ? 'current'
+          : completedChapterIds.has(chapterId)
+            ? 'completed'
+            : 'inactive'
+      return {
+        chapterId,
+        chapterOrder,
+        title: pickReadableText(chapter.title, `第 ${chapterOrder} 章`),
+        summary: pickReadableText(chapter.summary),
+        locationName: pickReadableText(chapter.locationName),
+        anchorType: pickReadableText(chapter.runtime?.anchorType, chapter.anchorType),
+        anchorTargetId: runtimeAnchorTargetId || chapterAnchorTargetId,
+        anchorTargetCode: pickReadableText(chapter.runtime?.anchorTargetCode, chapter.anchorTargetCode),
+        status,
+      }
+    })
+    .filter(Boolean) as StoryModeRouteChapter[]
+  const currentChapter = chapters.find((chapter) => chapter.status === 'current')
+    || chapters.find((chapter) => chapter.status !== 'locked')
+    || chapters[0]
+
+  return {
+    storylineId: safeStorylineId,
+    storylineName: pickReadableText(story.name, story.nameEn, story.code, `Story ${safeStorylineId}`),
+    sessionId: readText(sessionId),
+    currentChapterId: currentChapter?.chapterId,
+    currentChapterTitle: currentChapter?.title,
+    currentDestinationName: currentChapter?.locationName,
+    currentAnchorType: currentChapter?.anchorType,
+    currentAnchorTargetId: currentChapter?.anchorTargetId,
+    currentAnchorTargetCode: currentChapter?.anchorTargetCode,
+    chapters,
+    source: 'story_page',
+    savedAt: new Date().toISOString(),
+  }
+}
+
+export function saveStoryModeRouteContext(context: StoryModeRouteContext | null): StoryModeRouteContext | null {
+  if (!context) {
+    Taro.removeStorageSync(STORY_MODE_ROUTE_CONTEXT_KEY)
+    return null
+  }
+  const sanitized = sanitizeStoryModeRouteContext(context)
+  if (!sanitized) {
+    Taro.removeStorageSync(STORY_MODE_ROUTE_CONTEXT_KEY)
+    return null
+  }
+  Taro.setStorageSync(STORY_MODE_ROUTE_CONTEXT_KEY, sanitized)
+  return sanitized
+}
+
+export function getStoryModeRouteContext(): StoryModeRouteContext | null {
+  try {
+    return sanitizeStoryModeRouteContext(Taro.getStorageSync(STORY_MODE_ROUTE_CONTEXT_KEY))
+  } catch (error) {
+    console.warn('Failed to read story route context.', error)
+    return null
+  }
+}
+
+export function clearStoryModeRouteContext(): void {
+  Taro.removeStorageSync(STORY_MODE_ROUTE_CONTEXT_KEY)
+}
+
+export function resolveStoryRouteDestination(context: StoryModeRouteContext | null): PoiItem | null {
+  const sanitized = sanitizeStoryModeRouteContext(context)
+  if (!sanitized) {
+    return null
+  }
+  const byId = sanitized.currentAnchorTargetId ? getPoiById(sanitized.currentAnchorTargetId) : null
+  if (byId) {
+    return byId
+  }
+  const code = readText(sanitized.currentAnchorTargetCode)?.toLowerCase()
+  if (!code) {
+    return null
+  }
+  return getPoiCatalog().find((poi) => poi.code?.toLowerCase() === code) || null
 }
 
 export async function startStoryModeSession(storylineId: number, currentChapterId?: number): Promise<StoryModeSessionState> {

@@ -286,6 +286,202 @@
   }
 }
 
+.story-route-panel {
+  margin-bottom: 18px;
+  padding: 18px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.88), transparent 34%),
+    linear-gradient(135deg, rgba(255, 245, 236, 0.98) 0%, rgba(247, 249, 255, 0.96) 100%);
+  border: 1px solid rgba(255, 139, 167, 0.18);
+  box-shadow: 0 10px 22px rgba(40, 53, 90, 0.07);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__eyebrow,
+  &__title,
+  &__status,
+  &__metaLabel,
+  &__metaValue,
+  &__fallback,
+  &__sectionTitle {
+    display: block;
+  }
+
+  &__eyebrow {
+    font-size: 17px;
+    font-weight: 800;
+    color: #ff7aa2;
+  }
+
+  &__title {
+    margin-top: 6px;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.45;
+    color: #41495a;
+  }
+
+  &__status {
+    flex-shrink: 0;
+    align-self: flex-start;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(230, 235, 245, 0.76);
+    color: #657083;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  &__metaGrid {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  &__metaItem {
+    min-width: 0;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.75);
+  }
+
+  &__metaLabel {
+    font-size: 16px;
+    color: #8a91a2;
+  }
+
+  &__metaValue {
+    margin-top: 6px;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.45;
+    color: #465064;
+  }
+
+  &__fallback {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255, 247, 235, 0.92);
+    color: #a66f2b;
+    font-size: 18px;
+    line-height: 1.55;
+  }
+
+  &__sectionTitle {
+    margin-top: 14px;
+    font-size: 18px;
+    font-weight: 800;
+    color: #596275;
+  }
+
+  &__actions {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+  }
+
+  &__primary,
+  &__secondary {
+    flex: 1;
+    height: 52px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  &__primary {
+    background: linear-gradient(135deg, #ff8ba7 0%, #ffb38a 100%);
+    color: #fff;
+  }
+
+  &__secondary {
+    background: rgba(230, 235, 245, 0.78);
+    color: #596275;
+  }
+}
+
+.story-route-panel--map {
+  position: relative;
+  overflow: hidden;
+}
+
+.story-route-strip {
+  margin-top: 10px;
+  white-space: nowrap;
+}
+
+.story-route-step {
+  width: 206px;
+  min-height: 128px;
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: top;
+  margin-right: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 2px solid rgba(226, 231, 241, 0.86);
+
+  &__order,
+  &__title,
+  &__place {
+    display: block;
+  }
+
+  &__order {
+    font-size: 15px;
+    color: #ff7aa2;
+  }
+
+  &__title {
+    margin-top: 6px;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.35;
+    color: #424a5b;
+    white-space: normal;
+  }
+
+  &__place {
+    margin-top: 6px;
+    font-size: 16px;
+    line-height: 1.35;
+    color: #7b8494;
+    white-space: normal;
+  }
+
+}
+
+.story-route-step--current {
+  background: linear-gradient(135deg, rgba(255, 236, 226, 0.98) 0%, rgba(255, 249, 236, 0.96) 100%);
+  border-color: rgba(255, 139, 167, 0.52);
+  box-shadow: 0 10px 18px rgba(255, 139, 167, 0.1);
+}
+
+.story-route-step--completed {
+  border-color: rgba(81, 171, 139, 0.35);
+}
+
+.story-route-step--inactive {
+  opacity: 0.72;
+  filter: grayscale(0.2);
+}
+
+.story-route-step--locked {
+  opacity: 0.54;
+  filter: grayscale(0.35);
+}
+
 .map-card,
 
 .explore-panel,
@@ -744,6 +940,12 @@
   }
 }
 
+.poi-card--story-current {
+  border-color: rgba(255, 139, 167, 0.72);
+  background: linear-gradient(135deg, rgba(255, 248, 252, 0.98) 0%, rgba(255, 240, 226, 0.94) 100%);
+  box-shadow: 0 12px 22px rgba(255, 139, 167, 0.16);
+}
+
 .selected-poi {
   background: #fff8fb;
   border-radius: 24px;
@@ -762,9 +964,21 @@
   }
 
   &__name,
+  &__storyBadge,
   &__subtitle,
   &__desc {
     display: block;
+  }
+
+  &__storyBadge {
+    align-self: flex-start;
+    margin-bottom: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #d95f84;
+    font-size: 17px;
+    font-weight: 800;
   }
 
   &__name {
