@@ -30,11 +30,11 @@
 
 ### Mini-program Story Experience Acceptance
 
-- [ ] **MP-01**: The mini-program story page can load the flagship runtime from the public backend and render story introduction, chapter list, content blocks, generated images, Lottie, audio, video, and fallback states without mock-only assumptions.
-- [ ] **MP-02**: Story mode map behavior can draw the route, highlight the current chapter, gray out inactive route segments, and display current destination details from public runtime DTOs.
-- [ ] **MP-03**: The mini-program can report core story events including chapter start, content viewed, media played, pickup tapped, task baseline completed, and story session exit with idempotency.
-- [ ] **MP-04**: Baseline interactive objects for the flagship story can appear, be tapped, grant pickups/rewards/titles where configured, and update dynamic exploration progress through the public backend.
-- [ ] **MP-05**: Unsupported complex gameplay such as AR recognition, speech input, and puzzle minigames degrades to clear Traditional Chinese placeholders while still preserving story flow and progress integrity.
+- [x] **MP-01**: The mini-program story page can load the flagship runtime from the public backend and render story introduction, chapter list, content blocks, generated images, Lottie, audio, video, and fallback states without mock-only assumptions.
+- [x] **MP-02**: Story mode map behavior can draw the route, highlight the current chapter, gray out inactive route segments, and display current destination details from public runtime DTOs.
+- [x] **MP-03**: The mini-program can report core story events including chapter start, content viewed, media played, pickup tapped, task baseline completed, and story session exit with idempotency.
+- [x] **MP-04**: Baseline interactive objects for the flagship story can appear, be tapped, grant pickups/rewards/titles where configured, and update dynamic exploration progress through the public backend.
+- [x] **MP-05**: Unsupported complex gameplay such as AR recognition, speech input, and puzzle minigames degrades to clear Traditional Chinese placeholders while still preserving story flow and progress integrity.
 
 ### Verification and Operations Acceptance
 
@@ -77,11 +77,11 @@
 | RUN-02 | Phase 38 | Complete |
 | RUN-03 | Phase 38 | Complete |
 | RUN-04 | Phase 38 | Complete |
-| MP-01 | Phase 39 | Pending |
-| MP-02 | Phase 39 | Pending |
-| MP-03 | Phase 39 | Pending |
-| MP-04 | Phase 39 | Pending |
-| MP-05 | Phase 39 | Pending |
+| MP-01 | Phase 39 | Complete: story page/runtime media build and public runtime smoke evidence pass |
+| MP-02 | Phase 39 | Complete: route/current chapter/map handoff build evidence and source inspection pass |
+| MP-03 | Phase 39 | Complete: story session/event idempotency smoke evidence passes |
+| MP-04 | Phase 39 | Complete: baseline runtime action card/event/progress smoke evidence passes |
+| MP-05 | Phase 39 | Complete: unsupported gameplay and unavailable media fallback evidence passes |
 | ACC-01 | Phase 40 | Pending |
 | ACC-02 | Phase 40 | Pending |
 | ACC-03 | Phase 40 | Pending |
@@ -94,4 +94,4 @@
 
 ---
 *Requirements defined: 2026-04-30*
-*Last updated: 2026-05-03 after Phase 38 public runtime asset and authenticated event smoke verification*
+*Last updated: 2026-05-03 after Phase 39 mini-program build and story-mode smoke verification*

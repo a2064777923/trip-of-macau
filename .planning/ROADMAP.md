@@ -160,4 +160,4 @@ Plans:
 | v2.0 Admin Control-Plane Reconstruction | 7-12 executed, 13 skipped | 15/15 executed plans | Archived with gaps | 2026-04-15 |
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
 | v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-35 | 33/33 | Shipped | 2026-04-30 |
-| v3.1 Material Production and Mini-program Experience Acceptance | 36-40 | 11/11 currently planned plans complete; Phase 38 complete | Active | - |
+| v3.1 Material Production and Mini-program Experience Acceptance | 36-40 | 15/15 currently planned plans complete; Phase 39 complete | Active | - |
