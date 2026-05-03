@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FileImageOutlined,
   FileOutlined,
@@ -10,16 +10,39 @@ import type { AdminContentAssetItem } from '../../types/admin';
 
 const { Text } = Typography;
 
+function assetLocation(asset?: AdminContentAssetItem | null) {
+  return [
+    asset?.mimeType,
+    asset?.assetKind,
+    asset?.fileExtension,
+    asset?.originalFilename,
+    asset?.canonicalUrl,
+    asset?.objectKey,
+    asset?.clientRelativePath,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+}
+
 export function isImageAsset(asset?: AdminContentAssetItem | null) {
-  return !!asset?.mimeType && asset.mimeType.toLowerCase().startsWith('image/');
+  const value = assetLocation(asset);
+  return (
+    value.includes('image/') ||
+    asset?.assetKind === 'image' ||
+    asset?.assetKind === 'icon' ||
+    /\.(png|jpe?g|webp|gif|svg)(\?|#|$)/i.test(value)
+  );
 }
 
 export function isAudioAsset(asset?: AdminContentAssetItem | null) {
-  return !!asset?.mimeType && asset.mimeType.toLowerCase().startsWith('audio/');
+  const value = assetLocation(asset);
+  return value.includes('audio/') || asset?.assetKind === 'audio' || /\.(mp3|wav|m4a|aac|ogg)(\?|#|$)/i.test(value);
 }
 
 export function isVideoAsset(asset?: AdminContentAssetItem | null) {
-  return !!asset?.mimeType && asset.mimeType.toLowerCase().startsWith('video/');
+  const value = assetLocation(asset);
+  return value.includes('video/') || asset?.assetKind === 'video' || /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(value);
 }
 
 export function isLottieAsset(asset?: AdminContentAssetItem | null) {
@@ -60,6 +83,12 @@ export const MediaAssetPreview: React.FC<{
   asset?: AdminContentAssetItem | null;
   size?: number;
 }> = ({ asset, size = 120 }) => {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [asset?.id, asset?.canonicalUrl]);
+
   if (!asset) {
     return (
       <Card
@@ -71,7 +100,7 @@ export const MediaAssetPreview: React.FC<{
     );
   }
 
-  if (isImageAsset(asset) && asset.canonicalUrl) {
+  if (isImageAsset(asset) && asset.canonicalUrl && !imageFailed) {
     return (
       <Image
         src={asset.canonicalUrl}
@@ -79,9 +108,19 @@ export const MediaAssetPreview: React.FC<{
         width={size}
         height={size}
         style={{ borderRadius: 14, objectFit: 'cover' }}
+        onError={() => setImageFailed(true)}
       />
     );
   }
+
+  const healthLabel = !asset.canonicalUrl
+    ? '無公開連結'
+    : imageFailed
+      ? '預覽載入失敗'
+      : isLottieAsset(asset)
+        ? 'JSON 動畫'
+        : '不可直接預覽';
+  const healthColor = !asset.canonicalUrl || imageFailed ? 'orange' : isLottieAsset(asset) ? 'purple' : 'default';
 
   return (
     <Card
@@ -93,9 +132,10 @@ export const MediaAssetPreview: React.FC<{
         <Tag color={isLottieAsset(asset) ? 'purple' : 'default'}>
           {isLottieAsset(asset) ? 'Lottie' : asset.assetKind || 'asset'}
         </Tag>
+        <Tag color={healthColor}>{healthLabel}</Tag>
         {isLottieAsset(asset) ? (
           <Text type="secondary" style={{ fontSize: 12 }}>
-            JSON 動畫
+            小程序端用 Lottie Player 渲染
           </Text>
         ) : null}
       </Space>

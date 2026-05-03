@@ -50,6 +50,15 @@ import type {
   AdminStorylineModeSnapshot,
   StoryMaterialCandidateBindRequest,
   StoryMaterialLocalImportRequest,
+  StoryMaterialQaActionPayload,
+  StoryMaterialQaActionResult,
+  StoryMaterialQaConsistencyPayload,
+  StoryMaterialQaConsistencyReport,
+  StoryMaterialQaDetail,
+  StoryMaterialQaItem,
+  StoryMaterialQaItemQuery,
+  StoryMaterialQaOverview,
+  StoryMaterialQaReplacePayload,
   AdminIndoorBuildingDetail,
   AdminIndoorBuildingItem,
   AdminIndoorBuildingPayload,
@@ -659,6 +668,69 @@ export const getStoryMaterialItemVersions = (
   return request.get<StoryMaterialVersionRecord[]>(
     `/api/admin/v1/content/material-packages/${packageId}/items/${itemId}/versions`,
     { params },
+  );
+};
+
+export const getStoryMaterialQaOverview = (packageId: number, params?: StoryMaterialQaItemQuery) => {
+  return request.get<StoryMaterialQaOverview>(
+    `/api/admin/v1/content/material-packages/${packageId}/qa/overview`,
+    { params },
+  );
+};
+
+export const getStoryMaterialQaItems = (packageId: number, params?: StoryMaterialQaItemQuery) => {
+  return request.get<PaginationResponse<StoryMaterialQaItem>>(
+    `/api/admin/v1/content/material-packages/${packageId}/qa/items`,
+    { params },
+  );
+};
+
+export const getStoryMaterialQaDetail = (packageId: number, itemId: number) => {
+  return request.get<StoryMaterialQaDetail>(
+    `/api/admin/v1/content/material-packages/${packageId}/qa/items/${itemId}`,
+  );
+};
+
+export const rejectStoryMaterialQaItem = (
+  packageId: number,
+  itemId: number,
+  data: StoryMaterialQaActionPayload,
+) => {
+  return request.post<StoryMaterialQaActionResult>(
+    `/api/admin/v1/content/material-packages/${packageId}/qa/items/${itemId}/reject`,
+    data,
+  );
+};
+
+export const approveStoryMaterialQaItem = (
+  packageId: number,
+  itemId: number,
+  data: StoryMaterialQaActionPayload,
+) => {
+  return request.post<StoryMaterialQaActionResult>(
+    `/api/admin/v1/content/material-packages/${packageId}/qa/items/${itemId}/approve`,
+    data,
+  );
+};
+
+export const replaceStoryMaterialQaItem = (
+  packageId: number,
+  itemId: number,
+  data: StoryMaterialQaReplacePayload,
+) => {
+  return request.post<StoryMaterialQaActionResult>(
+    `/api/admin/v1/content/material-packages/${packageId}/qa/items/${itemId}/replace`,
+    data,
+  );
+};
+
+export const runStoryMaterialQaConsistencyCheck = (
+  packageId: number,
+  data?: StoryMaterialQaConsistencyPayload,
+) => {
+  return request.post<StoryMaterialQaConsistencyReport>(
+    `/api/admin/v1/content/material-packages/${packageId}/qa/consistency-check`,
+    data || {},
   );
 };
 

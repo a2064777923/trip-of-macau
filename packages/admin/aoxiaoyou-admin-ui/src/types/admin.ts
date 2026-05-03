@@ -2347,6 +2347,141 @@ export interface StoryMaterialVersionPage {
   total?: number;
 }
 
+export interface StoryMaterialQaFinding {
+  severity?: string;
+  findingCode?: string;
+  messageZht?: string;
+  sourceType?: string;
+  sourceId?: string;
+  expectedValue?: string;
+  actualValue?: string;
+  actionHintZht?: string;
+}
+
+export interface StoryMaterialQaContentAssetSummary {
+  id?: number;
+  assetKind?: string;
+  canonicalUrl?: string;
+  objectKey?: string;
+  bucketName?: string;
+  region?: string;
+  mimeType?: string;
+  originalFilename?: string;
+  fileSizeBytes?: number;
+  widthPx?: number;
+  heightPx?: number;
+  processingStatus?: string;
+  status?: string;
+}
+
+export interface StoryMaterialQaItem {
+  id: number;
+  packageId: number;
+  itemKey: string;
+  itemType?: string;
+  assetKind?: string;
+  targetType?: string;
+  targetId?: number | null;
+  targetCode?: string;
+  assetId?: number | null;
+  currentVersionId?: number | null;
+  currentVersionNo?: number;
+  publishedVersionId?: number | null;
+  publishedVersionNo?: number;
+  currentVersion?: StoryMaterialVersionRecord | null;
+  publishedVersion?: StoryMaterialVersionRecord | null;
+  previewUrl?: string;
+  canonicalUrl?: string;
+  localPath?: string;
+  cosObjectKey?: string;
+  healthStates?: string[];
+  findingsCount?: number;
+  runtimeExposure?: string;
+  usageTarget?: string;
+  chapterCode?: string;
+  itemStatus?: string;
+  providerName?: string;
+  modelCode?: string;
+  usageTargets?: string[];
+  lastProducedAt?: string;
+  updatedAt?: string;
+}
+
+export interface StoryMaterialQaOverview {
+  packageId: number;
+  totalItems?: number;
+  blockingCount?: number;
+  warningCount?: number;
+  infoCount?: number;
+  healthStateCounters?: Record<string, number>;
+  assetKindCounters?: Record<string, number>;
+  statusCounters?: Record<string, number>;
+  chapterCodeCounters?: Record<string, number>;
+  runtimeExposureCounters?: Record<string, number>;
+}
+
+export interface StoryMaterialQaDetail {
+  item?: StoryMaterialQaItem;
+  versions?: StoryMaterialVersionRecord[];
+  currentContentAsset?: StoryMaterialQaContentAssetSummary | null;
+  publishedContentAsset?: StoryMaterialQaContentAssetSummary | null;
+  findings?: StoryMaterialQaFinding[];
+  availableActions?: string[];
+}
+
+export interface StoryMaterialQaConsistencyReport {
+  packageId: number;
+  checkedAt?: string;
+  blockingCount?: number;
+  warningCount?: number;
+  infoCount?: number;
+  findings?: StoryMaterialQaFinding[];
+}
+
+export interface StoryMaterialQaItemQuery {
+  keyword?: string;
+  assetKind?: string;
+  chapterCode?: string;
+  usageTarget?: string;
+  itemStatus?: string;
+  healthState?: string;
+  runtimeExposure?: string;
+  providerName?: string;
+  modelCode?: string;
+  pageNum?: number;
+  pageSize?: number;
+}
+
+export interface StoryMaterialQaActionPayload {
+  versionId?: number;
+  targetStatus?: string;
+  note?: string;
+  confirmedImpact?: boolean;
+}
+
+export interface StoryMaterialQaReplacePayload {
+  replacementAssetId: number;
+  versionId?: number;
+  note?: string;
+  targetStatus?: string;
+  confirmedImpact?: boolean;
+}
+
+export interface StoryMaterialQaConsistencyPayload {
+  includeCosHead?: boolean;
+  includeLocalFileCheck?: boolean;
+  maxCosChecks?: number;
+  runtimeOnly?: boolean;
+}
+
+export interface StoryMaterialQaActionResult {
+  itemId?: number;
+  currentVersionId?: number;
+  currentStatus?: string;
+  targetStatus?: string;
+  messageZht?: string;
+}
+
 export interface AdminExplorationElementItem {
   id: number;
   elementCode: string;
