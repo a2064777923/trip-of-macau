@@ -265,7 +265,8 @@ public class AdminAiController {
             @RequestParam(required = false) Long providerId,
             @RequestParam(required = false) String requestType,
             @RequestParam(required = false) Long adminOwnerId,
-            @RequestParam(required = false) String inventoryCode) {
+            @RequestParam(required = false) String inventoryCode,
+            HttpServletRequest request) {
         return ApiResponse.success(adminAiService.pageLogs(
                 pageNum,
                 pageSize,
@@ -274,7 +275,9 @@ public class AdminAiController {
                 providerId,
                 requestType,
                 adminOwnerId,
-                inventoryCode
+                inventoryCode,
+                (Long) request.getAttribute("adminUserId"),
+                readRoles(request)
         ));
     }
 

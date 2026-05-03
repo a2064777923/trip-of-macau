@@ -109,7 +109,9 @@ public interface AdminAiService {
                                               Long providerId,
                                               String requestType,
                                               Long adminOwnerId,
-                                              String inventoryCode);
+                                              String inventoryCode,
+                                              Long currentAdminId,
+                                              List<String> roles);
 
     List<AdminAiPromptTemplateResponse> listPromptTemplates(String capabilityCode, String templateType);
 

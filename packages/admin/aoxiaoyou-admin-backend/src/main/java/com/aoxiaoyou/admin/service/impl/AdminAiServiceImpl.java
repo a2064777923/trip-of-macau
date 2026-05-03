@@ -91,9 +91,12 @@ public class AdminAiServiceImpl implements AdminAiService {
         int recentWindowHours = readIntegerConfig(CONFIG_AI_RECENT_WINDOW_HOURS, 24);
         int inventoryFreshnessHours = readIntegerConfig(CONFIG_AI_INVENTORY_FRESHNESS_HOURS, 24);
         LocalDateTime since = LocalDateTime.now().minusHours(recentWindowHours);
+        boolean superAdmin = isSuperAdmin(roles);
+        Long visibleHistoryOwnerId = resolveAiHistoryOwnerId(null, currentAdminId, roles);
         List<AiRequestLog> recentLogs = aiRequestLogMapper.selectList(
                 new LambdaQueryWrapper<AiRequestLog>()
                         .ge(AiRequestLog::getCreatedAt, since)
+                        .eq(visibleHistoryOwnerId != null, AiRequestLog::getAdminOwnerId, visibleHistoryOwnerId)
                         .orderByDesc(AiRequestLog::getCreatedAt)
                         .orderByDesc(AiRequestLog::getId)
         );
@@ -105,7 +108,6 @@ public class AdminAiServiceImpl implements AdminAiService {
                 .filter(item -> item.getProviderId() != null)
                 .collect(Collectors.groupingBy(AiRequestLog::getProviderId));
 
-        boolean superAdmin = isSuperAdmin(roles);
         List<AiGenerationJob> recentJobs = aiGenerationJobMapper.selectList(
                 new LambdaQueryWrapper<AiGenerationJob>()
                         .eq(!superAdmin && currentAdminId != null, AiGenerationJob::getOwnerAdminId, currentAdminId)
@@ -842,7 +844,10 @@ public class AdminAiServiceImpl implements AdminAiService {
                                                      Long providerId,
                                                      String requestType,
                                                      Long adminOwnerId,
-                                                     String inventoryCode) {
+                                                     String inventoryCode,
+                                                     Long currentAdminId,
+                                                     List<String> roles) {
+        Long effectiveOwnerId = resolveAiHistoryOwnerId(adminOwnerId, currentAdminId, roles);
         List<AiProviderConfig> providers = aiProviderConfigMapper.selectList(null);
         Map<Long, AiCapabilityPolicy> policyMap = aiCapabilityPolicyMapper.selectList(null).stream()
                 .collect(Collectors.toMap(AiCapabilityPolicy::getId, item -> item, (left, right) -> left));
@@ -853,7 +858,7 @@ public class AdminAiServiceImpl implements AdminAiService {
                         .eq(success != null, AiRequestLog::getSuccess, success)
                         .eq(StringUtils.hasText(capabilityCode), AiRequestLog::getCapabilityCode, capabilityCode)
                         .eq(StringUtils.hasText(requestType), AiRequestLog::getRequestType, requestType)
-                        .eq(adminOwnerId != null, AiRequestLog::getAdminOwnerId, adminOwnerId)
+                        .eq(effectiveOwnerId != null, AiRequestLog::getAdminOwnerId, effectiveOwnerId)
                         .eq(StringUtils.hasText(inventoryCode), AiRequestLog::getInventoryCode, inventoryCode)
                         .orderByDesc(AiRequestLog::getCreatedAt)
                         .orderByDesc(AiRequestLog::getId)
@@ -2275,6 +2280,13 @@ public class AdminAiServiceImpl implements AdminAiService {
 
     private boolean canAccessJob(AiGenerationJob job, Long currentAdminId, List<String> roles) {
         return job != null && (isSuperAdmin(roles) || (currentAdminId != null && Objects.equals(job.getOwnerAdminId(), currentAdminId)));
+    }
+
+    private Long resolveAiHistoryOwnerId(Long requestedOwnerId, Long currentAdminId, List<String> roles) {
+        if (isSuperAdmin(roles) || readIntegerConfig(CONFIG_AI_ALLOW_OPERATOR_GLOBAL_HISTORY, 0) == 1) {
+            return requestedOwnerId;
+        }
+        return currentAdminId == null ? -1L : currentAdminId;
     }
 
     private void replacePolicyBindings(Long policyId, List<AdminAiPolicyUpsertRequest.ProviderBinding> bindings) {

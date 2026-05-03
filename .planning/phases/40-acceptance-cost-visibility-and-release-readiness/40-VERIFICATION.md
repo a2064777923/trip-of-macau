@@ -24,6 +24,7 @@ Status is `partial` because WeChat DevTools/device UAT rows are prepared but sti
 | `mvn -q -DskipTests compile -f packages/admin/aoxiaoyou-admin-backend/pom.xml` | Passed | Admin backend compiled after AI observability DTO/service/controller changes. |
 | `npm run build` in `packages/admin/aoxiaoyou-admin-ui` | Passed | Admin UI build completed after `監控與成本` page rebuild; existing Vite large chunk warning remains advisory. |
 | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-40-release-readiness.ps1 -Quick` | Passed | Consolidated quick smoke wrote `40-SMOKE-REPORT.md` with Phase 36/37/38/39 checks and AI observability safe-field checks. |
+| Phase 40 code review fix verification | Passed | Admin backend recompiled, `8081` was restarted from current code, and quick smoke passed after AI request-log history visibility was scoped. |
 | Phase 40 planning-doc sensitive-literal scan | Passed | `40-SMOKE-REPORT.md`, `40-UAT.md`, `40-ACCEPTANCE.md`, and this verification file contain no banned credential, raw prompt/script, or machine-path literals. |
 
 ## Admin Cost And History Evidence
@@ -31,6 +32,7 @@ Status is `partial` because WeChat DevTools/device UAT rows are prepared but sti
 - `AdminAiGenerationJobResponse` exposes cost labels, cost type, safe prompt/request summaries, candidate count, and latest asset metadata for operator-friendly job history.
 - `AdminAiLogResponse` exposes model code, labeled cost data, and safe output summaries for request logs.
 - `AdminAiController` and `AdminAiService` support request log filters for request type, owner, and inventory/model code.
+- AI request-log and overview history visibility now respects super-admin role and the platform global-history setting; non-super admins default to their own request rows.
 - `/ai/observability` is now labeled `監控與成本`, with summary cards, visible filters, generation job and request log tables, drawer detail, ellipsized long values, and `進階診斷` kept collapsed by default.
 - The smoke wrapper calls AI overview/jobs/logs and asserts the safe-field shape without writing raw payloads into the report.
 
