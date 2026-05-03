@@ -3,6 +3,7 @@ package com.aoxiaoyou.tripofmacau;
 import com.aoxiaoyou.tripofmacau.mapper.ActivityMapper;
 import com.aoxiaoyou.tripofmacau.mapper.BadgeMapper;
 import com.aoxiaoyou.tripofmacau.mapper.CityMapper;
+import com.aoxiaoyou.tripofmacau.mapper.ContentAssetLinkMapper;
 import com.aoxiaoyou.tripofmacau.mapper.ContentAssetMapper;
 import com.aoxiaoyou.tripofmacau.mapper.ContentRelationLinkMapper;
 import com.aoxiaoyou.tripofmacau.mapper.CollectibleMapper;
@@ -17,7 +18,9 @@ import com.aoxiaoyou.tripofmacau.mapper.RewardRuleBindingMapper;
 import com.aoxiaoyou.tripofmacau.mapper.RewardRuleMapper;
 import com.aoxiaoyou.tripofmacau.mapper.RewardMapper;
 import com.aoxiaoyou.tripofmacau.mapper.StampMapper;
+import com.aoxiaoyou.tripofmacau.mapper.StoryChapterBlockLinkMapper;
 import com.aoxiaoyou.tripofmacau.mapper.StoryChapterMapper;
+import com.aoxiaoyou.tripofmacau.mapper.StoryContentBlockMapper;
 import com.aoxiaoyou.tripofmacau.mapper.StoryLineMapper;
 import com.aoxiaoyou.tripofmacau.mapper.SubMapMapper;
 import com.aoxiaoyou.tripofmacau.mapper.TipArticleMapper;
@@ -55,7 +58,10 @@ class CatalogFoundationServiceImplTest {
     @Mock private IndoorFloorMapper indoorFloorMapper;
     @Mock private StoryLineMapper storyLineMapper;
     @Mock private StoryChapterMapper storyChapterMapper;
+    @Mock private StoryChapterBlockLinkMapper storyChapterBlockLinkMapper;
+    @Mock private StoryContentBlockMapper storyContentBlockMapper;
     @Mock private ContentRelationLinkMapper contentRelationLinkMapper;
+    @Mock private ContentAssetLinkMapper contentAssetLinkMapper;
     @Mock private TipArticleMapper tipArticleMapper;
     @Mock private RewardMapper rewardMapper;
     @Mock private RedeemablePrizeMapper redeemablePrizeMapper;
@@ -89,7 +95,10 @@ class CatalogFoundationServiceImplTest {
                 indoorFloorMapper,
                 storyLineMapper,
                 storyChapterMapper,
+                storyChapterBlockLinkMapper,
+                storyContentBlockMapper,
                 contentRelationLinkMapper,
+                contentAssetLinkMapper,
                 tipArticleMapper,
                 rewardMapper,
                 redeemablePrizeMapper,

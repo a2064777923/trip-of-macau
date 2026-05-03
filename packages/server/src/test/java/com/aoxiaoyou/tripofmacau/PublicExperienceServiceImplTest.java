@@ -13,6 +13,7 @@ import com.aoxiaoyou.tripofmacau.mapper.ExperienceTemplateMapper;
 import com.aoxiaoyou.tripofmacau.mapper.ExplorationElementMapper;
 import com.aoxiaoyou.tripofmacau.mapper.UserExplorationEventMapper;
 import com.aoxiaoyou.tripofmacau.service.StoryLineService;
+import com.aoxiaoyou.tripofmacau.service.PublicRuntimeAssetService;
 import com.aoxiaoyou.tripofmacau.service.impl.PublicExperienceServiceImpl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,6 +56,8 @@ class PublicExperienceServiceImplTest {
     private ContentAssetMapper contentAssetMapper;
     @Mock
     private LocalizedContentSupport localizedContentSupport;
+    @Mock
+    private PublicRuntimeAssetService publicRuntimeAssetService;
 
     private PublicExperienceServiceImpl service;
 
@@ -71,6 +74,7 @@ class PublicExperienceServiceImplTest {
                 userExplorationEventMapper,
                 contentAssetMapper,
                 localizedContentSupport,
+                publicRuntimeAssetService,
                 new ObjectMapper()
         );
         when(localizedContentSupport.resolveText(any(), any(), any(), any(), any()))

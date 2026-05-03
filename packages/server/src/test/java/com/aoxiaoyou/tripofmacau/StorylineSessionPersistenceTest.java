@@ -18,6 +18,7 @@ import com.aoxiaoyou.tripofmacau.mapper.ExperienceTemplateMapper;
 import com.aoxiaoyou.tripofmacau.mapper.ExplorationElementMapper;
 import com.aoxiaoyou.tripofmacau.mapper.UserExplorationEventMapper;
 import com.aoxiaoyou.tripofmacau.mapper.UserStorylineSessionMapper;
+import com.aoxiaoyou.tripofmacau.service.PublicRuntimeAssetService;
 import com.aoxiaoyou.tripofmacau.service.StoryLineService;
 import com.aoxiaoyou.tripofmacau.service.impl.PublicExperienceServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +65,8 @@ class StorylineSessionPersistenceTest {
     private ContentAssetMapper contentAssetMapper;
     @Mock
     private LocalizedContentSupport localizedContentSupport;
+    @Mock
+    private PublicRuntimeAssetService publicRuntimeAssetService;
 
     private PublicExperienceServiceImpl service;
 
@@ -80,6 +83,7 @@ class StorylineSessionPersistenceTest {
                 userExplorationEventMapper,
                 contentAssetMapper,
                 localizedContentSupport,
+                publicRuntimeAssetService,
                 new ObjectMapper()
         );
         ReflectionTestUtils.setField(service, "userStorylineSessionMapper", userStorylineSessionMapper);

@@ -12,6 +12,7 @@ import com.aoxiaoyou.tripofmacau.entity.RewardPresentationStep;
 import com.aoxiaoyou.tripofmacau.entity.RewardRule;
 import com.aoxiaoyou.tripofmacau.entity.RewardRuleBinding;
 import com.aoxiaoyou.tripofmacau.service.CatalogFoundationService;
+import com.aoxiaoyou.tripofmacau.service.PublicRuntimeAssetService;
 import com.aoxiaoyou.tripofmacau.service.RuntimeSettingsService;
 import com.aoxiaoyou.tripofmacau.service.impl.PublicCatalogServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +38,8 @@ class PublicRewardDomainServiceTest {
     private CatalogFoundationService catalogFoundationService;
     @Mock
     private RuntimeSettingsService runtimeSettingsService;
+    @Mock
+    private PublicRuntimeAssetService publicRuntimeAssetService;
 
     private PublicCatalogServiceImpl service;
 
@@ -45,7 +48,9 @@ class PublicRewardDomainServiceTest {
         service = new PublicCatalogServiceImpl(
                 catalogFoundationService,
                 runtimeSettingsService,
-                new LocalizedContentSupport(new ObjectMapper())
+                new LocalizedContentSupport(new ObjectMapper()),
+                publicRuntimeAssetService,
+                new ObjectMapper()
         );
     }
 

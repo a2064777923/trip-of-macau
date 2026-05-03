@@ -11,6 +11,7 @@ import com.aoxiaoyou.tripofmacau.entity.Reward;
 import com.aoxiaoyou.tripofmacau.entity.StoryLine;
 import com.aoxiaoyou.tripofmacau.entity.SubMap;
 import com.aoxiaoyou.tripofmacau.service.CatalogFoundationService;
+import com.aoxiaoyou.tripofmacau.service.PublicRuntimeAssetService;
 import com.aoxiaoyou.tripofmacau.service.RuntimeSettingsService;
 import com.aoxiaoyou.tripofmacau.service.impl.PublicCatalogServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +37,8 @@ class PublicCatalogServiceImplCarryoverTest {
     private CatalogFoundationService catalogFoundationService;
     @Mock
     private RuntimeSettingsService runtimeSettingsService;
+    @Mock
+    private PublicRuntimeAssetService publicRuntimeAssetService;
 
     private PublicCatalogServiceImpl service;
 
@@ -44,7 +47,9 @@ class PublicCatalogServiceImplCarryoverTest {
         service = new PublicCatalogServiceImpl(
                 catalogFoundationService,
                 runtimeSettingsService,
-                new LocalizedContentSupport(new ObjectMapper())
+                new LocalizedContentSupport(new ObjectMapper()),
+                publicRuntimeAssetService,
+                new ObjectMapper()
         );
     }
 
