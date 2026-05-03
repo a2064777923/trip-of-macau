@@ -40,6 +40,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,6 +83,18 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
     private static final String OWNER_TYPE_CONTENT_ASSET = "content_asset";
     private static final String DEFAULT_SESSION_LOCALE = "zh-Hant";
     private static final String EMPTY_JSON_OBJECT = "{}";
+    private static final int MAX_EVENT_PAYLOAD_BYTES = 8192;
+    private static final Set<String> ALLOWED_EVENT_TYPES = Set.of(
+            "story_opened",
+            "chapter_started",
+            "content_viewed",
+            "media_completed",
+            "pickup_interacted",
+            "task_completed",
+            "reward_acquired",
+            "unsupported_viewed",
+            "story_session_exit",
+            "chapter_open");
     private static final Set<String> UNSUPPORTED_GAMEPLAY_TYPES = Set.of(
             "ar_checkin",
             "voice_input",
@@ -153,30 +166,34 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         }
         // Preserve client_event_id idempotency before the unique key handles duplicate writes.
         String clientEventId = defaultText(request.getClientEventId(), "server-" + UUID.randomUUID());
+        String eventType = normalizeEventType(request.getEventType());
+        String payloadJson = validateEventPayloadJson(request.getPayloadJson());
+        request.setEventType(eventType);
+        request.setPayloadJson(payloadJson);
         UserExplorationEvent existingEvent = findEventByClientEventId(userId, clientEventId);
         if (existingEvent != null) {
-            return toEventResponse(existingEvent);
+            return toEventResponse(existingEvent, true, resolveResponseCurrentChapterId(userId, existingEvent, null), "Duplicate event accepted");
         }
         ExplorationElement element = resolveExplorationElement(request.getElementId(), request.getElementCode());
         UserExplorationEvent event = new UserExplorationEvent();
         event.setUserId(userId);
         event.setElementId(element == null ? request.getElementId() : element.getId());
         event.setElementCode(defaultText(element == null ? request.getElementCode() : element.getElementCode(), ""));
-        event.setEventType(requireText(request.getEventType(), "eventType"));
+        event.setEventType(eventType);
         event.setEventSource(defaultText(request.getEventSource(), "mini_program"));
         event.setStorylineSessionId(defaultText(request.getStorylineSessionId(), ""));
         event.setClientEventId(clientEventId);
-        event.setEventPayloadJson(validateJson(request.getPayloadJson(), "payloadJson"));
+        event.setEventPayloadJson(payloadJson);
         event.setOccurredAt(parseDateTime(request.getOccurredAt(), LocalDateTime.now()));
         event.setCreatedAt(LocalDateTime.now());
         try {
             userExplorationEventMapper.insert(event);
             updateStorylineSessionAfterEvent(userId, request, event, element);
-            return toEventResponse(event);
+            return toEventResponse(event, false, resolveResponseCurrentChapterId(userId, event, element), "Event accepted");
         } catch (DuplicateKeyException ex) {
             UserExplorationEvent duplicateEvent = findEventByClientEventId(userId, clientEventId);
             if (duplicateEvent != null) {
-                return toEventResponse(duplicateEvent);
+                return toEventResponse(duplicateEvent, true, resolveResponseCurrentChapterId(userId, duplicateEvent, element), "Duplicate event accepted");
             }
             throw ex;
         }
@@ -216,13 +233,16 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         if (session == null) {
             throw new BusinessException(4044, "Storyline session not found");
         }
+        if (SESSION_STATUS_EXITED.equals(normalizeToken(session.getStatus()))) {
+            return toSessionResponse(session, true, "Storyline session already exited");
+        }
         UserStorylineSession exitedSession = copyStorylineSession(session);
         exitedSession.setStatus(SESSION_STATUS_EXITED);
         exitedSession.setExitedAt(LocalDateTime.now());
         exitedSession.setTemporaryStepStateJson(EMPTY_JSON_OBJECT);
         exitedSession.setExitClearedTemporaryState(true);
         requireUserStorylineSessionMapper().updateById(exitedSession);
-        return toSessionResponse(exitedSession);
+        return toSessionResponse(exitedSession, false, "Storyline session exited");
     }
 
     @Override
@@ -779,6 +799,26 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         }
     }
 
+    private String validateEventPayloadJson(String json) {
+        if (!StringUtils.hasText(json)) {
+            return null;
+        }
+        String trimmed = json.trim();
+        if (trimmed.getBytes(StandardCharsets.UTF_8).length > MAX_EVENT_PAYLOAD_BYTES) {
+            throw new BusinessException(4002, "payloadJson is too large");
+        }
+        try {
+            if (!objectMapper.readTree(trimmed).isObject()) {
+                throw new BusinessException(4002, "payloadJson must be a JSON object");
+            }
+            return trimmed;
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new BusinessException(4002, "payloadJson must be valid JSON");
+        }
+    }
+
     private LocalDateTime parseDateTime(String value, LocalDateTime fallback) {
         if (!StringUtils.hasText(value)) {
             return fallback;
@@ -1057,6 +1097,10 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
     }
 
     private ExperienceEventResponse toEventResponse(UserExplorationEvent event) {
+        return toEventResponse(event, false, resolveCurrentChapterId(null, null, event.getEventPayloadJson()), "Event accepted");
+    }
+
+    private ExperienceEventResponse toEventResponse(UserExplorationEvent event, boolean duplicate, Long currentChapterId, String message) {
         return ExperienceEventResponse.builder()
                 .accepted(true)
                 .eventId(event.getId())
@@ -1065,6 +1109,10 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
                 .elementCode(event.getElementCode())
                 .eventType(event.getEventType())
                 .storylineSessionId(event.getStorylineSessionId())
+                .duplicate(duplicate)
+                .acceptedAt(event.getCreatedAt() == null ? LocalDateTime.now().toString() : event.getCreatedAt().toString())
+                .currentChapterId(currentChapterId)
+                .message(message)
                 .build();
     }
 
@@ -1181,6 +1229,14 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         return value.trim();
     }
 
+    private String normalizeEventType(String eventType) {
+        String normalized = requireText(eventType, "eventType").toLowerCase();
+        if (!ALLOWED_EVENT_TYPES.contains(normalized)) {
+            throw new BusinessException(4002, "Unsupported eventType");
+        }
+        return normalized;
+    }
+
     private String defaultText(String value, String fallback) {
         return StringUtils.hasText(value) ? value.trim() : fallback;
     }
@@ -1200,7 +1256,7 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         }
         UserStorylineSession updatedSession = copyStorylineSession(session);
         updatedSession.setStatus(SESSION_STATUS_STARTED);
-        updatedSession.setCurrentChapterId(resolveCurrentChapterId(session, element, request.getPayloadJson()));
+        updatedSession.setCurrentChapterId(resolveCurrentChapterId(session, element, event.getEventPayloadJson()));
         updatedSession.setLastEventAt(event.getOccurredAt());
         updatedSession.setEventCount((session.getEventCount() == null ? 0 : session.getEventCount()) + 1);
         updatedSession.setTemporaryStepStateJson(buildTemporaryStepStateJson(request, event, updatedSession.getCurrentChapterId()));
@@ -1262,6 +1318,13 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
                 .build();
     }
 
+    private StorylineSessionResponse toSessionResponse(UserStorylineSession session, Boolean duplicateExit, String message) {
+        StorylineSessionResponse response = toSessionResponse(session);
+        response.setDuplicateExit(duplicateExit);
+        response.setMessage(message);
+        return response;
+    }
+
     private Long resolveInitialChapterId(StoryLineResponse storyline) {
         if (storyline == null || storyline.getChapters() == null || storyline.getChapters().isEmpty()) {
             return null;
@@ -1284,6 +1347,18 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         if (element != null && element.getStoryChapterId() != null) {
             return element.getStoryChapterId();
         }
+        return session == null ? null : session.getCurrentChapterId();
+    }
+
+    private Long resolveResponseCurrentChapterId(Long userId, UserExplorationEvent event, ExplorationElement element) {
+        Long payloadChapterId = extractChapterId(event == null ? null : event.getEventPayloadJson());
+        if (payloadChapterId != null) {
+            return payloadChapterId;
+        }
+        if (element != null && element.getStoryChapterId() != null) {
+            return element.getStoryChapterId();
+        }
+        UserStorylineSession session = event == null ? null : findStorylineSession(userId, null, event.getStorylineSessionId());
         return session == null ? null : session.getCurrentChapterId();
     }
 

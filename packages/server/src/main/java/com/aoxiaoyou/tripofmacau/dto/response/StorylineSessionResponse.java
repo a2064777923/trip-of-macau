@@ -17,4 +17,6 @@ public class StorylineSessionResponse {
     private LocalDateTime exitedAt;
     private Integer eventCount;
     private Boolean exitClearedTemporaryState;
+    private Boolean duplicateExit;
+    private String message;
 }

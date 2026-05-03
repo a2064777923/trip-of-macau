@@ -7,6 +7,11 @@ import lombok.Data;
 public class ExperienceEventRequest {
     private Long elementId;
     private String elementCode;
+    /**
+     * Allowed values: story_opened, chapter_started, content_viewed, media_completed,
+     * pickup_interacted, task_completed, reward_acquired, unsupported_viewed,
+     * story_session_exit, and backward-compatible chapter_open.
+     */
     @NotBlank(message = "eventType is required")
     private String eventType;
     private String eventSource;

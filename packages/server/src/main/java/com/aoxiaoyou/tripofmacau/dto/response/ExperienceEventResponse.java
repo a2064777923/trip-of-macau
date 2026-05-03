@@ -13,4 +13,8 @@ public class ExperienceEventResponse {
     private String elementCode;
     private String eventType;
     private String storylineSessionId;
+    private boolean duplicate;
+    private String acceptedAt;
+    private Long currentChapterId;
+    private String message;
 }
