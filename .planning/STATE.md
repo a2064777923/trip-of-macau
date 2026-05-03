@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Material Production and Mini-program Experience Acceptance
-current_phase: 40
-current_plan: 3
-status: review
-stopped_at: Phase 40 verification ready for milestone closure
-last_updated: "2026-05-03T13:49:02.177Z"
-last_activity: 2026-05-03 -- Phase 40 verification ready for milestone closure
+current_phase: null
+current_plan: null
+status: milestone_complete
+stopped_at: v3.1 archived; ready for /gsd-new-milestone
+last_updated: "2026-05-04T07:30:51+08:00"
+last_activity: 2026-05-04 -- v3.1 shipped with accepted WeChat UAT caveat
 progress:
   total_phases: 5
   completed_phases: 5
@@ -20,24 +20,24 @@ progress:
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-04-30)
+See: `.planning/PROJECT.md` (updated 2026-05-04)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Phase 40 — Acceptance, Cost Visibility, and Release Readiness
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 40 (Acceptance, Cost Visibility, and Release Readiness) — REVIEW
-Plan: 3 of 3
+Phase: none
+Plan: none
 Milestone: `v3.1`
-Current Phase: 40
+Current Phase: none
 Total Phases Planned: 5
-Status: Phase 40 verification ready for milestone closure
-Current Plan: 3
-Last activity: 2026-05-03 -- Phase 40 verification ready for milestone closure
-Last Activity Description: Phase 40 verification ready for milestone closure
+Status: v3.1 archived; ready for `/gsd-new-milestone`
+Current Plan: none
+Last activity: 2026-05-04 -- v3.1 shipped with accepted WeChat UAT caveat
+Last Activity Description: v3.1 archived and milestone documents updated
 
-Progress: [██████████] 100% of currently planned v3.1 plans complete; Phase 40 acceptance artifacts ready
+Progress: [██████████] 100% of v3.1 plans complete; milestone archived
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Progress: [██████████] 100% of currently planned v3.1 plans 
 - `v2.0`: 6 executed phases, 15 plans, archived with accepted gaps on 2026-04-15
 - `v2.1`: 14 phases, 44 plans, archived with one accepted future slice on 2026-04-19
 - `v3.0`: 8 phases, 33 plans, admin core domain completion and control-plane linkage shipped on 2026-04-30
+- `v3.1`: 5 phases, 18 plans, material production and mini-program story-mode baseline shipped on 2026-05-04 with accepted WeChat UAT caveat
 
 ## Quick Tasks Completed
 
@@ -78,13 +79,14 @@ Progress: [██████████] 100% of currently planned v3.1 plans 
 - Complete story/content, user/progress, and operations/testing as linked domains rather than isolated CRUD pages.
 - Phase 34 public runtime smoke is the v3.0 closure evidence for public-runtime linkage, not a substitute for full WeChat device journey UAT.
 - Future material production can assemble video from one or several `image-2` stills with pan/zoom/motion and narration/audio stitching; keep using material boards and local slicing to save generation cost.
-- v3.1 adopts that future scope as active work: real generated assets, asset QA/promotion, and mini-program story-mode acceptance.
+- v3.1 shipped real generated assets, asset QA/promotion, public runtime asset consumption, mini-program story-mode baseline, and release readiness evidence.
+- Manual WeChat DevTools/device UAT remains pending but accepted as a milestone caveat.
 - Phase 36 publish/rollback operations require both `SUPER_ADMIN` / `ROLE_SUPER_ADMIN` and an explicit confirmation flag; a confirmation boolean alone is not enough permission.
 
 ### Pending Todos
 
-- Keep provider and COS secrets outside tracked files while implementing real asset generation/upload.
-- Verify generated assets and package publish/rollback behavior on local services before marking Phase 36 complete.
+- Define the next milestone scope before adding new phases.
+- Keep provider, COS, and AI keys outside tracked files.
 
 ### Blockers/Concerns
 
@@ -96,6 +98,6 @@ Progress: [██████████] 100% of currently planned v3.1 plans 
 
 ## Session Continuity
 
-Last session: 2026-05-03T13:49:02.172Z
-Stopped at: Phase 40 verification ready for milestone closure
-Resume file: .planning/phases/40-acceptance-cost-visibility-and-release-readiness/40-ACCEPTANCE.md
+Last session: 2026-05-04T07:30:51+08:00
+Stopped at: v3.1 archived; ready for next milestone planning
+Resume file: .planning/milestones/v3.1-ROADMAP.md

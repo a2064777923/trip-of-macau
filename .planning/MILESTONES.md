@@ -1,5 +1,28 @@
 # Milestones
 
+## v3.1 Material Production and Mini-program Experience Acceptance (Shipped: 2026-05-04)
+
+**Phases completed:** 5 phases, 18 plans, 30+ tracked tasks
+
+**Key accomplishments:**
+
+- Generated/imported the `東西方文明的戰火與共生` flagship material package into real images, board slices, narration/audio, videos, COS-backed `content_assets`, and package item versions.
+- Added guarded material production APIs, explicit promotion/rollback states, version history, and smoke evidence for image/audio/video/COS chains.
+- Built Traditional Chinese material QA and reuse controls over the existing media library and picker, including package/item/version metadata search and consistency checks.
+- Extended public runtime APIs so generated image/audio/video/Lottie assets, poster/fallback states, unsupported-media hints, and sanitized usage metadata are traveler-safe.
+- Added idempotent public story event/session ingestion for media completion, pickup/action cards, baseline tasks, rewards, and story exit.
+- Updated the mini-program story-mode baseline to consume live public runtime data, render generated content/media, hand route context to the map, and degrade unsupported gameplay in Traditional Chinese.
+- Added a Phase 40 release-readiness smoke bundle, AI `監控與成本` observability, scoped AI history visibility, acceptance report, and WeChat DevTools/device UAT checklist.
+
+**Accepted caveats:**
+
+- Manual WeChat DevTools/device UAT remains pending in `40-UAT.md`; this milestone archives with that caveat accepted by the user.
+- Full AR/photo recognition, speech-input NPC interactions, route-coverage games, puzzle/cannon-defense minigames, and production indoor visual positioning remain future gameplay scope.
+- The mini-program story page still has an advisory bundle-size warning.
+- Live provider/COS mutation checks stay opt-in because they incur external cost and mutate persistent assets.
+
+---
+
 ## v3.0 Admin Core Domain Completion and Control-Plane Linkage (Shipped: 2026-04-30)
 
 **Phases completed:** 8 phases, 33 plans, 54 tasks

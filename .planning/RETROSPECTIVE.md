@@ -174,9 +174,56 @@
 - Verification cost was justified: Phase 34 and 35 smoke checks found contract and lifecycle issues before closeout.
 - Future material-production work will likely spend more on external APIs and asset review than on schema/API scaffolding.
 
+## Milestone: v3.1 - Material Production and Mini-program Experience Acceptance
+
+**Shipped:** 2026-05-04  
+**Phases:** 5 | **Plans:** 18 | **Status:** shipped with accepted WeChat UAT caveat
+
+### What Was Built
+
+- A real flagship material-production pipeline: generated/imported images, board slices, narration/audio, videos, COS-backed assets, package versions, promotion/rollback, and production smoke evidence.
+- Traditional Chinese material QA and reuse controls over the shared media library and picker.
+- Public runtime generated-asset consumption with image/audio/video/Lottie DTOs, fallbacks, unsupported states, privacy guards, and idempotent event/session ingestion.
+- Mini-program story-mode baseline consumption of live public runtime data, route handoff, media rendering, action cards, pickups/rewards/progress, and unsupported-gameplay placeholders.
+- Release-readiness evidence with Phase 40 quick smoke, AI monitoring/cost observability, scoped AI history visibility, acceptance report, and WeChat UAT checklist.
+
+### What Worked
+
+- The Phase 33 manifest made material generation traceable instead of ad hoc.
+- Keeping generated assets behind package item versions, status transitions, and COS-backed `content_assets` made rollback and runtime exposure auditable.
+- Public runtime smoke caught missing media linkage and stale backend-process issues before they reached milestone closure.
+- Separating baseline mini-program story consumption from full gameplay engines kept v3.1 shippable without pretending AR/speech/puzzle features exist.
+
+### What Was Inefficient
+
+- Manual WeChat DevTools/device UAT remained outside the automated flow and still needs operator execution.
+- Some requirement checkboxes lagged behind traceability rows, so milestone closure needed reconciliation.
+- The story page bundle-size warning remains unresolved.
+- Local DevTools automation was not reliable enough to replace manual visual/device validation.
+
+### Patterns Established
+
+- External-provider and COS mutation checks should remain explicit, opt-in, and logged.
+- Public DTOs should expose safe availability/fallback metadata while hiding prompts, local paths, provider payloads, and admin provenance.
+- Story material packages should be versioned and QA-governed before becoming runtime-facing.
+- Mini-program gameplay acceptance should distinguish baseline consumption from true device/gameplay engines.
+
+### Key Lessons
+
+- Runtime smoke must target the correct flagship story (`東西方文明的戰火與共生`), not legacy storylines that remain incomplete.
+- If a milestone closes with manual UAT pending, the caveat must be visible in roadmap, requirements archive, acceptance docs, and retrospective.
+- Generated media work costs more in verification and QA than in schema creation; future AI/material milestones need enough time for review and rollback.
+
+### Cost Observations
+
+- v3.1 incurred external-service and media-processing cost through image/audio/video generation and COS promotion.
+- The verification cost was justified because it found stale service processes and missing runtime media links.
+- Future full-gameplay milestones will likely cost more in device UAT and interaction debugging than backend DTO work.
+
 ## Cross-Milestone Trends
 
 - v1.0 established the project's baseline pattern: phased delivery, admin/public contract discipline, and smoke-first verification.
 - v2.0 confirmed that larger control-plane milestones need explicit carryover handling and milestone-audit discipline, not just more implementation volume.
 - v2.1 established a stronger closure standard: late-phase verification, accepted-carryover discipline, and planning-state reconciliation are now part of milestone completion rather than optional cleanup.
 - v3.0 confirmed that the admin platform works best when domain workbenches sit on shared runtime models, and when deferred experiential/material work is named explicitly instead of hidden inside "complete" claims.
+- v3.1 confirmed that generated assets and mini-program runtime acceptance need production-style QA, safe public DTOs, and explicit manual-UAT boundaries.
