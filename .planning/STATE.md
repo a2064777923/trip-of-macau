@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Material Production and Mini-program Experience Acceptance
-current_phase: 36
-current_plan: 5
-status: completed
+current_phase: 37
+current_plan: 1
+status: executing
 stopped_at: Phase 37 context gathered
-last_updated: "2026-05-03T00:32:04.612Z"
-last_activity: 2026-05-03 -- Phase 36 live chapter videos generated from stills plus narration, imported through backend APIs, published to COS, and smoke verified
+last_updated: "2026-05-03T00:38:44.258Z"
+last_activity: 2026-05-03 -- Phase 37 planning complete
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 5
+  total_plans: 8
   completed_plans: 5
-  percent: 100
+  percent: 63
 ---
 
 # Project State
@@ -27,17 +27,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-30)
 
 ## Current Position
 
-Phase: 36 (material-production-pipeline-and-asset-promotion) — COMPLETE
-Plan: 5 of 5
+Phase: 37 (material-qa-workspace-and-reuse-controls) — READY TO EXECUTE
+Plan: 1 of 3
 Milestone: `v3.1`
-Current Phase: 36
+Current Phase: 37
 Total Phases Planned: 5
-Status: Phase 36 complete; live image/board/audio/video/COS path passed
-Current Plan: 5
-Last activity: 2026-05-03 -- Phase 36 live chapter videos generated from stills plus narration, imported through backend APIs, published to COS, and smoke verified
-Last Activity Description: Phase 36 UAT is complete at 6/6 passed. Security audit `36-SECURITY.md` closes 25/25 threats and fixed publish/rollback authorization so both super-admin role and explicit confirmation are required. Live image, board-slice, audio, and video assets are now verified with backend COS storage, published material package versions, COS URL checks, version history, and rollback smoke. MAT-01 through MAT-05 are complete; chapter MP4s use external UTF-8 caption metadata because burned-in subtitles degraded on this workstation.
+Status: Ready to execute
+Current Plan: 1
+Last activity: 2026-05-03 -- Phase 37 planning complete
+Last Activity Description: Phase 37 planning complete — 3 plans ready
 
-Progress: [##########] 100% of Phase 36 implementation plans executed and live-smoked
+Progress: [######----] 63% of v3.1 plans complete; Phase 37 ready to execute
 
 ## Performance Metrics
 
