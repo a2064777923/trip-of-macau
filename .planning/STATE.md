@@ -5,8 +5,8 @@ milestone_name: Material Production and Mini-program Experience Acceptance
 current_phase: 36
 current_plan: 5
 status: completed
-stopped_at: Phase 36 live image/board/audio/video/COS smoke completed
-last_updated: "2026-05-03T00:27:03.116Z"
+stopped_at: Phase 37 context gathered
+last_updated: "2026-05-03T00:32:04.612Z"
 last_activity: 2026-05-03 -- Phase 36 live chapter videos generated from stills plus narration, imported through backend APIs, published to COS, and smoke verified
 progress:
   total_phases: 5
@@ -92,6 +92,6 @@ Progress: [##########] 100% of Phase 36 implementation plans executed and live-s
 
 ## Session Continuity
 
-Last session: 2026-04-30T04:03:38.191Z
-Stopped at: Phase 36 image/board/audio/video smoke passed
-Resume file: .planning/phases/36-material-production-pipeline-and-asset-promotion/36-VERIFICATION.md
+Last session: 2026-05-03T00:32:04.608Z
+Stopped at: Phase 37 context gathered
+Resume file: .planning/phases/37-material-qa-workspace-and-reuse-controls/37-CONTEXT.md
