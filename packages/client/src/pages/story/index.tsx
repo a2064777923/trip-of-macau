@@ -5,12 +5,25 @@ import LottieAssetPlayer from '../../components/LottieAssetPlayer'
 import PageShell from '../../components/PageShell'
 import StoryContentBlockRenderer from '../../components/StoryContentBlockRenderer'
 import {
+  exitStoryModeSession,
+  getActiveStoryModeSession,
+  isAuthRequiredError,
   getStorylines,
   recordStoryRuntimeEvent,
   refreshPublicContent,
+  refreshStoryExplorationSummary,
   refreshStorylineRuntime,
+  startStoryModeSession,
 } from '../../services/gameService'
-import type { StoryChapterItem, StorylineItem, StoryRuntimeStepItem } from '../../types/game'
+import type {
+  StoryChapterItem,
+  StoryExplorationSummaryItem,
+  StoryMediaAssetItem,
+  StorylineItem,
+  StoryModeSessionState,
+  StoryRuntimeEventType,
+  StoryRuntimeStepItem,
+} from '../../types/game'
 import './index.scss'
 
 function describeRule(rule?: StoryChapterItem['unlock']) {
@@ -145,59 +158,168 @@ function getRuntimeSteps(chapter: StoryChapterItem) {
     .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
 }
 
-function renderRuntimeFlow(
-  chapter: StoryChapterItem,
-  onUnsupportedStepView: (step: StoryRuntimeStepItem) => void,
-) {
+type RuntimeStepCardCategory = 'story' | 'location' | 'pickup' | 'task' | 'challenge' | 'reward' | 'unsupported'
+type ActionStateValue = 'pending' | 'accepted' | 'failed' | undefined
+
+function normalizeStepSearchText(step: StoryRuntimeStepItem) {
+  return [
+    step.eventType,
+    step.stepType,
+    step.displayCategory,
+    step.displayCategoryLabel,
+    step.stepCode,
+    step.triggerType,
+    step.template?.templateType,
+    step.template?.category,
+    step.template?.code,
+  ].filter(Boolean).join(' ').toLowerCase()
+}
+
+function getStepCardCategory(step: StoryRuntimeStepItem): RuntimeStepCardCategory {
+  const text = normalizeStepSearchText(step)
+  if (step.unsupported || text.includes('future') || text.includes('unsupported')) {
+    return 'unsupported'
+  }
+  if (step.eventType === 'pickup_interacted' || /pickup|collectible|clue/.test(text)) {
+    return 'pickup'
+  }
+  if (step.eventType === 'task_completed' || text.includes('task')) {
+    return 'task'
+  }
+  if (step.eventType === 'reward_acquired' || step.rewardRuleIds) {
+    return 'reward'
+  }
+  if (/hidden|challenge|puzzle|ar|speech|cannon|route_coverage/.test(text)) {
+    return 'challenge'
+  }
+  if (/location|poi|checkin|anchor/.test(text)) {
+    return 'location'
+  }
+  return 'story'
+}
+
+function getStepCardLabel(step: StoryRuntimeStepItem): string {
+  switch (getStepCardCategory(step)) {
+    case 'unsupported':
+      return '稍後開放'
+    case 'pickup':
+      return '拾取線索'
+    case 'task':
+      return '任務'
+    case 'reward':
+      return '獎勵'
+    case 'challenge':
+      return '隱藏挑戰'
+    case 'location':
+      return '地點互動'
+    default:
+      return '劇情播放'
+  }
+}
+
+function getStepEventType(step: StoryRuntimeStepItem): StoryRuntimeEventType {
+  switch (getStepCardCategory(step)) {
+    case 'pickup':
+      return 'pickup_interacted'
+    case 'task':
+    case 'challenge':
+      return 'task_completed'
+    case 'reward':
+      return 'reward_acquired'
+    case 'unsupported':
+      return 'unsupported_viewed'
+    default:
+      return 'content_viewed'
+  }
+}
+
+function getStepButtonText(step: StoryRuntimeStepItem) {
+  switch (getStepEventType(step)) {
+    case 'pickup_interacted':
+      return '拾取線索'
+    case 'task_completed':
+      return '標記任務完成'
+    case 'reward_acquired':
+      return '領取後端獎勵'
+    default:
+      return '同步互動進度'
+  }
+}
+
+function renderRuntimeFlow({
+  chapter,
+  storyModeSession,
+  actionStates,
+  onStepAction,
+}: {
+  chapter: StoryChapterItem
+  storyModeSession: StoryModeSessionState | null
+  actionStates: Record<string, ActionStateValue>
+  onStepAction: (chapter: StoryChapterItem, step: StoryRuntimeStepItem) => void
+}) {
   const steps = getRuntimeSteps(chapter)
   return (
     <View className='story-runtime-flow'>
       <Text className='story-runtime-flow__title'>故事互動流程</Text>
       {steps.length ? (
-        steps.map((step, stepIndex) => (
-          <View
-            key={step.id || step.stepCode || stepIndex}
-            className={`story-runtime-step ${step.unsupported ? 'story-runtime-step--unsupported' : ''}`}
-            onClick={() => {
-              if (step.unsupported) {
-                onUnsupportedStepView(step)
-              }
-            }}
-          >
-            <View className='story-runtime-step__top'>
-              <Text className='story-runtime-step__badge'>
-                {step.displayCategoryLabel || step.displayCategory || '互動步驟'}
-              </Text>
-              {step.requiredForCompletion ? (
-                <Text className='story-runtime-step__badge story-runtime-step__badge--required'>主線必做</Text>
-              ) : null}
-              {step.explorationWeightLevel ? (
-                <Text className='story-runtime-step__badge story-runtime-step__badge--weight'>
-                  探索權重：{step.explorationWeightLevel}
-                </Text>
-              ) : null}
-              {step.unsupported ? (
-                <Text className='story-runtime-step__badge story-runtime-step__badge--pending'>稍後開放</Text>
-              ) : null}
-            </View>
-            <Text className='story-runtime-step__name'>{step.name || `互動 ${stepIndex + 1}`}</Text>
-            {step.description ? <Text className='story-runtime-step__desc'>{step.description}</Text> : null}
-            {step.travelerActionLabel ? (
-              <Text className='story-runtime-step__action'>{step.travelerActionLabel}</Text>
-            ) : null}
-            {renderRuntimeStepMedia(step)}
-            {step.unsupported ? (
-              <View className='story-runtime-step__unsupportedCopy'>
-                <Text className='story-runtime-step__unsupportedText'>
-                  這個互動玩法已由後台配置，將在後續小程序玩法版本中開放。
-                </Text>
-                <Text className='story-runtime-step__debug'>
-                  玩法類型：{step.stepType || step.template?.templateType || '未指定'}
-                </Text>
+        steps.map((step, stepIndex) => {
+          const category = getStepCardCategory(step)
+          const stateKey = `${chapter.id}:${step.stepCode || step.id || stepIndex}:${getStepEventType(step)}`
+          const actionState = actionStates[stateKey]
+          const disabled = !storyModeSession?.sessionId && !['story', 'location', 'unsupported'].includes(category)
+          return (
+            <View
+              key={step.id || step.stepCode || stepIndex}
+              className={`story-runtime-action-card story-runtime-action-card--${category} ${disabled ? 'story-runtime-action-card--disabled' : 'story-runtime-action-card--active'} ${category === 'unsupported' ? 'story-runtime-action-card--unsupported' : ''}`}
+            >
+              <View className='story-runtime-step__top'>
+                <Text className='story-runtime-step__badge'>{getStepCardLabel(step)}</Text>
+                {step.requiredForCompletion ? (
+                  <Text className='story-runtime-step__badge story-runtime-step__badge--required'>主線必做</Text>
+                ) : null}
+                {step.explorationWeightLevel ? (
+                  <Text className='story-runtime-step__badge story-runtime-step__badge--weight'>
+                    探索權重：{step.explorationWeightLevel}
+                  </Text>
+                ) : null}
+                {category === 'unsupported' ? (
+                  <Text className='story-runtime-step__badge story-runtime-step__badge--pending'>稍後開放</Text>
+                ) : null}
               </View>
-            ) : null}
-          </View>
-        ))
+              <Text className='story-runtime-step__name'>{step.name || `互動 ${stepIndex + 1}`}</Text>
+              {step.description ? <Text className='story-runtime-step__desc'>{step.description}</Text> : null}
+              {step.travelerActionLabel ? (
+                <Text className='story-runtime-step__action'>{step.travelerActionLabel}</Text>
+              ) : null}
+              {renderRuntimeStepMedia(step)}
+              {category === 'unsupported' ? (
+                <View className='story-runtime-step__unsupportedCopy'>
+                  <Text className='story-runtime-step__unsupportedText'>
+                    此互動玩法已由後台配置，將在後續小程序玩法版本中開放。
+                  </Text>
+                  <Text className='story-runtime-step__debug'>
+                    玩法類型：{step.stepType || step.template?.templateType || '未指定'}
+                  </Text>
+                </View>
+              ) : null}
+              {disabled ? (
+                <Text className='story-runtime-action-card__status'>開始故事模式後可同步此互動。</Text>
+              ) : null}
+              {actionState ? (
+                <Text className='story-runtime-action-card__status'>
+                  {actionState === 'pending' ? '同步中...' : actionState === 'accepted' ? '已同步' : '同步失敗，點擊重試'}
+                </Text>
+              ) : null}
+              <Button
+                className='story-runtime-action-card__button'
+                disabled={actionState === 'pending'}
+                onClick={() => onStepAction(chapter, step)}
+              >
+                {category === 'unsupported' ? '查看玩法說明' : getStepButtonText(step)}
+              </Button>
+            </View>
+          )
+        })
       ) : (
         <Text className='story-runtime-flow__empty'>此章節暫未配置互動流程。</Text>
       )}
@@ -214,6 +336,12 @@ export default function StoryPage() {
   const [expandedChapterId, setExpandedChapterId] = useState<number | null>(initialChapterId || null)
   const [runtimeLoading, setRuntimeLoading] = useState(false)
   const [runtimeAlert, setRuntimeAlert] = useState('')
+  const [storyModeSession, setStoryModeSession] = useState<StoryModeSessionState | null>(() => (
+    initialStoryId ? getActiveStoryModeSession(initialStoryId) : getActiveStoryModeSession()
+  ))
+  const [storyModeBusy, setStoryModeBusy] = useState(false)
+  const [explorationSummary, setExplorationSummary] = useState<StoryExplorationSummaryItem | null>(null)
+  const [actionStates, setActionStates] = useState<Record<string, ActionStateValue>>({})
   const reportedContentEventsRef = useRef<Set<string>>(new Set())
   const reportedUnsupportedEventsRef = useRef<Set<string>>(new Set())
 
@@ -222,6 +350,10 @@ export default function StoryPage() {
   const activeStory = useMemo(
     () => stories.find((story) => story.id === expandedStoryId) || unlockedStories[0] || stories[0],
     [stories, expandedStoryId, unlockedStories],
+  )
+  const firstUnlockedChapter = useMemo(
+    () => activeStory?.chapters?.find((chapter) => !chapter.locked) || activeStory?.chapters?.[0] || null,
+    [activeStory?.chapters],
   )
 
   useEffect(() => {
@@ -307,23 +439,50 @@ export default function StoryPage() {
     }
   }, [activeStory, expandedChapterId])
 
-  const reportStoryEvent = (input: {
-    eventType: string
+  useEffect(() => {
+    if (!activeStory?.id) {
+      setStoryModeSession(null)
+      setExplorationSummary(null)
+      return
+    }
+    const storedSession = getActiveStoryModeSession(activeStory.id)
+    setStoryModeSession(storedSession)
+    void refreshStoryExplorationSummary(activeStory.id)
+      .then(setExplorationSummary)
+      .catch(() => setExplorationSummary(null))
+  }, [activeStory?.id])
+
+  const refreshExploration = async () => {
+    if (!activeStory?.id) {
+      return
+    }
+    try {
+      setExplorationSummary(await refreshStoryExplorationSummary(activeStory.id))
+    } catch (error) {
+      console.warn('Failed to refresh story exploration summary.', error)
+    }
+  }
+
+  const reportStoryEvent = async (input: {
+    eventType: StoryRuntimeEventType
+    sessionId?: string
+    clientEventId?: string
+    idempotencyScope?: string
     chapterId?: number
     stepId?: number
     blockId?: number
     elementCode?: string
     elementId?: number
+    mediaKind?: string
     payload?: Record<string, unknown>
   }) => {
     if (!activeStory?.id) {
-      return
+      return undefined
     }
-    void recordStoryRuntimeEvent({
+    return recordStoryRuntimeEvent({
       storylineId: activeStory.id,
+      sessionId: input.sessionId || storyModeSession?.sessionId,
       ...input,
-    }).catch((error) => {
-      console.warn('Failed to report story runtime event.', error)
     })
   }
 
@@ -337,40 +496,25 @@ export default function StoryPage() {
     }
 
     ;(chapter.contentBlocks || []).forEach((block) => {
-      const key = `${activeStory.id}:${chapter.id}:block:${block.id}:content_read`
+      const key = `${activeStory.id}:${chapter.id}:block:${block.id}:content_viewed`
       if (reportedContentEventsRef.current.has(key)) {
         return
       }
       reportedContentEventsRef.current.add(key)
-      reportStoryEvent({
-        eventType: 'content_read',
+      void reportStoryEvent({
+        eventType: 'content_viewed',
         chapterId: chapter.id,
         blockId: block.id,
         elementCode: block.code || `story_block_${block.id}`,
         elementId: block.id,
+        payload: {
+          source: 'story_page',
+          blockType: block.blockType,
+        },
+      }).catch((error) => {
+        console.warn('Failed to report story content view.', error)
       })
     })
-
-    getRuntimeSteps(chapter)
-      .filter((step) => step.unsupported)
-      .forEach((step) => {
-        const key = `${activeStory.id}:${chapter.id}:step:${step.id || step.stepCode}:unsupported_interaction_view`
-        if (reportedUnsupportedEventsRef.current.has(key)) {
-          return
-        }
-        reportedUnsupportedEventsRef.current.add(key)
-        reportStoryEvent({
-          eventType: 'unsupported_interaction_view',
-          chapterId: chapter.id,
-          stepId: step.id,
-          elementCode: step.elementCode || step.stepCode,
-          elementId: step.elementId,
-          payload: {
-            stepType: step.stepType,
-            templateType: step.template?.templateType,
-          },
-        })
-      })
   }, [activeStory, expandedChapterId])
 
   const handleStorySelect = (story: StorylineItem) => {
@@ -380,7 +524,7 @@ export default function StoryPage() {
     }
     void recordStoryRuntimeEvent({
       storylineId: story.id,
-      eventType: 'story_open',
+      eventType: 'story_opened',
       elementCode: `storyline_${story.id}`,
       elementId: story.id,
     }).catch((error) => {
@@ -399,13 +543,193 @@ export default function StoryPage() {
     const willExpand = expandedChapterId !== chapter.id
     setExpandedChapterId((prev) => (prev === chapter.id ? null : chapter.id))
     if (willExpand) {
-      reportStoryEvent({
-        eventType: 'chapter_open',
+      void reportStoryEvent({
+        eventType: 'chapter_started',
         chapterId: chapter.id,
         elementCode: chapter.anchorTargetCode || `story_chapter_${chapter.id}`,
         elementId: chapter.anchorTargetId || chapter.id,
+        idempotencyScope: `chapter:${chapter.id}`,
+      }).catch((error) => {
+        if (!isAuthRequiredError(error)) {
+          console.warn('Failed to report chapter start.', error)
+        }
       })
     }
+  }
+
+  const getActionStateKey = (chapter: StoryChapterItem, step: StoryRuntimeStepItem) => (
+    `${chapter.id}:${step.stepCode || step.id || 'step'}:${getStepEventType(step)}`
+  )
+
+  const handleStartStoryMode = async () => {
+    if (!activeStory?.id) {
+      return
+    }
+    const chapterId = expandedChapterId || firstUnlockedChapter?.id
+    setStoryModeBusy(true)
+    try {
+      const session = await startStoryModeSession(activeStory.id, chapterId)
+      setStoryModeSession(session)
+      await recordStoryRuntimeEvent({
+        storylineId: activeStory.id,
+        eventType: 'story_opened',
+        chapterId,
+        sessionId: session.sessionId,
+        elementCode: activeStory.code || `storyline_${activeStory.id}`,
+        elementId: activeStory.id,
+        idempotencyScope: 'start',
+      })
+      await refreshExploration()
+      Taro.showToast({ title: '故事模式已開始', icon: 'success' })
+    } catch (error) {
+      Taro.showToast({
+        title: isAuthRequiredError(error) ? '請先登入後開始故事模式' : '進度同步暫時失敗，可稍後重試',
+        icon: 'none',
+      })
+    } finally {
+      setStoryModeBusy(false)
+    }
+  }
+
+  const handleExitStoryMode = async () => {
+    if (!activeStory?.id) {
+      return
+    }
+    setStoryModeBusy(true)
+    try {
+      await reportStoryEvent({
+        eventType: 'story_session_exit',
+        sessionId: storyModeSession?.sessionId,
+        idempotencyScope: 'exit',
+      })
+      const exited = await exitStoryModeSession(activeStory.id)
+      setStoryModeSession(exited?.active ? exited : null)
+      Taro.showToast({ title: '已離開故事模式', icon: 'success' })
+    } catch (error) {
+      Taro.showToast({ title: '進度同步暫時失敗，可稍後重試', icon: 'none' })
+    } finally {
+      setStoryModeBusy(false)
+    }
+  }
+
+  const handleRuntimeStepAction = async (chapter: StoryChapterItem, step: StoryRuntimeStepItem) => {
+    if (!activeStory?.id) {
+      return
+    }
+    const category = getStepCardCategory(step)
+    const eventType = getStepEventType(step)
+    const stateKey = getActionStateKey(chapter, step)
+    if (category === 'unsupported') {
+      const unsupportedKey = `${activeStory.id}:${storyModeSession?.sessionId || 'read'}:${chapter.id}:${step.stepCode || step.id}:unsupported_viewed`
+      if (reportedUnsupportedEventsRef.current.has(unsupportedKey)) {
+        return
+      }
+      reportedUnsupportedEventsRef.current.add(unsupportedKey)
+      try {
+        await reportStoryEvent({
+          eventType: 'unsupported_viewed',
+          chapterId: chapter.id,
+          stepId: step.id,
+          elementCode: step.elementCode || step.stepCode,
+          elementId: step.elementId,
+          sessionId: storyModeSession?.sessionId,
+          idempotencyScope: `unsupported:${step.stepCode || step.id}`,
+          payload: {
+            stepType: step.stepType,
+            templateType: step.template?.templateType,
+            triggerType: step.triggerType,
+          },
+        })
+      } catch (error) {
+        console.warn('Failed to report unsupported step view.', error)
+      }
+      return
+    }
+    if (!storyModeSession?.sessionId && ['pickup', 'task', 'challenge', 'reward'].includes(category)) {
+      Taro.showToast({ title: '請先開始故事模式', icon: 'none' })
+      return
+    }
+
+    setActionStates((previous) => ({ ...previous, [stateKey]: 'pending' }))
+    try {
+      await reportStoryEvent({
+        eventType,
+        chapterId: chapter.id,
+        stepId: step.id,
+        elementCode: step.elementCode || step.stepCode || `story_step_${step.id}`,
+        elementId: step.elementId || step.id,
+        idempotencyScope: `${storyModeSession?.sessionId || 'read'}:${chapter.id}:${step.stepCode || step.id}:${eventType}`,
+        payload: {
+          category,
+          stepType: step.stepType,
+          templateType: step.template?.templateType,
+          triggerType: step.triggerType,
+        },
+      })
+      setActionStates((previous) => ({ ...previous, [stateKey]: 'accepted' }))
+      await refreshExploration()
+    } catch (error) {
+      setActionStates((previous) => ({ ...previous, [stateKey]: 'failed' }))
+      Taro.showToast({ title: '進度同步暫時失敗，可稍後重試', icon: 'none' })
+    }
+  }
+
+  const handleMediaCompleted = async (
+    chapter: StoryChapterItem,
+    block: NonNullable<StoryChapterItem['contentBlocks']>[number],
+    asset: StoryMediaAssetItem,
+    mediaKind: 'audio' | 'video',
+  ) => {
+    try {
+      await reportStoryEvent({
+        eventType: 'media_completed',
+        chapterId: chapter.id,
+        blockId: block.id,
+        elementCode: block.code || asset.usageHint?.materialItemKey || `story_block_${block.id}`,
+        elementId: block.id,
+        mediaKind,
+        idempotencyScope: `${mediaKind}:${asset.id || block.id}`,
+        payload: {
+          mediaKind,
+          assetId: asset.id,
+          availability: asset.availability,
+          durationMs: asset.durationMs,
+        },
+      })
+      if (storyModeSession?.sessionId) {
+        await refreshExploration()
+      }
+    } catch (error) {
+      if (storyModeSession?.sessionId) {
+        Taro.showToast({ title: '進度同步暫時失敗，可稍後重試', icon: 'none' })
+      }
+    }
+  }
+
+  const handleUnavailableMediaViewed = (
+    chapter: StoryChapterItem,
+    block: NonNullable<StoryChapterItem['contentBlocks']>[number],
+    asset: StoryMediaAssetItem | null | undefined,
+    reason: string,
+  ) => {
+    const key = `${activeStory?.id || 'story'}:${chapter.id}:${block.id}:${asset?.id || 'missing'}:${reason}`
+    if (reportedUnsupportedEventsRef.current.has(key)) {
+      return
+    }
+    reportedUnsupportedEventsRef.current.add(key)
+    void reportStoryEvent({
+      eventType: 'unsupported_viewed',
+      chapterId: chapter.id,
+      blockId: block.id,
+      elementCode: block.code || asset?.usageHint?.materialItemKey || `story_block_${block.id}`,
+      elementId: block.id,
+      idempotencyScope: `media-unavailable:${block.id}:${asset?.id || 'missing'}`,
+      payload: {
+        reason,
+        availability: asset?.availability,
+        blockType: block.blockType,
+      },
+    }).catch((error) => console.warn('Failed to report unavailable media view.', error))
   }
 
   const runtimeStatusText = runtimeLoading
@@ -517,90 +841,128 @@ export default function StoryPage() {
                   </Button>
                 </View>
               ) : (
-                <View className='chapter-list'>
-                  <Text className='chapter-list__title'>章節工作台</Text>
-                  {(activeStory.chapters || []).map((chapter, index) => {
-                    const expanded = expandedChapterId === chapter.id && !chapter.locked
-                    return (
-                      <View
-                        key={chapter.id}
-                        className={`chapter-card ${chapter.locked ? 'chapter-card--locked' : ''} ${expanded ? 'chapter-card--expanded' : ''}`}
-                      >
-                        <View className='chapter-card__header' onClick={() => handleToggleChapter(chapter)}>
-                          <View className='chapter-card__headerMain'>
-                            <Text className='chapter-card__index'>第 {index + 1} 章</Text>
-                            <Text className='chapter-card__title'>{chapter.title}</Text>
-                            <Text className='chapter-card__summary'>{chapter.summary}</Text>
-                          </View>
-                          <View className='chapter-card__side'>
-                            <Text className={`chapter-card__badge ${chapter.locked ? 'locked' : 'ready'}`}>
-                              {chapter.locked ? '未解鎖' : expanded ? '收起' : '展開'}
-                            </Text>
-                          </View>
-                        </View>
-
-                        {expanded ? (
-                          <View className='chapter-card__detailWrap'>
-                            <Text className='chapter-card__detail'>{chapter.detail}</Text>
-                            <View className='chapter-card__infoGrid'>
-                              <View className='chapter-card__infoItem'>
-                                <Text className='chapter-card__infoLabel'>章節成就</Text>
-                                <Text className='chapter-card__infoValue'>{chapter.achievement}</Text>
-                              </View>
-                              <View className='chapter-card__infoItem'>
-                                <Text className='chapter-card__infoLabel'>收集目標</Text>
-                                <Text className='chapter-card__infoValue'>{chapter.collectible}</Text>
-                              </View>
-                              <View className='chapter-card__infoItem chapter-card__infoItem--full'>
-                                <Text className='chapter-card__infoLabel'>錨點位置</Text>
-                                <Text className='chapter-card__infoValue'>{chapter.locationName}</Text>
-                              </View>
-                            </View>
-
-                            <View className='chapter-rule-list'>
-                              {chapter.unlock ? <Text className='chapter-rule-chip'>解鎖：{describeRule(chapter.unlock)}</Text> : null}
-                              {chapter.prerequisite ? <Text className='chapter-rule-chip'>前置：{describeRule(chapter.prerequisite)}</Text> : null}
-                              {chapter.completion ? <Text className='chapter-rule-chip'>完成：{describeRule(chapter.completion)}</Text> : null}
-                              {chapter.effect ? <Text className='chapter-rule-chip'>效果：{describeRule(chapter.effect)}</Text> : null}
-                            </View>
-
-                            {renderRuntimeFlow(chapter, (step) => {
-                              reportStoryEvent({
-                                eventType: 'unsupported_interaction_view',
-                                chapterId: chapter.id,
-                                stepId: step.id,
-                                elementCode: step.elementCode || step.stepCode,
-                                elementId: step.elementId,
-                                payload: {
-                                  stepType: step.stepType,
-                                  templateType: step.template?.templateType,
-                                  triggerType: step.triggerType,
-                                },
-                              })
-                            })}
-
-                            <StoryContentBlockRenderer blocks={chapter.contentBlocks} />
-
-                            <View className='chapter-card__actions'>
-                              <Button className='chapter-card__primary' onClick={() => Taro.switchTab({ url: '/pages/map/index' })}>
-                                前往地圖
-                              </Button>
-                              <Button className='chapter-card__secondary' onClick={() => Taro.navigateTo({ url: '/pages/stamps/index' })}>
-                                查看收集
-                              </Button>
-                            </View>
-                          </View>
-                        ) : null}
-
-                        {chapter.locked ? (
-                          <View className='chapter-card__lockedTip'>
-                            <Text className='chapter-card__lockedText'>請先完成前置章節、地點或互動條件。</Text>
-                          </View>
-                        ) : null}
+                <>
+                  <View className='story-mode-panel'>
+                    <View className='story-mode-panel__header'>
+                      <View>
+                        <Text className='story-mode-panel__title'>主線故事模式</Text>
+                        <Text className='story-mode-panel__hint'>
+                          {storyModeSession?.active
+                            ? '故事模式進行中'
+                            : '你可以先閱讀故事內容；開始故事模式後，章節、媒體與互動進度會同步到後端。'}
+                        </Text>
                       </View>
-                    )
-                  })}
-                </View>
+                      <Text className={`story-mode-panel__status ${storyModeSession?.active ? 'active' : ''}`}>
+                        {storyModeSession?.active ? '故事模式進行中' : '只讀瀏覽'}
+                      </Text>
+                    </View>
+                    <View className='story-mode-panel__progress'>
+                      <Text className='story-mode-panel__progressLabel'>故事探索進度</Text>
+                      <Text className='story-mode-panel__progressValue'>
+                        {explorationSummary?.progressPercent !== undefined ? `${Math.round(explorationSummary.progressPercent)}%` : '尚未同步'}
+                      </Text>
+                    </View>
+                    <Text className='story-mode-panel__exitHint'>
+                      離開只會清除本次路線強調，已獲得的探索、拾取與獎勵紀錄會保留。
+                    </Text>
+                    <View className='story-mode-panel__actions'>
+                      {!storyModeSession?.active ? (
+                        <Button className='story-mode-panel__primary' loading={storyModeBusy} onClick={handleStartStoryMode}>
+                          開始故事模式
+                        </Button>
+                      ) : (
+                        <Button className='story-mode-panel__secondary' loading={storyModeBusy} onClick={handleExitStoryMode}>
+                          離開故事模式
+                        </Button>
+                      )}
+                    </View>
+                  </View>
+
+                  <View className='chapter-list'>
+                    <Text className='chapter-list__title'>章節工作台</Text>
+                    {(activeStory.chapters || []).map((chapter, index) => {
+                      const expanded = expandedChapterId === chapter.id && !chapter.locked
+                      return (
+                        <View
+                          key={chapter.id}
+                          className={`chapter-card ${chapter.locked ? 'chapter-card--locked' : ''} ${expanded ? 'chapter-card--expanded' : ''}`}
+                        >
+                          <View className='chapter-card__header' onClick={() => handleToggleChapter(chapter)}>
+                            <View className='chapter-card__headerMain'>
+                              <Text className='chapter-card__index'>第 {index + 1} 章</Text>
+                              <Text className='chapter-card__title'>{chapter.title}</Text>
+                              <Text className='chapter-card__summary'>{chapter.summary}</Text>
+                            </View>
+                            <View className='chapter-card__side'>
+                              <Text className={`chapter-card__badge ${chapter.locked ? 'locked' : 'ready'}`}>
+                                {chapter.locked ? '未解鎖' : expanded ? '收起' : '展開'}
+                              </Text>
+                            </View>
+                          </View>
+
+                          {expanded ? (
+                            <View className='chapter-card__detailWrap'>
+                              <Text className='chapter-card__detail'>{chapter.detail}</Text>
+                              <View className='chapter-card__infoGrid'>
+                                <View className='chapter-card__infoItem'>
+                                  <Text className='chapter-card__infoLabel'>章節成就</Text>
+                                  <Text className='chapter-card__infoValue'>{chapter.achievement}</Text>
+                                </View>
+                                <View className='chapter-card__infoItem'>
+                                  <Text className='chapter-card__infoLabel'>收集目標</Text>
+                                  <Text className='chapter-card__infoValue'>{chapter.collectible}</Text>
+                                </View>
+                                <View className='chapter-card__infoItem chapter-card__infoItem--full'>
+                                  <Text className='chapter-card__infoLabel'>錨點位置</Text>
+                                  <Text className='chapter-card__infoValue'>{chapter.locationName}</Text>
+                                </View>
+                              </View>
+
+                              <View className='chapter-rule-list'>
+                                {chapter.unlock ? <Text className='chapter-rule-chip'>解鎖：{describeRule(chapter.unlock)}</Text> : null}
+                                {chapter.prerequisite ? <Text className='chapter-rule-chip'>前置：{describeRule(chapter.prerequisite)}</Text> : null}
+                                {chapter.completion ? <Text className='chapter-rule-chip'>完成：{describeRule(chapter.completion)}</Text> : null}
+                                {chapter.effect ? <Text className='chapter-rule-chip'>效果：{describeRule(chapter.effect)}</Text> : null}
+                              </View>
+
+                              {renderRuntimeFlow({
+                                chapter,
+                                storyModeSession,
+                                actionStates,
+                                onStepAction: handleRuntimeStepAction,
+                              })}
+
+                              <StoryContentBlockRenderer
+                                blocks={chapter.contentBlocks}
+                                onMediaCompleted={(block, asset, mediaKind) => {
+                                  void handleMediaCompleted(chapter, block, asset, mediaKind)
+                                }}
+                                onUnavailableMediaViewed={(block, asset, reason) => {
+                                  handleUnavailableMediaViewed(chapter, block, asset, reason)
+                                }}
+                              />
+
+                              <View className='chapter-card__actions'>
+                                <Button className='chapter-card__primary' onClick={() => Taro.switchTab({ url: '/pages/map/index' })}>
+                                  前往地圖
+                                </Button>
+                                <Button className='chapter-card__secondary' onClick={() => Taro.navigateTo({ url: '/pages/stamps/index' })}>
+                                  查看收集
+                                </Button>
+                              </View>
+                            </View>
+                          ) : null}
+
+                          {chapter.locked ? (
+                            <View className='chapter-card__lockedTip'>
+                              <Text className='chapter-card__lockedText'>請先完成前置章節、地點或互動條件。</Text>
+                            </View>
+                          ) : null}
+                        </View>
+                      )
+                    })}
+                  </View>
+                </>
               )}
             </View>
           </View>

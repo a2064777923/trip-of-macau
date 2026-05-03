@@ -89,6 +89,7 @@ export interface StoryChapterItem {
 
 export interface StorylineItem {
   id: number
+  code?: string
   name: string
   nameEn: string
   description: string
@@ -204,6 +205,7 @@ export interface StoryRuntimeStepItem {
   triggerType?: string
   mediaAssetId?: number
   mediaAsset?: StoryMediaAssetItem
+  rewardRuleIds?: unknown
   explorationWeightLevel?: string
   explorationWeightValue?: number
   requiredForCompletion?: boolean
@@ -246,6 +248,37 @@ export interface StorySessionItem {
   exitedAt?: string
   eventCount?: number
   exitClearedTemporaryState?: boolean
+}
+
+export type StoryRuntimeEventType =
+  | 'story_opened'
+  | 'chapter_started'
+  | 'content_viewed'
+  | 'media_completed'
+  | 'pickup_interacted'
+  | 'task_completed'
+  | 'reward_acquired'
+  | 'unsupported_viewed'
+  | 'story_session_exit'
+  | string
+
+export interface StoryModeSessionState {
+  storylineId: number
+  sessionId?: string
+  active: boolean
+  currentChapterId?: number
+  startedAt?: string
+  lastEventAt?: string
+  exitedAt?: string
+  statusText?: string
+}
+
+export interface StoryExplorationSummaryItem {
+  progressPercent?: number
+  completedElementCount?: number
+  availableElementCount?: number
+  completedWeight?: number
+  availableWeight?: number
 }
 
 export interface StampItem {

@@ -12,7 +12,10 @@ import {
   StampItem,
   StoryContentBlockItem,
   StoryChapterRuntimeItem,
+  StoryExplorationSummaryItem,
   StoryMediaAssetItem,
+  StoryModeSessionState,
+  StoryRuntimeEventType,
   StoryRuntimeStepItem,
   StorySessionItem,
   StoryRulePayload,
@@ -62,6 +65,7 @@ const TOKEN_KEY = 'token'
 const EMERGENCY_CONTACT_KEY = 'trip-of-macau-emergency-contact'
 const PUBLIC_CONTENT_KEY = 'trip-of-macau-public-content'
 const DEV_BYPASS_IDENTITY_KEY = 'trip-of-macau-dev-bypass-identity'
+const STORY_MODE_SESSION_KEY = 'trip-of-macau-story-mode-session'
 const PROFILE_AUTH_WALL_PATH = '/pages/profile/index'
 
 const DEFAULT_UNLOCKED_CITY_ID = 'macau'
@@ -1015,6 +1019,7 @@ function mapRuntimeStep(step: PublicExperienceRuntimeStepDto): StoryRuntimeStepI
     triggerType: step.triggerType,
     mediaAssetId: step.mediaAssetId,
     mediaAsset: mapStoryMediaAsset(step.mediaAsset),
+    rewardRuleIds: step.rewardRuleIds,
     explorationWeightLevel: step.explorationWeightLevel,
     explorationWeightValue: step.explorationWeightValue,
     requiredForCompletion: !!step.requiredForCompletion,
@@ -1265,6 +1270,7 @@ function getStoryCatalog(state = loadGameState()) {
       })
       return {
         id: story.id,
+        code: story.code,
         name: pickReadableText(story.name, story.nameEn, humanizeCode(story.code), `Story ${story.id}`),
         nameEn: pickReadableText(story.nameEn, story.name, humanizeCode(story.code), `Story ${story.id}`),
         description: pickReadableText(story.description, `${pickReadableText(story.name, story.nameEn, 'This route')} connects major Macau story stops.`),
@@ -1610,38 +1616,164 @@ export async function exitStorylineRuntimeSession(storylineId: number, sessionId
   return mapStorylineSession(session)
 }
 
-function buildStoryRuntimeClientEventId(input: {
+export function getActiveStoryModeSession(storylineId?: number): StoryModeSessionState | null {
+  try {
+    const stored = Taro.getStorageSync(STORY_MODE_SESSION_KEY)
+    if (!stored || typeof stored !== 'object') {
+      return null
+    }
+    const session = stored as StoryModeSessionState
+    if (!session.active || !Number.isFinite(Number(session.storylineId))) {
+      return null
+    }
+    if (storylineId && Number(session.storylineId) !== Number(storylineId)) {
+      return null
+    }
+    return session
+  } catch (error) {
+    console.warn('Failed to read story mode session.', error)
+    return null
+  }
+}
+
+export function saveActiveStoryModeSession(session: StoryModeSessionState | null): StoryModeSessionState | null {
+  if (!session) {
+    Taro.removeStorageSync(STORY_MODE_SESSION_KEY)
+    return null
+  }
+  Taro.setStorageSync(STORY_MODE_SESSION_KEY, session)
+  return session
+}
+
+export async function startStoryModeSession(storylineId: number, currentChapterId?: number): Promise<StoryModeSessionState> {
+  if (!(await requireAuth('開始故事模式前，請先使用微信登入。'))) {
+    throw new AuthRequiredError()
+  }
+
+  const session = await startStorylineRuntimeSession(storylineId)
+  if (!session?.sessionId) {
+    throw new AuthRequiredError()
+  }
+
+  const now = new Date().toISOString()
+  return saveActiveStoryModeSession({
+    storylineId,
+    sessionId: session.sessionId,
+    currentChapterId: currentChapterId || session.currentChapterId,
+    active: true,
+    startedAt: session.startedAt || now,
+    lastEventAt: session.lastEventAt || now,
+    statusText: '故事模式進行中',
+  })!
+}
+
+export async function exitStoryModeSession(storylineId: number): Promise<StoryModeSessionState | null> {
+  const stored = getActiveStoryModeSession(storylineId)
+  const now = new Date().toISOString()
+  let exited: StorySessionItem | undefined
+  if (stored?.sessionId) {
+    exited = await exitStorylineRuntimeSession(storylineId, stored.sessionId)
+  }
+  return saveActiveStoryModeSession({
+    storylineId,
+    sessionId: stored?.sessionId || exited?.sessionId,
+    currentChapterId: stored?.currentChapterId || exited?.currentChapterId,
+    active: false,
+    startedAt: stored?.startedAt || exited?.startedAt,
+    lastEventAt: exited?.lastEventAt || stored?.lastEventAt || now,
+    exitedAt: exited?.exitedAt || now,
+    statusText: '已離開故事模式，永久探索進度會保留。',
+  })
+}
+
+export async function refreshStoryExplorationSummary(storylineId: number): Promise<StoryExplorationSummaryItem | null> {
+  if (!hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous') {
+    return null
+  }
+  const response = await api.public.getPublicUserExploration({
+    locale: DEFAULT_PUBLIC_LOCALE,
+    scopeType: 'storyline',
+    scopeId: storylineId,
+  })
+  return {
+    progressPercent: response.progressPercent,
+    completedElementCount: response.completedElementCount,
+    availableElementCount: response.availableElementCount,
+    completedWeight: response.completedWeight,
+    availableWeight: response.availableWeight,
+  }
+}
+
+const STORY_RUNTIME_EVENT_NAME_MAP: Record<string, StoryRuntimeEventType> = {
+  'story_open': 'story_opened',
+  'chapter_open': 'chapter_started',
+  'content_read': 'content_viewed',
+  'unsupported_interaction_view': 'unsupported_viewed',
+}
+
+function normalizeStoryRuntimeEventType(eventType: StoryRuntimeEventType): StoryRuntimeEventType {
+  return STORY_RUNTIME_EVENT_NAME_MAP[eventType] || eventType
+}
+
+export function buildStoryRuntimeClientEventId(input: {
   storylineId: number
+  sessionId?: string
   chapterId?: number
   stepId?: number
   blockId?: number
-  eventType: string
+  elementCode?: string
+  elementId?: number
+  idempotencyScope?: string
+  eventType: StoryRuntimeEventType
 }) {
+  const normalizedEventType = normalizeStoryRuntimeEventType(input.eventType)
   return [
-    `storyline-${input.storylineId}`,
-    `chapter-${input.chapterId ?? 'none'}`,
-    `step-${input.stepId ?? 'none'}`,
-    `block-${input.blockId ?? 'none'}`,
-    `event-${input.eventType}`,
+    'story-runtime:',
+    input.storylineId,
+    input.sessionId || 'read',
+    input.chapterId || 'story',
+    input.blockId || input.stepId || input.elementCode || input.elementId || input.idempotencyScope || 'root',
+    normalizedEventType,
   ].join(':')
 }
 
 export async function recordStoryRuntimeEvent(input: {
   storylineId: number
   sessionId?: string
+  clientEventId?: string
+  idempotencyScope?: string
   chapterId?: number
   stepId?: number
   blockId?: number
-  eventType: string
+  eventType: StoryRuntimeEventType
   elementCode?: string
   elementId?: number
+  mediaKind?: string
   payload?: Record<string, unknown>
-}): Promise<void> {
-  if (USE_MOCK || !hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous') {
-    return
+}) {
+  const eventType = normalizeStoryRuntimeEventType(input.eventType)
+  const activeSession = input.sessionId
+    ? { sessionId: input.sessionId }
+    : getActiveStoryModeSession(input.storylineId)
+  const sessionId = activeSession?.sessionId
+  const readOnlyEvents = new Set<StoryRuntimeEventType>(['story_opened', 'content_viewed', 'unsupported_viewed'])
+
+  if (!sessionId && !readOnlyEvents.has(eventType)) {
+    if (!(await requireAuth('這個故事進度需要先開始故事模式。'))) {
+      throw new AuthRequiredError()
+    }
+    throw new AuthRequiredError('這個故事進度需要先開始故事模式。')
   }
 
-  const clientEventId = buildStoryRuntimeClientEventId(input)
+  if (USE_MOCK || (!sessionId && (!hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous'))) {
+    return undefined
+  }
+
+  const clientEventId = input.clientEventId || buildStoryRuntimeClientEventId({
+    ...input,
+    sessionId,
+    eventType,
+  })
   const payloadJson = input.payload
     ? JSON.stringify({
         ...input.payload,
@@ -1649,28 +1781,33 @@ export async function recordStoryRuntimeEvent(input: {
         chapterId: input.chapterId,
         stepId: input.stepId,
         blockId: input.blockId,
+        mediaKind: input.mediaKind,
       })
     : undefined
 
-  try {
-    const request = {
-      elementId: input.elementId,
-      elementCode: input.elementCode,
-      eventType: input.eventType,
-      eventSource: 'mini_program_story',
-      storylineSessionId: input.sessionId,
-      clientEventId,
-      payloadJson,
-      occurredAt: new Date().toISOString(),
-    }
-    if (input.sessionId) {
-      await api.public.recordPublicStorylineSessionEvent(input.storylineId, input.sessionId, request)
-      return
-    }
-    await api.public.recordPublicExperienceEvent(request)
-  } catch (error) {
-    console.warn('Failed to record story runtime event.', error)
+  const request = {
+    elementId: input.elementId,
+    elementCode: input.elementCode,
+    eventType,
+    eventSource: 'mini_program_story',
+    storylineSessionId: sessionId,
+    clientEventId,
+    payloadJson,
+    occurredAt: new Date().toISOString(),
   }
+  if (sessionId) {
+    const response = await api.public.recordPublicStorylineSessionEvent(input.storylineId, sessionId, request)
+    const stored = getActiveStoryModeSession(input.storylineId)
+    if (stored?.active) {
+      saveActiveStoryModeSession({
+        ...stored,
+        lastEventAt: request.occurredAt,
+        currentChapterId: input.chapterId || stored.currentChapterId,
+      })
+    }
+    return response
+  }
+  return api.public.recordPublicExperienceEvent(request)
 }
 
 export function loadGameState(): GameStateSnapshot {
