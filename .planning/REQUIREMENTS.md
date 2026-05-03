@@ -38,10 +38,10 @@
 
 ### Verification and Operations Acceptance
 
-- [ ] **ACC-01**: A repeatable local smoke can verify generation metadata, asset promotion, COS URL availability, public runtime asset consumption, and mini-program build compatibility.
-- [ ] **ACC-02**: A WeChat DevTools/device UAT checklist exists for the flagship story journey, including route display, chapter progression, media playback, pickups, rewards, and exit/restart behavior.
-- [ ] **ACC-03**: Operators can view production cost and generation job history for the material package without exposing API keys or provider secrets.
-- [ ] **ACC-04**: The milestone ships with clear evidence of what was fully implemented, what was manually accepted, and what remains deferred for complex gameplay engines.
+- [x] **ACC-01**: A repeatable local smoke can verify generation metadata, asset promotion, COS URL availability, public runtime asset consumption, and mini-program build compatibility.
+- [x] **ACC-02**: A WeChat DevTools/device UAT checklist exists for the flagship story journey, including route display, chapter progression, media playback, pickups, rewards, and exit/restart behavior.
+- [x] **ACC-03**: Operators can view production cost and generation job history for the material package without exposing API keys or provider secrets.
+- [x] **ACC-04**: The milestone ships with clear evidence of what was fully implemented, what was manually accepted, and what remains deferred for complex gameplay engines.
 
 ## Future Requirements
 
@@ -82,10 +82,10 @@
 | MP-03 | Phase 39 | Complete: story session/event idempotency smoke evidence passes |
 | MP-04 | Phase 39 | Complete: baseline runtime action card/event/progress smoke evidence passes |
 | MP-05 | Phase 39 | Complete: unsupported gameplay and unavailable media fallback evidence passes |
-| ACC-01 | Phase 40 | Pending |
-| ACC-02 | Phase 40 | Pending |
-| ACC-03 | Phase 40 | Pending |
-| ACC-04 | Phase 40 | Pending |
+| ACC-01 | Phase 40 | Complete: repeatable Phase 40 smoke bundle and report |
+| ACC-02 | Phase 40 | Complete: WeChat DevTools/device UAT checklist exists; actual pass/pending state is recorded in `40-UAT.md` |
+| ACC-03 | Phase 40 | Complete: AI monitoring/cost/job-history UI and API smoke evidence |
+| ACC-04 | Phase 40 | Complete: final acceptance report separates automated/manual/skipped/deferred evidence |
 
 **Coverage:**
 - v3.1 requirements: 22 total
@@ -94,4 +94,4 @@
 
 ---
 *Requirements defined: 2026-04-30*
-*Last updated: 2026-05-03 after Phase 39 mini-program build and story-mode smoke verification*
+*Last updated: 2026-05-03 after Phase 40 acceptance, cost visibility, and release-readiness verification*

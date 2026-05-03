@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Material Production and Mini-program Experience Acceptance
 current_phase: 40
-current_plan: 1
-status: executing
-stopped_at: Phase 40 context gathered
-last_updated: "2026-05-03T13:21:20.050Z"
-last_activity: 2026-05-03 -- Phase 40 execution started
+current_plan: 3
+status: review
+stopped_at: Phase 40 verification ready for milestone closure
+last_updated: "2026-05-03T13:49:02.177Z"
+last_activity: 2026-05-03 -- Phase 40 verification ready for milestone closure
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 18
-  completed_plans: 15
-  percent: 83
+  completed_plans: 18
+  percent: 100
 ---
 
 # Project State
@@ -27,17 +27,17 @@ See: `.planning/PROJECT.md` (updated 2026-04-30)
 
 ## Current Position
 
-Phase: 40 (Acceptance, Cost Visibility, and Release Readiness) — EXECUTING
-Plan: 1 of 3
+Phase: 40 (Acceptance, Cost Visibility, and Release Readiness) — REVIEW
+Plan: 3 of 3
 Milestone: `v3.1`
 Current Phase: 40
 Total Phases Planned: 5
-Status: Executing Phase 40
-Current Plan: 1
-Last activity: 2026-05-03 -- Phase 40 execution started
-Last Activity Description: Phase 40 execution started
+Status: Phase 40 verification ready for milestone closure
+Current Plan: 3
+Last activity: 2026-05-03 -- Phase 40 verification ready for milestone closure
+Last Activity Description: Phase 40 verification ready for milestone closure
 
-Progress: [██████████] 100% of currently planned v3.1 plans complete; Phase 39 complete
+Progress: [██████████] 100% of currently planned v3.1 plans complete; Phase 40 acceptance artifacts ready
 
 ## Performance Metrics
 
@@ -56,7 +56,7 @@ Progress: [██████████] 100% of currently planned v3.1 plans 
 | Phase 33 P33-03 | 55 min | 2 tasks | 2 files |
 | Phase 33 P33-04 | 35 min | 4 tasks | Admin story material package page, route/sidebar, smoke script, and handoff docs |
 | 2026-05-02 | `260502-p19` | Clarified material asset usability states, repaired media preview/error states, and browser-fixed story/experience IA/layout issues. |
-| 2026-05-02 | Phase 36 UAT/security | Completed 6/6 UAT checkpoints, created `36-SECURITY.md`, and tightened publish/rollback super-admin authorization. |
+| 2026-05-02 | Phase 36 UAT/security | Completed 6/6 UAT checkpoints, created `36-SECURITY.md`, and tightened publish/rollback super-admin permission checks. |
 | 2026-05-02 | `260502-so0` | Added env-backed custom image endpoint support, generated 37 local PNG story assets, and recorded remaining live COS/audio/video blockers. |
 | 2026-05-02 | `260502-urn` | Verified live 百煉 audio generation, backend COS upload, finalized content assets, and published material package versions for 6 Phase 36 audio items. |
 | 2026-05-02 | `260502-w21` | Verified live compatible-image import, 35 board-sliced pickup/title icons, COS upload, published versions, rollback smoke, and prepared video closure. |
@@ -79,7 +79,7 @@ Progress: [██████████] 100% of currently planned v3.1 plans 
 - Phase 34 public runtime smoke is the v3.0 closure evidence for public-runtime linkage, not a substitute for full WeChat device journey UAT.
 - Future material production can assemble video from one or several `image-2` stills with pan/zoom/motion and narration/audio stitching; keep using material boards and local slicing to save generation cost.
 - v3.1 adopts that future scope as active work: real generated assets, asset QA/promotion, and mini-program story-mode acceptance.
-- Phase 36 publish/rollback operations require both `SUPER_ADMIN` / `ROLE_SUPER_ADMIN` and an explicit confirmation flag; a confirmation boolean alone is not authorization.
+- Phase 36 publish/rollback operations require both `SUPER_ADMIN` / `ROLE_SUPER_ADMIN` and an explicit confirmation flag; a confirmation boolean alone is not enough permission.
 
 ### Pending Todos
 
@@ -96,6 +96,6 @@ Progress: [██████████] 100% of currently planned v3.1 plans 
 
 ## Session Continuity
 
-Last session: 2026-05-03T11:14:36.156Z
-Stopped at: Phase 40 context gathered
-Resume file: .planning/phases/40-acceptance-cost-visibility-and-release-readiness/40-CONTEXT.md
+Last session: 2026-05-03T13:49:02.172Z
+Stopped at: Phase 40 verification ready for milestone closure
+Resume file: .planning/phases/40-acceptance-cost-visibility-and-release-readiness/40-ACCEPTANCE.md
