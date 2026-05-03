@@ -502,6 +502,23 @@ export interface PublicStoryMediaAssetDto {
   posterUrl?: string
   fallbackAssetId?: number
   fallbackUrl?: string
+  availability?: 'available' | 'fallback' | 'unsupported' | string
+  unavailableReason?: string
+  fallbackUsed?: boolean
+  runtimeKind?: 'image' | 'audio' | 'video' | 'lottie' | 'json' | 'map_tile' | 'other' | string
+  fileSizeBytes?: number
+  durationMs?: number
+  usageHint?: PublicStoryMediaUsageHintDto
+}
+
+export interface PublicStoryMediaUsageHintDto {
+  materialItemKey?: string
+  usageTarget?: string
+  chapterCode?: string
+  targetType?: string
+  targetCode?: string
+  displayRole?: string
+  sourceScope?: string
 }
 
 export interface PublicStoryContentBlockDto {

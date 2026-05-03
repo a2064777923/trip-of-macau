@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, Image, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import lottie from 'lottie-miniprogram'
@@ -10,6 +10,8 @@ interface LottieAssetPlayerProps {
   height?: number
   autoplay?: boolean
   loop?: boolean
+  onReady?: (asset: StoryMediaAssetItem) => void
+  onUnavailable?: (asset: StoryMediaAssetItem, reason: string) => void
 }
 
 type PlayerStatus = 'idle' | 'loading' | 'ready' | 'error'
@@ -30,8 +32,12 @@ export default function LottieAssetPlayer({
   height,
   autoplay,
   loop,
+  onReady,
+  onUnavailable,
 }: LottieAssetPlayerProps) {
   const [status, setStatus] = useState<PlayerStatus>('idle')
+  const readyNotifiedRef = useRef('')
+  const unavailableNotifiedRef = useRef('')
   const canvasId = useMemo(() => `story-lottie-${Math.random().toString(36).slice(2, 10)}`, [])
   const systemInfo = useMemo(() => Taro.getSystemInfoSync(), [])
   const resolvedHeight = useMemo(() => {
@@ -47,9 +53,33 @@ export default function LottieAssetPlayer({
 
   const fallbackUrl = asset?.posterUrl || asset?.fallbackUrl
 
+  const notifyReady = (target: StoryMediaAssetItem) => {
+    const key = `${target.id}:ready`
+    if (readyNotifiedRef.current === key) {
+      return
+    }
+    readyNotifiedRef.current = key
+    onReady?.(target)
+  }
+
+  const notifyUnavailable = (target: StoryMediaAssetItem, reason: string) => {
+    const key = `${target.id}:${reason}`
+    if (unavailableNotifiedRef.current === key) {
+      return
+    }
+    unavailableNotifiedRef.current = key
+    onUnavailable?.(target, reason)
+  }
+
   useEffect(() => {
-    if (!asset?.url) {
+    if (!asset) {
+      setStatus('idle')
+      return
+    }
+
+    if (!asset.url) {
       setStatus('error')
+      notifyUnavailable(asset, 'Lottie 動畫資源未配置。')
       return
     }
 
@@ -104,11 +134,13 @@ export default function LottieAssetPlayer({
 
         if (!disposed) {
           setStatus('ready')
+          notifyReady(asset)
         }
       } catch (error) {
-        console.warn('Failed to initialize lottie asset.', error)
+        console.warn('Failed to initialize lottie asset.')
         if (!disposed) {
           setStatus('error')
+          notifyUnavailable(asset, '動畫暫時無法播放')
         }
       }
     }

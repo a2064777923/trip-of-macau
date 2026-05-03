@@ -1090,9 +1090,49 @@ function mapStoryMediaAsset(asset?: PublicStoryMediaAssetDto | null): StoryMedia
     animationSubtype: asset.animationSubtype,
     defaultLoop: asset.defaultLoop,
     defaultAutoplay: asset.defaultAutoplay,
+    posterAssetId: asset.posterAssetId,
     posterUrl: asset.posterUrl,
+    fallbackAssetId: asset.fallbackAssetId,
     fallbackUrl: asset.fallbackUrl,
+    availability: asset.availability,
+    unavailableReason: asset.unavailableReason,
+    fallbackUsed: asset.fallbackUsed,
+    runtimeKind: asset.runtimeKind,
+    fileSizeBytes: asset.fileSizeBytes,
+    durationMs: asset.durationMs,
+    usageHint: asset.usageHint
+      ? {
+          materialItemKey: asset.usageHint.materialItemKey,
+          usageTarget: asset.usageHint.usageTarget,
+          chapterCode: asset.usageHint.chapterCode,
+          targetType: asset.usageHint.targetType,
+          targetCode: asset.usageHint.targetCode,
+          displayRole: asset.usageHint.displayRole,
+          sourceScope: asset.usageHint.sourceScope,
+        }
+      : undefined,
   }
+}
+
+export function resolveStoryMediaUrl(asset?: StoryMediaAssetItem | null): string {
+  return asset?.url || asset?.fallbackUrl || asset?.posterUrl || ''
+}
+
+export function getStoryMediaFallbackReason(
+  asset?: StoryMediaAssetItem | null,
+  fallback = '媒體資源暫時未能載入',
+): string {
+  if (hasText(asset?.unavailableReason)) {
+    return asset.unavailableReason.trim()
+  }
+  if (asset?.availability === 'unsupported') {
+    return '此媒體暫時未能播放，請稍後再試。'
+  }
+  return fallback
+}
+
+export function isStoryMediaPlayable(asset?: StoryMediaAssetItem | null): boolean {
+  return asset?.availability !== 'unsupported' && hasText(resolveStoryMediaUrl(asset))
 }
 
 function mapStoryContentBlock(block: PublicStoryContentBlockDto): StoryContentBlockItem {
