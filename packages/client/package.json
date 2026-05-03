@@ -9,6 +9,7 @@
     "build:weapp": "npm run clean:dist && taro build --type weapp && node scripts/write-weapp-project-config.js",
     "smoke:phase17:indoor-runtime": "powershell -ExecutionPolicy Bypass -File ..\\..\\scripts\\local\\smoke-phase-17-indoor-runtime.ps1",
     "smoke:phase39:story-mode": "powershell -NoProfile -ExecutionPolicy Bypass -File ..\\..\\scripts\\local\\smoke-phase-39-mini-program-story-mode.ps1",
+    "smoke:phase40:release-readiness": "powershell -NoProfile -ExecutionPolicy Bypass -File ..\\..\\scripts\\local\\smoke-phase-40-release-readiness.ps1",
     "build:swan": "taro build --type swan",
     "build:alipay": "taro build --type alipay",
     "build:tt": "taro build --type tt",
