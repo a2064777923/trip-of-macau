@@ -15,6 +15,7 @@ import {
   getActiveStoryModeSession,
   isAuthRequiredError,
   getStorylines,
+  mapStoryExplorationSummary,
   recordStoryRuntimeEvent,
   refreshPublicContent,
   refreshStoryExplorationSummary,
@@ -23,6 +24,12 @@ import {
   saveStoryModeRouteContext,
   startStoryModeSession,
 } from '../../services/gameService'
+import {
+  buildStoryRuntimeEventPayload,
+  classifyStoryRuntimeStep,
+  getStoryRuntimeActionKey,
+  resolveStoryRuntimeFeedback,
+} from '../../services/storyRuntimeEventEngine'
 import type {
   StoryChapterItem,
   StoryExplorationSummaryItem,
@@ -30,6 +37,7 @@ import type {
   StoryModeRouteChapter,
   StorylineItem,
   StoryModeSessionState,
+  StoryRuntimeActionState,
   StoryRuntimeEventType,
   StoryRuntimeStepItem,
 } from '../../types/game'
@@ -167,94 +175,6 @@ function getRuntimeSteps(chapter: StoryChapterItem) {
     .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
 }
 
-type RuntimeStepCardCategory = 'story' | 'location' | 'pickup' | 'task' | 'challenge' | 'reward' | 'unsupported'
-type ActionStateValue = 'pending' | 'accepted' | 'failed' | undefined
-
-function normalizeStepSearchText(step: StoryRuntimeStepItem) {
-  return [
-    step.eventType,
-    step.stepType,
-    step.displayCategory,
-    step.displayCategoryLabel,
-    step.stepCode,
-    step.triggerType,
-    step.template?.templateType,
-    step.template?.category,
-    step.template?.code,
-  ].filter(Boolean).join(' ').toLowerCase()
-}
-
-function getStepCardCategory(step: StoryRuntimeStepItem): RuntimeStepCardCategory {
-  const text = normalizeStepSearchText(step)
-  if (step.unsupported || text.includes('future') || text.includes('unsupported')) {
-    return 'unsupported'
-  }
-  if (step.eventType === 'pickup_interacted' || /pickup|collectible|clue/.test(text)) {
-    return 'pickup'
-  }
-  if (step.eventType === 'task_completed' || text.includes('task')) {
-    return 'task'
-  }
-  if (step.eventType === 'reward_acquired' || step.rewardRuleIds) {
-    return 'reward'
-  }
-  if (/hidden|challenge|puzzle|ar|speech|cannon|route_coverage/.test(text)) {
-    return 'challenge'
-  }
-  if (/location|poi|checkin|anchor/.test(text)) {
-    return 'location'
-  }
-  return 'story'
-}
-
-function getStepCardLabel(step: StoryRuntimeStepItem): string {
-  switch (getStepCardCategory(step)) {
-    case 'unsupported':
-      return '稍後開放'
-    case 'pickup':
-      return '拾取線索'
-    case 'task':
-      return '任務'
-    case 'reward':
-      return '獎勵'
-    case 'challenge':
-      return '隱藏挑戰'
-    case 'location':
-      return '地點互動'
-    default:
-      return '劇情播放'
-  }
-}
-
-function getStepEventType(step: StoryRuntimeStepItem): StoryRuntimeEventType {
-  switch (getStepCardCategory(step)) {
-    case 'pickup':
-      return 'pickup_interacted'
-    case 'task':
-    case 'challenge':
-      return 'task_completed'
-    case 'reward':
-      return 'reward_acquired'
-    case 'unsupported':
-      return 'unsupported_viewed'
-    default:
-      return 'content_viewed'
-  }
-}
-
-function getStepButtonText(step: StoryRuntimeStepItem) {
-  switch (getStepEventType(step)) {
-    case 'pickup_interacted':
-      return '拾取線索'
-    case 'task_completed':
-      return '標記任務完成'
-    case 'reward_acquired':
-      return '領取後端獎勵'
-    default:
-      return '同步互動進度'
-  }
-}
-
 function getRouteStatusText(status: StoryModeRouteChapter['status']) {
   switch (status) {
     case 'current':
@@ -268,6 +188,44 @@ function getRouteStatusText(status: StoryModeRouteChapter['status']) {
   }
 }
 
+function getActionStateText(actionState?: StoryRuntimeActionState) {
+  switch (actionState?.status) {
+    case 'syncing':
+      return '同步中'
+    case 'synced':
+      return '已同步'
+    case 'already_synced':
+      return '已記錄'
+    case 'failed':
+      return '同步失敗，可重試'
+    case 'blocked':
+      return '請先開始故事模式'
+    case 'unsupported':
+      return '稍後開放'
+    default:
+      return ''
+  }
+}
+
+function renderActionFeedback(actionState?: StoryRuntimeActionState) {
+  if (!actionState?.title && !actionState?.message && !actionState?.outcomeLabels?.length) {
+    return null
+  }
+  return (
+    <View className='story-runtime-feedback'>
+      {actionState.title ? <Text className='story-runtime-feedback__title'>{actionState.title}</Text> : null}
+      {actionState.message ? <Text className='story-runtime-feedback__message'>{actionState.message}</Text> : null}
+      {!!actionState.outcomeLabels?.length ? (
+        <View className='story-runtime-feedback__labels'>
+          {actionState.outcomeLabels.map((label) => (
+            <Text key={label} className='story-runtime-feedback__label'>{label}</Text>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  )
+}
+
 function renderRuntimeFlow({
   chapter,
   storyModeSession,
@@ -276,7 +234,7 @@ function renderRuntimeFlow({
 }: {
   chapter: StoryChapterItem
   storyModeSession: StoryModeSessionState | null
-  actionStates: Record<string, ActionStateValue>
+  actionStates: Record<string, StoryRuntimeActionState>
   onStepAction: (chapter: StoryChapterItem, step: StoryRuntimeStepItem) => void
 }) {
   const steps = getRuntimeSteps(chapter)
@@ -285,17 +243,25 @@ function renderRuntimeFlow({
       <Text className='story-runtime-flow__title'>故事互動流程</Text>
       {steps.length ? (
         steps.map((step, stepIndex) => {
-          const category = getStepCardCategory(step)
-          const stateKey = `${chapter.id}:${step.stepCode || step.id || stepIndex}:${getStepEventType(step)}`
+          const classification = classifyStoryRuntimeStep(step)
+          const category = classification.category
+          const stateKey = getStoryRuntimeActionKey({
+            chapterId: chapter.id,
+            step,
+            eventType: classification.eventType,
+            fallbackIndex: stepIndex,
+          })
           const actionState = actionStates[stateKey]
-          const disabled = !storyModeSession?.sessionId && !['story', 'location', 'unsupported'].includes(category)
+          const disabled = classification.stateful && !storyModeSession?.sessionId
+          const stateText = actionState ? getActionStateText(actionState) : disabled ? '請先開始故事模式' : ''
+          const stateStatus = actionState?.status || (disabled ? 'blocked' : undefined)
           return (
             <View
               key={step.id || step.stepCode || stepIndex}
               className={`story-runtime-action-card story-runtime-action-card--${category} ${disabled ? 'story-runtime-action-card--disabled' : 'story-runtime-action-card--active'} ${category === 'unsupported' ? 'story-runtime-action-card--unsupported' : ''}`}
             >
               <View className='story-runtime-step__top'>
-                <Text className='story-runtime-step__badge'>{getStepCardLabel(step)}</Text>
+                <Text className='story-runtime-step__badge'>{classification.label}</Text>
                 {step.requiredForCompletion ? (
                   <Text className='story-runtime-step__badge story-runtime-step__badge--required'>主線必做</Text>
                 ) : null}
@@ -306,6 +272,11 @@ function renderRuntimeFlow({
                 ) : null}
                 {category === 'unsupported' ? (
                   <Text className='story-runtime-step__badge story-runtime-step__badge--pending'>稍後開放</Text>
+                ) : null}
+                {stateText ? (
+                  <Text className={`story-runtime-state-chip story-runtime-state-chip--${stateStatus}`}>
+                    {stateText}
+                  </Text>
                 ) : null}
               </View>
               <Text className='story-runtime-step__name'>{step.name || `互動 ${stepIndex + 1}`}</Text>
@@ -327,17 +298,13 @@ function renderRuntimeFlow({
               {disabled ? (
                 <Text className='story-runtime-action-card__status'>開始故事模式後可同步此互動。</Text>
               ) : null}
-              {actionState ? (
-                <Text className='story-runtime-action-card__status'>
-                  {actionState === 'pending' ? '同步中...' : actionState === 'accepted' ? '已同步' : '同步失敗，點擊重試'}
-                </Text>
-              ) : null}
+              {renderActionFeedback(actionState)}
               <Button
                 className='story-runtime-action-card__button'
-                disabled={actionState === 'pending'}
+                disabled={actionState?.status === 'syncing'}
                 onClick={() => onStepAction(chapter, step)}
               >
-                {category === 'unsupported' ? '查看玩法說明' : getStepButtonText(step)}
+                {classification.buttonText}
               </Button>
             </View>
           )
@@ -363,7 +330,7 @@ export default function StoryPage() {
   ))
   const [storyModeBusy, setStoryModeBusy] = useState(false)
   const [explorationSummary, setExplorationSummary] = useState<StoryExplorationSummaryItem | null>(null)
-  const [actionStates, setActionStates] = useState<Record<string, ActionStateValue>>({})
+  const [actionStates, setActionStates] = useState<Record<string, StoryRuntimeActionState>>({})
   const reportedContentEventsRef = useRef<Set<string>>(new Set())
   const reportedUnsupportedEventsRef = useRef<Set<string>>(new Set())
 
@@ -636,10 +603,6 @@ export default function StoryPage() {
     Taro.showToast({ title: '已切換至故事地圖', icon: 'success' })
   }
 
-  const getActionStateKey = (chapter: StoryChapterItem, step: StoryRuntimeStepItem) => (
-    `${chapter.id}:${step.stepCode || step.id || 'step'}:${getStepEventType(step)}`
-  )
-
   const handleStartStoryMode = async () => {
     if (!activeStory?.id) {
       return
@@ -683,7 +646,8 @@ export default function StoryPage() {
       })
       const exited = await exitStoryModeSession(activeStory.id)
       setStoryModeSession(exited?.active ? exited : null)
-      Taro.showToast({ title: '已離開故事模式', icon: 'success' })
+      setActionStates({})
+      Taro.showToast({ title: '已離開故事模式，已獲得的探索與獎勵紀錄會保留', icon: 'success' })
     } catch (error) {
       Taro.showToast({ title: '進度同步暫時失敗，可稍後重試', icon: 'none' })
     } finally {
@@ -695,10 +659,29 @@ export default function StoryPage() {
     if (!activeStory?.id) {
       return
     }
-    const category = getStepCardCategory(step)
-    const eventType = getStepEventType(step)
-    const stateKey = getActionStateKey(chapter, step)
-    if (category === 'unsupported') {
+    const classification = classifyStoryRuntimeStep(step)
+    const eventPayload = buildStoryRuntimeEventPayload({
+      storylineId: activeStory.id,
+      sessionId: storyModeSession?.sessionId,
+      chapterId: chapter.id,
+      step,
+      classification,
+    })
+    const stateKey = getStoryRuntimeActionKey({
+      chapterId: chapter.id,
+      step,
+      eventType: classification.eventType,
+    })
+    if (classification.unsupported) {
+      setActionStates((previous) => ({
+        ...previous,
+        [stateKey]: {
+          status: 'unsupported',
+          title: '玩法稍後開放',
+          message: '此玩法已配置，將於後續小程序玩法版本開放。',
+          updatedAt: new Date().toISOString(),
+        },
+      }))
       const unsupportedKey = `${activeStory.id}:${storyModeSession?.sessionId || 'read'}:${chapter.id}:${step.stepCode || step.id}:unsupported_viewed`
       if (reportedUnsupportedEventsRef.current.has(unsupportedKey)) {
         return
@@ -709,14 +692,13 @@ export default function StoryPage() {
           eventType: 'unsupported_viewed',
           chapterId: chapter.id,
           stepId: step.id,
-          elementCode: step.elementCode || step.stepCode,
-          elementId: step.elementId,
+          elementCode: eventPayload.elementCode,
+          elementId: eventPayload.elementId,
           sessionId: storyModeSession?.sessionId,
           idempotencyScope: `unsupported:${step.stepCode || step.id}`,
           payload: {
-            stepType: step.stepType,
-            templateType: step.template?.templateType,
-            triggerType: step.triggerType,
+            ...eventPayload.payload,
+            unsupportedReason: step.unsupportedReason,
           },
         })
       } catch (error) {
@@ -724,31 +706,65 @@ export default function StoryPage() {
       }
       return
     }
-    if (!storyModeSession?.sessionId && ['pickup', 'task', 'challenge', 'reward'].includes(category)) {
+    if (classification.stateful && !storyModeSession?.sessionId) {
+      setActionStates((previous) => ({
+        ...previous,
+        [stateKey]: {
+          status: 'blocked',
+          title: '請先開始故事模式',
+          message: '匿名或只讀瀏覽可以查看故事內容，但拾取、打卡、任務與獎勵需要先開始故事模式。',
+          updatedAt: new Date().toISOString(),
+        },
+      }))
       Taro.showToast({ title: '請先開始故事模式', icon: 'none' })
       return
     }
 
-    setActionStates((previous) => ({ ...previous, [stateKey]: 'pending' }))
+    setActionStates((previous) => ({
+      ...previous,
+      [stateKey]: {
+        status: 'syncing',
+        title: '同步中',
+        message: '正在把互動事件寫入後端。',
+        updatedAt: new Date().toISOString(),
+      },
+    }))
     try {
-      await reportStoryEvent({
-        eventType,
+      const response = await reportStoryEvent({
+        eventType: eventPayload.eventType,
         chapterId: chapter.id,
         stepId: step.id,
-        elementCode: step.elementCode || step.stepCode || `story_step_${step.id}`,
-        elementId: step.elementId || step.id,
-        idempotencyScope: `${storyModeSession?.sessionId || 'read'}:${chapter.id}:${step.stepCode || step.id}:${eventType}`,
-        payload: {
-          category,
-          stepType: step.stepType,
-          templateType: step.template?.templateType,
-          triggerType: step.triggerType,
-        },
+        elementCode: eventPayload.elementCode,
+        elementId: eventPayload.elementId,
+        idempotencyScope: eventPayload.idempotencyScope,
+        payload: eventPayload.payload,
       })
-      setActionStates((previous) => ({ ...previous, [stateKey]: 'accepted' }))
-      await refreshExploration()
+      setActionStates((previous) => ({
+        ...previous,
+        [stateKey]: resolveStoryRuntimeFeedback(response, {
+          title: classification.eventType === 'click_interacted' ? '互動已同步' : undefined,
+        }),
+      }))
+      if (response?.currentChapterId) {
+        setExpandedChapterId(response.currentChapterId)
+        const storedSession = getActiveStoryModeSession(activeStory.id)
+        setStoryModeSession(storedSession)
+      }
+      if (response?.explorationSummary) {
+        setExplorationSummary(mapStoryExplorationSummary(response.explorationSummary))
+      } else {
+        await refreshExploration()
+      }
     } catch (error) {
-      setActionStates((previous) => ({ ...previous, [stateKey]: 'failed' }))
+      setActionStates((previous) => ({
+        ...previous,
+        [stateKey]: {
+          status: 'failed',
+          title: '同步失敗',
+          message: '服務器開小差了，請稍後重試。',
+          updatedAt: new Date().toISOString(),
+        },
+      }))
       Taro.showToast({ title: '進度同步暫時失敗，可稍後重試', icon: 'none' })
     }
   }

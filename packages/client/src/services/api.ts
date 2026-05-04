@@ -710,12 +710,22 @@ export interface PublicExperienceEventRequestDto {
 
 export interface PublicExperienceEventResponseDto {
   accepted?: boolean
+  duplicate?: boolean
   eventId?: number
   userId?: number
   elementId?: number
   elementCode?: string
   eventType?: string
   storylineSessionId?: string
+  acceptedAt?: string
+  currentChapterId?: number
+  message?: string
+  eventStatus?: string
+  outcomeType?: string
+  feedbackTitle?: string
+  feedbackMessage?: string
+  outcomeLabels?: string[]
+  explorationSummary?: PublicUserExplorationDto
 }
 
 export interface PublicStorylineSessionDto {

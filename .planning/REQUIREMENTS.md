@@ -14,9 +14,9 @@
 ### Traveler Gameplay Runtime
 
 - [x] **PLAY-01**: Traveler can enter the `東西方文明的戰火與共生` story mode from the mini-program and see the correct introduction, chapters, current route, and generated media.
-- [ ] **PLAY-02**: Traveler can trigger compiled POI/story runtime steps for click, proximity, content-completion, pickup, task, and reward events without relying on mock-only state.
-- [ ] **PLAY-03**: Traveler can receive visible Traditional Chinese feedback for pickups, task progress, medals, titles, coins, and unsupported advanced gameplay.
-- [ ] **PLAY-04**: Traveler can exit and re-enter story mode with session progress, permanent exploration events, and already-earned rewards behaving according to backend state.
+- [x] **PLAY-02**: Traveler can trigger compiled POI/story runtime steps for click, proximity, content-completion, pickup, task, and reward events without relying on mock-only state.
+- [x] **PLAY-03**: Traveler can receive visible Traditional Chinese feedback for pickups, task progress, medals, titles, coins, and unsupported advanced gameplay.
+- [x] **PLAY-04**: Traveler can exit and re-enter story mode with session progress, permanent exploration events, and already-earned rewards behaving according to backend state.
 - [x] **PLAY-05**: Traveler-facing media playback supports image, audio, video, and Lottie assets with poster/fallback behavior and no blank-screen failure when an asset is unavailable.
 
 ### User Progress and Operations
@@ -65,9 +65,9 @@
 | UAT-02 | Phase 44 | Pending |
 | UAT-03 | Phase 44 | Pending |
 | PLAY-01 | Phase 41 | Verified |
-| PLAY-02 | Phase 42 | Pending |
-| PLAY-03 | Phase 42 | Pending |
-| PLAY-04 | Phase 42 | Pending |
+| PLAY-02 | Phase 42 | Complete |
+| PLAY-03 | Phase 42 | Complete |
+| PLAY-04 | Phase 42 | Complete |
 | PLAY-05 | Phase 41 | Verified |
 | OPS-01 | Phase 43 | Pending |
 | OPS-02 | Phase 43 | Pending |

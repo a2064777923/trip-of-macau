@@ -41,7 +41,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -63,6 +66,9 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
 
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
     };
+    private record EventFeedback(String title, String message) {
+    }
+
     private static final String STATUS_PUBLISHED = "published";
     private static final String RUNTIME_VERSION = "v1";
     private static final String RUNTIME_SOURCE = "public_runtime";
@@ -89,6 +95,9 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
             "chapter_started",
             "content_viewed",
             "media_completed",
+            "click_interacted",
+            "proximity_reached",
+            "checkin_completed",
             "pickup_interacted",
             "task_completed",
             "reward_acquired",
@@ -172,7 +181,7 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         request.setPayloadJson(payloadJson);
         UserExplorationEvent existingEvent = findEventByClientEventId(userId, clientEventId);
         if (existingEvent != null) {
-            return toEventResponse(existingEvent, true, resolveResponseCurrentChapterId(userId, existingEvent, null), "Duplicate event accepted");
+            return toEventResponse(existingEvent, true, resolveResponseCurrentChapterId(userId, existingEvent, null));
         }
         ExplorationElement element = resolveExplorationElement(request.getElementId(), request.getElementCode());
         UserExplorationEvent event = new UserExplorationEvent();
@@ -189,11 +198,11 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         try {
             userExplorationEventMapper.insert(event);
             updateStorylineSessionAfterEvent(userId, request, event, element);
-            return toEventResponse(event, false, resolveResponseCurrentChapterId(userId, event, element), "Event accepted");
+            return toEventResponse(event, false, resolveResponseCurrentChapterId(userId, event, element));
         } catch (DuplicateKeyException ex) {
             UserExplorationEvent duplicateEvent = findEventByClientEventId(userId, clientEventId);
             if (duplicateEvent != null) {
-                return toEventResponse(duplicateEvent, true, resolveResponseCurrentChapterId(userId, duplicateEvent, element), "Duplicate event accepted");
+                return toEventResponse(duplicateEvent, true, resolveResponseCurrentChapterId(userId, duplicateEvent, element));
             }
             throw ex;
         }
@@ -823,7 +832,22 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         if (!StringUtils.hasText(value)) {
             return fallback;
         }
-        return LocalDateTime.parse(value);
+        String trimmed = value.trim();
+        try {
+            return LocalDateTime.parse(trimmed);
+        } catch (Exception ignored) {
+            // Mini-program and smoke clients send ISO offset/UTC timestamps; store them as local server time.
+        }
+        try {
+            return OffsetDateTime.parse(trimmed).atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+        } catch (Exception ignored) {
+            // Fall through to instant parsing.
+        }
+        try {
+            return LocalDateTime.ofInstant(Instant.parse(trimmed), ZoneId.systemDefault());
+        } catch (Exception ignored) {
+            return fallback;
+        }
     }
 
     private List<ExperienceFlowStep> selectPublishedFlowSteps(Long flowId) {
@@ -1097,10 +1121,13 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
     }
 
     private ExperienceEventResponse toEventResponse(UserExplorationEvent event) {
-        return toEventResponse(event, false, resolveCurrentChapterId(null, null, event.getEventPayloadJson()), "Event accepted");
+        return toEventResponse(event, false, resolveCurrentChapterId(null, null, event.getEventPayloadJson()));
     }
 
-    private ExperienceEventResponse toEventResponse(UserExplorationEvent event, boolean duplicate, Long currentChapterId, String message) {
+    private ExperienceEventResponse toEventResponse(UserExplorationEvent event, boolean duplicate, Long currentChapterId) {
+        Map<String, Object> payload = readObjectMap(event.getEventPayloadJson());
+        EventFeedback feedback = buildEventFeedback(event.getEventType(), duplicate, payload);
+        Long storylineId = resolveResponseStorylineId(event.getUserId(), event);
         return ExperienceEventResponse.builder()
                 .accepted(true)
                 .eventId(event.getId())
@@ -1112,8 +1139,106 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
                 .duplicate(duplicate)
                 .acceptedAt(event.getCreatedAt() == null ? LocalDateTime.now().toString() : event.getCreatedAt().toString())
                 .currentChapterId(currentChapterId)
-                .message(message)
+                .message(feedback.message())
+                .eventStatus(duplicate ? "already_synced" : "synced")
+                .outcomeType(resolveOutcomeType(event.getEventType()))
+                .feedbackTitle(feedback.title())
+                .feedbackMessage(feedback.message())
+                .outcomeLabels(extractOutcomeLabels(payload))
+                .explorationSummary(resolveEventExplorationSummary(event.getUserId(), storylineId))
                 .build();
+    }
+
+    private EventFeedback buildEventFeedback(String eventType, boolean duplicate, Map<String, Object> payload) {
+        String title = switch (normalizeToken(eventType)) {
+            case "story_opened" -> "故事進度已同步";
+            case "chapter_started", "chapter_open" -> "章節進度已同步";
+            case "content_viewed" -> "內容閱讀已記錄";
+            case "media_completed" -> "媒體播放已完成";
+            case "click_interacted" -> "互動已記錄";
+            case "proximity_reached" -> "到達範圍已確認";
+            case "checkin_completed" -> "打卡進度已同步";
+            case "pickup_interacted" -> "線索已拾取";
+            case "task_completed" -> "任務進度已同步";
+            case "reward_acquired" -> "獎勵進度已同步";
+            case "unsupported_viewed" -> "玩法說明已查看";
+            case "story_session_exit" -> "故事模式狀態已同步";
+            default -> "故事進度已同步";
+        };
+        if (duplicate) {
+            return new EventFeedback(title, "已記錄過，不會重複發放");
+        }
+        List<String> labels = extractOutcomeLabels(payload);
+        if (!labels.isEmpty()) {
+            return new EventFeedback(title, title + "：" + String.join("、", labels));
+        }
+        return new EventFeedback(title, title);
+    }
+
+    private String resolveOutcomeType(String eventType) {
+        return switch (normalizeToken(eventType)) {
+            case "story_opened" -> "story";
+            case "chapter_started", "chapter_open" -> "chapter";
+            case "content_viewed" -> "content";
+            case "media_completed" -> "media";
+            case "click_interacted" -> "click";
+            case "proximity_reached" -> "proximity";
+            case "checkin_completed" -> "checkin";
+            case "pickup_interacted" -> "pickup";
+            case "task_completed" -> "task";
+            case "reward_acquired" -> "reward";
+            case "unsupported_viewed" -> "unsupported";
+            case "story_session_exit" -> "session";
+            default -> "story";
+        };
+    }
+
+    private List<String> extractOutcomeLabels(Map<String, Object> payload) {
+        if (payload == null || payload.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> labels = new ArrayList<>();
+        appendOutcomeLabelValues(labels, payload.get("outcomeLabels"));
+        appendOutcomeLabelValues(labels, payload.get("rewardLabels"));
+        appendOutcomeLabelValues(labels, payload.get("titleLabels"));
+        appendOutcomeLabelValues(labels, payload.get("coinAmount"));
+        appendOutcomeLabelValues(labels, payload.get("pickupLabel"));
+        appendOutcomeLabelValues(labels, payload.get("taskLabel"));
+        return labels.stream()
+                .filter(StringUtils::hasText)
+                .map(this::sanitizeOutcomeLabel)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .limit(6)
+                .toList();
+    }
+
+    private void appendOutcomeLabelValues(List<String> labels, Object value) {
+        if (value == null) {
+            return;
+        }
+        if (value instanceof Collection<?> collection) {
+            collection.forEach(item -> appendOutcomeLabelValues(labels, item));
+            return;
+        }
+        if (value instanceof Map<?, ?> map) {
+            Object label = firstNonNull(map.get("label"), firstNonNull(map.get("name"), map.get("title")));
+            appendOutcomeLabelValues(labels, label);
+            return;
+        }
+        if (value instanceof Number number) {
+            labels.add("金幣 " + number);
+            return;
+        }
+        labels.add(String.valueOf(value));
+    }
+
+    private String sanitizeOutcomeLabel(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        String sanitized = value.replaceAll("[\\r\\n\\t]+", " ").trim();
+        return sanitized.length() > 40 ? sanitized.substring(0, 40) : sanitized;
     }
 
     private void applyOverride(List<ExperienceRuntimeResponse.Step> compiled, ExperienceOverride override, String localeHint) {
@@ -1362,12 +1487,46 @@ public class PublicExperienceServiceImpl implements PublicExperienceService {
         return session == null ? null : session.getCurrentChapterId();
     }
 
+    private Long resolveResponseStorylineId(Long userId, UserExplorationEvent event) {
+        if (event == null) {
+            return null;
+        }
+        Long payloadStorylineId = extractStorylineId(event.getEventPayloadJson());
+        if (payloadStorylineId != null) {
+            return payloadStorylineId;
+        }
+        UserStorylineSession session = findStorylineSession(userId, null, event.getStorylineSessionId());
+        return session == null ? null : session.getStorylineId();
+    }
+
+    private UserExplorationResponse resolveEventExplorationSummary(Long userId, Long storylineId) {
+        if (userId == null || storylineId == null) {
+            return null;
+        }
+        try {
+            return getUserExploration(userId, DEFAULT_SESSION_LOCALE, "storyline", storylineId);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     private Long extractChapterId(String payloadJson) {
         Map<String, Object> payload = readObjectMap(payloadJson);
         for (String key : List.of("currentChapterId", "storyChapterId", "chapterId")) {
             Long chapterId = readLongValue(payload.get(key));
             if (chapterId != null) {
                 return chapterId;
+            }
+        }
+        return null;
+    }
+
+    private Long extractStorylineId(String payloadJson) {
+        Map<String, Object> payload = readObjectMap(payloadJson);
+        for (String key : List.of("storylineId", "storyLineId")) {
+            Long storylineId = readLongValue(payload.get(key));
+            if (storylineId != null) {
+                return storylineId;
             }
         }
         return null;

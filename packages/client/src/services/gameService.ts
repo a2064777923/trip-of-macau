@@ -56,6 +56,7 @@ import {
   PublicTipArticleDto,
   PublicLocaleCode,
   PublicUserPreferencesDto,
+  PublicUserExplorationDto,
   PublicUserSessionDto,
   PublicUserStateDto,
 } from './api'
@@ -1880,6 +1881,13 @@ export async function refreshStoryExplorationSummary(storylineId: number): Promi
     scopeType: 'storyline',
     scopeId: storylineId,
   })
+  return mapStoryExplorationSummary(response)
+}
+
+export function mapStoryExplorationSummary(response?: PublicUserExplorationDto | null): StoryExplorationSummaryItem | null {
+  if (!response) {
+    return null
+  }
   return {
     progressPercent: response.progressPercent,
     completedElementCount: response.completedElementCount,
@@ -1893,6 +1901,22 @@ const STORY_RUNTIME_EVENT_NAME_MAP: Record<string, StoryRuntimeEventType> = {
   'story_open': 'story_opened',
   'chapter_open': 'chapter_started',
   'content_read': 'content_viewed',
+  'tap': 'click_interacted',
+  'tap_interacted': 'click_interacted',
+  'click': 'click_interacted',
+  'click_interaction': 'click_interacted',
+  'arrival': 'proximity_reached',
+  'arrived': 'proximity_reached',
+  'poi_arrival': 'proximity_reached',
+  'nearby_reached': 'proximity_reached',
+  'range_reached': 'proximity_reached',
+  'checkin': 'checkin_completed',
+  'check_in': 'checkin_completed',
+  'poi_checkin': 'checkin_completed',
+  'pickup': 'pickup_interacted',
+  'collectible_pickup': 'pickup_interacted',
+  'task_complete': 'task_completed',
+  'reward_claimed': 'reward_acquired',
   'unsupported_interaction_view': 'unsupported_viewed',
 }
 
@@ -1987,7 +2011,7 @@ export async function recordStoryRuntimeEvent(input: {
       saveActiveStoryModeSession({
         ...stored,
         lastEventAt: request.occurredAt,
-        currentChapterId: input.chapterId || stored.currentChapterId,
+        currentChapterId: response.currentChapterId || input.chapterId || stored.currentChapterId,
       })
     }
     return response

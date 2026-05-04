@@ -11,6 +11,7 @@
     "smoke:phase39:story-mode": "powershell -NoProfile -ExecutionPolicy Bypass -File ..\\..\\scripts\\local\\smoke-phase-39-mini-program-story-mode.ps1",
     "smoke:phase40:release-readiness": "powershell -NoProfile -ExecutionPolicy Bypass -File ..\\..\\scripts\\local\\smoke-phase-40-release-readiness.ps1",
     "smoke:phase41:wechat-runtime": "powershell -NoProfile -ExecutionPolicy Bypass -File ..\\..\\scripts\\local\\smoke-phase-41-wechat-runtime-uat.ps1",
+    "smoke:phase42:gameplay-event-engine": "powershell -NoProfile -ExecutionPolicy Bypass -File ..\\..\\scripts\\local\\smoke-phase-42-gameplay-event-engine.ps1",
     "build:swan": "taro build --type swan",
     "build:alipay": "taro build --type alipay",
     "build:tt": "taro build --type tt",

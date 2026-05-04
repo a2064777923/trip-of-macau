@@ -84,3 +84,32 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-41
 ## Caveats
 
 Phase 41 verifies the story runtime entry, media fallback visibility, WeChat build readiness, and DevTools launch readiness. It does not prove advanced AR, speech, puzzle gameplay, indoor visual positioning, or the full future gameplay engine.
+
+## Phase 42 Gameplay Event Checks
+
+Run the Phase 42 gameplay event smoke from the mini-program package:
+
+```powershell
+cd D:\Archive\trip-of-macau\packages\client
+npm run smoke:phase42:gameplay-event-engine
+```
+
+Run the same smoke directly from the repository root:
+
+```powershell
+cd D:\Archive\trip-of-macau
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-42-gameplay-event-engine.ps1 -Quick
+```
+
+Run with a mini-program build check:
+
+```powershell
+cd D:\Archive\trip-of-macau
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local/smoke-phase-42-gameplay-event-engine.ps1 -IncludeBuild
+```
+
+Anonymous users may browse story content and runtime cards in read-only mode, but pickup, task, reward, proximity, and check-in actions require starting story mode with an authenticated user session. Duplicate taps should show an already-recorded state, not an error.
+
+Advanced AR, photo recognition, speech input, puzzle, cannon-defense, route-coverage, and indoor-positioning gameplay remains pending. These cards should show Traditional Chinese fallback copy instead of crashing or pretending the gameplay engine is complete.
+
+Physical-device proximity/GPS behavior must not be marked passed unless it was actually tested on a device or a realistic location simulation. The automated smoke only proves backend event acceptance, idempotency, exploration refresh, and story session exit.

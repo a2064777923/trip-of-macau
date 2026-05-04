@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v3.2
 milestone_name: Traveler Gameplay Runtime and Operations Acceptance
-current_phase: 42
-current_plan: ready
-status: ready_to_execute
-stopped_at: Phase 42 planning complete; ready to execute
-last_updated: "2026-05-04T14:30:00+08:00"
-last_activity: 2026-05-04 -- Phase 42 gameplay event engine planning completed
+current_phase: 43
+current_plan: Not started
+status: ready_for_next_phase
+stopped_at: Phase 42 gameplay event engine completed and verified; Phase 43 is next
+last_updated: "2026-05-04T16:10:00+08:00"
+last_activity: 2026-05-04 -- Phase 42 gameplay event engine completed and verified
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 6
-  completed_plans: 3
-  percent: 25
+  completed_phases: 2
+  total_plans: 12
+  completed_plans: 6
+  percent: 50
 ---
 
 # Project State
@@ -23,21 +23,21 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-05-04)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Phase 42 — traveler gameplay event engine
+**Current focus:** Phase 43 — traveler progress and reward operations
 
 ## Current Position
 
-Phase: 42 (traveler-gameplay-event-engine) — CONTEXT READY
-Plan: ready
+Phase: 43 (traveler-progress-and-reward-operations) — NEXT
+Plan: not started
 Milestone: `v3.2`
-Current Phase: 42
+Current Phase: 43
 Total Phases Planned: 4
-Status: Ready to execute
-Current Plan: ready
-Last activity: 2026-05-04 -- Phase 42 gameplay event engine planning completed
-Last Activity Description: Added Phase 42 research, validation strategy, and three executable plans covering backend event contract enrichment, mini-program gameplay event interpreter, and smoke/UAT verification
+Status: Ready for next phase
+Current Plan: Not started
+Last activity: 2026-05-04 -- Phase 42 gameplay event engine completed and verified
+Last Activity Description: Phase 42 shipped backend event contract enrichment, mini-program gameplay event interpreter, duplicate-as-success feedback, and smoke/UAT evidence against local backend 8080.
 
-Progress: [██░░░░░░░░] 25% of v3.2 phases complete; Phase 42 ready to execute
+Progress: [█████░░░░░] 50% of v3.2 phases complete; Phase 43 is next
 
 ## Performance Metrics
 
@@ -88,6 +88,7 @@ Progress: [██░░░░░░░░] 25% of v3.2 phases complete; Phase 42
 
 - Run manual physical-device UAT for Phase 41 when ready.
 - Complete manual WeChat DevTools/device UAT instead of treating automated build smoke as equivalent.
+- Complete Phase 42 manual WeChat DevTools/device UAT for real GPS/proximity behavior when device testing is available.
 - Keep provider, COS, and AI keys outside tracked files.
 
 ### Blockers/Concerns
@@ -100,6 +101,6 @@ Progress: [██░░░░░░░░] 25% of v3.2 phases complete; Phase 42
 
 ## Session Continuity
 
-Last session: 2026-05-04T12:13:00+08:00
-Stopped at: Phase 42 planning complete; ready to execute
-Resume file: .planning/phases/42-traveler-gameplay-event-engine/42-CONTEXT.md
+Last session: 2026-05-04T16:10:00+08:00
+Stopped at: Phase 42 completed and verified; Phase 43 is next
+Resume file: .planning/ROADMAP.md

@@ -256,12 +256,36 @@ export type StoryRuntimeEventType =
   | 'chapter_started'
   | 'content_viewed'
   | 'media_completed'
+  | 'click_interacted'
+  | 'proximity_reached'
+  | 'checkin_completed'
   | 'pickup_interacted'
   | 'task_completed'
   | 'reward_acquired'
   | 'unsupported_viewed'
   | 'story_session_exit'
   | string
+
+export type StoryRuntimeActionStatus =
+  | 'idle'
+  | 'syncing'
+  | 'synced'
+  | 'already_synced'
+  | 'failed'
+  | 'blocked'
+  | 'unsupported'
+
+export interface StoryRuntimeActionState {
+  status: StoryRuntimeActionStatus
+  title?: string
+  message?: string
+  acceptedAt?: string
+  outcomeType?: string
+  outcomeLabels?: string[]
+  eventId?: number
+  currentChapterId?: number
+  updatedAt?: string
+}
 
 export interface StoryModeSessionState {
   storylineId: number
