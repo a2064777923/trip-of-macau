@@ -40,6 +40,22 @@ public class AdminUserProgressRepairRequest {
     @Positive(message = "duplicateOfEventId must be positive when provided")
     private Long duplicateOfEventId;
 
+    @Positive(message = "rewardId must be positive when provided")
+    private Long rewardId;
+
+    @Positive(message = "gameRewardId must be positive when provided")
+    private Long gameRewardId;
+
+    @Positive(message = "ruleId must be positive when provided")
+    private Long ruleId;
+
+    @Positive(message = "sourceEventId must be positive when provided")
+    private Long sourceEventId;
+
+    private String annotationText;
+
+    private String issueSeverity;
+
     @NotBlank(message = "reason is required")
     private String reason;
 

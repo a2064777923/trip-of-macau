@@ -28,5 +28,6 @@ public class AdminUserProgressOperationResultResponse {
     private Integer writtenStateRows;
     private Integer mutatedEventRows;
     private Integer deletedEventRows;
+    private String operationMessage;
     private Map<String, Object> resultSummary;
 }

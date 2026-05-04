@@ -2,16 +2,26 @@ package com.aoxiaoyou.admin.service.impl;
 
 import com.aoxiaoyou.admin.common.exception.BusinessException;
 import com.aoxiaoyou.admin.dto.response.AdminUserProgressSummaryResponse;
+import com.aoxiaoyou.admin.entity.GameReward;
+import com.aoxiaoyou.admin.entity.Reward;
+import com.aoxiaoyou.admin.entity.RewardRedemption;
 import com.aoxiaoyou.admin.entity.SysOperationLog;
+import com.aoxiaoyou.admin.entity.UserGameRewardGrant;
 import com.aoxiaoyou.admin.entity.UserProgressOperationAudit;
 import com.aoxiaoyou.admin.mapper.AdminUserProgressReadMapper;
+import com.aoxiaoyou.admin.mapper.GameRewardMapper;
+import com.aoxiaoyou.admin.mapper.RewardMapper;
+import com.aoxiaoyou.admin.mapper.RewardRedemptionMapper;
+import com.aoxiaoyou.admin.mapper.RewardRuleMapper;
 import com.aoxiaoyou.admin.mapper.SysOperationLogMapper;
 import com.aoxiaoyou.admin.mapper.UserExplorationEventAdminMapper;
 import com.aoxiaoyou.admin.mapper.UserExplorationStateAdminMapper;
+import com.aoxiaoyou.admin.mapper.UserGameRewardGrantMapper;
 import com.aoxiaoyou.admin.mapper.UserProgressOperationAuditMapper;
 import com.aoxiaoyou.admin.service.AdminUserProgressCalculatorService;
 import com.aoxiaoyou.admin.service.AdminUserProgressRepairService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.dao.DuplicateKeyException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +47,9 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
     public static final String RECOMPUTE_SCOPE = "RECOMPUTE_SCOPE";
     public static final String LINK_ORPHAN_EVENT = "LINK_ORPHAN_EVENT";
     public static final String MARK_DUPLICATE_CLIENT_EVENT = "MARK_DUPLICATE_CLIENT_EVENT";
+    public static final String VOID_DUPLICATE_EVENT = "VOID_DUPLICATE_EVENT";
+    public static final String RESEND_REWARD = "RESEND_REWARD";
+    public static final String ANNOTATE_ISSUE = "ANNOTATE_ISSUE";
 
     private static final Set<String> ALLOWED_SCOPE_TYPES = Set.of(
             "global",
@@ -59,6 +72,11 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
     private final UserExplorationEventAdminMapper eventMapper;
     private final UserProgressOperationAuditMapper auditMapper;
     private final SysOperationLogMapper sysOperationLogMapper;
+    private final RewardMapper rewardMapper;
+    private final GameRewardMapper gameRewardMapper;
+    private final RewardRuleMapper rewardRuleMapper;
+    private final RewardRedemptionMapper rewardRedemptionMapper;
+    private final UserGameRewardGrantMapper userGameRewardGrantMapper;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -117,7 +135,7 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
         );
         writeSystemLog(request.operator(), RECOMPUTE_SCOPE, request.reason(), preview.previewSummaryJson(), toJson(resultSummary));
 
-        return new OperationResult(RECOMPUTE_SCOPE, "confirmed", writtenRows, 0, 0, resultSummary);
+        return new OperationResult(RECOMPUTE_SCOPE, "confirmed", writtenRows, 0, 0, "進度已重新計算並寫入狀態快取", resultSummary);
     }
 
     @Override
@@ -130,6 +148,12 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
                 request.replacementElementId(),
                 request.replacementElementCode(),
                 request.duplicateOfEventId(),
+                request.rewardId(),
+                request.gameRewardId(),
+                request.ruleId(),
+                request.sourceEventId(),
+                request.annotationText(),
+                request.issueSeverity(),
                 request.reason()
         );
         return preview.response();
@@ -145,6 +169,12 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
                 request.replacementElementId(),
                 request.replacementElementCode(),
                 request.duplicateOfEventId(),
+                request.rewardId(),
+                request.gameRewardId(),
+                request.ruleId(),
+                request.sourceEventId(),
+                request.annotationText(),
+                request.issueSeverity(),
                 request.reason()
         );
         validateConfirmation(preview.response(), request.previewToken(), request.confirmText());
@@ -165,6 +195,42 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
                     request.duplicateOfEventId(),
                     toJson(buildRepairNote(actionType, preview.response().previewSummary(), request.reason()))
             );
+        } else if (VOID_DUPLICATE_EVENT.equals(actionType)) {
+            mutatedRows = eventMapper.markDuplicate(
+                    request.targetEventId(),
+                    request.duplicateOfEventId(),
+                    toJson(buildRepairNote(actionType, preview.response().previewSummary(), request.reason()))
+            );
+            resultSummary.put("voided", true);
+        } else if (RESEND_REWARD.equals(actionType)) {
+            ResendApplyResult resendResult = applyResendReward(target, request, preview.response().previewSummary());
+            mutatedRows = 0;
+            resultSummary.putAll(resendResult.resultSummary());
+            resultSummary.put("appliedAt", LocalDateTime.now());
+            writeAudit(
+                    request.operator(),
+                    target,
+                    actionType,
+                    preview.response(),
+                    resultSummary,
+                    request.reason(),
+                    request.previewToken()
+            );
+            writeSystemLog(request.operator(), actionType, request.reason(), preview.previewSummaryJson(), toJson(resultSummary));
+            return new OperationResult(
+                    actionType,
+                    resendResult.status(),
+                    resendResult.writtenRows(),
+                    0,
+                    0,
+                    resendResult.operationMessage(),
+                    resultSummary
+            );
+        } else if (ANNOTATE_ISSUE.equals(actionType)) {
+            mutatedRows = 0;
+            resultSummary.put("annotationText", defaultText(request.annotationText()));
+            resultSummary.put("issueSeverity", normalizeIssueSeverity(request.issueSeverity()));
+            resultSummary.put("annotated", true);
         } else {
             throw new BusinessException(4004, "Unsupported repair action");
         }
@@ -183,7 +249,7 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
         );
         writeSystemLog(request.operator(), actionType, request.reason(), preview.previewSummaryJson(), toJson(resultSummary));
 
-        return new OperationResult(actionType, "confirmed", 0, mutatedRows, 0, resultSummary);
+        return new OperationResult(actionType, operationStatus(actionType), 0, mutatedRows, 0, operationMessage(actionType), resultSummary);
     }
 
     @Override
@@ -256,6 +322,12 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
             Long replacementElementId,
             String replacementElementCode,
             Long duplicateOfEventId,
+            Long rewardId,
+            Long gameRewardId,
+            Long ruleId,
+            Long sourceEventId,
+            String annotationText,
+            String issueSeverity,
             String reason) {
         String actionType = normalizeActionType(requestedActionType);
         Map<String, Object> previewSummary = new LinkedHashMap<>();
@@ -275,7 +347,7 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
             previewSummary.put("beforeElementCode", event.getElementCode());
             previewSummary.put("afterElementId", replacementElementId);
             previewSummary.put("afterElementCode", defaultText(replacementElementCode));
-        } else if (MARK_DUPLICATE_CLIENT_EVENT.equals(actionType)) {
+        } else if (MARK_DUPLICATE_CLIENT_EVENT.equals(actionType) || VOID_DUPLICATE_EVENT.equals(actionType)) {
             UserExplorationEventAdminMapper.EventRecord event = requireOwnedEvent(targetEventId, target.userId());
             UserExplorationEventAdminMapper.EventRecord canonical = requireOwnedEvent(duplicateOfEventId, target.userId());
             if (Objects.equals(event.getId(), canonical.getId())) {
@@ -285,6 +357,44 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
             previewSummary.put("beforeDuplicateOfEventId", event.getDuplicateOfEventId());
             previewSummary.put("duplicateOfEventId", canonical.getId());
             previewSummary.put("clientEventId", event.getClientEventId());
+            previewSummary.put("deletedEventRows", 0);
+            previewSummary.put("voided", VOID_DUPLICATE_EVENT.equals(actionType));
+        } else if (RESEND_REWARD.equals(actionType)) {
+            if (rewardId == null && gameRewardId == null) {
+                throw new BusinessException(4004, "Reward or game reward target must be provided");
+            }
+            if (sourceEventId == null && targetEventId == null && ruleId == null) {
+                throw new BusinessException(4004, "Reward resend must include source event, target event, or rule");
+            }
+            Reward reward = rewardId == null ? null : requireReward(rewardId);
+            GameReward gameReward = gameRewardId == null ? null : requireGameReward(gameRewardId);
+            if (ruleId != null && rewardRuleMapper.selectById(ruleId) == null) {
+                throw new BusinessException(4044, "Reward rule not found");
+            }
+            boolean alreadyGranted = rewardId != null
+                    ? findRewardRedemption(target.userId(), rewardId, ruleId, firstNonNull(sourceEventId, targetEventId)) != null
+                    : findGameRewardGrant(target.userId(), gameRewardId, ruleId, firstNonNull(sourceEventId, targetEventId)) != null;
+            previewSummary.put("rewardId", rewardId);
+            previewSummary.put("gameRewardId", gameRewardId);
+            previewSummary.put("ruleId", ruleId);
+            previewSummary.put("sourceEventId", sourceEventId);
+            previewSummary.put("targetRewardType", rewardId != null ? "redeemable_reward" : "game_reward");
+            previewSummary.put("targetRewardName", reward != null ? localizedRewardName(reward) : localizedGameRewardName(gameReward));
+            previewSummary.put("alreadyGranted", alreadyGranted);
+            previewSummary.put("operatorMessage", alreadyGranted
+                    ? "旅客已擁有此補發結果，確認後不會重複發放"
+                    : "可補發，確認後會寫入旅客獎勵狀態與審計");
+        } else if (ANNOTATE_ISSUE.equals(actionType)) {
+            if (!StringUtils.hasText(annotationText)) {
+                throw new BusinessException(4004, "Annotation text is required");
+            }
+            previewSummary.put("annotationText", annotationText.trim());
+            previewSummary.put("issueSeverity", normalizeIssueSeverity(issueSeverity));
+            previewSummary.put("sourceEventId", sourceEventId);
+            previewSummary.put("rewardId", rewardId);
+            previewSummary.put("gameRewardId", gameRewardId);
+            previewSummary.put("ruleId", ruleId);
+            previewSummary.put("operatorMessage", "確認後只會寫入審計與系統操作紀錄，不會改動旅客狀態");
         } else {
             throw new BusinessException(4004, "Unsupported repair action");
         }
@@ -329,6 +439,188 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
             throw new BusinessException(4004, "Repair request cannot cross user boundaries");
         }
         return event;
+    }
+
+    private Reward requireReward(Long rewardId) {
+        Reward reward = rewardMapper.selectById(rewardId);
+        if (reward == null) {
+            throw new BusinessException(4044, "Reward not found");
+        }
+        return reward;
+    }
+
+    private GameReward requireGameReward(Long gameRewardId) {
+        GameReward gameReward = gameRewardMapper.selectById(gameRewardId);
+        if (gameReward == null) {
+            throw new BusinessException(4044, "Game reward not found");
+        }
+        return gameReward;
+    }
+
+    private RewardRedemption findRewardRedemption(Long userId, Long rewardId, Long ruleId, Long sourceEventId) {
+        return rewardRedemptionMapper.selectOne(new LambdaQueryWrapper<RewardRedemption>()
+                .eq(RewardRedemption::getUserId, userId)
+                .eq(RewardRedemption::getRewardId, rewardId)
+                .eq(RewardRedemption::getDeleted, 0)
+                .eq(ruleId != null, RewardRedemption::getSourceRuleId, ruleId)
+                .eq(sourceEventId != null, RewardRedemption::getSourceEventId, sourceEventId)
+                .last("LIMIT 1"));
+    }
+
+    private UserGameRewardGrant findGameRewardGrant(Long userId, Long gameRewardId, Long ruleId, Long sourceEventId) {
+        return userGameRewardGrantMapper.selectOne(new LambdaQueryWrapper<UserGameRewardGrant>()
+                .eq(UserGameRewardGrant::getUserId, userId)
+                .eq(UserGameRewardGrant::getGameRewardId, gameRewardId)
+                .eq(ruleId != null, UserGameRewardGrant::getRuleId, ruleId)
+                .eq(sourceEventId != null, UserGameRewardGrant::getSourceEventId, sourceEventId)
+                .last("LIMIT 1"));
+    }
+
+    private ResendApplyResult applyResendReward(
+            ScopeTarget target,
+            RepairApplyRequest request,
+            Map<String, Object> previewSummary) {
+        Long effectiveSourceEventId = firstNonNull(request.sourceEventId(), request.targetEventId());
+        Long sourceSessionId = null;
+        if (effectiveSourceEventId != null) {
+            UserExplorationEventAdminMapper.EventRecord event = requireOwnedEvent(effectiveSourceEventId, target.userId());
+            sourceSessionId = null;
+            previewSummary.put("sourceEventType", event.getEventType());
+        }
+        boolean alreadyGranted = Boolean.TRUE.equals(previewSummary.get("alreadyGranted"));
+        if (alreadyGranted) {
+            Map<String, Object> result = resendResultBase(request, effectiveSourceEventId, null, null);
+            result.put("alreadyGranted", true);
+            result.put("grantPersistenceMode", request.rewardId() != null ? "reward_redemptions" : "user_game_reward_grants");
+            result.put("writtenStateRows", 0);
+            result.put("resendRecordedAt", LocalDateTime.now());
+            return new ResendApplyResult("already_present", 0, "旅客已擁有此補發結果，未重複發放", result);
+        }
+
+        if (request.rewardId() != null) {
+            Reward reward = requireReward(request.rewardId());
+            String idempotencyKey = rewardIdempotencyKey(
+                    target.userId(),
+                    request.rewardId(),
+                    request.ruleId(),
+                    effectiveSourceEventId,
+                    sourceSessionId);
+            RewardRedemption existing = selectRewardRedemptionByIdempotency(idempotencyKey);
+            if (existing != null) {
+                Map<String, Object> result = resendResultBase(request, effectiveSourceEventId, "reward_redemptions", existing.getId());
+                result.put("alreadyGranted", true);
+                result.put("writtenStateRows", 0);
+                result.put("resendRecordedAt", existing.getCreatedAt());
+                return new ResendApplyResult("already_present", 0, "旅客已擁有此補發結果，未重複發放", result);
+            }
+            RewardRedemption redemption = new RewardRedemption();
+            redemption.setUserId(target.userId());
+            redemption.setRewardId(reward.getId());
+            redemption.setRedemptionStatus("created");
+            redemption.setStampCostSnapshot(reward.getStampCost() == null ? 0 : reward.getStampCost());
+            redemption.setQrCode("SUPPORT-" + target.userId() + "-" + reward.getId());
+            redemption.setRedeemedAt(LocalDateTime.now());
+            redemption.setExpiresAt(null);
+            redemption.setSourceEventId(effectiveSourceEventId);
+            redemption.setSourceRuleId(request.ruleId());
+            redemption.setSourceSessionId(sourceSessionId);
+            redemption.setIdempotencyKey(idempotencyKey);
+            redemption.setDeleted(0);
+            try {
+                rewardRedemptionMapper.insert(redemption);
+            } catch (DuplicateKeyException ex) {
+                existing = selectRewardRedemptionByIdempotency(idempotencyKey);
+                Map<String, Object> result = resendResultBase(request, effectiveSourceEventId, "reward_redemptions", existing == null ? null : existing.getId());
+                result.put("alreadyGranted", true);
+                result.put("writtenStateRows", 0);
+                result.put("resendRecordedAt", LocalDateTime.now());
+                return new ResendApplyResult("already_present", 0, "旅客已擁有此補發結果，未重複發放", result);
+            }
+            Map<String, Object> result = resendResultBase(request, effectiveSourceEventId, "reward_redemptions", redemption.getId());
+            result.put("writtenStateRows", 1);
+            result.put("resendRecordedAt", LocalDateTime.now());
+            return new ResendApplyResult("resent", 1, "已補發兌換獎勵並寫入旅客狀態", result);
+        }
+
+        GameReward gameReward = requireGameReward(request.gameRewardId());
+        String idempotencyKey = gameRewardIdempotencyKey(
+                target.userId(),
+                gameReward.getId(),
+                request.ruleId(),
+                effectiveSourceEventId,
+                sourceSessionId);
+        UserGameRewardGrant existing = selectGameRewardGrantByIdempotency(idempotencyKey);
+        if (existing != null) {
+            Map<String, Object> result = resendResultBase(request, effectiveSourceEventId, "user_game_reward_grants", existing.getId());
+            result.put("alreadyGranted", true);
+            result.put("writtenStateRows", 0);
+            result.put("resendRecordedAt", existing.getGrantedAt());
+            return new ResendApplyResult("already_present", 0, "旅客已擁有此補發結果，未重複發放", result);
+        }
+        UserGameRewardGrant grant = new UserGameRewardGrant();
+        grant.setUserId(target.userId());
+        grant.setGameRewardId(gameReward.getId());
+        grant.setRuleId(request.ruleId());
+        grant.setSourceEventId(effectiveSourceEventId);
+        grant.setSourceSessionId(sourceSessionId);
+        grant.setGrantStatus("granted");
+        grant.setGrantReason(defaultText(request.reason()));
+        grant.setGrantedBy(request.operator() == null ? null : request.operator().operatorId());
+        grant.setGrantedAt(LocalDateTime.now());
+        grant.setIdempotencyKey(idempotencyKey);
+        try {
+            userGameRewardGrantMapper.insert(grant);
+        } catch (DuplicateKeyException ex) {
+            existing = selectGameRewardGrantByIdempotency(idempotencyKey);
+            Map<String, Object> result = resendResultBase(request, effectiveSourceEventId, "user_game_reward_grants", existing == null ? null : existing.getId());
+            result.put("alreadyGranted", true);
+            result.put("writtenStateRows", 0);
+            result.put("resendRecordedAt", LocalDateTime.now());
+            return new ResendApplyResult("already_present", 0, "旅客已擁有此補發結果，未重複發放", result);
+        }
+        Map<String, Object> result = resendResultBase(request, effectiveSourceEventId, "user_game_reward_grants", grant.getId());
+        result.put("writtenStateRows", 1);
+        result.put("resendRecordedAt", grant.getGrantedAt());
+        return new ResendApplyResult("resent", 1, "已補發遊戲內獎勵並寫入旅客狀態", result);
+    }
+
+    private Map<String, Object> resendResultBase(
+            RepairApplyRequest request,
+            Long effectiveSourceEventId,
+            String grantPersistenceMode,
+            Long grantRowId) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("rewardId", request.rewardId());
+        result.put("gameRewardId", request.gameRewardId());
+        result.put("ruleId", request.ruleId());
+        result.put("sourceEventId", effectiveSourceEventId);
+        result.put("grantPersistenceMode", grantPersistenceMode);
+        result.put("grantRowId", grantRowId);
+        result.put("mutatedEventRows", 0);
+        result.put("deletedEventRows", 0);
+        return result;
+    }
+
+    private RewardRedemption selectRewardRedemptionByIdempotency(String idempotencyKey) {
+        return rewardRedemptionMapper.selectOne(new LambdaQueryWrapper<RewardRedemption>()
+                .eq(RewardRedemption::getIdempotencyKey, idempotencyKey)
+                .last("LIMIT 1"));
+    }
+
+    private UserGameRewardGrant selectGameRewardGrantByIdempotency(String idempotencyKey) {
+        return userGameRewardGrantMapper.selectOne(new LambdaQueryWrapper<UserGameRewardGrant>()
+                .eq(UserGameRewardGrant::getIdempotencyKey, idempotencyKey)
+                .last("LIMIT 1"));
+    }
+
+    private String rewardIdempotencyKey(Long userId, Long rewardId, Long ruleId, Long sourceEventId, Long sourceSessionId) {
+        return "resend:reward:" + userId + ":" + rewardId + ":rule:" + nullToZero(ruleId)
+                + ":event:" + nullToZero(sourceEventId) + ":session:" + nullToZero(sourceSessionId);
+    }
+
+    private String gameRewardIdempotencyKey(Long userId, Long gameRewardId, Long ruleId, Long sourceEventId, Long sourceSessionId) {
+        return "resend:game_reward:" + userId + ":" + gameRewardId + ":rule:" + nullToZero(ruleId)
+                + ":event:" + nullToZero(sourceEventId) + ":session:" + nullToZero(sourceSessionId);
     }
 
     private void validateConfirmation(OperationPreview preview, String previewToken, String confirmText) {
@@ -398,7 +690,85 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
     }
 
     private String normalizeActionType(String actionType) {
-        return StringUtils.hasText(actionType) ? actionType.trim().toUpperCase(Locale.ROOT) : "";
+        String normalized = StringUtils.hasText(actionType) ? actionType.trim().toUpperCase(Locale.ROOT) : "";
+        if ("VOID_DUPLICATE".equals(normalized)) {
+            return VOID_DUPLICATE_EVENT;
+        }
+        return normalized;
+    }
+
+    private String normalizeIssueSeverity(String issueSeverity) {
+        String normalized = StringUtils.hasText(issueSeverity) ? issueSeverity.trim().toLowerCase(Locale.ROOT) : "info";
+        return switch (normalized) {
+            case "warning", "critical" -> normalized;
+            default -> "info";
+        };
+    }
+
+    private String operationStatus(String actionType) {
+        if (ANNOTATE_ISSUE.equals(actionType)) {
+            return "annotated";
+        }
+        if (VOID_DUPLICATE_EVENT.equals(actionType)) {
+            return "voided";
+        }
+        return "confirmed";
+    }
+
+    private String operationMessage(String actionType) {
+        if (ANNOTATE_ISSUE.equals(actionType)) {
+            return "已新增支援註記，不會改動旅客狀態";
+        }
+        if (VOID_DUPLICATE_EVENT.equals(actionType)) {
+            return "已標記重複事件，未刪除原始紀錄";
+        }
+        if (MARK_DUPLICATE_CLIENT_EVENT.equals(actionType)) {
+            return "已標記重複事件";
+        }
+        if (LINK_ORPHAN_EVENT.equals(actionType)) {
+            return "已重新連結探索事件";
+        }
+        return "操作已完成";
+    }
+
+    private String localizedRewardName(Reward reward) {
+        if (reward == null) {
+            return "";
+        }
+        if (StringUtils.hasText(reward.getNameZht())) {
+            return reward.getNameZht().trim();
+        }
+        if (StringUtils.hasText(reward.getNameZh())) {
+            return reward.getNameZh().trim();
+        }
+        if (StringUtils.hasText(reward.getNameEn())) {
+            return reward.getNameEn().trim();
+        }
+        return defaultText(reward.getCode());
+    }
+
+    private String localizedGameRewardName(GameReward reward) {
+        if (reward == null) {
+            return "";
+        }
+        if (StringUtils.hasText(reward.getNameZht())) {
+            return reward.getNameZht().trim();
+        }
+        if (StringUtils.hasText(reward.getNameZh())) {
+            return reward.getNameZh().trim();
+        }
+        if (StringUtils.hasText(reward.getNameEn())) {
+            return reward.getNameEn().trim();
+        }
+        return defaultText(reward.getCode());
+    }
+
+    private Long firstNonNull(Long first, Long second) {
+        return first != null ? first : second;
+    }
+
+    private long nullToZero(Long value) {
+        return value == null ? 0L : value;
     }
 
     private String confirmationToken(String actionType, ScopeTarget target, String previewJson, String reason) {
@@ -428,5 +798,12 @@ public class AdminUserProgressRepairServiceImpl implements AdminUserProgressRepa
     }
 
     private record PreviewComputation(OperationPreview response, String previewSummaryJson) {
+    }
+
+    private record ResendApplyResult(
+            String status,
+            int writtenRows,
+            String operationMessage,
+            Map<String, Object> resultSummary) {
     }
 }

@@ -43,6 +43,12 @@ public interface AdminUserProgressRepairService {
             Long replacementElementId,
             String replacementElementCode,
             Long duplicateOfEventId,
+            Long rewardId,
+            Long gameRewardId,
+            Long ruleId,
+            Long sourceEventId,
+            String annotationText,
+            String issueSeverity,
             String reason,
             LocalDateTime windowStart,
             LocalDateTime windowEnd) {
@@ -56,6 +62,12 @@ public interface AdminUserProgressRepairService {
             Long replacementElementId,
             String replacementElementCode,
             Long duplicateOfEventId,
+            Long rewardId,
+            Long gameRewardId,
+            Long ruleId,
+            Long sourceEventId,
+            String annotationText,
+            String issueSeverity,
             String reason,
             LocalDateTime windowStart,
             LocalDateTime windowEnd,
@@ -84,6 +96,7 @@ public interface AdminUserProgressRepairService {
             int writtenStateRows,
             int mutatedEventRows,
             int deletedEventRows,
+            String operationMessage,
             Map<String, Object> resultSummary) {
     }
 }

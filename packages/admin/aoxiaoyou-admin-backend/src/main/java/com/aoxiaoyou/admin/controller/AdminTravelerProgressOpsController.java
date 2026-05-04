@@ -53,7 +53,10 @@ public class AdminTravelerProgressOpsController {
     private static final int MAX_AUDIT_FETCH_LIMIT = 200;
     private static final Set<String> INTERNAL_REPAIR_ACTION_TYPES = Set.of(
             "LINK_ORPHAN_EVENT",
-            "MARK_DUPLICATE_CLIENT_EVENT"
+            "MARK_DUPLICATE_CLIENT_EVENT",
+            "VOID_DUPLICATE_EVENT",
+            "RESEND_REWARD",
+            "ANNOTATE_ISSUE"
     );
     private static final TypeReference<Map<String, Object>> SUMMARY_TYPE = new TypeReference<>() {
     };
@@ -159,6 +162,12 @@ public class AdminTravelerProgressOpsController {
                         request.getReplacementElementId(),
                         request.getReplacementElementCode(),
                         request.getDuplicateOfEventId(),
+                        request.getRewardId(),
+                        request.getGameRewardId(),
+                        request.getRuleId(),
+                        request.getSourceEventId(),
+                        request.getAnnotationText(),
+                        request.getIssueSeverity(),
                         request.getReason(),
                         request.getFrom(),
                         request.getTo()
@@ -200,6 +209,12 @@ public class AdminTravelerProgressOpsController {
                         request.getReplacementElementId(),
                         request.getReplacementElementCode(),
                         request.getDuplicateOfEventId(),
+                        request.getRewardId(),
+                        request.getGameRewardId(),
+                        request.getRuleId(),
+                        request.getSourceEventId(),
+                        request.getAnnotationText(),
+                        request.getIssueSeverity(),
                         request.getReason(),
                         request.getFrom(),
                         request.getTo()
@@ -214,6 +229,12 @@ public class AdminTravelerProgressOpsController {
                         request.getReplacementElementId(),
                         request.getReplacementElementCode(),
                         request.getDuplicateOfEventId(),
+                        request.getRewardId(),
+                        request.getGameRewardId(),
+                        request.getRuleId(),
+                        request.getSourceEventId(),
+                        request.getAnnotationText(),
+                        request.getIssueSeverity(),
                         request.getReason(),
                         request.getFrom(),
                         request.getTo(),
@@ -366,6 +387,7 @@ public class AdminTravelerProgressOpsController {
                 .writtenStateRows(result.writtenStateRows())
                 .mutatedEventRows(result.mutatedEventRows())
                 .deletedEventRows(result.deletedEventRows())
+                .operationMessage(result.operationMessage())
                 .resultSummary(result.resultSummary())
                 .build();
     }
