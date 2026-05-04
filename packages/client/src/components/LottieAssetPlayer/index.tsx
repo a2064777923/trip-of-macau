@@ -188,6 +188,11 @@ export default function LottieAssetPlayer({
           動畫暫時無法播放
         </Text>
       ) : null}
+      {status === 'error' && fallbackUrl ? (
+        <Text style={{ display: 'block', marginTop: '12px', color: '#8b6e54', fontSize: '24px' }}>
+          動畫無法播放，已顯示備用圖片
+        </Text>
+      ) : null}
     </View>
   )
 }

@@ -257,6 +257,38 @@
   line-height: 1.6;
 }
 
+.story-runtime-diagnostics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(247, 249, 252, 0.92);
+  border: 1px solid rgba(109, 121, 145, 0.12);
+}
+
+.story-runtime-diagnostics__item {
+  display: block;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #657083;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.story-runtime-diagnostics__button {
+  margin: 0;
+  min-height: 52px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff9d7a 0%, #ffc067 100%);
+  color: #fff;
+  font-size: 19px;
+  font-weight: 700;
+}
+
 .story-tags {
   margin-top: 16px;
   display: flex;

@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v3.2
 milestone_name: Traveler Gameplay Runtime and Operations Acceptance
-current_phase: null
-current_plan: null
-status: planning_phase_41
-stopped_at: Phase 41 planned; ready for execute-phase
-last_updated: "2026-05-04T09:40:00+08:00"
-last_activity: 2026-05-04 -- Phase 41 planned for WeChat runtime UAT harness and story entry hardening
+current_phase: 41
+current_plan: complete
+status: phase_41_complete
+stopped_at: Phase 41 complete; ready to plan/execute Phase 42
+last_updated: "2026-05-04T12:05:00+08:00"
+last_activity: 2026-05-04 -- Phase 41 story runtime UAT harness, mini-program diagnostics, WeChat DevTools CLI check, and UAT docs completed
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
+  completed_plans: 3
   percent: 0
 ---
 
@@ -23,21 +23,21 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-05-04)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** v3.2 traveler gameplay runtime and operations acceptance
+**Current focus:** Phase 42 — traveler gameplay event engine
 
 ## Current Position
 
-Phase: Not started
-Plan: none
+Phase: 41 (wechat-runtime-uat-harness-and-story-entry-hardening) — COMPLETE
+Plan: complete
 Milestone: `v3.2`
-Current Phase: none
+Current Phase: 41
 Total Phases Planned: 4
-Status: Phase 41 planned; ready for `/gsd-execute-phase 41`
-Current Plan: 41-01 / 41-02 / 41-03 planned
-Last activity: 2026-05-04 -- Phase 41 planned for WeChat runtime UAT harness and story entry hardening
-Last Activity Description: Phase 41 context, research, UI spec, validation strategy, and three executable plans created
+Status: Phase 41 complete; ready for Phase 42
+Current Plan: complete
+Last activity: 2026-05-04 -- Phase 41 story runtime UAT harness, mini-program diagnostics, WeChat DevTools CLI check, and UAT docs completed
+Last Activity Description: Added Phase 41 WeChat runtime UAT harness, story page runtime diagnostics, visible media/Lottie fallback states, UAT documentation, verification evidence, and a passing DevTools CLI open check
 
-Progress: [░░░░░░░░░░] 0% of v3.2 phases complete; Phase 41 ready to execute
+Progress: [██░░░░░░░░] 25% of v3.2 phases complete; Phase 42 ready to plan/execute
 
 ## Performance Metrics
 
@@ -86,7 +86,7 @@ Progress: [░░░░░░░░░░] 0% of v3.2 phases complete; Phase 41 
 
 ### Pending Todos
 
-- Execute Phase 41 before planning Phase 42.
+- Run manual physical-device UAT for Phase 41 when ready.
 - Complete manual WeChat DevTools/device UAT instead of treating automated build smoke as equivalent.
 - Keep provider, COS, and AI keys outside tracked files.
 

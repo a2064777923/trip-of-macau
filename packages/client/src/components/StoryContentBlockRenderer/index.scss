@@ -17,7 +17,8 @@
 .story-block__attachmentText,
 .story-block__mediaCaption,
 .story-block__missingMediaTitle,
-.story-block__missingMediaHint {
+.story-block__missingMediaHint,
+.story-block__missingMediaId {
   display: block;
 }
 
@@ -138,6 +139,9 @@
   min-width: 0;
   font-size: 22px;
   color: #596274;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .story-block__attachmentLink {
@@ -171,4 +175,10 @@
   font-size: 20px;
   line-height: 1.6;
   color: #9a8d80;
+}
+
+.story-block__missingMediaId {
+  margin-top: 8px;
+  font-size: 18px;
+  color: #b29a84;
 }

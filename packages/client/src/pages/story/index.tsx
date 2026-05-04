@@ -5,6 +5,11 @@ import LottieAssetPlayer from '../../components/LottieAssetPlayer'
 import PageShell from '../../components/PageShell'
 import StoryContentBlockRenderer from '../../components/StoryContentBlockRenderer'
 import {
+  PUBLIC_API_HOST_LABEL,
+  RUNTIME_ENV_LABEL,
+  STORY_RUNTIME_DIAGNOSTICS_ENABLED,
+} from '../../constants/env'
+import {
   buildStoryModeRouteContext,
   exitStoryModeSession,
   getActiveStoryModeSession,
@@ -385,6 +390,36 @@ export default function StoryPage() {
     .filter((chapter) => chapter.status !== 'locked')
     .find((chapter) => (chapter.chapterOrder || 0) > (currentRouteChapter?.chapterOrder || 0))
 
+  const syncActiveStoryRuntime = async (storyId: number, shouldCommit = () => true) => {
+    if (shouldCommit()) {
+      setRuntimeLoading(true)
+      setRuntimeAlert('')
+    }
+    try {
+      const syncedStory = await refreshStorylineRuntime(storyId)
+      if (!shouldCommit()) {
+        return
+      }
+      const nextStories = getStorylines()
+      setStories(nextStories)
+      const nextStory = syncedStory || nextStories.find((story) => story.id === storyId)
+      if (nextStory?.runtimeSource === 'fallback') {
+        setRuntimeAlert('故事資料暫時未能同步，已顯示本機快取內容。')
+      }
+    } catch (error) {
+      console.warn('Failed to synchronize story runtime.', error)
+      if (!shouldCommit()) {
+        return
+      }
+      setStories(getStorylines())
+      setRuntimeAlert('故事資料暫時未能同步，已顯示本機快取內容。')
+    } finally {
+      if (shouldCommit()) {
+        setRuntimeLoading(false)
+      }
+    }
+  }
+
   useEffect(() => {
     let cancelled = false
 
@@ -419,28 +454,11 @@ export default function StoryPage() {
     let cancelled = false
 
     const syncRuntime = async () => {
-      setRuntimeLoading(true)
-      setRuntimeAlert('')
       try {
-        const syncedStory = await refreshStorylineRuntime(activeStory.id)
-        if (cancelled) {
-          return
-        }
-        const nextStories = getStorylines()
-        setStories(nextStories)
-        const nextStory = syncedStory || nextStories.find((story) => story.id === activeStory.id)
-        if (nextStory?.runtimeSource === 'fallback') {
-          setRuntimeAlert('故事資料暫時未能同步，已顯示本機快取內容。')
-        }
+        await syncActiveStoryRuntime(activeStory.id, () => !cancelled)
       } catch (error) {
-        console.warn('Failed to synchronize story runtime.', error)
         if (!cancelled) {
-          setStories(getStorylines())
           setRuntimeAlert('故事資料暫時未能同步，已顯示本機快取內容。')
-        }
-      } finally {
-        if (!cancelled) {
-          setRuntimeLoading(false)
         }
       }
     }
@@ -799,6 +817,9 @@ export default function StoryPage() {
   const runtimeStatusClass = !runtimeLoading && activeStory?.runtimeSource === 'live'
     ? 'story-runtime-status--live'
     : 'story-runtime-status--fallback'
+  const runtimeSourceLabel = activeStory?.runtimeSource === 'live' ? '資料源：即時後端' : '資料源：本機快取'
+  const storyIdentifier = activeStory?.code || activeStory?.id
+  const diagnosticsChapterCount = activeStory?.totalChapters || activeStory?.chapters?.length || 0
 
   return (
     <PageShell className='story-page'>
@@ -843,6 +864,23 @@ export default function StoryPage() {
                   {runtimeStatusText}
                 </Text>
                 {runtimeAlert ? <Text className='story-runtime-alert'>{runtimeAlert}</Text> : null}
+                {STORY_RUNTIME_DIAGNOSTICS_ENABLED ? (
+                  <View className='story-runtime-diagnostics'>
+                    <Text className='story-runtime-diagnostics__item'>{runtimeSourceLabel}</Text>
+                    <Text className='story-runtime-diagnostics__item'>API：{PUBLIC_API_HOST_LABEL}</Text>
+                    <Text className='story-runtime-diagnostics__item'>模式：{RUNTIME_ENV_LABEL}</Text>
+                    <Text className='story-runtime-diagnostics__item'>章節：{diagnosticsChapterCount}</Text>
+                    <Text className='story-runtime-diagnostics__item'>目前故事：{storyIdentifier}</Text>
+                    <Button
+                      className='story-runtime-diagnostics__button'
+                      loading={runtimeLoading}
+                      disabled={runtimeLoading}
+                      onClick={() => activeStory?.id && void syncActiveStoryRuntime(activeStory.id)}
+                    >
+                      重新同步故事資料
+                    </Button>
+                  </View>
+                ) : null}
               </View>
 
               {!!activeStory.moodTags?.length ? (

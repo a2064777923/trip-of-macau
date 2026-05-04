@@ -24,7 +24,8 @@ function FallbackNotice({ asset }: { asset?: StoryMediaAssetItem | null }) {
   if (asset?.availability !== 'fallback' && asset?.fallbackUsed !== true) {
     return null
   }
-  return <Text className='story-block__fallbackNotice'>已使用備用媒體播放。</Text>
+  const kind = asset.assetKind || asset.runtimeKind || '媒體'
+  return <Text className='story-block__fallbackNotice'>已使用備用媒體播放：{kind}</Text>
 }
 
 function MissingMedia({
@@ -51,6 +52,9 @@ function MissingMedia({
     <View className='story-block__missingMedia'>
       <Text className='story-block__missingMediaTitle'>媒體資源暫時未能載入</Text>
       <Text className='story-block__missingMediaHint'>{reason}</Text>
+      {asset?.id ? (
+        <Text className='story-block__missingMediaId'>資源編號：{asset.id}</Text>
+      ) : null}
     </View>
   )
 }
@@ -208,7 +212,7 @@ export default function StoryContentBlockRenderer({
                           />
                         ))}
                       {[asset, ...attachmentAssets].some((item) => item?.availability === 'fallback' || item?.fallbackUsed)
-                        ? <Text className='story-block__fallbackNotice'>已使用備用媒體播放。</Text>
+                        ? <Text className='story-block__fallbackNotice'>已使用備用媒體播放：圖片</Text>
                         : null}
                     </View>
                   )

@@ -7,7 +7,7 @@
 - [x] **v2.1 Interactive Rules Platform and AI Capability Center** - Archived 2026-04-19 with one accepted future slice for deferred mini-program experiential acceptance. Archives: `.planning/milestones/v2.1-ROADMAP.md`, `.planning/milestones/v2.1-REQUIREMENTS.md`
 - [x] **v3.0 Admin Core Domain Completion and Control-Plane Linkage** - Shipped 2026-04-30. Archives: `.planning/milestones/v3.0-ROADMAP.md`, `.planning/milestones/v3.0-REQUIREMENTS.md`, `.planning/milestones/v3.0-MILESTONE-AUDIT.md`
 - [x] **v3.1 Material Production and Mini-program Experience Acceptance** - Shipped 2026-05-04 with accepted WeChat UAT caveat. Archives: `.planning/milestones/v3.1-ROADMAP.md`, `.planning/milestones/v3.1-REQUIREMENTS.md`
-- [ ] **v3.2 Traveler Gameplay Runtime and Operations Acceptance** - Active. Phase 41 starts the milestone.
+- [ ] **v3.2 Traveler Gameplay Runtime and Operations Acceptance** - Active. Phase 41 completed with DevTools CLI acceptance; physical-device journey UAT remains for later acceptance.
 
 ## Current Milestone
 
@@ -19,7 +19,7 @@
 
 | Phase | Name | Goal | Requirements | Status |
 |-------|------|------|--------------|--------|
-| 41 | WeChat Runtime UAT Harness and Story Entry Hardening | Make the live flagship story route open reliably in WeChat DevTools/local runtime, with correct config, media fallback, and build/UAT harnesses. | UAT-01, PLAY-01, PLAY-05 | Pending |
+| 41 | WeChat Runtime UAT Harness and Story Entry Hardening | Make the live flagship story route open reliably in WeChat DevTools/local runtime, with correct config, media fallback, and build/UAT harnesses. | UAT-01, PLAY-01, PLAY-05 | Complete |
 | 42 | Traveler Gameplay Event Engine | Convert compiled experience-flow steps into mini-program gameplay interactions for story progression, pickups, tasks, rewards, titles, session exit/re-entry, and unsupported-feature fallbacks. | PLAY-02, PLAY-03, PLAY-04 | Pending |
 | 43 | Traveler Progress and Reward Operations | Give operators usable visibility and support actions for user sessions, exploration events, backpack, rewards, titles, rule traces, and audit-backed repairs. | OPS-01, OPS-02, OPS-03, OPS-04 | Pending |
 | 44 | Management-System IA Polish and Release Acceptance | Remove/merge misleading admin entries, polish story/gameplay operational pages, repair preview/detail UX, and produce final automated plus manual UAT evidence. | UAT-02, UAT-03, ADMIN-01, ADMIN-02, ADMIN-03, ADMIN-04 | Pending |
@@ -143,4 +143,4 @@
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
 | v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-35 | 33/33 | Shipped | 2026-04-30 |
 | v3.1 Material Production and Mini-program Experience Acceptance | 36-40 | 18/18 | Shipped with accepted UAT caveat | 2026-05-04 |
-| v3.2 Traveler Gameplay Runtime and Operations Acceptance | 41-44 | 0/0 | Active | - |
+| v3.2 Traveler Gameplay Runtime and Operations Acceptance | 41-44 | 3/3 Phase 41 plans | Active | - |

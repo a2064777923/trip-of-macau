@@ -7,17 +7,17 @@
 
 ### Device Acceptance
 
-- [ ] **UAT-01**: Operator can build and open the mini-program in WeChat DevTools against the local public backend without route-load, auth, or config mismatch failures.
+- [x] **UAT-01**: Operator can build and open the mini-program in WeChat DevTools against the local public backend without route-load, auth, or config mismatch failures.
 - [ ] **UAT-02**: Operator can run a documented flagship story smoke on a real device or DevTools simulator and capture the exact pass/fail evidence.
 - [ ] **UAT-03**: Operator can distinguish automated smoke, DevTools checks, physical-device checks, and accepted caveats in one release-readiness report.
 
 ### Traveler Gameplay Runtime
 
-- [ ] **PLAY-01**: Traveler can enter the `東西方文明的戰火與共生` story mode from the mini-program and see the correct introduction, chapters, current route, and generated media.
+- [x] **PLAY-01**: Traveler can enter the `東西方文明的戰火與共生` story mode from the mini-program and see the correct introduction, chapters, current route, and generated media.
 - [ ] **PLAY-02**: Traveler can trigger compiled POI/story runtime steps for click, proximity, content-completion, pickup, task, and reward events without relying on mock-only state.
 - [ ] **PLAY-03**: Traveler can receive visible Traditional Chinese feedback for pickups, task progress, medals, titles, coins, and unsupported advanced gameplay.
 - [ ] **PLAY-04**: Traveler can exit and re-enter story mode with session progress, permanent exploration events, and already-earned rewards behaving according to backend state.
-- [ ] **PLAY-05**: Traveler-facing media playback supports image, audio, video, and Lottie assets with poster/fallback behavior and no blank-screen failure when an asset is unavailable.
+- [x] **PLAY-05**: Traveler-facing media playback supports image, audio, video, and Lottie assets with poster/fallback behavior and no blank-screen failure when an asset is unavailable.
 
 ### User Progress and Operations
 
@@ -61,14 +61,14 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UAT-01 | Phase 41 | Pending |
+| UAT-01 | Phase 41 | Verified |
 | UAT-02 | Phase 44 | Pending |
 | UAT-03 | Phase 44 | Pending |
-| PLAY-01 | Phase 41 | Pending |
+| PLAY-01 | Phase 41 | Verified |
 | PLAY-02 | Phase 42 | Pending |
 | PLAY-03 | Phase 42 | Pending |
 | PLAY-04 | Phase 42 | Pending |
-| PLAY-05 | Phase 41 | Pending |
+| PLAY-05 | Phase 41 | Verified |
 | OPS-01 | Phase 43 | Pending |
 | OPS-02 | Phase 43 | Pending |
 | OPS-03 | Phase 43 | Pending |
@@ -85,4 +85,4 @@
 
 ---
 *Requirements defined: 2026-05-04*  
-*Last updated: 2026-05-04 after starting v3.2*
+*Last updated: 2026-05-04 after Phase 41 execution*
