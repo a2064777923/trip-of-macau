@@ -110,6 +110,8 @@ import type {
   AdminUserDetail,
   AdminTravelerProgressWorkbench,
   AdminTravelerProgressBreakdownQuery,
+  AdminTravelerRewardRuleTrace,
+  AdminTravelerRewardState,
   AdminTravelerTimelineEntry,
   AdminTravelerTimelineQuery,
   AdminUserProgressAuditEntry,
@@ -209,6 +211,24 @@ export const getAdminTravelerTimeline = (userId: number, params?: AdminTravelerT
       },
     },
   );
+};
+
+export const getAdminTravelerRewardState = (userId: number) => {
+  return request.get<AdminTravelerRewardState>(`/api/admin/v1/users/${userId}/reward-state`);
+};
+
+export const getAdminTravelerRewardRuleTrace = (
+  userId: number,
+  params?: {
+    sourceEventId?: number;
+    ruleId?: number;
+    rewardId?: number;
+    gameRewardId?: number;
+  },
+) => {
+  return request.get<AdminTravelerRewardRuleTrace>(`/api/admin/v1/users/${userId}/reward-rule-trace`, {
+    params,
+  });
 };
 
 export const previewAdminUserProgressRecompute = (

@@ -1216,13 +1216,173 @@ export interface AdminTravelerTimelineEntry {
   userId?: number | null;
   storylineId?: number | null;
   storylineName?: string | null;
+  chapterId?: number | null;
+  chapterName?: string | null;
   poiId?: number | null;
   poiName?: string | null;
+  cityId?: number | null;
+  subMapId?: number | null;
+  status?: string | null;
+  rewardType?: string | null;
+  rewardId?: number | null;
+  gameRewardId?: number | null;
   title?: string | null;
   summary?: string | null;
   payloadPreview?: string | null;
   rawPayload?: string | null;
   occurredAt?: string | null;
+}
+
+export interface AdminTravelerBackpackItem {
+  sourceType?: string | null;
+  sourceId?: number | null;
+  code?: string | null;
+  name?: string | null;
+  description?: string | null;
+  assetId?: number | null;
+  quantity?: number | null;
+  rarity?: string | null;
+  status?: string | null;
+  sourceEventId?: number | null;
+  sourceRuleId?: number | null;
+  earnedAt?: string | null;
+}
+
+export interface AdminTravelerGameRewardStateItem {
+  rewardId?: number | null;
+  code?: string | null;
+  rewardType?: string | null;
+  name?: string | null;
+  rarity?: string | null;
+  status?: string | null;
+  sourceEventId?: number | null;
+  sourceRuleId?: number | null;
+  earnedAt?: string | null;
+}
+
+export interface AdminTravelerTitleStateItem {
+  rewardId?: number | null;
+  code?: string | null;
+  name?: string | null;
+  rarity?: string | null;
+  equipped?: boolean | null;
+  status?: string | null;
+  sourceEventId?: number | null;
+  sourceRuleId?: number | null;
+  earnedAt?: string | null;
+}
+
+export interface AdminTravelerRedeemableRewardStateItem {
+  redemptionId?: number | null;
+  rewardId?: number | null;
+  rewardName?: string | null;
+  redemptionStatus?: string | null;
+  stampCostSnapshot?: number | null;
+  redeemedAt?: string | null;
+  expiresAt?: string | null;
+}
+
+export interface AdminTravelerRewardState {
+  userId: number;
+  backpackItems: AdminTravelerBackpackItem[];
+  gameRewards: AdminTravelerGameRewardStateItem[];
+  titles: AdminTravelerTitleStateItem[];
+  redeemableRewards: AdminTravelerRedeemableRewardStateItem[];
+  summary?: {
+    backpackCount?: number | null;
+    gameRewardCount?: number | null;
+    titleCount?: number | null;
+    redeemableRewardCount?: number | null;
+    lastEarnedAt?: string | null;
+  } | null;
+}
+
+export interface AdminTravelerRuleTraceConditionNode {
+  conditionId?: number | null;
+  conditionType?: string | null;
+  metricType?: string | null;
+  operatorType?: string | null;
+  comparatorValue?: string | null;
+  comparatorUnit?: string | null;
+  summaryText?: string | null;
+  evaluationStatus?: string | null;
+}
+
+export interface AdminTravelerRuleTraceConditionGroupNode {
+  groupId?: number | null;
+  groupCode?: string | null;
+  operatorType?: string | null;
+  minimumMatchCount?: number | null;
+  summaryText?: string | null;
+  conditions?: AdminTravelerRuleTraceConditionNode[];
+}
+
+export interface AdminTravelerRuleTraceRuleNode {
+  ruleId?: number | null;
+  code?: string | null;
+  ruleType?: string | null;
+  status?: string | null;
+  name?: string | null;
+  summaryText?: string | null;
+  bindingOwnerDomain?: string | null;
+  bindingOwnerId?: number | null;
+  bindingRole?: string | null;
+  conditionGroups?: AdminTravelerRuleTraceConditionGroupNode[];
+}
+
+export interface AdminTravelerRuleTraceGrantNode {
+  grantSource?: string | null;
+  grantRowId?: number | null;
+  rewardId?: number | null;
+  gameRewardId?: number | null;
+  sourceEventId?: number | null;
+  sourceRuleId?: number | null;
+  grantStatus?: string | null;
+  grantedAt?: string | null;
+}
+
+export interface AdminTravelerRewardRuleTrace {
+  userId: number;
+  sourceEventId?: number | null;
+  traceStatus?: string | null;
+  traceStatusLabel?: string | null;
+  explanation?: string | null;
+  event?: {
+    eventId?: number | null;
+    elementId?: number | null;
+    elementCode?: string | null;
+    eventType?: string | null;
+    eventSource?: string | null;
+    storylineSessionId?: string | null;
+    payloadPreview?: string | null;
+    occurredAt?: string | null;
+  } | null;
+  explorationElement?: {
+    elementId?: number | null;
+    elementCode?: string | null;
+    elementType?: string | null;
+    ownerType?: string | null;
+    ownerId?: number | null;
+    ownerCode?: string | null;
+    cityId?: number | null;
+    subMapId?: number | null;
+    poiId?: number | null;
+    storylineId?: number | null;
+    chapterId?: number | null;
+    title?: string | null;
+    status?: string | null;
+  } | null;
+  experienceStep?: {
+    flowStepId?: number | null;
+    flowId?: number | null;
+    stepCode?: string | null;
+    stepType?: string | null;
+    stepName?: string | null;
+    status?: string | null;
+  } | null;
+  rules?: AdminTravelerRuleTraceRuleNode[];
+  grants?: AdminTravelerRuleTraceGrantNode[];
+  missingLinks?: string[];
 }
 
 export interface AdminUserProgressOperationPreview {
@@ -1289,6 +1449,12 @@ export interface AdminTravelerTimelineQuery {
   pageSize?: number;
   eventTypes?: string[];
   storylineId?: number;
+  chapterId?: number;
+  poiId?: number;
+  mapScopeType?: string;
+  mapScopeId?: number;
+  status?: string;
+  rewardType?: string;
   from?: string;
   to?: string;
 }
@@ -1331,6 +1497,12 @@ export interface AdminUserProgressRepairPayload {
   replacementElementId?: number;
   replacementElementCode?: string;
   duplicateOfEventId?: number;
+  rewardId?: number;
+  gameRewardId?: number;
+  ruleId?: number;
+  sourceEventId?: number;
+  annotationText?: string;
+  issueSeverity?: string;
   reason: string;
   previewHash?: string;
   confirmationToken?: string;
