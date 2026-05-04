@@ -24,6 +24,7 @@ import com.aoxiaoyou.tripofmacau.dto.response.UserStampProgressResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.UserStateResponse;
 import com.aoxiaoyou.tripofmacau.dto.response.TestModeResponse;
 import com.aoxiaoyou.tripofmacau.entity.City;
+import com.aoxiaoyou.tripofmacau.entity.GameReward;
 import com.aoxiaoyou.tripofmacau.entity.TestAccount;
 import com.aoxiaoyou.tripofmacau.entity.Poi;
 import com.aoxiaoyou.tripofmacau.entity.Reward;
@@ -31,6 +32,7 @@ import com.aoxiaoyou.tripofmacau.entity.RewardRedemption;
 import com.aoxiaoyou.tripofmacau.entity.Stamp;
 import com.aoxiaoyou.tripofmacau.entity.StoryChapter;
 import com.aoxiaoyou.tripofmacau.entity.UserCheckin;
+import com.aoxiaoyou.tripofmacau.entity.UserGameRewardGrant;
 import com.aoxiaoyou.tripofmacau.entity.UserPreference;
 import com.aoxiaoyou.tripofmacau.entity.UserProfile;
 import com.aoxiaoyou.tripofmacau.entity.UserProgress;
@@ -38,11 +40,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.aoxiaoyou.tripofmacau.mapper.CityMapper;
+import com.aoxiaoyou.tripofmacau.mapper.GameRewardMapper;
 import com.aoxiaoyou.tripofmacau.mapper.PoiMapper;
 import com.aoxiaoyou.tripofmacau.mapper.RewardMapper;
 import com.aoxiaoyou.tripofmacau.mapper.RewardRedemptionMapper;
 import com.aoxiaoyou.tripofmacau.mapper.StampMapper;
 import com.aoxiaoyou.tripofmacau.mapper.UserCheckinMapper;
+import com.aoxiaoyou.tripofmacau.mapper.UserGameRewardGrantMapper;
 import com.aoxiaoyou.tripofmacau.mapper.UserPreferenceMapper;
 import com.aoxiaoyou.tripofmacau.mapper.UserProfileMapper;
 import com.aoxiaoyou.tripofmacau.mapper.UserProgressMapper;
@@ -64,6 +68,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -87,7 +92,9 @@ public class UserServiceImpl implements UserService {
     private final UserProgressMapper userProgressMapper;
     private final UserCheckinMapper userCheckinMapper;
     private final RewardRedemptionMapper rewardRedemptionMapper;
+    private final UserGameRewardGrantMapper userGameRewardGrantMapper;
     private final RewardMapper rewardMapper;
+    private final GameRewardMapper gameRewardMapper;
     private final CityMapper cityMapper;
     private final PoiMapper poiMapper;
     private final StampMapper stampMapper;
@@ -652,36 +659,99 @@ public class UserServiceImpl implements UserService {
         UserProfile profile = requireProfile(userId);
         UserPreference preference = ensurePreference(profile);
         String locale = resolveLocale(localeHint, profile, preference);
-        List<RewardRedemption> items = rewardRedemptionMapper.selectList(new LambdaQueryWrapper<RewardRedemption>()
+        List<RewardRedemption> redemptions = rewardRedemptionMapper.selectList(new LambdaQueryWrapper<RewardRedemption>()
                 .eq(RewardRedemption::getUserId, userId)
                 .orderByDesc(RewardRedemption::getCreatedAt)
                 .orderByDesc(RewardRedemption::getId));
-        if (items.isEmpty()) {
+        List<UserGameRewardGrant> grants = userGameRewardGrantMapper.selectList(new LambdaQueryWrapper<UserGameRewardGrant>()
+                .eq(UserGameRewardGrant::getUserId, userId)
+                .orderByDesc(UserGameRewardGrant::getGrantedAt)
+                .orderByDesc(UserGameRewardGrant::getId));
+        if (redemptions.isEmpty() && grants.isEmpty()) {
             return Collections.emptyList();
         }
-        Map<Long, Reward> rewardsById = rewardMapper.selectBatchIds(items.stream().map(RewardRedemption::getRewardId).distinct().toList()).stream()
-                .map(Reward.class::cast)
-                .collect(Collectors.toMap(Reward::getId, reward -> reward, (left, right) -> left, LinkedHashMap::new));
-        return items.stream()
-                .map(item -> UserRewardRedemptionResponse.builder()
-                        .id(item.getId())
-                        .rewardId(item.getRewardId())
-                        .rewardName(rewardsById.containsKey(item.getRewardId())
-                                ? localizedContentSupport.resolveText(
-                                        locale,
-                                        rewardsById.get(item.getRewardId()).getNameZh(),
-                                        rewardsById.get(item.getRewardId()).getNameEn(),
-                                        rewardsById.get(item.getRewardId()).getNameZht(),
-                                        rewardsById.get(item.getRewardId()).getNamePt())
-                                : "")
-                        .redemptionStatus(item.getRedemptionStatus())
-                        .stampCostSnapshot(item.getStampCostSnapshot())
-                        .qrCode(item.getQrCode())
-                        .redeemedAt(item.getRedeemedAt())
-                        .expiresAt(item.getExpiresAt())
-                        .createdAt(item.getCreatedAt())
-                        .build())
+
+        Map<Long, Reward> rewardsById = redemptions.isEmpty()
+                ? Collections.emptyMap()
+                : rewardMapper.selectBatchIds(redemptions.stream()
+                                .map(RewardRedemption::getRewardId)
+                                .filter(Objects::nonNull)
+                                .distinct()
+                                .toList())
+                        .stream()
+                        .map(Reward.class::cast)
+                        .collect(Collectors.toMap(Reward::getId, reward -> reward, (left, right) -> left, LinkedHashMap::new));
+        Map<Long, GameReward> gameRewardsById = grants.isEmpty()
+                ? Collections.emptyMap()
+                : gameRewardMapper.selectBatchIds(grants.stream()
+                                .map(UserGameRewardGrant::getGameRewardId)
+                                .filter(Objects::nonNull)
+                                .distinct()
+                                .toList())
+                        .stream()
+                        .map(GameReward.class::cast)
+                        .collect(Collectors.toMap(GameReward::getId, reward -> reward, (left, right) -> left, LinkedHashMap::new));
+
+        List<UserRewardRedemptionResponse> responses = new ArrayList<>();
+        for (RewardRedemption item : redemptions) {
+            Reward reward = rewardsById.get(item.getRewardId());
+            LocalDateTime earnedAt = firstNonNull(item.getRedeemedAt(), item.getCreatedAt());
+            responses.add(UserRewardRedemptionResponse.builder()
+                    .id(item.getId())
+                    .entryKind("redeemable_reward")
+                    .rewardId(item.getRewardId())
+                    .rewardName(reward == null ? "" : localizedContentSupport.resolveText(
+                            locale,
+                            reward.getNameZh(),
+                            reward.getNameEn(),
+                            reward.getNameZht(),
+                            reward.getNamePt()))
+                    .redemptionStatus(item.getRedemptionStatus())
+                    .stampCostSnapshot(item.getStampCostSnapshot())
+                    .qrCode(item.getQrCode())
+                    .sourceEventId(item.getSourceEventId())
+                    .sourceRuleId(item.getSourceRuleId())
+                    .earnedAt(earnedAt)
+                    .redeemedAt(item.getRedeemedAt())
+                    .expiresAt(item.getExpiresAt())
+                    .createdAt(item.getCreatedAt())
+                    .build());
+        }
+        for (UserGameRewardGrant grant : grants) {
+            GameReward reward = gameRewardsById.get(grant.getGameRewardId());
+            LocalDateTime earnedAt = firstNonNull(grant.getGrantedAt(), grant.getCreatedAt());
+            responses.add(UserRewardRedemptionResponse.builder()
+                    .id(grant.getId())
+                    .entryKind("game_reward")
+                    .gameRewardId(grant.getGameRewardId())
+                    .gameRewardCode(reward == null ? null : reward.getCode())
+                    .rewardType(reward == null ? null : reward.getRewardType())
+                    .rarity(reward == null ? null : reward.getRarity())
+                    .rewardName(reward == null ? "" : localizedContentSupport.resolveText(
+                            locale,
+                            reward.getNameZh(),
+                            reward.getNameEn(),
+                            reward.getNameZht(),
+                            reward.getNamePt()))
+                    .redemptionStatus(grant.getGrantStatus())
+                    .sourceEventId(grant.getSourceEventId())
+                    .sourceRuleId(grant.getRuleId())
+                    .earnedAt(earnedAt)
+                    .createdAt(grant.getCreatedAt())
+                    .build());
+        }
+        return responses.stream()
+                .sorted(Comparator.comparing(this::rewardSortTime, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(UserRewardRedemptionResponse::getId, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
+    }
+
+    private LocalDateTime firstNonNull(LocalDateTime primary, LocalDateTime fallback) {
+        return primary == null ? fallback : primary;
+    }
+
+    private LocalDateTime rewardSortTime(UserRewardRedemptionResponse item) {
+        return firstNonNull(item.getEarnedAt(), item.getCreatedAt());
     }
 
     private ProgressState loadProgress(Long userId) {

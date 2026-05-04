@@ -21,7 +21,7 @@
 |-------|------|------|--------------|--------|
 | 41 | WeChat Runtime UAT Harness and Story Entry Hardening | Make the live flagship story route open reliably in WeChat DevTools/local runtime, with correct config, media fallback, and build/UAT harnesses. | UAT-01, PLAY-01, PLAY-05 | Complete |
 | 42 | Traveler Gameplay Event Engine | Convert compiled experience-flow steps into mini-program gameplay interactions for story progression, pickups, tasks, rewards, titles, session exit/re-entry, and unsupported-feature fallbacks. | PLAY-02, PLAY-03, PLAY-04 | Complete |
-| 43 | Traveler Progress and Reward Operations | 2/6 | In Progress|  |
+| 43 | Traveler Progress and Reward Operations | 3/6 | In Progress|  |
 | 44 | Management-System IA Polish and Release Acceptance | Remove/merge misleading admin entries, polish story/gameplay operational pages, repair preview/detail UX, and produce final automated plus manual UAT evidence. | UAT-02, UAT-03, ADMIN-01, ADMIN-02, ADMIN-03, ADMIN-04 | Pending |
 
 ## Phase Details

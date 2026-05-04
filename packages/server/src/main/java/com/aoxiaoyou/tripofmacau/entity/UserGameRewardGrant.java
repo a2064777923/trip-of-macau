@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("reward_redemptions")
-public class RewardRedemption extends BaseEntity {
+@TableName("user_game_reward_grants")
+public class UserGameRewardGrant extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -20,32 +20,29 @@ public class RewardRedemption extends BaseEntity {
     @TableField("user_id")
     private Long userId;
 
-    @TableField("reward_id")
-    private Long rewardId;
+    @TableField("game_reward_id")
+    private Long gameRewardId;
 
-    @TableField("redemption_status")
-    private String redemptionStatus;
-
-    @TableField("stamp_cost_snapshot")
-    private Integer stampCostSnapshot;
-
-    @TableField("qr_code")
-    private String qrCode;
-
-    @TableField("redeemed_at")
-    private LocalDateTime redeemedAt;
-
-    @TableField("expires_at")
-    private LocalDateTime expiresAt;
+    @TableField("rule_id")
+    private Long ruleId;
 
     @TableField("source_event_id")
     private Long sourceEventId;
 
-    @TableField("source_rule_id")
-    private Long sourceRuleId;
-
     @TableField("source_session_id")
     private Long sourceSessionId;
+
+    @TableField("grant_status")
+    private String grantStatus;
+
+    @TableField("grant_reason")
+    private String grantReason;
+
+    @TableField("granted_by")
+    private Long grantedBy;
+
+    @TableField("granted_at")
+    private LocalDateTime grantedAt;
 
     @TableField("idempotency_key")
     private String idempotencyKey;

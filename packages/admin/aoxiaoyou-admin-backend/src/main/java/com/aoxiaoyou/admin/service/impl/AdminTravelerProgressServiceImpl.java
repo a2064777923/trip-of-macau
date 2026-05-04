@@ -34,6 +34,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -154,23 +155,76 @@ public class AdminTravelerProgressServiceImpl implements AdminTravelerProgressSe
                         .expiresAt(row.getExpiresAt())
                         .build())
                 .toList();
+        List<AdminTravelerProgressReadMapper.GameRewardGrantStateRow> grantRows =
+                safeList(readMapper.selectGameRewardGrants(userId));
+        List<AdminTravelerRewardStateResponse.TitleItem> titles = grantRows.stream()
+                .filter(row -> isTitleLikeRewardType(row.getRewardType()))
+                .map(row -> AdminTravelerRewardStateResponse.TitleItem.builder()
+                        .rewardId(row.getGameRewardId())
+                        .code(row.getRewardCode())
+                        .name(row.getRewardName())
+                        .rarity(row.getRarity())
+                        .equipped(false)
+                        .status(row.getGrantStatus())
+                        .sourceEventId(row.getSourceEventId())
+                        .sourceRuleId(row.getSourceRuleId())
+                        .earnedAt(row.getGrantedAt())
+                        .build())
+                .toList();
+        List<AdminTravelerRewardStateResponse.GameRewardItem> gameRewards = grantRows.stream()
+                .filter(row -> !isTitleLikeRewardType(row.getRewardType()) && !isBackpackRewardType(row.getRewardType()))
+                .map(row -> AdminTravelerRewardStateResponse.GameRewardItem.builder()
+                        .rewardId(row.getGameRewardId())
+                        .code(row.getRewardCode())
+                        .rewardType(row.getRewardType())
+                        .name(row.getRewardName())
+                        .rarity(row.getRarity())
+                        .status(row.getGrantStatus())
+                        .sourceEventId(row.getSourceEventId())
+                        .sourceRuleId(row.getSourceRuleId())
+                        .earnedAt(row.getGrantedAt())
+                        .build())
+                .toList();
+        List<AdminTravelerRewardStateResponse.BackpackItem> backpackItems = grantRows.stream()
+                .filter(row -> isBackpackRewardType(row.getRewardType()))
+                .map(row -> AdminTravelerRewardStateResponse.BackpackItem.builder()
+                        .sourceType("user_game_reward_grants")
+                        .sourceId(row.getGrantId())
+                        .code(row.getRewardCode())
+                        .name(row.getRewardName())
+                        .description(row.getRewardDescription())
+                        .assetId(row.getIconAssetId() == null ? row.getCoverAssetId() : row.getIconAssetId())
+                        .quantity(1)
+                        .rarity(row.getRarity())
+                        .status(row.getGrantStatus())
+                        .sourceEventId(row.getSourceEventId())
+                        .sourceRuleId(row.getSourceRuleId())
+                        .earnedAt(row.getGrantedAt())
+                        .build())
+                .toList();
 
         LocalDateTime lastEarnedAt = redeemableRows.stream()
                 .map(AdminTravelerProgressReadMapper.RewardRedemptionRow::getRedeemedAt)
                 .filter(Objects::nonNull)
                 .max(Comparator.naturalOrder())
                 .orElse(null);
+        lastEarnedAt = Stream.concat(
+                        grantRows.stream().map(AdminTravelerProgressReadMapper.GameRewardGrantStateRow::getGrantedAt),
+                        Stream.of(lastEarnedAt))
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .orElse(null);
 
         return AdminTravelerRewardStateResponse.builder()
                 .userId(userId)
-                .backpackItems(Collections.emptyList())
-                .gameRewards(Collections.emptyList())
-                .titles(Collections.emptyList())
+                .backpackItems(backpackItems)
+                .gameRewards(gameRewards)
+                .titles(titles)
                 .redeemableRewards(redeemableRewards)
                 .summary(AdminTravelerRewardStateResponse.Summary.builder()
-                        .backpackCount(0)
-                        .gameRewardCount(0)
-                        .titleCount(0)
+                        .backpackCount(backpackItems.size())
+                        .gameRewardCount(gameRewards.size())
+                        .titleCount(titles.size())
                         .redeemableRewardCount(redeemableRewards.size())
                         .lastEarnedAt(lastEarnedAt)
                         .build())
@@ -216,13 +270,15 @@ public class AdminTravelerProgressServiceImpl implements AdminTravelerProgressSe
         boolean hasDisabledRule = ruleRows.stream().anyMatch(row -> !isRuleEnabled(row.getRuleStatus()));
         boolean hasEnabledRule = ruleRows.stream().anyMatch(row -> isRuleEnabled(row.getRuleStatus()));
         boolean hasRedemption = rewardId != null && readMapper.countRewardRedemptions(userId, rewardId) > 0;
+        AdminTravelerProgressReadMapper.GameRewardGrantTraceRow gameRewardGrant = gameRewardId == null
+                ? null : readMapper.selectGameRewardGrantTrace(userId, gameRewardId, ruleId, sourceEventId);
 
         String traceStatus;
         if (!missingLinks.isEmpty()) {
             traceStatus = AdminTravelerRewardRuleTraceResponse.MISSING_LINK;
         } else if (hasDisabledRule && !hasEnabledRule) {
             traceStatus = AdminTravelerRewardRuleTraceResponse.RULE_DISABLED;
-        } else if (hasRedemption) {
+        } else if (hasRedemption || gameRewardGrant != null) {
             traceStatus = AdminTravelerRewardRuleTraceResponse.ELIGIBLE_GRANTED;
         } else if (conditionsContainExplicitFailure(ruleRows)) {
             traceStatus = AdminTravelerRewardRuleTraceResponse.NOT_ELIGIBLE;
@@ -241,7 +297,7 @@ public class AdminTravelerProgressServiceImpl implements AdminTravelerProgressSe
                 .explorationElement(toElementNode(event))
                 .experienceStep(null)
                 .rules(rules)
-                .grants(buildGrantNodes(userId, rewardId, gameRewardId, sourceEventId, ruleRows))
+                .grants(buildGrantNodes(userId, rewardId, gameRewardId, sourceEventId, ruleRows, gameRewardGrant))
                 .missingLinks(missingLinks)
                 .build();
     }
@@ -405,6 +461,7 @@ public class AdminTravelerProgressServiceImpl implements AdminTravelerProgressSe
         rows.addAll(safeList(readMapper.selectExplorationTimelineRows(userId)));
         rows.addAll(safeList(readMapper.selectStorySessionTimelineRows(userId)));
         rows.addAll(safeList(readMapper.selectRewardTimelineRows(userId)));
+        rows.addAll(safeList(readMapper.selectGameRewardGrantTimelineRows(userId)));
         rows.addAll(safeList(readMapper.selectRepairAuditTimelineRows(userId)));
         return rows;
     }
@@ -609,7 +666,19 @@ public class AdminTravelerProgressServiceImpl implements AdminTravelerProgressSe
             Long rewardId,
             Long gameRewardId,
             Long sourceEventId,
-            List<AdminTravelerProgressReadMapper.RuleBindingTraceRow> rules) {
+            List<AdminTravelerProgressReadMapper.RuleBindingTraceRow> rules,
+            AdminTravelerProgressReadMapper.GameRewardGrantTraceRow gameRewardGrant) {
+        if (gameRewardGrant != null) {
+            return List.of(AdminTravelerRewardRuleTraceResponse.GrantNode.builder()
+                    .grantSource("user_game_reward_grants")
+                    .grantRowId(gameRewardGrant.getGrantId())
+                    .gameRewardId(gameRewardGrant.getGameRewardId())
+                    .sourceEventId(gameRewardGrant.getSourceEventId())
+                    .sourceRuleId(gameRewardGrant.getSourceRuleId())
+                    .grantStatus(gameRewardGrant.getGrantStatus())
+                    .grantedAt(gameRewardGrant.getGrantedAt())
+                    .build());
+        }
         if (rewardId == null || readMapper.countRewardRedemptions(userId, rewardId) <= 0) {
             return Collections.emptyList();
         }
@@ -627,6 +696,20 @@ public class AdminTravelerProgressServiceImpl implements AdminTravelerProgressSe
     private boolean isRuleEnabled(String status) {
         String normalized = normalizeToken(status);
         return "published".equals(normalized) || "active".equals(normalized);
+    }
+
+    private boolean isTitleLikeRewardType(String rewardType) {
+        String normalized = normalizeToken(rewardType);
+        return "title".equals(normalized) || "honor".equals(normalized) || "badge".equals(normalized);
+    }
+
+    private boolean isBackpackRewardType(String rewardType) {
+        String normalized = normalizeToken(rewardType);
+        return "coin".equals(normalized)
+                || "fragment".equals(normalized)
+                || "collectible".equals(normalized)
+                || "item".equals(normalized)
+                || "voice_pack".equals(normalized);
     }
 
     private boolean conditionsContainExplicitFailure(List<AdminTravelerProgressReadMapper.RuleBindingTraceRow> ruleRows) {

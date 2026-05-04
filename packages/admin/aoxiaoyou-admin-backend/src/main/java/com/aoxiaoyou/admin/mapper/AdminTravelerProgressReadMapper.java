@@ -330,6 +330,90 @@ public interface AdminTravelerProgressReadMapper {
 
     @Select({
             "SELECT",
+            "  CONCAT('game_reward:', ugr.id) AS entryId,",
+            "  'game_reward_grant' AS entryType,",
+            "  'user_game_reward_grants' AS sourceTable,",
+            "  ugr.id AS sourceRecordId,",
+            "  ugr.user_id AS userId,",
+            "  el.storyline_id AS storylineId,",
+            "  COALESCE(NULLIF(s.name_zht, ''), s.name_zh, s.name_en, s.code) AS storylineName,",
+            "  el.story_chapter_id AS chapterId,",
+            "  COALESCE(NULLIF(sc.title_zht, ''), sc.title_zh, sc.title_en, CONCAT('Chapter#', el.story_chapter_id)) AS chapterName,",
+            "  el.poi_id AS poiId,",
+            "  COALESCE(NULLIF(p.name_zht, ''), p.name_zh, p.name_en, CONCAT('POI#', el.poi_id)) AS poiName,",
+            "  el.city_id AS cityId,",
+            "  el.sub_map_id AS subMapId,",
+            "  ugr.grant_status AS status,",
+            "  gr.reward_type AS rewardType,",
+            "  NULL AS rewardId,",
+            "  ugr.game_reward_id AS gameRewardId,",
+            "  'Game Reward Grant' AS title,",
+            "  gr.reward_type AS summary,",
+            "  CONCAT('遊戲內獎勵已獲得：', COALESCE(NULLIF(gr.name_zht, ''), gr.name_zh, gr.name_en, gr.code)) AS payloadPreview,",
+            "  CONCAT('{\"gameRewardId\":', ugr.game_reward_id, ',\"status\":\"', ugr.grant_status, '\"}') AS rawPayload,",
+            "  ugr.granted_at AS occurredAt",
+            "FROM user_game_reward_grants ugr",
+            "LEFT JOIN game_rewards gr ON gr.id = ugr.game_reward_id",
+            "LEFT JOIN user_exploration_events e ON e.id = ugr.source_event_id",
+            "LEFT JOIN exploration_elements el ON el.id = e.element_id",
+            "LEFT JOIN story_chapters sc ON sc.id = el.story_chapter_id",
+            "LEFT JOIN pois p ON p.id = el.poi_id",
+            "LEFT JOIN storylines s ON s.id = el.storyline_id",
+            "WHERE ugr.user_id = #{userId}",
+            "ORDER BY ugr.granted_at DESC, ugr.id DESC"
+    })
+    List<TimelineSourceRow> selectGameRewardGrantTimelineRows(@Param("userId") Long userId);
+
+    @Select({
+            "SELECT",
+            "  ugr.id AS grantId,",
+            "  ugr.user_id AS userId,",
+            "  ugr.game_reward_id AS gameRewardId,",
+            "  ugr.rule_id AS sourceRuleId,",
+            "  ugr.source_event_id AS sourceEventId,",
+            "  ugr.source_session_id AS sourceSessionId,",
+            "  ugr.grant_status AS grantStatus,",
+            "  ugr.granted_at AS grantedAt,",
+            "  ugr.idempotency_key AS idempotencyKey,",
+            "  gr.code AS rewardCode,",
+            "  gr.reward_type AS rewardType,",
+            "  gr.rarity AS rarity,",
+            "  COALESCE(NULLIF(gr.name_zht, ''), gr.name_zh, gr.name_en, gr.code) AS rewardName,",
+            "  COALESCE(NULLIF(gr.description_zht, ''), gr.description_zh, gr.description_en, '') AS rewardDescription,",
+            "  gr.icon_asset_id AS iconAssetId,",
+            "  gr.cover_asset_id AS coverAssetId",
+            "FROM user_game_reward_grants ugr",
+            "LEFT JOIN game_rewards gr ON gr.id = ugr.game_reward_id",
+            "WHERE ugr.user_id = #{userId}",
+            "ORDER BY ugr.granted_at DESC, ugr.id DESC"
+    })
+    List<GameRewardGrantStateRow> selectGameRewardGrants(@Param("userId") Long userId);
+
+    @Select({
+            "SELECT",
+            "  ugr.id AS grantId,",
+            "  ugr.user_id AS userId,",
+            "  ugr.game_reward_id AS gameRewardId,",
+            "  ugr.rule_id AS sourceRuleId,",
+            "  ugr.source_event_id AS sourceEventId,",
+            "  ugr.grant_status AS grantStatus,",
+            "  ugr.granted_at AS grantedAt",
+            "FROM user_game_reward_grants ugr",
+            "WHERE ugr.user_id = #{userId}",
+            "  AND ugr.game_reward_id = #{gameRewardId}",
+            "  AND (#{ruleId} IS NULL OR ugr.rule_id = #{ruleId})",
+            "  AND (#{sourceEventId} IS NULL OR ugr.source_event_id = #{sourceEventId})",
+            "ORDER BY ugr.granted_at DESC, ugr.id DESC",
+            "LIMIT 1"
+    })
+    GameRewardGrantTraceRow selectGameRewardGrantTrace(
+            @Param("userId") Long userId,
+            @Param("gameRewardId") Long gameRewardId,
+            @Param("ruleId") Long ruleId,
+            @Param("sourceEventId") Long sourceEventId);
+
+    @Select({
+            "SELECT",
             "  rr.id AS redemptionId,",
             "  rr.user_id AS userId,",
             "  rr.reward_id AS rewardId,",
@@ -646,5 +730,40 @@ public interface AdminTravelerProgressReadMapper {
         private String comparatorValue;
         private String comparatorUnit;
         private String summaryText;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class GameRewardGrantStateRow {
+        private Long grantId;
+        private Long userId;
+        private Long gameRewardId;
+        private Long sourceRuleId;
+        private Long sourceEventId;
+        private Long sourceSessionId;
+        private String grantStatus;
+        private LocalDateTime grantedAt;
+        private String idempotencyKey;
+        private String rewardCode;
+        private String rewardType;
+        private String rarity;
+        private String rewardName;
+        private String rewardDescription;
+        private Long iconAssetId;
+        private Long coverAssetId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class GameRewardGrantTraceRow {
+        private Long grantId;
+        private Long userId;
+        private Long gameRewardId;
+        private Long sourceRuleId;
+        private Long sourceEventId;
+        private String grantStatus;
+        private LocalDateTime grantedAt;
     }
 }
