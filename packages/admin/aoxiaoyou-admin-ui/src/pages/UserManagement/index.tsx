@@ -111,7 +111,7 @@ const UserManagement: React.FC = () => {
               navigate(`/users/progress/${record.userId}`);
             }}
           >
-            開啟旅客進度工作台
+            打開支援工作台
           </Button>,
         ],
       },
@@ -121,8 +121,8 @@ const UserManagement: React.FC = () => {
 
   return (
     <PageContainer
-      title="旅客管理"
-      subTitle="查看旅客名單、搜尋關鍵資料，並進入完整的進度工作台"
+      title="旅客進度與獎勵支援"
+      subTitle="搜尋旅客後可檢視故事 Session、事件時間線、探索度、背包、獎勵、稱號與審計紀錄。"
     >
       <ProTable<AdminUserListItem>
         rowKey="userId"

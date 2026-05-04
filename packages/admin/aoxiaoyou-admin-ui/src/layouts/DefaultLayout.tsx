@@ -305,7 +305,7 @@ const DefaultLayout: React.FC = () => {
           {
             key: '/users/progress',
             icon: <TeamOutlined />,
-            label: <Link to="/users/progress">用戶與進度工作台</Link>,
+            label: <Link to="/users/progress">旅客進度與獎勵支援</Link>,
           },
         ],
       },
