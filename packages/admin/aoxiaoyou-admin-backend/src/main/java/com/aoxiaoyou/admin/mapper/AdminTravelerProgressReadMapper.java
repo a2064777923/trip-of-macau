@@ -146,8 +146,16 @@ public interface AdminTravelerProgressReadMapper {
             "  c.user_id AS userId,",
             "  p.storyline_id AS storylineId,",
             "  COALESCE(NULLIF(s.name_zht, ''), s.name_zh, s.name_en, s.code) AS storylineName,",
+            "  NULL AS chapterId,",
+            "  NULL AS chapterName,",
             "  c.poi_id AS poiId,",
             "  COALESCE(NULLIF(p.name_zht, ''), p.name_zh, p.name_en, CONCAT('POI#', c.poi_id)) AS poiName,",
+            "  p.city_id AS cityId,",
+            "  p.sub_map_id AS subMapId,",
+            "  'checked' AS status,",
+            "  NULL AS rewardType,",
+            "  NULL AS rewardId,",
+            "  NULL AS gameRewardId,",
             "  'Check-in' AS title,",
             "  CONCAT('triggerMode=', c.trigger_mode) AS summary,",
             "  c.trigger_mode AS payloadPreview,",
@@ -170,8 +178,16 @@ public interface AdminTravelerProgressReadMapper {
             "  t.user_id AS userId,",
             "  p.storyline_id AS storylineId,",
             "  COALESCE(NULLIF(s.name_zht, ''), s.name_zh, s.name_en, s.code) AS storylineName,",
+            "  NULL AS chapterId,",
+            "  NULL AS chapterName,",
             "  t.poi_id AS poiId,",
             "  COALESCE(NULLIF(p.name_zht, ''), p.name_zh, p.name_en, CONCAT('POI#', t.poi_id)) AS poiName,",
+            "  p.city_id AS cityId,",
+            "  p.sub_map_id AS subMapId,",
+            "  t.trigger_type AS status,",
+            "  NULL AS rewardType,",
+            "  NULL AS rewardId,",
+            "  NULL AS gameRewardId,",
             "  'Trigger' AS title,",
             "  CONCAT('triggerType=', t.trigger_type) AS summary,",
             "  CONCAT('triggerType=', t.trigger_type) AS payloadPreview,",
@@ -194,8 +210,16 @@ public interface AdminTravelerProgressReadMapper {
             "  e.user_id AS userId,",
             "  el.storyline_id AS storylineId,",
             "  COALESCE(NULLIF(s.name_zht, ''), s.name_zh, s.name_en, s.code) AS storylineName,",
+            "  el.story_chapter_id AS chapterId,",
+            "  COALESCE(NULLIF(sc.title_zht, ''), sc.title_zh, sc.title_en, CONCAT('Chapter#', el.story_chapter_id)) AS chapterName,",
             "  el.poi_id AS poiId,",
             "  COALESCE(NULLIF(p.name_zht, ''), p.name_zh, p.name_en, CONCAT('POI#', el.poi_id)) AS poiName,",
+            "  el.city_id AS cityId,",
+            "  el.sub_map_id AS subMapId,",
+            "  e.event_type AS status,",
+            "  NULL AS rewardType,",
+            "  NULL AS rewardId,",
+            "  NULL AS gameRewardId,",
             "  'Exploration Event' AS title,",
             "  e.event_type AS summary,",
             "  LEFT(CAST(e.event_payload_json AS CHAR), 160) AS payloadPreview,",
@@ -203,6 +227,7 @@ public interface AdminTravelerProgressReadMapper {
             "  e.occurred_at AS occurredAt",
             "FROM user_exploration_events e",
             "LEFT JOIN exploration_elements el ON el.id = e.element_id",
+            "LEFT JOIN story_chapters sc ON sc.id = el.story_chapter_id",
             "LEFT JOIN pois p ON p.id = el.poi_id",
             "LEFT JOIN storylines s ON s.id = el.storyline_id",
             "WHERE e.user_id = #{userId}",
@@ -219,8 +244,16 @@ public interface AdminTravelerProgressReadMapper {
             "  us.user_id AS userId,",
             "  us.storyline_id AS storylineId,",
             "  COALESCE(NULLIF(s.name_zht, ''), s.name_zh, s.name_en, s.code) AS storylineName,",
+            "  us.current_chapter_id AS chapterId,",
+            "  COALESCE(NULLIF(sc.title_zht, ''), sc.title_zh, sc.title_en, CONCAT('Chapter#', us.current_chapter_id)) AS chapterName,",
             "  NULL AS poiId,",
             "  NULL AS poiName,",
+            "  s.city_id AS cityId,",
+            "  NULL AS subMapId,",
+            "  us.status AS status,",
+            "  NULL AS rewardType,",
+            "  NULL AS rewardId,",
+            "  NULL AS gameRewardId,",
             "  'Story Session' AS title,",
             "  us.status AS summary,",
             "  us.status AS payloadPreview,",
@@ -228,6 +261,7 @@ public interface AdminTravelerProgressReadMapper {
             "  COALESCE(us.last_event_at, us.started_at) AS occurredAt",
             "FROM user_storyline_sessions us",
             "LEFT JOIN storylines s ON s.id = us.storyline_id",
+            "LEFT JOIN story_chapters sc ON sc.id = us.current_chapter_id",
             "WHERE us.user_id = #{userId}",
             "ORDER BY COALESCE(us.last_event_at, us.started_at) DESC, us.session_id DESC"
     })
@@ -242,8 +276,16 @@ public interface AdminTravelerProgressReadMapper {
             "  rr.user_id AS userId,",
             "  NULL AS storylineId,",
             "  NULL AS storylineName,",
+            "  NULL AS chapterId,",
+            "  NULL AS chapterName,",
             "  NULL AS poiId,",
             "  NULL AS poiName,",
+            "  NULL AS cityId,",
+            "  NULL AS subMapId,",
+            "  rr.redemption_status AS status,",
+            "  'redeemable_reward' AS rewardType,",
+            "  rr.reward_id AS rewardId,",
+            "  NULL AS gameRewardId,",
             "  'Reward Redemption' AS title,",
             "  rr.redemption_status AS summary,",
             "  rr.redemption_status AS payloadPreview,",
@@ -265,8 +307,16 @@ public interface AdminTravelerProgressReadMapper {
             "  a.target_user_id AS userId,",
             "  a.storyline_id AS storylineId,",
             "  NULL AS storylineName,",
+            "  NULL AS chapterId,",
+            "  NULL AS chapterName,",
             "  NULL AS poiId,",
             "  NULL AS poiName,",
+            "  NULL AS cityId,",
+            "  NULL AS subMapId,",
+            "  a.action_type AS status,",
+            "  NULL AS rewardType,",
+            "  NULL AS rewardId,",
+            "  NULL AS gameRewardId,",
             "  a.action_type AS title,",
             "  a.reason AS summary,",
             "  a.reason AS payloadPreview,",
@@ -277,6 +327,143 @@ public interface AdminTravelerProgressReadMapper {
             "ORDER BY a.created_at DESC, a.id DESC"
     })
     List<TimelineSourceRow> selectRepairAuditTimelineRows(@Param("userId") Long userId);
+
+    @Select({
+            "SELECT",
+            "  rr.id AS redemptionId,",
+            "  rr.user_id AS userId,",
+            "  rr.reward_id AS rewardId,",
+            "  COALESCE(NULLIF(r.name_zht, ''), r.name_zh, r.name_en, r.code) AS rewardName,",
+            "  rr.redemption_status AS redemptionStatus,",
+            "  rr.stamp_cost_snapshot AS stampCostSnapshot,",
+            "  rr.redeemed_at AS redeemedAt,",
+            "  rr.expires_at AS expiresAt",
+            "FROM reward_redemptions rr",
+            "LEFT JOIN rewards r ON r.id = rr.reward_id",
+            "WHERE rr.user_id = #{userId}",
+            "  AND rr.deleted = 0",
+            "ORDER BY COALESCE(rr.redeemed_at, rr.created_at) DESC, rr.id DESC"
+    })
+    List<RewardRedemptionRow> selectAllRewardRedemptions(@Param("userId") Long userId);
+
+    @Select({
+            "SELECT",
+            "  e.id AS eventId,",
+            "  e.user_id AS userId,",
+            "  e.element_id AS elementId,",
+            "  e.element_code AS elementCode,",
+            "  e.event_type AS eventType,",
+            "  e.event_source AS eventSource,",
+            "  e.storyline_session_id AS storylineSessionId,",
+            "  LEFT(CAST(e.event_payload_json AS CHAR), 160) AS payloadPreview,",
+            "  CAST(e.event_payload_json AS CHAR) AS rawPayload,",
+            "  e.occurred_at AS occurredAt,",
+            "  el.element_type AS elementType,",
+            "  el.owner_type AS ownerType,",
+            "  el.owner_id AS ownerId,",
+            "  el.owner_code AS ownerCode,",
+            "  el.city_id AS cityId,",
+            "  el.sub_map_id AS subMapId,",
+            "  el.poi_id AS poiId,",
+            "  el.storyline_id AS storylineId,",
+            "  el.story_chapter_id AS chapterId,",
+            "  COALESCE(NULLIF(el.title_zht, ''), el.title_zh, el.title_en, el.element_code) AS elementTitle,",
+            "  el.status AS elementStatus",
+            "FROM user_exploration_events e",
+            "LEFT JOIN exploration_elements el ON el.id = e.element_id",
+            "WHERE e.user_id = #{userId}",
+            "  AND e.id = #{sourceEventId}",
+            "LIMIT 1"
+    })
+    TraceEventElementRow selectTraceEventElement(
+            @Param("userId") Long userId,
+            @Param("sourceEventId") Long sourceEventId);
+
+    @Select({
+            "SELECT",
+            "  rb.id AS bindingId,",
+            "  rb.rule_id AS ruleId,",
+            "  rb.owner_domain AS ownerDomain,",
+            "  rb.owner_id AS ownerId,",
+            "  rb.owner_code AS ownerCode,",
+            "  rb.binding_role AS bindingRole,",
+            "  rr.code AS ruleCode,",
+            "  rr.rule_type AS ruleType,",
+            "  rr.status AS ruleStatus,",
+            "  COALESCE(NULLIF(rr.name_zht, ''), rr.name_zh, rr.code) AS ruleName,",
+            "  rr.summary_text AS summaryText,",
+            "  rr.root_condition_group_id AS rootConditionGroupId",
+            "FROM reward_rule_bindings rb",
+            "JOIN reward_rules rr ON rr.id = rb.rule_id AND rr.deleted = 0",
+            "WHERE rb.deleted = 0",
+            "  AND (#{ruleId} IS NULL OR rb.rule_id = #{ruleId})",
+            "  AND (",
+            "    (#{gameRewardId} IS NOT NULL AND rb.owner_domain = 'game_reward' AND rb.owner_id = #{gameRewardId})",
+            "    OR (#{rewardId} IS NOT NULL AND rb.owner_domain IN ('redeemable_prize', 'reward') AND rb.owner_id = #{rewardId})",
+            "    OR (#{elementId} IS NOT NULL AND rb.owner_domain IN ('exploration_element', 'element') AND rb.owner_id = #{elementId})",
+            "    OR (#{ownerType} <> '' AND rb.owner_domain = #{ownerType} AND rb.owner_id = #{ownerId})",
+            "    OR (#{storylineId} IS NOT NULL AND rb.owner_domain = 'storyline' AND rb.owner_id = #{storylineId})",
+            "    OR (#{chapterId} IS NOT NULL AND rb.owner_domain IN ('story_chapter', 'chapter') AND rb.owner_id = #{chapterId})",
+            "    OR (#{poiId} IS NOT NULL AND rb.owner_domain = 'poi' AND rb.owner_id = #{poiId})",
+            "  )",
+            "ORDER BY rb.sort_order ASC, rb.id ASC"
+    })
+    List<RuleBindingTraceRow> selectTraceRuleBindings(
+            @Param("ruleId") Long ruleId,
+            @Param("rewardId") Long rewardId,
+            @Param("gameRewardId") Long gameRewardId,
+            @Param("elementId") Long elementId,
+            @Param("ownerType") String ownerType,
+            @Param("ownerId") Long ownerId,
+            @Param("storylineId") Long storylineId,
+            @Param("chapterId") Long chapterId,
+            @Param("poiId") Long poiId);
+
+    @Select({
+            "SELECT",
+            "  g.id AS groupId,",
+            "  g.rule_id AS ruleId,",
+            "  g.parent_group_id AS parentGroupId,",
+            "  g.group_code AS groupCode,",
+            "  g.operator_type AS operatorType,",
+            "  g.minimum_match_count AS minimumMatchCount,",
+            "  g.summary_text AS summaryText",
+            "FROM reward_condition_groups g",
+            "WHERE g.rule_id = #{ruleId}",
+            "  AND g.deleted = 0",
+            "ORDER BY g.parent_group_id ASC, g.sort_order ASC, g.id ASC"
+    })
+    List<ConditionGroupTraceRow> selectConditionGroups(@Param("ruleId") Long ruleId);
+
+    @Select({
+            "SELECT",
+            "  c.id AS conditionId,",
+            "  c.group_id AS groupId,",
+            "  c.condition_type AS conditionType,",
+            "  c.metric_type AS metricType,",
+            "  c.operator_type AS operatorType,",
+            "  c.comparator_value AS comparatorValue,",
+            "  c.comparator_unit AS comparatorUnit,",
+            "  c.summary_text AS summaryText",
+            "FROM reward_conditions c",
+            "WHERE c.group_id IN (",
+            "  SELECT g.id FROM reward_condition_groups g WHERE g.rule_id = #{ruleId} AND g.deleted = 0",
+            ")",
+            "  AND c.deleted = 0",
+            "ORDER BY c.group_id ASC, c.sort_order ASC, c.id ASC"
+    })
+    List<ConditionTraceRow> selectConditions(@Param("ruleId") Long ruleId);
+
+    @Select({
+            "SELECT COUNT(*)",
+            "FROM reward_redemptions rr",
+            "WHERE rr.user_id = #{userId}",
+            "  AND rr.deleted = 0",
+            "  AND (#{rewardId} IS NULL OR rr.reward_id = #{rewardId})"
+    })
+    int countRewardRedemptions(
+            @Param("userId") Long userId,
+            @Param("rewardId") Long rewardId);
 
     @Data
     @NoArgsConstructor
@@ -372,12 +559,92 @@ public interface AdminTravelerProgressReadMapper {
         private Long userId;
         private Long storylineId;
         private String storylineName;
+        private Long chapterId;
+        private String chapterName;
         private Long poiId;
         private String poiName;
+        private Long cityId;
+        private Long subMapId;
+        private String status;
+        private String rewardType;
+        private Long rewardId;
+        private Long gameRewardId;
         private String title;
         private String summary;
         private String payloadPreview;
         private String rawPayload;
         private LocalDateTime occurredAt;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class TraceEventElementRow {
+        private Long eventId;
+        private Long userId;
+        private Long elementId;
+        private String elementCode;
+        private String eventType;
+        private String eventSource;
+        private String storylineSessionId;
+        private String payloadPreview;
+        private String rawPayload;
+        private LocalDateTime occurredAt;
+        private String elementType;
+        private String ownerType;
+        private Long ownerId;
+        private String ownerCode;
+        private Long cityId;
+        private Long subMapId;
+        private Long poiId;
+        private Long storylineId;
+        private Long chapterId;
+        private String elementTitle;
+        private String elementStatus;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class RuleBindingTraceRow {
+        private Long bindingId;
+        private Long ruleId;
+        private String ownerDomain;
+        private Long ownerId;
+        private String ownerCode;
+        private String bindingRole;
+        private String ruleCode;
+        private String ruleType;
+        private String ruleStatus;
+        private String ruleName;
+        private String summaryText;
+        private Long rootConditionGroupId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class ConditionGroupTraceRow {
+        private Long groupId;
+        private Long ruleId;
+        private Long parentGroupId;
+        private String groupCode;
+        private String operatorType;
+        private Integer minimumMatchCount;
+        private String summaryText;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class ConditionTraceRow {
+        private Long conditionId;
+        private Long groupId;
+        private String conditionType;
+        private String metricType;
+        private String operatorType;
+        private String comparatorValue;
+        private String comparatorUnit;
+        private String summaryText;
     }
 }

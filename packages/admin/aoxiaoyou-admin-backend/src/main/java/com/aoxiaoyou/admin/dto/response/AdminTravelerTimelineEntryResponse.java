@@ -15,8 +15,16 @@ public class AdminTravelerTimelineEntryResponse {
     private Long userId;
     private Long storylineId;
     private String storylineName;
+    private Long chapterId;
+    private String chapterName;
     private Long poiId;
     private String poiName;
+    private Long cityId;
+    private Long subMapId;
+    private String status;
+    private String rewardType;
+    private Long rewardId;
+    private Long gameRewardId;
     private String title;
     private String summary;
     private String payloadPreview;
