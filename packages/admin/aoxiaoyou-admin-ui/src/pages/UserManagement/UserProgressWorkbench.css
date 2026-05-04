@@ -1,0 +1,35 @@
+.traveler-support-tabs-card .ant-tabs {
+  margin-bottom: -8px;
+}
+
+.traveler-support-tabs-card .ant-tabs-content-holder {
+  padding: 8px 4px 0;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.traveler-support-filter-card .ant-space {
+  width: 100%;
+}
+
+.traveler-support-filter-field {
+  min-width: 180px;
+  width: 100%;
+}
+
+.traveler-support-filter-wide {
+  min-width: 260px;
+  width: 100%;
+}
+
+.traveler-support-ellipsis {
+  display: inline-block;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.traveler-support-filter-card .ant-picker {
+  width: 100%;
+}

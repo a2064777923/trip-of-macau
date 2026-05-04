@@ -1273,7 +1273,7 @@ export interface AdminTravelerTitleStateItem {
 }
 
 export interface AdminTravelerRedeemableRewardStateItem {
-  redemptionId?: number | null;
+  redemptionId: number;
   rewardId?: number | null;
   rewardName?: string | null;
   redemptionStatus?: string | null;

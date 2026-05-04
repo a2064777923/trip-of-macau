@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import type { Dayjs } from 'dayjs';
 import { PageContainer } from '@ant-design/pro-layout';
 import {
   Alert,
@@ -6,6 +7,7 @@ import {
   Card,
   Collapse,
   Col,
+  DatePicker,
   Descriptions,
   Empty,
   Input,
@@ -19,6 +21,7 @@ import {
   Statistic,
   Switch,
   Table,
+  Tabs,
   Tag,
   Typography,
   message,
@@ -37,6 +40,8 @@ import {
   confirmAdminUserProgressRecompute,
   getAdminTravelerProgressBreakdown,
   getAdminTravelerProgressWorkbench,
+  getAdminTravelerRewardRuleTrace,
+  getAdminTravelerRewardState,
   getAdminTravelerTimeline,
   getAdminUserProgressAudits,
   previewAdminUserProgressRecompute,
@@ -45,8 +50,15 @@ import {
 import type {
   AdminLegacyProgressSnapshot,
   AdminTravelerProgressWorkbench,
+  AdminTravelerBackpackItem,
+  AdminTravelerGameRewardStateItem,
+  AdminTravelerRewardRuleTrace,
+  AdminTravelerRewardState,
   AdminTravelerRewardRedemptionSummary,
+  AdminTravelerRuleTraceGrantNode,
+  AdminTravelerRuleTraceRuleNode,
   AdminTravelerTimelineEntry,
+  AdminTravelerTitleStateItem,
   AdminUserProgressAuditEntry,
   AdminUserProgressBreakdown,
   AdminUserProgressBreakdownElement,
@@ -54,6 +66,7 @@ import type {
   AdminUserProgressOperationResult,
   AdminUserProgressSummary,
 } from '../../types/admin';
+import './UserProgressWorkbench.css';
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -69,9 +82,19 @@ type MergedTimelineEntry = {
   sourceLabel: string;
   storylineId?: number | null;
   storylineName?: string | null;
+  chapterId?: number | null;
+  chapterName?: string | null;
+  poiId?: number | null;
+  poiName?: string | null;
+  status?: string | null;
+  rewardType?: string | null;
+  rewardId?: number | null;
+  gameRewardId?: number | null;
   payloadTitle?: string;
   payloadContent?: string;
 };
+
+type RangeValue = [Dayjs | null, Dayjs | null] | null;
 
 function formatDateTime(value?: string | null) {
   if (!value) {
@@ -149,6 +172,68 @@ function formatTimelineTypeLabel(entryType: string) {
   }
 }
 
+function formatStatusLabel(status?: string | null) {
+  switch (status) {
+    case 'completed':
+      return '已完成';
+    case 'active':
+      return '進行中';
+    case 'exited':
+      return '已退出';
+    case 'published':
+      return '已發佈';
+    case 'voided':
+      return '已作廢';
+    case 'ignored_duplicate':
+      return '已標記重複';
+    case 'granted':
+      return '已發放';
+    case 'redeemed':
+      return '已兌換';
+    default:
+      return status || '未標記';
+  }
+}
+
+function formatRewardTypeLabel(rewardType?: string | null) {
+  switch (rewardType) {
+    case 'badge':
+      return '徽章';
+    case 'title':
+      return '稱號';
+    case 'city_currency':
+      return '城市貨幣';
+    case 'city_fragment':
+      return '城市碎片';
+    case 'voice_pack':
+      return '語音包';
+    case 'unlock_pass':
+      return '解鎖通行證';
+    case 'redeemable':
+      return '兌換獎勵';
+    case 'collectible':
+      return '收集物';
+    default:
+      return rewardType || '未標記';
+  }
+}
+
+function formatRepairActionLabel(actionType: string) {
+  switch (actionType) {
+    case 'LINK_ORPHAN_EVENT':
+      return '補連孤兒事件';
+    case 'MARK_DUPLICATE_CLIENT_EVENT':
+    case 'VOID_DUPLICATE_EVENT':
+      return '標記重複事件';
+    case 'RESEND_REWARD':
+      return '補發獎勵';
+    case 'ANNOTATE_ISSUE':
+      return '留下問題註記';
+    default:
+      return actionType;
+  }
+}
+
 function stringifyPayload(value?: string | Record<string, unknown> | null) {
   if (!value) {
     return '';
@@ -157,6 +242,13 @@ function stringifyPayload(value?: string | Record<string, unknown> | null) {
     return value;
   }
   return JSON.stringify(value, null, 2);
+}
+
+function ellipsisText(value?: string | number | null) {
+  if (value === undefined || value === null || value === '') {
+    return '暫無';
+  }
+  return <span className="traveler-support-ellipsis" title={String(value)}>{String(value)}</span>;
 }
 
 function computePercentDelta(legacy: AdminLegacyProgressSnapshot, currentSummary?: AdminUserProgressSummary | null) {
@@ -170,6 +262,7 @@ function JsonDetailCard(props: {
   label: string;
   value?: string | Record<string, unknown> | null;
   onView: (title: string, content: string) => void;
+  compact?: boolean;
 }) {
   const content = stringifyPayload(props.value);
   if (!content) {
@@ -179,7 +272,7 @@ function JsonDetailCard(props: {
   return (
     <Space wrap>
       <Button size="small" icon={<EyeOutlined />} onClick={() => props.onView(props.label, content)}>
-        查看內容
+        {props.compact ? '查看詳情' : '查看內容'}
       </Button>
       <Button
         size="small"
@@ -195,22 +288,24 @@ function JsonDetailCard(props: {
       >
         複製 JSON
       </Button>
-      <Collapse
-        size="small"
-        items={[
-          {
-            key: 'payload',
-            label: '內嵌預覽',
-            children: (
-              <Paragraph
-                style={{ marginBottom: 0, whiteSpace: 'pre-wrap', maxHeight: 220, overflow: 'auto' }}
-              >
-                {content}
-              </Paragraph>
-            ),
-          },
-        ]}
-      />
+      {props.compact ? null : (
+        <Collapse
+          size="small"
+          items={[
+            {
+              key: 'payload',
+              label: '內嵌預覽',
+              children: (
+                <Paragraph
+                  style={{ marginBottom: 0, whiteSpace: 'pre-wrap', maxHeight: 220, overflow: 'auto' }}
+                >
+                  {content}
+                </Paragraph>
+              ),
+            },
+          ]}
+        />
+      )}
     </Space>
   );
 }
@@ -230,14 +325,29 @@ const UserProgressWorkbench: React.FC = () => {
   const [timelineEntries, setTimelineEntries] = useState<AdminTravelerTimelineEntry[]>([]);
   const [auditsLoading, setAuditsLoading] = useState(false);
   const [auditEntries, setAuditEntries] = useState<AdminUserProgressAuditEntry[]>([]);
+  const [rewardStateLoading, setRewardStateLoading] = useState(false);
+  const [rewardState, setRewardState] = useState<AdminTravelerRewardState | null>(null);
+  const [ruleTraceLoading, setRuleTraceLoading] = useState(false);
+  const [ruleTrace, setRuleTrace] = useState<AdminTravelerRewardRuleTrace | null>(null);
   const [payloadViewer, setPayloadViewer] = useState<{ title: string; content: string } | null>(null);
 
   const [selectedScopeType, setSelectedScopeType] = useState('global');
   const [selectedScopeId, setSelectedScopeId] = useState<number | undefined>();
   const [selectedStorylineId, setSelectedStorylineId] = useState<number | undefined>();
+  const [timelineChapterId, setTimelineChapterId] = useState<number | undefined>();
+  const [timelinePoiId, setTimelinePoiId] = useState<number | undefined>();
+  const [timelineMapScopeType, setTimelineMapScopeType] = useState<string | undefined>();
+  const [timelineMapScopeId, setTimelineMapScopeId] = useState<number | undefined>();
+  const [timelineStatus, setTimelineStatus] = useState<string | undefined>();
+  const [timelineRewardType, setTimelineRewardType] = useState<string | undefined>();
+  const [timelineRange, setTimelineRange] = useState<RangeValue>(null);
   const [completionFilter, setCompletionFilter] = useState<CompletionFilter>('all');
   const [includeInactiveComparison, setIncludeInactiveComparison] = useState(false);
   const [timelineEventTypes, setTimelineEventTypes] = useState<string[]>([]);
+  const [traceSourceEventId, setTraceSourceEventId] = useState<number | null>(null);
+  const [traceRuleId, setTraceRuleId] = useState<number | null>(null);
+  const [traceRewardId, setTraceRewardId] = useState<number | null>(null);
+  const [traceGameRewardId, setTraceGameRewardId] = useState<number | null>(null);
 
   const [recomputeReason, setRecomputeReason] = useState('');
   const [recomputePreview, setRecomputePreview] = useState<AdminUserProgressOperationPreview | null>(null);
@@ -250,6 +360,12 @@ const UserProgressWorkbench: React.FC = () => {
   const [repairReplacementElementId, setRepairReplacementElementId] = useState<number | null>(null);
   const [repairReplacementElementCode, setRepairReplacementElementCode] = useState('');
   const [repairDuplicateOfEventId, setRepairDuplicateOfEventId] = useState<number | null>(null);
+  const [repairRewardId, setRepairRewardId] = useState<number | null>(null);
+  const [repairGameRewardId, setRepairGameRewardId] = useState<number | null>(null);
+  const [repairRuleId, setRepairRuleId] = useState<number | null>(null);
+  const [repairSourceEventId, setRepairSourceEventId] = useState<number | null>(null);
+  const [repairAnnotationText, setRepairAnnotationText] = useState('');
+  const [repairIssueSeverity, setRepairIssueSeverity] = useState('info');
   const [repairReason, setRepairReason] = useState('');
   const [repairConfirmText, setRepairConfirmText] = useState('');
   const [repairPreview, setRepairPreview] = useState<AdminUserProgressOperationPreview | null>(null);
@@ -290,6 +406,89 @@ const UserProgressWorkbench: React.FC = () => {
       cancelled = true;
     };
   }, [hasValidUserId, refreshKey, userId]);
+
+  useEffect(() => {
+    if (!hasValidUserId) {
+      return;
+    }
+
+    let cancelled = false;
+    const loadRewardState = async () => {
+      setRewardStateLoading(true);
+      try {
+        const response = await getAdminTravelerRewardState(userId);
+        if (cancelled) {
+          return;
+        }
+        if (response.success) {
+          setRewardState(response.data);
+        } else {
+          message.error(response.message || '無法載入背包與獎勵狀態');
+        }
+      } catch (error) {
+        if (!cancelled) {
+          message.error('載入背包與獎勵狀態失敗');
+        }
+      } finally {
+        if (!cancelled) {
+          setRewardStateLoading(false);
+        }
+      }
+    };
+
+    void loadRewardState();
+    return () => {
+      cancelled = true;
+    };
+  }, [hasValidUserId, refreshKey, userId]);
+
+  useEffect(() => {
+    if (!hasValidUserId) {
+      return;
+    }
+
+    let cancelled = false;
+    const loadRuleTrace = async () => {
+      setRuleTraceLoading(true);
+      try {
+        const response = await getAdminTravelerRewardRuleTrace(userId, {
+          sourceEventId: traceSourceEventId || undefined,
+          ruleId: traceRuleId || undefined,
+          rewardId: traceRewardId || undefined,
+          gameRewardId: traceGameRewardId || undefined,
+        });
+        if (cancelled) {
+          return;
+        }
+        if (response.success) {
+          setRuleTrace(response.data);
+        } else {
+          message.error(response.message || '無法載入規則追蹤');
+        }
+      } catch (error) {
+        if (!cancelled) {
+          message.error('載入規則追蹤失敗');
+        }
+      } finally {
+        if (!cancelled) {
+          setRuleTraceLoading(false);
+        }
+      }
+    };
+
+    void loadRuleTrace();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    hasValidUserId,
+    refreshKey,
+    traceGameRewardId,
+    traceRewardId,
+    traceRuleId,
+    traceSourceEventId,
+    userId,
+  ]);
 
   useEffect(() => {
     if (!workbench) {
@@ -368,6 +567,14 @@ const UserProgressWorkbench: React.FC = () => {
           pageSize: 50,
           eventTypes: timelineEventTypes.filter((item) => item !== 'audit'),
           storylineId: selectedStorylineId,
+          chapterId: timelineChapterId,
+          poiId: timelinePoiId,
+          mapScopeType: timelineMapScopeType,
+          mapScopeId: timelineMapScopeId,
+          status: timelineStatus,
+          rewardType: timelineRewardType,
+          from: timelineRange?.[0]?.format('YYYY-MM-DDTHH:mm:ss'),
+          to: timelineRange?.[1]?.format('YYYY-MM-DDTHH:mm:ss'),
         });
         if (cancelled) {
           return;
@@ -392,7 +599,21 @@ const UserProgressWorkbench: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [hasValidUserId, refreshKey, selectedStorylineId, timelineEventTypes.join('|'), userId]);
+  }, [
+    hasValidUserId,
+    refreshKey,
+    selectedStorylineId,
+    timelineChapterId,
+    timelineEventTypes.join('|'),
+    timelineMapScopeId,
+    timelineMapScopeType,
+    timelinePoiId,
+    timelineRange?.[0]?.valueOf(),
+    timelineRange?.[1]?.valueOf(),
+    timelineRewardType,
+    timelineStatus,
+    userId,
+  ]);
 
   useEffect(() => {
     if (!hasValidUserId) {
@@ -505,6 +726,14 @@ const UserProgressWorkbench: React.FC = () => {
       sourceLabel: entry.sourceTable || 'timeline',
       storylineId: entry.storylineId,
       storylineName: entry.storylineName,
+      chapterId: entry.chapterId,
+      chapterName: entry.chapterName,
+      poiId: entry.poiId,
+      poiName: entry.poiName,
+      status: entry.status,
+      rewardType: entry.rewardType,
+      rewardId: entry.rewardId,
+      gameRewardId: entry.gameRewardId,
       payloadTitle: `${formatTimelineTypeLabel(entry.entryType)} 詳細內容`,
       payloadContent: stringifyPayload(entry.rawPayload || entry.payloadPreview),
     })),
@@ -519,6 +748,7 @@ const UserProgressWorkbench: React.FC = () => {
       storylineId: entry.storylineId,
       storylineName:
         storylineOptions.find((item) => item.value === entry.storylineId)?.label || undefined,
+      status: entry.actionType,
       payloadTitle: '審計詳細內容',
       payloadContent: stringifyPayload({
         previewSummary: entry.previewSummary || {},
@@ -550,6 +780,11 @@ const UserProgressWorkbench: React.FC = () => {
 
   const timelineEventTypeOptions = Array.from(
     new Set([
+      'storyline_session',
+      'exploration_event',
+      'reward_redemption',
+      'checkin',
+      'trigger_log',
       ...timelineEntries.map((item) => item.entryType),
       ...(auditEntries.length > 0 ? ['audit'] : []),
     ]),
@@ -557,6 +792,53 @@ const UserProgressWorkbench: React.FC = () => {
     label: formatTimelineTypeLabel(item),
     value: item,
   }));
+
+  const timelineStatusOptions = Array.from(
+    new Set([
+      'completed',
+      'active',
+      'exited',
+      'granted',
+      'redeemed',
+      'ignored_duplicate',
+      ...timelineEntries.map((item) => item.status).filter(Boolean),
+    ]),
+  ).map((item) => ({
+    label: formatStatusLabel(item),
+    value: item as string,
+  }));
+
+  const timelineRewardTypeOptions = Array.from(
+    new Set([
+      'badge',
+      'title',
+      'city_currency',
+      'city_fragment',
+      'voice_pack',
+      'redeemable',
+      ...timelineEntries.map((item) => item.rewardType).filter(Boolean),
+    ]),
+  ).map((item) => ({
+    label: formatRewardTypeLabel(item),
+    value: item as string,
+  }));
+
+  const mapScopeTypeOptions = [
+    { label: '城市', value: 'city' },
+    { label: '大地圖 / 子地圖', value: 'sub_map' },
+    { label: 'POI', value: 'poi' },
+    { label: '故事線', value: 'storyline' },
+    { label: '章節', value: 'story_chapter' },
+    { label: '室內建築', value: 'indoor_building' },
+    { label: '室內樓層', value: 'indoor_floor' },
+  ];
+
+  const resetTraceFilters = () => {
+    setTraceSourceEventId(null);
+    setTraceRuleId(null);
+    setTraceRewardId(null);
+    setTraceGameRewardId(null);
+  };
 
   const elementColumns: ColumnsType<AdminUserProgressBreakdownElement> = [
     {
@@ -707,6 +989,211 @@ const UserProgressWorkbench: React.FC = () => {
     },
   ];
 
+  const backpackColumns: ColumnsType<AdminTravelerBackpackItem> = [
+    {
+      title: '收集物',
+      key: 'name',
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{record.name || record.code || `來源 #${record.sourceId}`}</Text>
+          <Text type="secondary">{ellipsisText(record.code || record.description)}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: '數量 / 稀有度',
+      key: 'quantity',
+      render: (_, record) => (
+        <Space wrap>
+          <Tag color="blue">x{record.quantity ?? 1}</Tag>
+          <Tag>{record.rarity || '未標記'}</Tag>
+        </Space>
+      ),
+    },
+    {
+      title: '來源',
+      key: 'source',
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Text>{record.sourceType || '未知來源'}</Text>
+          <Text type="secondary">{ellipsisText(record.sourceId ? `#${record.sourceId}` : record.sourceEventId ? `事件 #${record.sourceEventId}` : '')}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: '取得時間',
+      dataIndex: 'earnedAt',
+      key: 'earnedAt',
+      render: (value) => formatDateTime(value),
+    },
+  ];
+
+  const gameRewardColumns: ColumnsType<AdminTravelerGameRewardStateItem> = [
+    {
+      title: '獎勵',
+      key: 'name',
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{record.name || record.code || `獎勵 #${record.rewardId}`}</Text>
+          <Text type="secondary">{ellipsisText(record.code)}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: '類型 / 稀有度',
+      key: 'type',
+      render: (_, record) => (
+        <Space wrap>
+          <Tag color={record.rewardType === 'title' ? 'purple' : 'gold'}>{formatRewardTypeLabel(record.rewardType)}</Tag>
+          <Tag>{record.rarity || '未標記'}</Tag>
+        </Space>
+      ),
+    },
+    {
+      title: '規則追蹤',
+      key: 'trace',
+      render: (_, record) => (
+        <Button
+          size="small"
+          onClick={() => {
+            setTraceRewardId(record.rewardId || null);
+            setTraceGameRewardId(record.rewardId || null);
+            setTraceRuleId(record.sourceRuleId || null);
+            setTraceSourceEventId(record.sourceEventId || null);
+          }}
+        >
+          查看規則追蹤
+        </Button>
+      ),
+    },
+    {
+      title: '取得時間',
+      dataIndex: 'earnedAt',
+      key: 'earnedAt',
+      render: (value) => formatDateTime(value),
+    },
+  ];
+
+  const titleColumns: ColumnsType<AdminTravelerTitleStateItem> = [
+    {
+      title: '稱號',
+      key: 'name',
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{record.name || record.code || `稱號 #${record.rewardId}`}</Text>
+          <Text type="secondary">{ellipsisText(record.code)}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: '狀態',
+      key: 'status',
+      render: (_, record) => (
+        <Space wrap>
+          <Tag color={record.equipped ? 'success' : 'default'}>{record.equipped ? '已裝備' : '未裝備'}</Tag>
+          <Tag>{formatStatusLabel(record.status)}</Tag>
+        </Space>
+      ),
+    },
+    {
+      title: '規則追蹤',
+      key: 'trace',
+      render: (_, record) => (
+        <Button
+          size="small"
+          onClick={() => {
+            setTraceRewardId(record.rewardId || null);
+            setTraceGameRewardId(record.rewardId || null);
+            setTraceRuleId(record.sourceRuleId || null);
+            setTraceSourceEventId(record.sourceEventId || null);
+          }}
+        >
+          查看規則追蹤
+        </Button>
+      ),
+    },
+    {
+      title: '取得時間',
+      dataIndex: 'earnedAt',
+      key: 'earnedAt',
+      render: (value) => formatDateTime(value),
+    },
+  ];
+
+  const ruleTraceRuleColumns: ColumnsType<AdminTravelerRuleTraceRuleNode> = [
+    {
+      title: '規則',
+      key: 'rule',
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{record.name || record.code || `規則 #${record.ruleId}`}</Text>
+          <Text type="secondary">{ellipsisText(record.code)}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: '狀態',
+      dataIndex: 'status',
+      key: 'status',
+      render: (value) => <Tag>{formatStatusLabel(value)}</Tag>,
+    },
+    {
+      title: '綁定',
+      key: 'binding',
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Text>{record.bindingOwnerDomain || '未綁定'}</Text>
+          <Text type="secondary">{record.bindingOwnerId ? `#${record.bindingOwnerId}` : record.bindingRole || '暫無'}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: '條件摘要',
+      key: 'conditions',
+      render: (_, record) => (
+        <Space direction="vertical" size={4}>
+          {(record.conditionGroups || []).slice(0, 3).map((group) => (
+            <Text key={group.groupId || group.groupCode} type="secondary">
+              {group.summaryText || group.groupCode || group.operatorType || '未命名條件組'}
+            </Text>
+          ))}
+          {(record.conditionGroups || []).length === 0 ? <Text type="secondary">暫無條件組</Text> : null}
+        </Space>
+      ),
+    },
+  ];
+
+  const ruleTraceGrantColumns: ColumnsType<AdminTravelerRuleTraceGrantNode> = [
+    {
+      title: '發放來源',
+      dataIndex: 'grantSource',
+      key: 'grantSource',
+      render: (value) => <Tag color="gold">{value || '未知'}</Tag>,
+    },
+    {
+      title: '獎勵',
+      key: 'reward',
+      render: (_, record) => (
+        <Space direction="vertical" size={0}>
+          <Text>{record.rewardId ? `兌換獎勵 #${record.rewardId}` : '無兌換獎勵'}</Text>
+          <Text type="secondary">{record.gameRewardId ? `遊戲內獎勵 #${record.gameRewardId}` : '無遊戲獎勵'}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: '狀態',
+      dataIndex: 'grantStatus',
+      key: 'grantStatus',
+      render: (value) => <Tag>{formatStatusLabel(value)}</Tag>,
+    },
+    {
+      title: '發放時間',
+      dataIndex: 'grantedAt',
+      key: 'grantedAt',
+      render: (value) => formatDateTime(value),
+    },
+  ];
+
   const mergedTimelineColumns: ColumnsType<MergedTimelineEntry> = [
     {
       title: '時間',
@@ -735,6 +1222,18 @@ const UserProgressWorkbench: React.FC = () => {
           <Text strong>{record.title}</Text>
           <Text>{record.summary}</Text>
           {record.storylineName ? <Text type="secondary">故事線：{record.storylineName}</Text> : null}
+          {record.chapterName || record.chapterId ? (
+            <Text type="secondary">章節：{record.chapterName || `#${record.chapterId}`}</Text>
+          ) : null}
+          {record.poiName || record.poiId ? (
+            <Text type="secondary">POI：{record.poiName || `#${record.poiId}`}</Text>
+          ) : null}
+          <Space wrap>
+            {record.status ? <Tag>{formatStatusLabel(record.status)}</Tag> : null}
+            {record.rewardType ? <Tag color="gold">{formatRewardTypeLabel(record.rewardType)}</Tag> : null}
+            {record.rewardId ? <Tag>Reward #{record.rewardId}</Tag> : null}
+            {record.gameRewardId ? <Tag>Game #{record.gameRewardId}</Tag> : null}
+          </Space>
         </Space>
       ),
     },
@@ -747,6 +1246,7 @@ const UserProgressWorkbench: React.FC = () => {
           label={record.payloadTitle || record.title}
           value={record.payloadContent}
           onView={(title, content) => setPayloadViewer({ title, content })}
+          compact
         />
       ),
     },
@@ -803,6 +1303,7 @@ const UserProgressWorkbench: React.FC = () => {
             requestIp: record.requestIp,
           }}
           onView={(title, content) => setPayloadViewer({ title, content })}
+          compact
         />
       ),
     },
@@ -856,12 +1357,22 @@ const UserProgressWorkbench: React.FC = () => {
       if (response.success) {
         setRecomputePreview(response.data);
         setRecomputeResult(null);
-        message.success('已產生重算預覽');
+        Modal.info({
+          title: '重新計算進度預覽',
+          width: 720,
+          content: (
+            <JsonDetailCard
+              label="重新計算進度預覽摘要"
+              value={response.data?.previewSummary}
+              onView={openPayloadViewer}
+            />
+          ),
+        });
       } else {
-        message.error(response.message || '重算預覽失敗');
+        message.error(response.message || '無法產生操作預覽');
       }
     } catch (error) {
-      message.error('重算預覽失敗');
+      message.error('無法產生操作預覽');
     } finally {
       setRecomputeBusy(false);
     }
@@ -892,49 +1403,78 @@ const UserProgressWorkbench: React.FC = () => {
         setRecomputePreview(null);
         setRecomputeConfirmText('');
         setRefreshKey((value) => value + 1);
-        message.success('重算已完成');
+        message.success('支援操作已寫入審計');
       } else {
-        message.error(response.message || '重算確認失敗');
+        message.error(response.message || '支援操作未完成');
       }
     } catch (error) {
-      message.error('重算確認失敗');
+      message.error('支援操作未完成');
     } finally {
       setRecomputeBusy(false);
     }
   };
+
+  const buildRepairPayload = (withConfirmation = false) => ({
+    userId,
+    scopeType: selectedScopeType,
+    scopeId: selectedScopeId,
+    storylineId: selectedStorylineId,
+    actionType: repairActionType,
+    targetEventId: repairTargetEventId || undefined,
+    replacementElementId: repairReplacementElementId || undefined,
+    replacementElementCode: repairReplacementElementCode.trim() || undefined,
+    duplicateOfEventId: repairDuplicateOfEventId || undefined,
+    rewardId: repairRewardId || undefined,
+    gameRewardId: repairGameRewardId || undefined,
+    ruleId: repairRuleId || undefined,
+    sourceEventId: repairSourceEventId || undefined,
+    annotationText: repairAnnotationText.trim() || undefined,
+    issueSeverity: repairIssueSeverity || undefined,
+    reason: repairReason.trim(),
+    previewHash: withConfirmation ? repairPreview?.previewHash : undefined,
+    confirmationToken: withConfirmation ? repairPreview?.confirmationToken || repairPreview?.previewHash : undefined,
+    confirmationText: withConfirmation ? ('REPAIR' as const) : undefined,
+  });
 
   const handlePreviewRepair = async () => {
     if (!repairReason.trim()) {
       message.warning('請先填寫修復原因');
       return;
     }
-    if (!repairTargetEventId) {
+    if (['VOID_DUPLICATE_EVENT', 'LINK_ORPHAN_EVENT', 'MARK_DUPLICATE_CLIENT_EVENT'].includes(repairActionType) && !repairTargetEventId) {
       message.warning('請填寫目標事件 ID');
+      return;
+    }
+    if (repairActionType === 'RESEND_REWARD' && !repairRewardId && !repairGameRewardId) {
+      message.warning('補發獎勵需要填寫 rewardId 或 gameRewardId');
+      return;
+    }
+    if (repairActionType === 'ANNOTATE_ISSUE' && !repairAnnotationText.trim()) {
+      message.warning('請填寫問題註記內容');
       return;
     }
     setRepairBusy(true);
     try {
-      const response = await previewAdminUserProgressRepair(userId, {
-        userId,
-        scopeType: selectedScopeType,
-        scopeId: selectedScopeId,
-        storylineId: selectedStorylineId,
-        actionType: repairActionType,
-        targetEventId: repairTargetEventId || undefined,
-        replacementElementId: repairReplacementElementId || undefined,
-        replacementElementCode: repairReplacementElementCode.trim() || undefined,
-        duplicateOfEventId: repairDuplicateOfEventId || undefined,
-        reason: repairReason.trim(),
-      });
+      const response = await previewAdminUserProgressRepair(userId, buildRepairPayload());
       if (response.success) {
         setRepairPreview(response.data);
         setRepairResult(null);
-        message.success('已產生修復預覽');
+        Modal.info({
+          title: `${formatRepairActionLabel(repairActionType)}預覽`,
+          width: 720,
+          content: (
+            <JsonDetailCard
+              label={`${formatRepairActionLabel(repairActionType)}預覽摘要`}
+              value={response.data?.previewSummary}
+              onView={openPayloadViewer}
+            />
+          ),
+        });
       } else {
-        message.error(response.message || '修復預覽失敗');
+        message.error(response.message || '無法產生操作預覽');
       }
     } catch (error) {
-      message.error('修復預覽失敗');
+      message.error('無法產生操作預覽');
     } finally {
       setRepairBusy(false);
     }
@@ -951,31 +1491,18 @@ const UserProgressWorkbench: React.FC = () => {
     }
     setRepairBusy(true);
     try {
-      const response = await applyAdminUserProgressRepair(userId, {
-        userId,
-        scopeType: selectedScopeType,
-        scopeId: selectedScopeId,
-        storylineId: selectedStorylineId,
-        actionType: repairActionType,
-        targetEventId: repairTargetEventId || undefined,
-        replacementElementId: repairReplacementElementId || undefined,
-        replacementElementCode: repairReplacementElementCode.trim() || undefined,
-        duplicateOfEventId: repairDuplicateOfEventId || undefined,
-        reason: repairReason.trim(),
-        previewHash: repairPreview.previewHash,
-        confirmationText: 'REPAIR',
-      });
+      const response = await applyAdminUserProgressRepair(userId, buildRepairPayload(true));
       if (response.success) {
         setRepairResult(response.data);
         setRepairPreview(null);
         setRepairConfirmText('');
         setRefreshKey((value) => value + 1);
-        message.success('修復已完成');
+        message.success('支援操作已寫入審計');
       } else {
-        message.error(response.message || '修復套用失敗');
+        message.error(response.message || '支援操作未完成');
       }
     } catch (error) {
-      message.error('修復套用失敗');
+      message.error('支援操作未完成');
     } finally {
       setRepairBusy(false);
     }
@@ -1023,6 +1550,172 @@ const UserProgressWorkbench: React.FC = () => {
         </Card>
       ) : (
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Card title="支援工作台分頁" className="traveler-support-tabs-card">
+            <Tabs
+              type="card"
+              items={[
+                {
+                  key: 'overview',
+                  label: '總覽',
+                  children: '身份、偏好、關聯範圍與動態探索摘要集中在下方總覽區。',
+                },
+                {
+                  key: 'sessions',
+                  label: '故事 Session',
+                  children: '檢視旅客正在進行或已退出的故事模式 Session。',
+                },
+                {
+                  key: 'timeline',
+                  label: '事件時間線',
+                  children: '使用下方篩選器查找探索事件、打卡、獎勵、觸發與審計記錄。',
+                },
+                {
+                  key: 'breakdown',
+                  label: '探索度明細',
+                  children: '按範圍查看動態探索元素分母、權重與完成來源。',
+                },
+                {
+                  key: 'backpack',
+                  label: '背包 / 收集物',
+                  children: '查看已取得的拾取物、來源事件、稀有度與取得時間。',
+                },
+                {
+                  key: 'rewards',
+                  label: '獎勵與稱號',
+                  children: '核對遊戲內獎勵、稱號與可兌換獎勵是否與公開端一致。',
+                },
+                {
+                  key: 'trace',
+                  label: '規則追蹤',
+                  children: '按事件、規則或獎勵追蹤為何已發放、未發放或找不到綁定。',
+                },
+                {
+                  key: 'ops',
+                  label: '修復與審計',
+                  children: '所有支援操作都先預覽，再輸入確認字樣後寫入審計。',
+                },
+              ]}
+            />
+          </Card>
+
+          <Card title="時間線與規則上下文篩選" className="traveler-support-filter-card">
+            <Row gutter={[12, 12]}>
+              <Col xs={24} md={12} xl={6}>
+                <Space direction="vertical" size={4} className="traveler-support-filter-wide">
+                  <Text type="secondary">故事線</Text>
+                  <Select
+                    allowClear
+                    placeholder="選擇故事線"
+                    value={selectedStorylineId}
+                    options={storylineOptions}
+                    onChange={handleStorylineChange}
+                    className="traveler-support-filter-wide"
+                  />
+                </Space>
+              </Col>
+              <Col xs={24} md={12} xl={6}>
+                <Space direction="vertical" size={4} className="traveler-support-filter-field">
+                  <Text type="secondary">章節 ID</Text>
+                  <InputNumber
+                    min={1}
+                    value={timelineChapterId}
+                    onChange={(value) => setTimelineChapterId(typeof value === 'number' ? value : undefined)}
+                    className="traveler-support-filter-field"
+                    placeholder="chapterId"
+                  />
+                </Space>
+              </Col>
+              <Col xs={24} md={12} xl={6}>
+                <Space direction="vertical" size={4} className="traveler-support-filter-field">
+                  <Text type="secondary">POI ID</Text>
+                  <InputNumber
+                    min={1}
+                    value={timelinePoiId}
+                    onChange={(value) => setTimelinePoiId(typeof value === 'number' ? value : undefined)}
+                    className="traveler-support-filter-field"
+                    placeholder="poiId"
+                  />
+                </Space>
+              </Col>
+              <Col xs={24} md={12} xl={6}>
+                <Space direction="vertical" size={4} className="traveler-support-filter-field">
+                  <Text type="secondary">地圖範圍類型</Text>
+                  <Select
+                    allowClear
+                    placeholder="mapScopeType"
+                    value={timelineMapScopeType}
+                    options={mapScopeTypeOptions}
+                    onChange={(value) => setTimelineMapScopeType(value)}
+                    className="traveler-support-filter-field"
+                  />
+                </Space>
+              </Col>
+              <Col xs={24} md={12} xl={6}>
+                <Space direction="vertical" size={4} className="traveler-support-filter-field">
+                  <Text type="secondary">地圖範圍 ID</Text>
+                  <InputNumber
+                    min={1}
+                    value={timelineMapScopeId}
+                    onChange={(value) => setTimelineMapScopeId(typeof value === 'number' ? value : undefined)}
+                    className="traveler-support-filter-field"
+                    placeholder="mapScopeId"
+                  />
+                </Space>
+              </Col>
+              <Col xs={24} md={12} xl={6}>
+                <Space direction="vertical" size={4} className="traveler-support-filter-wide">
+                  <Text type="secondary">事件類型</Text>
+                  <Select
+                    mode="multiple"
+                    allowClear
+                    placeholder="選擇事件類型"
+                    value={timelineEventTypes}
+                    options={timelineEventTypeOptions}
+                    onChange={(value) => setTimelineEventTypes(value)}
+                    className="traveler-support-filter-wide"
+                  />
+                </Space>
+              </Col>
+              <Col xs={24} md={12} xl={6}>
+                <Space direction="vertical" size={4} className="traveler-support-filter-field">
+                  <Text type="secondary">狀態</Text>
+                  <Select
+                    allowClear
+                    placeholder="選擇狀態"
+                    value={timelineStatus}
+                    options={timelineStatusOptions}
+                    onChange={(value) => setTimelineStatus(value)}
+                    className="traveler-support-filter-field"
+                  />
+                </Space>
+              </Col>
+              <Col xs={24} md={12} xl={6}>
+                <Space direction="vertical" size={4} className="traveler-support-filter-field">
+                  <Text type="secondary">獎勵類型</Text>
+                  <Select
+                    allowClear
+                    placeholder="選擇獎勵類型"
+                    value={timelineRewardType}
+                    options={timelineRewardTypeOptions}
+                    onChange={(value) => setTimelineRewardType(value)}
+                    className="traveler-support-filter-field"
+                  />
+                </Space>
+              </Col>
+              <Col xs={24} xl={12}>
+                <Space direction="vertical" size={4} className="traveler-support-filter-wide">
+                  <Text type="secondary">時間範圍</Text>
+                  <DatePicker.RangePicker
+                    showTime
+                    value={timelineRange}
+                    onChange={(value) => setTimelineRange(value)}
+                    className="traveler-support-filter-wide"
+                  />
+                </Space>
+              </Col>
+            </Row>
+          </Card>
+
           <Card title="身份與偏好">
             <Row gutter={[16, 16]}>
               <Col xs={24} xl={12}>
@@ -1405,6 +2098,147 @@ const UserProgressWorkbench: React.FC = () => {
             />
           </Card>
 
+          <Card title="背包 / 收集物" loading={rewardStateLoading}>
+            <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+              <Col xs={24} md={12} xl={6}>
+                <Statistic title="收集物" value={rewardState?.summary?.backpackCount ?? rewardState?.backpackItems?.length ?? 0} />
+              </Col>
+              <Col xs={24} md={12} xl={6}>
+                <Statistic title="遊戲內獎勵" value={rewardState?.summary?.gameRewardCount ?? rewardState?.gameRewards?.length ?? 0} />
+              </Col>
+              <Col xs={24} md={12} xl={6}>
+                <Statistic title="稱號" value={rewardState?.summary?.titleCount ?? rewardState?.titles?.length ?? 0} />
+              </Col>
+              <Col xs={24} md={12} xl={6}>
+                <Statistic title="最後取得時間" value={formatDateTime(rewardState?.summary?.lastEarnedAt)} />
+              </Col>
+            </Row>
+            <Table
+              rowKey={(record) => `${record.sourceType || 'item'}-${record.sourceId || record.code || record.sourceEventId}`}
+              columns={backpackColumns}
+              dataSource={rewardState?.backpackItems || []}
+              pagination={{ pageSize: 6 }}
+              locale={{ emptyText: '暫無背包或收集物資料' }}
+            />
+          </Card>
+
+          <Card title="獎勵與稱號" loading={rewardStateLoading}>
+            <Tabs
+              items={[
+                {
+                  key: 'gameRewards',
+                  label: '遊戲內獎勵',
+                  children: (
+                    <Table
+                      rowKey={(record) => `${record.rewardType || 'reward'}-${record.rewardId}-${record.sourceEventId || ''}`}
+                      columns={gameRewardColumns}
+                      dataSource={rewardState?.gameRewards || []}
+                      pagination={{ pageSize: 6 }}
+                      locale={{ emptyText: '暫無遊戲內獎勵' }}
+                    />
+                  ),
+                },
+                {
+                  key: 'titles',
+                  label: '榮譽稱號',
+                  children: (
+                    <Table
+                      rowKey={(record) => `${record.rewardId}-${record.sourceEventId || ''}`}
+                      columns={titleColumns}
+                      dataSource={rewardState?.titles || []}
+                      pagination={{ pageSize: 6 }}
+                      locale={{ emptyText: '暫無稱號' }}
+                    />
+                  ),
+                },
+                {
+                  key: 'redeemable',
+                  label: '兌換獎勵',
+                  children: (
+                    <Table
+                      rowKey="redemptionId"
+                      columns={rewardColumns}
+                      dataSource={rewardState?.redeemableRewards || workbench.rewardRedemptions}
+                      pagination={{ pageSize: 6 }}
+                      locale={{ emptyText: '暫無兌換獎勵' }}
+                    />
+                  ),
+                },
+              ]}
+            />
+          </Card>
+
+          <Card
+            title="規則追蹤"
+            loading={ruleTraceLoading}
+            extra={
+              <Space wrap>
+                <InputNumber
+                  min={1}
+                  value={traceSourceEventId}
+                  placeholder="sourceEventId"
+                  onChange={(value) => setTraceSourceEventId(typeof value === 'number' ? value : null)}
+                />
+                <InputNumber
+                  min={1}
+                  value={traceRuleId}
+                  placeholder="ruleId"
+                  onChange={(value) => setTraceRuleId(typeof value === 'number' ? value : null)}
+                />
+                <InputNumber
+                  min={1}
+                  value={traceRewardId}
+                  placeholder="rewardId"
+                  onChange={(value) => setTraceRewardId(typeof value === 'number' ? value : null)}
+                />
+                <InputNumber
+                  min={1}
+                  value={traceGameRewardId}
+                  placeholder="gameRewardId"
+                  onChange={(value) => setTraceGameRewardId(typeof value === 'number' ? value : null)}
+                />
+                <Button onClick={resetTraceFilters}>清除追蹤條件</Button>
+              </Space>
+            }
+          >
+            <Space direction="vertical" size={16} style={{ width: '100%' }}>
+              <Alert
+                type={ruleTrace?.traceStatus === 'eligible_granted' ? 'success' : ruleTrace?.traceStatus === 'missing_link' ? 'warning' : 'info'}
+                showIcon
+                message={ruleTrace?.traceStatusLabel || '規則追蹤狀態'}
+                description={ruleTrace?.explanation || '可按事件、規則、兌換獎勵或遊戲內獎勵查詢發放鏈路。'}
+              />
+              <Descriptions size="small" bordered column={2}>
+                <Descriptions.Item label="事件">
+                  {ruleTrace?.event?.eventId ? `#${ruleTrace.event.eventId}｜${ruleTrace.event.eventType || '未知事件'}` : '暫無'}
+                </Descriptions.Item>
+                <Descriptions.Item label="探索元素">
+                  {ruleTrace?.explorationElement?.title || ruleTrace?.explorationElement?.elementCode || '暫無'}
+                </Descriptions.Item>
+                <Descriptions.Item label="體驗步驟">
+                  {ruleTrace?.experienceStep?.stepName || ruleTrace?.experienceStep?.stepCode || '暫無'}
+                </Descriptions.Item>
+                <Descriptions.Item label="缺失鏈路">
+                  {(ruleTrace?.missingLinks || []).length > 0 ? (ruleTrace?.missingLinks || []).join('、') : '暫無'}
+                </Descriptions.Item>
+              </Descriptions>
+              <Table
+                rowKey={(record) => record.ruleId || record.code || 'rule'}
+                columns={ruleTraceRuleColumns}
+                dataSource={ruleTrace?.rules || []}
+                pagination={{ pageSize: 4 }}
+                locale={{ emptyText: '目前沒有可顯示的規則鏈路' }}
+              />
+              <Table
+                rowKey={(record) => `${record.grantSource || 'grant'}-${record.grantRowId || record.rewardId || record.gameRewardId}`}
+                columns={ruleTraceGrantColumns}
+                dataSource={ruleTrace?.grants || []}
+                pagination={{ pageSize: 4 }}
+                locale={{ emptyText: '目前沒有發放紀錄' }}
+              />
+            </Space>
+          </Card>
+
           <Card title="收集與獎勵來源">
             <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
               <Col xs={24} md={8}>
@@ -1435,7 +2269,7 @@ const UserProgressWorkbench: React.FC = () => {
             />
           </Card>
 
-          <Card title="修復與重算">
+          <Card title="修復與審計">
             <Alert
               type="warning"
               showIcon
@@ -1445,7 +2279,7 @@ const UserProgressWorkbench: React.FC = () => {
             />
             <Row gutter={[16, 16]}>
               <Col xs={24} xl={12}>
-                <Card title="重算快取" size="small">
+                <Card title="重新計算進度" size="small">
                   <Space direction="vertical" size={12} style={{ width: '100%' }}>
                     <Text>
                       目前範圍：{formatScopeTypeLabel(selectedScopeType)}｜{activeScopeName}
@@ -1456,7 +2290,12 @@ const UserProgressWorkbench: React.FC = () => {
                       placeholder="請填寫重算原因"
                       onChange={(event) => setRecomputeReason(event.target.value)}
                     />
-                    <Button loading={recomputeBusy} icon={<ReloadOutlined />} onClick={handlePreviewRecompute}>
+                    <Button
+                      loading={recomputeBusy}
+                      disabled={recomputeBusy}
+                      icon={<ReloadOutlined />}
+                      onClick={handlePreviewRecompute}
+                    >
                       預覽重算影響
                     </Button>
 
@@ -1494,6 +2333,7 @@ const UserProgressWorkbench: React.FC = () => {
                           type="primary"
                           danger
                           loading={recomputeBusy}
+                          disabled={recomputeBusy}
                           onClick={handleConfirmRecompute}
                         >
                           確認重算
@@ -1525,45 +2365,113 @@ const UserProgressWorkbench: React.FC = () => {
               </Col>
 
               <Col xs={24} xl={12}>
-                <Card title="事件修復" size="small">
+                <Card title="支援操作" size="small">
                   <Space direction="vertical" size={12} style={{ width: '100%' }}>
                     <Select
                       value={repairActionType}
                       options={[
                         { label: '補連孤兒事件', value: 'LINK_ORPHAN_EVENT' },
                         { label: '標記重複事件', value: 'MARK_DUPLICATE_CLIENT_EVENT' },
+                        { label: '標記重複事件（作廢重複）', value: 'VOID_DUPLICATE_EVENT' },
+                        { label: '補發獎勵', value: 'RESEND_REWARD' },
+                        { label: '留下問題註記', value: 'ANNOTATE_ISSUE' },
                       ]}
-                      onChange={(value) => setRepairActionType(value)}
+                      onChange={(value) => {
+                        setRepairActionType(value);
+                        setRepairPreview(null);
+                        setRepairConfirmText('');
+                      }}
                     />
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      value={repairTargetEventId}
-                      min={1}
-                      placeholder="目標事件 ID"
-                      onChange={(value) => setRepairTargetEventId(typeof value === 'number' ? value : null)}
+                    <Row gutter={[12, 12]}>
+                      <Col xs={24} md={12}>
+                        <InputNumber
+                          style={{ width: '100%' }}
+                          value={repairTargetEventId}
+                          min={1}
+                          placeholder="目標事件 ID"
+                          onChange={(value) => setRepairTargetEventId(typeof value === 'number' ? value : null)}
+                        />
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <InputNumber
+                          style={{ width: '100%' }}
+                          value={repairDuplicateOfEventId}
+                          min={1}
+                          placeholder="重複來源事件 ID"
+                          onChange={(value) =>
+                            setRepairDuplicateOfEventId(typeof value === 'number' ? value : null)
+                          }
+                        />
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <InputNumber
+                          style={{ width: '100%' }}
+                          value={repairReplacementElementId}
+                          min={1}
+                          placeholder="替代元素 ID"
+                          onChange={(value) =>
+                            setRepairReplacementElementId(typeof value === 'number' ? value : null)
+                          }
+                        />
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Input
+                          value={repairReplacementElementCode}
+                          placeholder="替代元素 Code"
+                          onChange={(event) => setRepairReplacementElementCode(event.target.value)}
+                        />
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <InputNumber
+                          style={{ width: '100%' }}
+                          value={repairSourceEventId}
+                          min={1}
+                          placeholder="sourceEventId"
+                          onChange={(value) => setRepairSourceEventId(typeof value === 'number' ? value : null)}
+                        />
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <InputNumber
+                          style={{ width: '100%' }}
+                          value={repairRuleId}
+                          min={1}
+                          placeholder="ruleId"
+                          onChange={(value) => setRepairRuleId(typeof value === 'number' ? value : null)}
+                        />
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <InputNumber
+                          style={{ width: '100%' }}
+                          value={repairRewardId}
+                          min={1}
+                          placeholder="rewardId"
+                          onChange={(value) => setRepairRewardId(typeof value === 'number' ? value : null)}
+                        />
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <InputNumber
+                          style={{ width: '100%' }}
+                          value={repairGameRewardId}
+                          min={1}
+                          placeholder="gameRewardId"
+                          onChange={(value) => setRepairGameRewardId(typeof value === 'number' ? value : null)}
+                        />
+                      </Col>
+                    </Row>
+                    <Select
+                      value={repairIssueSeverity}
+                      options={[
+                        { label: 'info 一般註記', value: 'info' },
+                        { label: 'warning 需要跟進', value: 'warning' },
+                        { label: 'critical 高風險', value: 'critical' },
+                      ]}
+                      onChange={(value) => setRepairIssueSeverity(value)}
                     />
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      value={repairReplacementElementId}
-                      min={1}
-                      placeholder="替代元素 ID（補連孤兒事件時可填）"
-                      onChange={(value) =>
-                        setRepairReplacementElementId(typeof value === 'number' ? value : null)
-                      }
-                    />
-                    <Input
-                      value={repairReplacementElementCode}
-                      placeholder="替代元素 Code（可選）"
-                      onChange={(event) => setRepairReplacementElementCode(event.target.value)}
-                    />
-                    <InputNumber
-                      style={{ width: '100%' }}
-                      value={repairDuplicateOfEventId}
-                      min={1}
-                      placeholder="重複來源事件 ID（標記重複事件時可填）"
-                      onChange={(value) =>
-                        setRepairDuplicateOfEventId(typeof value === 'number' ? value : null)
-                      }
+                    <Input.TextArea
+                      rows={3}
+                      value={repairAnnotationText}
+                      placeholder="問題註記內容（留下問題註記時必填）"
+                      onChange={(event) => setRepairAnnotationText(event.target.value)}
                     />
                     <Input.TextArea
                       rows={3}
@@ -1571,8 +2479,13 @@ const UserProgressWorkbench: React.FC = () => {
                       placeholder="請填寫修復原因"
                       onChange={(event) => setRepairReason(event.target.value)}
                     />
-                    <Button loading={repairBusy} icon={<ToolOutlined />} onClick={handlePreviewRepair}>
-                      預覽修復影響
+                    <Button
+                      loading={repairBusy}
+                      disabled={repairBusy}
+                      icon={<ToolOutlined />}
+                      onClick={handlePreviewRepair}
+                    >
+                      預覽{formatRepairActionLabel(repairActionType)}影響
                     </Button>
 
                     {repairPreview ? (
@@ -1609,9 +2522,10 @@ const UserProgressWorkbench: React.FC = () => {
                           type="primary"
                           danger
                           loading={repairBusy}
+                          disabled={repairBusy}
                           onClick={handleApplyRepair}
                         >
-                          套用修復
+                          套用{formatRepairActionLabel(repairActionType)}
                         </Button>
                       </Card>
                     ) : null}
