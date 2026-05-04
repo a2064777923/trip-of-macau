@@ -1,19 +1,19 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.1
-milestone_name: Material Production and Mini-program Experience Acceptance
+milestone: v3.2
+milestone_name: Traveler Gameplay Runtime and Operations Acceptance
 current_phase: null
 current_plan: null
-status: milestone_complete
-stopped_at: v3.1 archived; ready for /gsd-new-milestone
-last_updated: "2026-05-04T07:30:51+08:00"
-last_activity: 2026-05-04 -- v3.1 shipped with accepted WeChat UAT caveat
+status: defining_requirements
+stopped_at: v3.2 started; roadmap ready for Phase 41 planning
+last_updated: "2026-05-04T09:00:00+08:00"
+last_activity: 2026-05-04 -- v3.2 started for traveler gameplay runtime and operations acceptance
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 18
-  completed_plans: 18
-  percent: 100
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -23,21 +23,21 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-05-04)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Planning next milestone
+**Current focus:** v3.2 traveler gameplay runtime and operations acceptance
 
 ## Current Position
 
-Phase: none
+Phase: Not started
 Plan: none
-Milestone: `v3.1`
+Milestone: `v3.2`
 Current Phase: none
-Total Phases Planned: 5
-Status: v3.1 archived; ready for `/gsd-new-milestone`
+Total Phases Planned: 4
+Status: roadmap ready for Phase 41 planning
 Current Plan: none
-Last activity: 2026-05-04 -- v3.1 shipped with accepted WeChat UAT caveat
-Last Activity Description: v3.1 archived and milestone documents updated
+Last activity: 2026-05-04 -- v3.2 started for traveler gameplay runtime and operations acceptance
+Last Activity Description: v3.2 requirements and roadmap initialized
 
-Progress: [██████████] 100% of v3.1 plans complete; milestone archived
+Progress: [░░░░░░░░░░] 0% of v3.2 phases complete; start Phase 41
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Progress: [██████████] 100% of v3.1 plans complete; mileston
 - `v2.1`: 14 phases, 44 plans, archived with one accepted future slice on 2026-04-19
 - `v3.0`: 8 phases, 33 plans, admin core domain completion and control-plane linkage shipped on 2026-04-30
 - `v3.1`: 5 phases, 18 plans, material production and mini-program story-mode baseline shipped on 2026-05-04 with accepted WeChat UAT caveat
+- `v3.2`: active milestone for traveler gameplay runtime and operations acceptance
 
 ## Quick Tasks Completed
 
@@ -85,7 +86,8 @@ Progress: [██████████] 100% of v3.1 plans complete; mileston
 
 ### Pending Todos
 
-- Define the next milestone scope before adding new phases.
+- Plan Phase 41 before making v3.2 code changes.
+- Complete manual WeChat DevTools/device UAT instead of treating automated build smoke as equivalent.
 - Keep provider, COS, and AI keys outside tracked files.
 
 ### Blockers/Concerns
@@ -98,6 +100,6 @@ Progress: [██████████] 100% of v3.1 plans complete; mileston
 
 ## Session Continuity
 
-Last session: 2026-05-04T07:30:51+08:00
-Stopped at: v3.1 archived; ready for next milestone planning
-Resume file: .planning/milestones/v3.1-ROADMAP.md
+Last session: 2026-05-04T09:00:00+08:00
+Stopped at: v3.2 initialized; ready for Phase 41 planning
+Resume file: .planning/ROADMAP.md
