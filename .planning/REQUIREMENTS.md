@@ -21,10 +21,10 @@
 
 ### User Progress and Operations
 
-- [ ] **OPS-01**: Operator can inspect a traveler story session, exploration events, pickups, rewards, titles, and backpack state from admin without querying the database manually.
-- [ ] **OPS-02**: Operator can search/filter progress and reward records by user, story, chapter, POI/map, status, event type, and time range.
-- [ ] **OPS-03**: Operator can preview and execute safe support actions such as recompute progress, resend reward, void duplicate event, or annotate an issue with audit trail.
-- [ ] **OPS-04**: Operator can see why a traveler did or did not receive a configured reward/title by tracing from runtime event to rule, condition, and result.
+- [x] **OPS-01**: Operator can inspect a traveler story session, exploration events, pickups, rewards, titles, and backpack state from admin without querying the database manually.
+- [x] **OPS-02**: Operator can search/filter progress and reward records by user, story, chapter, POI/map, status, event type, and time range.
+- [x] **OPS-03**: Operator can preview and execute safe support actions such as recompute progress, resend reward, void duplicate event, or annotate an issue with audit trail.
+- [x] **OPS-04**: Operator can see why a traveler did or did not receive a configured reward/title by tracing from runtime event to rule, condition, and result.
 
 ### Management System Polish
 
@@ -69,10 +69,10 @@
 | PLAY-03 | Phase 42 | Complete |
 | PLAY-04 | Phase 42 | Complete |
 | PLAY-05 | Phase 41 | Verified |
-| OPS-01 | Phase 43 | Pending |
-| OPS-02 | Phase 43 | Pending |
-| OPS-03 | Phase 43 | Pending |
-| OPS-04 | Phase 43 | Pending |
+| OPS-01 | Phase 43 | Complete |
+| OPS-02 | Phase 43 | Complete |
+| OPS-03 | Phase 43 | Complete |
+| OPS-04 | Phase 43 | Complete |
 | ADMIN-01 | Phase 44 | Pending |
 | ADMIN-02 | Phase 44 | Pending |
 | ADMIN-03 | Phase 44 | Pending |
@@ -85,4 +85,4 @@
 
 ---
 *Requirements defined: 2026-05-04*  
-*Last updated: 2026-05-04 after Phase 41 execution*
+*Last updated: 2026-05-04 after Phase 43 execution*

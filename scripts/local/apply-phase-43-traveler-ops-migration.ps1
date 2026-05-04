@@ -181,6 +181,7 @@ function Test-Phase43Schema {
   $checks = @(
     (Test-Exists -Label 'table user_game_reward_grants' -SqlText "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'user_game_reward_grants';"),
     (Test-Exists -Label 'column user_game_reward_grants.idempotency_key' -SqlText "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_game_reward_grants' AND column_name = 'idempotency_key';"),
+    (Test-Exists -Label 'column user_game_reward_grants.deleted' -SqlText "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_game_reward_grants' AND column_name = 'deleted';"),
     (Test-Exists -Label 'index uk_user_game_reward_grant_idempotency' -SqlText "SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'user_game_reward_grants' AND index_name = 'uk_user_game_reward_grant_idempotency';"),
     (Test-Exists -Label 'column reward_redemptions.source_event_id' -SqlText "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reward_redemptions' AND column_name = 'source_event_id';"),
     (Test-Exists -Label 'column reward_redemptions.source_rule_id' -SqlText "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'reward_redemptions' AND column_name = 'source_rule_id';"),

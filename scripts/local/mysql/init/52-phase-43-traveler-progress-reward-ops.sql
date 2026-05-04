@@ -14,11 +14,28 @@ CREATE TABLE IF NOT EXISTS `user_game_reward_grants` (
   `idempotency_key` VARCHAR(128) NOT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` TINYINT NOT NULL DEFAULT 0,
   UNIQUE KEY `uk_user_game_reward_grant_idempotency` (`idempotency_key`),
   KEY `idx_user_game_reward_grants_user` (`user_id`, `granted_at`),
   KEY `idx_user_game_reward_grants_reward` (`game_reward_id`, `grant_status`),
   KEY `idx_user_game_reward_grants_source` (`source_event_id`, `rule_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET @column_exists = (
+  SELECT COUNT(*)
+  FROM `information_schema`.`columns`
+  WHERE `table_schema` = DATABASE()
+    AND `table_name` = 'user_game_reward_grants'
+    AND `column_name` = 'deleted'
+);
+SET @ddl = IF(
+  @column_exists = 0,
+  'ALTER TABLE `user_game_reward_grants` ADD COLUMN `deleted` TINYINT NOT NULL DEFAULT 0 AFTER `updated_at`',
+  'SELECT 1'
+);
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 SET @column_exists = (
   SELECT COUNT(*)

@@ -1,0 +1,8 @@
+{
+  "checkName": "補發獎勵一致性實測",
+  "reason": "煙測補發驗證：確認補發獎勵具有冪等性並能在公私端狀態中讀取。",
+  "sourceEventId": null,
+  "ruleId": null,
+  "rewardId": null,
+  "gameRewardId": null
+}
