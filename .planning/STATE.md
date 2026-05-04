@@ -4,14 +4,14 @@ milestone: v3.2
 milestone_name: Traveler Gameplay Runtime and Operations Acceptance
 current_phase: null
 current_plan: null
-status: defining_requirements
-stopped_at: v3.2 started; roadmap ready for Phase 41 planning
-last_updated: "2026-05-04T09:00:00+08:00"
-last_activity: 2026-05-04 -- v3.2 started for traveler gameplay runtime and operations acceptance
+status: planning_phase_41
+stopped_at: Phase 41 planned; ready for execute-phase
+last_updated: "2026-05-04T09:40:00+08:00"
+last_activity: 2026-05-04 -- Phase 41 planned for WeChat runtime UAT harness and story entry hardening
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 0
   percent: 0
 ---
@@ -32,12 +32,12 @@ Plan: none
 Milestone: `v3.2`
 Current Phase: none
 Total Phases Planned: 4
-Status: roadmap ready for Phase 41 planning
-Current Plan: none
-Last activity: 2026-05-04 -- v3.2 started for traveler gameplay runtime and operations acceptance
-Last Activity Description: v3.2 requirements and roadmap initialized
+Status: Phase 41 planned; ready for `/gsd-execute-phase 41`
+Current Plan: 41-01 / 41-02 / 41-03 planned
+Last activity: 2026-05-04 -- Phase 41 planned for WeChat runtime UAT harness and story entry hardening
+Last Activity Description: Phase 41 context, research, UI spec, validation strategy, and three executable plans created
 
-Progress: [░░░░░░░░░░] 0% of v3.2 phases complete; start Phase 41
+Progress: [░░░░░░░░░░] 0% of v3.2 phases complete; Phase 41 ready to execute
 
 ## Performance Metrics
 
@@ -86,7 +86,7 @@ Progress: [░░░░░░░░░░] 0% of v3.2 phases complete; start Pha
 
 ### Pending Todos
 
-- Plan Phase 41 before making v3.2 code changes.
+- Execute Phase 41 before planning Phase 42.
 - Complete manual WeChat DevTools/device UAT instead of treating automated build smoke as equivalent.
 - Keep provider, COS, and AI keys outside tracked files.
 
@@ -100,6 +100,6 @@ Progress: [░░░░░░░░░░] 0% of v3.2 phases complete; start Pha
 
 ## Session Continuity
 
-Last session: 2026-05-04T09:00:00+08:00
-Stopped at: v3.2 initialized; ready for Phase 41 planning
-Resume file: .planning/ROADMAP.md
+Last session: 2026-05-04T09:40:00+08:00
+Stopped at: Phase 41 planned; ready for execution
+Resume file: .planning/phases/41-wechat-runtime-uat-harness-and-story-entry-hardening/41-01-PLAN.md
