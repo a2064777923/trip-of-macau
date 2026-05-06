@@ -78,6 +78,19 @@
 4. Interaction templates, governance checks, and runtime-state actions include concise inline explanations and avoid JSON-first operator workflows.
 5. Final acceptance report separates automated smoke, browser/admin checks, WeChat DevTools/device checks, accepted caveats, and future gameplay scope.
 
+### Phase 45: Storyline Lifecycle Safety and Runtime Selection
+
+**Goal:** Make duplicate-storyline cleanup safe and ensure the mini-program selects the intended `東西方文明的戰火與共生` runtime instead of the old duplicate `濠江烽煙：東西方文明的戰火與共生`.
+
+**Requirements:** ADMIN-01, PLAY-01, PLAY-05, OPS-03
+
+**Success criteria:**
+1. Admin storyline deletion is impact-aware and blocks hard delete for published or dependency-bearing storylines.
+2. Published storylines can be safely archived/unpublished from public runtime without deleting chapters, flows, exploration events, user sessions, or reward bindings.
+3. The old duplicate `macau_fire_route` no longer appears in the public story list after the lifecycle correction.
+4. The mini-program story page and homepage recommendation prefer `east_west_war_and_coexistence`.
+5. Stale story IDs show controlled traveler-safe Traditional Chinese copy instead of a generic server failure.
+
 ## Archived Milestones
 
 <details>
@@ -143,4 +156,4 @@
 | v2.1 Interactive Rules Platform and AI Capability Center | 14-27 | 44/44 | Archived with accepted future slice | 2026-04-19 |
 | v3.0 Admin Core Domain Completion and Control-Plane Linkage | 28-35 | 33/33 | Shipped | 2026-04-30 |
 | v3.1 Material Production and Mini-program Experience Acceptance | 36-40 | 18/18 | Shipped with accepted UAT caveat | 2026-05-04 |
-| v3.2 Traveler Gameplay Runtime and Operations Acceptance | 41-44 | 12/12 Phase 41-43 plans | Active | - |
+| v3.2 Traveler Gameplay Runtime and Operations Acceptance | 41-45 | 12/12 Phase 41-43 plans | Active | - |
