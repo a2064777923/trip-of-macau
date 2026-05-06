@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@ant-design/pro-components';
 import {
+  Alert,
   App as AntdApp,
   Button,
   Card,
@@ -636,8 +637,9 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
   const flowColumns: ColumnsType<AdminExperienceFlowItem> = [
     {
       title: '流程',
+      width: 280,
       render: (_, record) => (
-        <Space direction="vertical" size={4} style={{ width: '100%', minWidth: 0 }}>
+        <Space direction="vertical" size={4} className="experience-flow-title-cell" style={{ width: '100%', minWidth: 0 }}>
           <Text strong ellipsis={{ tooltip: pickFlowName(record) }}>
             {pickFlowName(record)}
           </Text>
@@ -766,9 +768,17 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
   ];
 
   const renderFlowWorkbench = () => (
-    <Row gutter={16}>
-      <Col xs={24} xl={14}>
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      <Alert
+        type="info"
+        showIcon
+        message="體驗流程工作台負責把模板組裝成可綁定的流程"
+        description="流程描述一組可被 POI、章節、活動或手動目標套用的觸發與演出步驟。操作順序：先在「互動與任務模板庫」建立可復用模板，再在此頁把模板編成流程步驟，最後掛到 POI、室內節點或故事章節。故事線專屬增刪改效果請在「故事章節覆寫」或「故事路線與章節覆寫」處理。"
+      />
+      <Row gutter={[20, 20]} className="experience-flow-layout">
+      <Col xs={24} xl={15}>
         <Card
+          className="experience-workbench-table-card"
           title="體驗流程"
           extra={<Button type="primary" onClick={() => openFlow()}>新增流程</Button>}
         >
@@ -779,11 +789,14 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
             dataSource={flows}
             pagination={{ pageSize: 8 }}
             size="small"
+            className="experience-table-scroll-safe"
+            scroll={{ x: 1180 }}
           />
         </Card>
       </Col>
-      <Col xs={24} xl={10}>
+      <Col xs={24} xl={9}>
         <Card
+          className="experience-workbench-table-card"
           title={selectedFlow ? `流程編排：${pickFlowName(selectedFlow)}` : '流程時間線'}
           extra={selectedFlow ? <Button type="primary" onClick={() => openStep(selectedFlow.id)}>新增步驟</Button> : null}
         >
@@ -800,7 +813,14 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
                   ),
                 }))}
               />
-              <Table rowKey="id" columns={stepColumns} dataSource={selectedFlow.steps || []} pagination={false} size="small" />
+              <Table
+                rowKey="id"
+                columns={stepColumns}
+                dataSource={selectedFlow.steps || []}
+                pagination={false}
+                size="small"
+                scroll={{ x: 760 }}
+              />
             </Space>
           ) : (
             <Paragraph type="secondary">
@@ -809,7 +829,8 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
           )}
         </Card>
       </Col>
-    </Row>
+      </Row>
+    </Space>
   );
 
   const renderGovernance = () => (
@@ -857,11 +878,30 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
         <Card>
           <Title level={4} style={{ marginTop: 0 }}>編排方式</Title>
           <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-            POI、室內節點、故事章節等主體可綁定一條預設流程；故事章節默認繼承錨點流程，再用覆寫規則關閉、替換或追加步驟。探索度只配置元素權重，百分比由後端根據已發布元素動態計算。
+            本頁用途：設定地點、章節、活動或手動目標在小程序中的觸發條件、流程步驟與演出效果。這裡不是媒體資源庫；媒體上傳、預覽與素材狀態請到「媒體資源」或「故事素材包」處理。POI、室內節點、故事章節等主體可綁定一條預設流程；故事章節默認繼承錨點流程，再用覆寫規則關閉、替換或追加步驟。探索度只配置元素權重，百分比由後端根據已發布元素動態計算。
           </Paragraph>
         </Card>
 
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={8}>
+            <Card size="small" title="內容積木庫">
+              <Text type="secondary">管理可重用的圖文、音頻、影片與 Lottie 內容段落，只處理「展示內容」。</Text>
+            </Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card size="small" title="互動與任務模板庫">
+              <Text type="secondary">管理可重用的條件、觸發、任務玩法與效果模板，只處理「行為規格」。</Text>
+            </Card>
+          </Col>
+          <Col xs={24} md={8}>
+            <Card size="small" title="治理中心">
+              <Text type="secondary">跨 POI、章節、室內互動與獎勵做檢查和追蹤，不作為主要編輯入口。</Text>
+            </Card>
+          </Col>
+        </Row>
+
         <Tabs
+          className="experience-workbench-tabs"
           activeKey={activeTab}
           onChange={(key) => {
             const nextTab = key as TabKey;
@@ -884,7 +924,7 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
               label: '體驗流程綁定',
               children: (
                 <Card title="主體與流程綁定" extra={<Button type="primary" onClick={() => openBinding()}>新增綁定</Button>}>
-                  <Table rowKey="id" loading={loading} columns={bindingColumns} dataSource={bindings} pagination={{ pageSize: 10 }} />
+                  <Table rowKey="id" loading={loading} columns={bindingColumns} dataSource={bindings} pagination={{ pageSize: 10 }} scroll={{ x: 900 }} />
                 </Card>
               ),
             },
@@ -893,7 +933,7 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
               label: '故事章節覆寫',
               children: (
                 <Card title="繼承流程覆寫規則" extra={<Button type="primary" onClick={() => openOverride()}>新增覆寫</Button>}>
-                  <Table rowKey="id" loading={loading} columns={overrideColumns} dataSource={overrides} pagination={{ pageSize: 10 }} />
+                  <Table rowKey="id" loading={loading} columns={overrideColumns} dataSource={overrides} pagination={{ pageSize: 10 }} scroll={{ x: 900 }} />
                 </Card>
               ),
             },
@@ -902,7 +942,7 @@ const ExperienceOrchestrationWorkbench: React.FC<Props> = ({ initialTab = 'flows
               label: '探索元素與進度規則',
               children: (
                 <Card title="探索元素註冊表" extra={<Button type="primary" onClick={() => openElement()}>新增探索元素</Button>}>
-                  <Table rowKey="id" loading={loading} columns={elementColumns} dataSource={elements} pagination={{ pageSize: 10 }} />
+                  <Table rowKey="id" loading={loading} columns={elementColumns} dataSource={elements} pagination={{ pageSize: 10 }} scroll={{ x: 980 }} />
                 </Card>
               ),
             },

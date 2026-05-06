@@ -6,7 +6,7 @@
 
 ## User Constraints
 
-No `44-CONTEXT.md` exists in `.planning/phases/44-management-system-ia-polish-and-release-acceptance`, so there are no phase-specific locked decisions, discretion notes, or deferred ideas to copy verbatim. [VERIFIED: filesystem]
+`44-CONTEXT.md` exists for execution planning and resolves the post-research IA/evidence decisions. This research file was produced before that context artifact was finalized, so downstream agents must treat `44-CONTEXT.md` as the higher-precedence Phase 44 decision source. [RESOLVED]
 
 Project-level constraints that apply to this phase: preserve the brownfield Taro/React mini-program, Spring Boot/MyBatis-Plus backends, existing admin UI, local Docker MySQL/Mongo setup, `/admin` as the authoritative control plane, MySQL as primary operational storage, backend-mediated COS uploads, externalized secrets, UTF-8/utf8mb4 handling, and real local verification against services. [VERIFIED: AGENTS.md]
 
@@ -356,22 +356,19 @@ This mirrors prior UAT evidence tables while adding the requirement-specific evi
 | A2 | Table/button wrapping warning signs are inferred from UI behavior, not captured by an automated screenshot in this research pass. | Common Pitfalls | Planner may need browser screenshots to confirm exact layout issues. |
 | A3 | Removing visible placeholder entries is preferable to leaving them in the v3.2 operator path. | Common Pitfalls | If user wants future-scope placeholders visible, planner must keep them but clearly mark them as future. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Will Phase 44 include actual physical-device UAT?** [VERIFIED: 41-VERIFICATION.md]
    - What we know: Prior verification marks physical-device UAT as pending. [VERIFIED: 41-VERIFICATION.md, 42-VERIFICATION.md, 43-VERIFICATION.md]
-   - What's unclear: Whether a device/tester is available during execution. [ASSUMED]
-   - Recommendation: Plan the report to support PASS, FAIL, or PENDING for physical device, and do not gate UI polish on device availability. [VERIFIED: REQUIREMENTS.md]
+   - Decision: Phase 44 tooling must support PASS, FAIL, BLOCKED, or PENDING for physical-device checks, but execution may not mark physical-device UAT as PASS unless actual evidence is supplied. UI polish can complete without a device; final release acceptance remains BLOCKED for UAT-02 if neither DevTools nor physical-device flagship story smoke evidence is supplied. [RESOLVED]
 
 2. **Which placeholder entries are considered v3.2-owned workflows?** [VERIFIED: ROADMAP.md]
    - What we know: `map-tiles`, `campaigns`, `ops/sandbox`, and `system/audit` route to `ModulePlaceholder`. [VERIFIED: App.tsx]
-   - What's unclear: Whether the user wants these hidden, kept as future-labeled entries, or moved out of the primary navigation. [ASSUMED]
-   - Recommendation: Remove or demote visible shell-only entries from the v3.2 primary path; keep compatibility routes only if needed. [VERIFIED: ADMIN-01]
+   - Decision: Keep future-scope placeholders visible only when their page clearly says they are future/out-of-scope and never use them as v3.2 acceptance paths. Do not rename the locked story/content workflow labels just to reduce overlap; instead add in-page mission copy and hide only low-level implementation routes such as experience bindings/overrides from the visible sidebar. [RESOLVED]
 
 3. **Should Phase 44 add a new smoke script?** [VERIFIED: scripts/local]
    - What we know: Scripts exist for Phases 41-43; no Phase 44 smoke script exists. [VERIFIED: scripts/local]
-   - What's unclear: Whether acceptance evidence should be a new collector script or a manually assembled report. [ASSUMED]
-   - Recommendation: Prefer a lightweight report/checklist script only if it can reuse existing smoke commands without hardcoding secrets. [VERIFIED: AGENTS.md]
+   - Decision: Add a lightweight Phase 44 collector script. It must reuse existing smoke/build commands, redact secrets, read UTF-8 expectation data from files or built-in ASCII-safe markers where possible, and produce a report that cannot overclaim manual WeChat/browser evidence. [RESOLVED]
 
 ## Environment Availability
 

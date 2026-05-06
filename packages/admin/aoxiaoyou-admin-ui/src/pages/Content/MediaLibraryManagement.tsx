@@ -325,7 +325,7 @@ const MediaLibraryManagement: React.FC = () => {
           <List
             loading={loading}
             dataSource={assets}
-            locale={{ emptyText: <Empty description="尚未找到符合條件的資源" /> }}
+            locale={{ emptyText: <Empty description="尚未找到媒體資源，請調整篩選或先上傳素材。" /> }}
             grid={{ gutter: 16, xs: 1, sm: 2, lg: 3, xl: 4 }}
             pagination={{
               current: pageNum,
@@ -398,7 +398,7 @@ const MediaLibraryManagement: React.FC = () => {
                         <Text type="secondary" style={{ fontSize: 12 }}>
                           {asset.fileSizeBytes ? `${(asset.fileSizeBytes / 1024).toFixed(1)} KB` : '大小未提供'}
                         </Text>
-                        <Text type="secondary" style={{ display: 'block', width: '100%', minWidth: 0, fontSize: 12 }} ellipsis={{ tooltip: assetTitle(asset) }}>
+                        <Text type="secondary" className="material-url-text" style={{ display: 'block', width: '100%', minWidth: 0, fontSize: 12 }} ellipsis={{ tooltip: assetTitle(asset) }}>
                           {assetTitle(asset)}
                         </Text>
                       </Space>

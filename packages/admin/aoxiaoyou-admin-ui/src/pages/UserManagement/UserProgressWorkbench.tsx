@@ -248,7 +248,7 @@ function ellipsisText(value?: string | number | null) {
   if (value === undefined || value === null || value === '') {
     return '暫無';
   }
-  return <span className="traveler-support-ellipsis" title={String(value)}>{String(value)}</span>;
+  return <span className="traveler-support-ellipsis experience-code-text" title={String(value)}>{String(value)}</span>;
 }
 
 function computePercentDelta(legacy: AdminLegacyProgressSnapshot, currentSummary?: AdminUserProgressSummary | null) {
@@ -2038,7 +2038,7 @@ const UserProgressWorkbench: React.FC = () => {
               columns={elementColumns}
               dataSource={filteredElements}
               pagination={{ pageSize: 8 }}
-              locale={{ emptyText: '目前範圍沒有可顯示的探索元素' }}
+              locale={{ emptyText: '暫無符合條件的旅客進度資料' }}
             />
 
             {includeInactiveComparison ? (
@@ -2275,7 +2275,7 @@ const UserProgressWorkbench: React.FC = () => {
               showIcon
               style={{ marginBottom: 16 }}
               message="高影響操作"
-              description="所有操作都必須先預覽，再輸入指定確認字樣後才能送出，避免誤改旅客衍生進度。"
+              description="所有修復動作都會先預覽影響範圍，確認後才寫入審計紀錄。所有操作都必須先預覽，再輸入指定確認字樣後才能送出，避免誤改旅客衍生進度。"
             />
             <Row gutter={[16, 16]}>
               <Col xs={24} xl={12}>

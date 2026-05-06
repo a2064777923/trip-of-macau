@@ -53,6 +53,12 @@ function resolveSelectedKey(pathname: string) {
   if (/^\/content\/storylines\/[^/]+\/mode/.test(pathname)) {
     return '/content/storyline-mode';
   }
+  if (pathname.startsWith('/content/experience/bindings') || pathname.startsWith('/content/experience/overrides')) {
+    return '/content/experience';
+  }
+  if (pathname.startsWith('/content/chapters/workbench')) {
+    return '/content/chapters';
+  }
 
   const routeKeys = [
     '/dashboard',
@@ -78,8 +84,6 @@ function resolveSelectedKey(pathname: string) {
     '/content/blocks',
     '/content/experience',
     '/content/experience/templates',
-    '/content/experience/bindings',
-    '/content/experience/overrides',
     '/content/experience/exploration',
     '/content/experience/governance',
     '/content/campaigns',

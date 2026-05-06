@@ -487,7 +487,7 @@ function VersionAssetPreview({ record }: { record: StoryMaterialVersionRecord })
         </Tooltip>
         {compactLocation ? (
           <Tooltip title={location} placement="topLeft">
-            <Text type="secondary" className="story-material-package__asset-url">
+            <Text type="secondary" className="story-material-package__asset-url material-url-text">
               {compactLocation}
             </Text>
           </Tooltip>
@@ -495,7 +495,7 @@ function VersionAssetPreview({ record }: { record: StoryMaterialVersionRecord })
           <Text type="secondary">未配置資產路徑</Text>
         )}
         {record.posterFallbackItemKey ? (
-          <Text type="secondary" className="story-material-package__asset-url">
+          <Text type="secondary" className="story-material-package__asset-url material-url-text">
             fallback：{record.posterFallbackItemKey}
           </Text>
         ) : null}
@@ -1632,7 +1632,7 @@ const StoryMaterialPackageManagement: React.FC = () => {
                     type="info"
                     showIcon
                     message="素材包行是素材需求位，不等於已可用資產"
-                    description="待生產、無公開連結或未發布的行會保留在素材包內，因為它們代表故事線仍需要補齊的資源；可用性篩選只改變檢視，不會刪除 manifest 任務位。"
+                    description="不可預覽或已損毀的素材會保留為待處理項，不會計入可用資產。待生產、無公開連結或未發布的行會保留在素材包內，因為它們代表故事線仍需要補齊的資源；可用性篩選只改變檢視，不會刪除 manifest 任務位。"
                   />
                   <Row gutter={[16, 16]}>
                     {healthSummaryOrder.map((key) => (
@@ -1964,6 +1964,7 @@ const StoryMaterialPackageManagement: React.FC = () => {
               dataSource={versions}
               pagination={false}
               scroll={{ x: 1400 }}
+              locale={{ emptyText: '此素材尚未產生可回溯版本，請先匯入、生成或發布資產。' }}
               columns={[
                 {
                   title: '版本',

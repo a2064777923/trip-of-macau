@@ -138,6 +138,11 @@ export const MediaAssetPreview: React.FC<{
             小程序端用 Lottie Player 渲染
           </Text>
         ) : null}
+        {!asset.canonicalUrl || imageFailed || (!isImageAsset(asset) && !isLottieAsset(asset)) ? (
+          <Text type="secondary" style={{ maxWidth: size - 12, fontSize: 12, textAlign: 'center' }}>
+            此資源可保留在素材包中追蹤，但不應視為可發布素材。
+          </Text>
+        ) : null}
       </Space>
     </Card>
   );

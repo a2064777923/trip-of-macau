@@ -19,6 +19,25 @@ interface MediaAssetDetailDrawerProps {
   onClose: () => void;
 }
 
+const compactValueStyle: React.CSSProperties = {
+  display: 'block',
+  maxWidth: '100%',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+};
+
+const CompactValue: React.FC<{ value?: string | number | null; copyable?: boolean }> = ({ value, copyable }) => {
+  if (value === undefined || value === null || value === '') {
+    return <Text type="secondary">-</Text>;
+  }
+  return (
+    <Text style={compactValueStyle} title={String(value)} copyable={copyable ? { text: String(value) } : false}>
+      {String(value)}
+    </Text>
+  );
+};
+
 const MediaAssetDetailDrawer: React.FC<MediaAssetDetailDrawerProps> = ({
   open,
   asset,
@@ -35,6 +54,22 @@ const MediaAssetDetailDrawer: React.FC<MediaAssetDetailDrawerProps> = ({
             <MediaAssetMeta asset={asset} />
           </Space>
 
+          {!asset.canonicalUrl ? (
+            <Alert
+              type="warning"
+              showIcon
+              message="這份資源目前沒有可打開的公開連結"
+              description="資料庫仍保留這筆資產記錄，但它可能只是本地素材、待上傳需求位或 COS 同步失敗。請重新匯入/上傳，或檢查 objectKey 是否已發布成 canonicalUrl。"
+            />
+          ) : null}
+
+          <Alert
+            type="info"
+            showIcon
+            message="完整連結已收起，避免長網址撐破版面。"
+            description="物件鍵、客戶端相對路徑與 canonical URL 會以省略方式顯示，可用 tooltip 或複製功能查看完整內容。"
+          />
+
           {isAudioAsset(asset) && asset.canonicalUrl ? (
             <audio controls src={asset.canonicalUrl} style={{ width: '100%' }} />
           ) : null}
@@ -49,7 +84,9 @@ const MediaAssetDetailDrawer: React.FC<MediaAssetDetailDrawerProps> = ({
             <Descriptions.Item label="MIME">{asset.mimeType || '-'}</Descriptions.Item>
             <Descriptions.Item label="語言">{asset.localeCode || '-'}</Descriptions.Item>
             <Descriptions.Item label="上傳來源">{asset.uploadSource || '-'}</Descriptions.Item>
-            <Descriptions.Item label="客戶端相對路徑">{asset.clientRelativePath || '-'}</Descriptions.Item>
+            <Descriptions.Item label="客戶端相對路徑">
+              <CompactValue value={asset.clientRelativePath} copyable />
+            </Descriptions.Item>
             <Descriptions.Item label="上傳管理員">{asset.uploadedByAdminName || '-'}</Descriptions.Item>
             <Descriptions.Item label="處理策略">{asset.processingPolicyCode || '-'}</Descriptions.Item>
             <Descriptions.Item label="處理狀態">{asset.processingStatus || '-'}</Descriptions.Item>
@@ -64,7 +101,9 @@ const MediaAssetDetailDrawer: React.FC<MediaAssetDetailDrawerProps> = ({
             <Descriptions.Item label="發布時間">{asset.publishedAt || '-'}</Descriptions.Item>
             <Descriptions.Item label="建立時間">{asset.createdAt || '-'}</Descriptions.Item>
             <Descriptions.Item label="更新時間">{asset.updatedAt || '-'}</Descriptions.Item>
-            <Descriptions.Item label="COS 物件鍵">{asset.objectKey || '-'}</Descriptions.Item>
+            <Descriptions.Item label="COS 物件鍵">
+              <CompactValue value={asset.objectKey} copyable />
+            </Descriptions.Item>
             <Descriptions.Item label="Lottie 子類型">
               {isLottieAsset(asset) ? asset.animationSubtype || 'lottie-json' : '-'}
             </Descriptions.Item>
@@ -82,9 +121,12 @@ const MediaAssetDetailDrawer: React.FC<MediaAssetDetailDrawerProps> = ({
             </Descriptions.Item>
             <Descriptions.Item label="資源連結">
               {asset.canonicalUrl ? (
-                <Link href={asset.canonicalUrl} target="_blank">
-                  在新視窗開啟
-                </Link>
+                <Space direction="vertical" size={4} style={{ width: '100%', minWidth: 0 }}>
+                  <Link href={asset.canonicalUrl} target="_blank">
+                    在新視窗開啟
+                  </Link>
+                  <CompactValue value={asset.canonicalUrl} copyable />
+                </Space>
               ) : (
                 '-'
               )}

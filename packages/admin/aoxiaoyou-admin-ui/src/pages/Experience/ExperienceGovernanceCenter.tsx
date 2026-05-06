@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   App as AntdApp,
   Button,
   Card,
@@ -143,6 +144,17 @@ const ExperienceGovernanceCenter: React.FC = () => {
   const [checking, setChecking] = useState(false);
   const [detail, setDetail] = useState<AdminExperienceGovernanceDetail | null>(null);
   const [conflicts, setConflicts] = useState<AdminExperienceGovernanceFinding[]>([]);
+  const tableItems = items.map((item, index) => ({
+    ...item,
+    __rowKey: [
+      item.itemKey,
+      item.sourceDomain || '-',
+      item.ownerType || '-',
+      item.ownerId || item.ownerCode || '-',
+      item.stepCode || item.templateCode || '-',
+      index,
+    ].join(':'),
+  }));
 
   const loadData = async (nextQuery = query) => {
     setLoading(true);
@@ -234,11 +246,18 @@ const ExperienceGovernanceCenter: React.FC = () => {
       <Card className="experience-workbench-hero">
         <Title level={3} style={{ marginTop: 0 }}>體驗規則治理中心</Title>
         <Paragraph style={{ marginBottom: 0 }}>
-          聚合 POI 預設流程、故事章節覆寫、室內互動行為與獎勵規則，用同一套篩選與衝突檢查查看觸發鏈是否重合、獎勵是否重複、必要步驟是否被錯誤關閉。
+          治理中心聚合體驗流程、故事覆寫、室內互動與獎勵規則，用來檢查同場景全屏效果、重複獎勵與必要完成條件衝突。
         </Paragraph>
       </Card>
 
-      <Row gutter={12}>
+      <Alert
+        type="info"
+        showIcon
+        message="治理中心只負責檢查與追蹤，不是主要編輯入口"
+        description="若要改步驟內容，回到體驗流程工作台或故事路線與章節覆寫；若要改模板，回到互動與任務模板庫。此頁用來按城市、POI、章節、觸發類型、效果類型和風險篩出重合或衝突的規則。"
+      />
+
+      <Row gutter={[16, 16]}>
         <Col xs={12} md={4}><Card><Statistic title="模板" value={overview?.templateCount || 0} /></Card></Col>
         <Col xs={12} md={4}><Card><Statistic title="流程" value={overview?.flowCount || 0} /></Card></Col>
         <Col xs={12} md={4}><Card><Statistic title="綁定" value={overview?.bindingCount || 0} /></Card></Col>
@@ -270,10 +289,12 @@ const ExperienceGovernanceCenter: React.FC = () => {
 
       <Card title="治理項目">
         <Table
-          rowKey="itemKey"
+          rowKey="__rowKey"
           loading={loading}
           columns={columns}
-          dataSource={items}
+          dataSource={tableItems}
+          scroll={{ x: 1180 }}
+          locale={{ emptyText: '尚未找到治理項目，請調整篩選或先建立體驗流程。' }}
           pagination={{
             current: query.pageNum || 1,
             pageSize: query.pageSize || 20,
@@ -331,6 +352,7 @@ const ExperienceGovernanceCenter: React.FC = () => {
               }
               dataSource={detail?.usageRefs || []}
               pagination={false}
+              scroll={{ x: 760 }}
               columns={[
                 { title: '來源', dataIndex: 'sourceDomain' },
                 { title: '關係', dataIndex: 'relationType' },

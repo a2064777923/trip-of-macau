@@ -1,0 +1,151 @@
+{
+  "requiredLayoutText": [
+    "故事路線與章節覆寫",
+    "章節管理",
+    "內容積木庫",
+    "互動與任務模板庫",
+    "體驗規則治理中心"
+  ],
+  "hiddenVisibleRouteText": [
+    "content/experience/bindings\">",
+    "content/experience/overrides\">"
+  ],
+  "requiredPageMissionText": [
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/StorylineModeWorkbench/index.tsx",
+      "text": "本頁用途：編排故事模式路線、章節順序、錨點繼承與故事線覆寫。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/StorylineModeWorkbench/index.tsx",
+      "text": "不是章節內容編輯器"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/StorylineModeWorkbench/index.tsx",
+      "text": "進階 JSON 只作除錯與版本快照，不是主要編輯入口。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Content/StoryChapterWorkbench.tsx",
+      "text": "本頁用途：管理單一章節的標題、摘要、內容、錨點與發布狀態。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Content/StoryChapterWorkbench.tsx",
+      "text": "不是故事路線編排工具"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Content/StoryContentBlockManagement.tsx",
+      "text": "本頁用途：維護可被多個章節重用的圖文、音訊、影片、Lottie 與附件內容積木。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Content/StoryContentBlockManagement.tsx",
+      "text": "不是觸發規則"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceOrchestrationWorkbench.tsx",
+      "text": "本頁用途：設定地點、章節、活動或手動目標在小程序中的觸發條件、流程步驟與演出效果。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceOrchestrationWorkbench.tsx",
+      "text": "不是媒體資源庫"
+    }
+  ],
+  "requiredUsabilityText": [
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceOrchestrationWorkbench.tsx",
+      "text": "experience-flow-title-cell"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceOrchestrationWorkbench.tsx",
+      "text": "流程描述一組可被 POI、章節、活動或手動目標套用的觸發與演出步驟。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceOrchestrationWorkbench.tsx",
+      "text": "scroll={{ x: 1180"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceTemplateLibrary.tsx",
+      "text": "模板用來沉澱可重用的展示、觸發、任務玩法與獎勵演出；從預設複製後再按故事或地點微調。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceTemplateLibrary.tsx",
+      "text": "使用處會顯示哪些流程、章節或治理項目正在引用此模板。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceGovernanceCenter.tsx",
+      "text": "治理中心聚合體驗流程、故事覆寫、室內互動與獎勵規則"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceGovernanceCenter.tsx",
+      "text": "experience-filter-field-label"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceGovernanceCenter.tsx",
+      "text": "尚未找到治理項目，請調整篩選或先建立體驗流程。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceWorkbench.css",
+      "text": ".experience-flow-title-cell"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceWorkbench.css",
+      "text": ".experience-table-scroll-safe"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Experience/ExperienceWorkbench.css",
+      "text": ".experience-inline-help-card"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/UserManagement/UserProgressWorkbench.tsx",
+      "text": "所有修復動作都會先預覽影響範圍，確認後才寫入審計紀錄。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/UserManagement/UserProgressWorkbench.tsx",
+      "text": "暫無符合條件的旅客進度資料"
+    }
+  ],
+  "requiredMediaText": [
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/components/media/MediaAssetPreview.tsx",
+      "text": "無公開連結"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/components/media/MediaAssetPreview.tsx",
+      "text": "預覽載入失敗"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/components/media/MediaAssetPreview.tsx",
+      "text": "不可直接預覽"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/components/media/MediaAssetPreview.tsx",
+      "text": "此資源可保留在素材包中追蹤，但不應視為可發布素材。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/components/media/MediaAssetDetailDrawer.tsx",
+      "text": "完整連結已收起，避免長網址撐破版面。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/components/media/MediaAssetDetailDrawer.tsx",
+      "text": "textOverflow"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Content/StoryMaterialPackageManagement.tsx",
+      "text": "不可預覽或已損毀的素材會保留為待處理項，不會計入可用資產。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Content/StoryMaterialPackageManagement.tsx",
+      "text": "此素材尚未產生可回溯版本，請先匯入、生成或發布資產。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Content/StoryMaterialPackageManagement.tsx",
+      "text": "material-url-text"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Content/MediaLibraryManagement.tsx",
+      "text": "尚未找到媒體資源，請調整篩選或先上傳素材。"
+    },
+    {
+      "file": "packages/admin/aoxiaoyou-admin-ui/src/pages/Content/MediaLibraryManagement.tsx",
+      "text": "material-url-text"
+    }
+  ]
+}

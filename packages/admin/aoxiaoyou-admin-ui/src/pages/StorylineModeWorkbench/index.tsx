@@ -820,6 +820,13 @@ const StorylineModeWorkbench: React.FC = () => {
       className="storyline-mode-workbench"
     >
       <Spin spinning={loading}>
+        <Alert
+          type="info"
+          showIcon
+          message="本頁用途：編排故事模式路線、章節順序、錨點繼承與故事線覆寫。"
+          description="這裡不是章節內容編輯器；章節管理維護章節文本、錨點與內容積木，本頁只處理故事線模式下的路線、地圖顯示策略、章節間支線策略，以及對錨點預設體驗的繼承、停用、替換或追加。"
+          style={{ marginBottom: 16 }}
+        />
         <Row gutter={[16, 16]}>
           <Col xs={24} xl={6}>
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
@@ -1003,7 +1010,7 @@ const StorylineModeWorkbench: React.FC = () => {
                             <Alert
                               type="info"
                               showIcon
-                              message="進階 JSON 只作備援"
+                              message="進階 JSON 只作除錯與版本快照，不是主要編輯入口。"
                               description="一般情況請使用上方結構化設定；若開啟進階 JSON，後端仍會要求 schemaVersion。"
                             />
                             <Form.Item name="advancedJsonEnabled" label="使用進階 JSON 覆蓋" valuePropName="checked">
@@ -1318,7 +1325,7 @@ const StorylineModeWorkbench: React.FC = () => {
                                 <Alert
                                   type="info"
                                   showIcon
-                                  message="進階 JSON 只作 fallback"
+                                  message="進階 JSON 只作除錯與版本快照，不是主要編輯入口。"
                                   description="結構化欄位會自動編譯成 schemaVersion: 1 JSON；只有需要精修 runtime payload 時才開啟。"
                                 />
                                 <Form.Item name="advancedJsonEnabled" label="使用進階 JSON 覆蓋" valuePropName="checked">

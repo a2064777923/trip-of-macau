@@ -683,8 +683,8 @@ const StoryChapterWorkbench: React.FC = () => {
         <Alert
           type="info"
           showIcon
-          message="章節工作台"
-          description="故事線只綁定城市與子地圖。POI、任務點、標記與疊加物等具體錨點，都在章節層處理。"
+          message="本頁用途：管理單一章節的標題、摘要、內容、錨點與發布狀態。"
+          description="這裡不是故事路線編排工具；在這裡維護章節順序、四語文本、錨點、內容積木、解鎖條件與完成效果。若要讓章節繼承 POI 預設流程並停用、替換或追加某些互動，請到「故事路線與章節覆寫」或「體驗流程工作台」處理。"
         />
 
         <Card>

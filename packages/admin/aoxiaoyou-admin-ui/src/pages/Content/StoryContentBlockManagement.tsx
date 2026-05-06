@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PageContainer } from '@ant-design/pro-components';
 import {
+  Alert,
   App as AntdApp,
   Button,
   Drawer,
@@ -262,6 +263,13 @@ const StoryContentBlockManagement: React.FC = () => {
       ]}
     >
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Alert
+          type="info"
+          showIcon
+          message="本頁用途：維護可被多個章節重用的圖文、音訊、影片、Lottie 與附件內容積木。"
+          description="這裡不是觸發規則、任務玩法或獎勵邏輯入口；那些由體驗流程與互動模板管理。積木庫只保存可在多個章節中重用的圖文、音訊、影片、Lottie、附件列表，章節可選取後排序並做局部覆寫。"
+        />
+
         <Form
           form={filterForm}
           layout="inline"
