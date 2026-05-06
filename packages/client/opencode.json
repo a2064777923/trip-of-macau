@@ -5,7 +5,7 @@
     "openAI": {
       "options": {
         "baseURL": "https://new.lemonapi.site/v1",
-        "apiKey": "sk-NST51Yc99gw9dzlYd9BvxjPKFlizkFsoItJajG49Rgh9h7RM"
+        "apiKey": "REPLACE_WITH_LOCAL_API_KEY"
       },
       "models": {
         "[L]gemini-3.1-pro-preview": {
