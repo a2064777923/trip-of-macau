@@ -91,13 +91,107 @@ CREATE TABLE IF NOT EXISTS `story_material_package_item_versions` (
   CONSTRAINT `fk_story_material_package_item_versions_asset` FOREIGN KEY (`content_asset_id`) REFERENCES `content_assets` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Immutable package item material production versions and rollback targets';
 
+INSERT INTO `story_material_package_item_versions` (
+  `package_item_id`,
+  `version_no`,
+  `version_status`,
+  `promotion_status`,
+  `content_asset_id`,
+  `source_type`,
+  `provider_name`,
+  `model_code`,
+  `local_path`,
+  `cos_object_key`,
+  `canonical_url`,
+  `asset_kind`,
+  `poster_fallback_item_key`,
+  `prompt_text`,
+  `script_text`,
+  `provenance_json`,
+  `currency_code`,
+  `created_by_admin_id`,
+  `created_by_admin_name`,
+  `created_at`,
+  `updated_at`,
+  `deleted`
+)
+SELECT
+  item.`id`,
+  1,
+  'uploaded',
+  CASE
+    WHEN item.`status` = 'published' THEN 'published'
+    WHEN item.`status` = 'approved' THEN 'approved'
+    ELSE 'uploaded'
+  END,
+  item.`asset_id`,
+  'seed_baseline',
+  COALESCE(NULLIF(item.`provenance_type`, ''), 'seed'),
+  'phase33-material-package',
+  COALESCE(item.`local_path`, ''),
+  COALESCE(item.`cos_object_key`, ''),
+  COALESCE(item.`canonical_url`, ''),
+  COALESCE(item.`asset_kind`, ''),
+  COALESCE(item.`fallback_item_key`, ''),
+  item.`prompt_text`,
+  item.`script_text`,
+  JSON_OBJECT(
+    'schemaVersion', 1,
+    'sourceType', 'seed_baseline',
+    'note', 'Backfilled baseline version from existing story_material_package_items after Phase 36 versioning migration.',
+    'itemStatus', COALESCE(item.`status`, ''),
+    'provenanceType', COALESCE(item.`provenance_type`, '')
+  ),
+  'CNY',
+  NULL,
+  'phase36-baseline-backfill',
+  COALESCE(item.`updated_at`, NOW()),
+  COALESCE(item.`updated_at`, NOW()),
+  0
+FROM `story_material_package_items` item
+JOIN `content_assets` asset ON asset.`id` = item.`asset_id`
+WHERE item.`deleted` = 0
+  AND item.`asset_id` IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1
+    FROM `story_material_package_item_versions` existing
+    WHERE existing.`package_item_id` = item.`id`
+      AND existing.`deleted` = 0
+  );
+
+UPDATE `story_material_package_items` item
+JOIN (
+  SELECT latest.`package_item_id`, version.`id`, version.`version_no`, version.`created_at`
+  FROM (
+    SELECT `package_item_id`, MAX(`version_no`) AS `latest_version_no`
+    FROM `story_material_package_item_versions`
+    WHERE `deleted` = 0
+    GROUP BY `package_item_id`
+  ) latest
+  JOIN `story_material_package_item_versions` version
+    ON version.`package_item_id` = latest.`package_item_id`
+   AND version.`version_no` = latest.`latest_version_no`
+   AND version.`deleted` = 0
+) current_version ON current_version.`package_item_id` = item.`id`
+SET
+  item.`current_version_id` = IF(item.`current_version_id` IS NULL, current_version.`id`, item.`current_version_id`),
+  item.`current_version_no` = IF(item.`current_version_no` IS NULL OR item.`current_version_no` = 0, current_version.`version_no`, item.`current_version_no`),
+  item.`last_produced_at` = IF(item.`last_produced_at` IS NULL, current_version.`created_at`, item.`last_produced_at`)
+WHERE item.`deleted` = 0
+  AND (
+    item.`current_version_id` IS NULL
+    OR item.`current_version_no` IS NULL
+    OR item.`current_version_no` = 0
+    OR item.`last_produced_at` IS NULL
+  );
+
 INSERT INTO `seed_runs` (`seed_key`, `description`, `status`, `executed_at`, `notes`)
 VALUES (
   'phase36-material-production-versioning',
   'Create material production version journal and package item current-version pointers',
   'completed',
   NOW(),
-  'Adds immutable story_material_package_item_versions and additive pointer columns for Phase 36 production promotion and rollback.'
+  'Adds immutable story_material_package_item_versions, additive pointer columns, and idempotent baseline version backfill for existing material package items.'
 )
 ON DUPLICATE KEY UPDATE
   `description` = VALUES(`description`),
