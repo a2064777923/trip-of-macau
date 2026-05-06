@@ -220,6 +220,52 @@
 - The verification cost was justified because it found stale service processes and missing runtime media links.
 - Future full-gameplay milestones will likely cost more in device UAT and interaction debugging than backend DTO work.
 
+## Milestone: v3.2 - Traveler Gameplay Runtime and Operations Acceptance
+
+**Shipped:** 2026-05-06
+**Phases:** 5 | **Plans:** 16 | **Status:** shipped with accepted WeChat DevTools/physical-device UAT caveat
+
+### What Was Built
+
+- WeChat runtime entry hardening and story baseline smoke coverage for the live flagship story route.
+- A traveler gameplay event engine for compiled runtime steps, pickups, tasks, rewards, titles, sessions, and unsupported-feature fallbacks.
+- Admin traveler progress/reward operations with support workbench views, timeline filters, safe annotations, idempotent reward resend, and rule trace evidence.
+- Admin IA and release-readiness polish for story/gameplay operations, media/material previews, helper copy, and truthful acceptance reporting.
+- Safe storyline lifecycle controls that archive dependency-bearing duplicates and make the mini-program choose the intended `east_west_war_and_coexistence` runtime.
+
+### What Worked
+
+- Keeping UAT evidence truthful prevented the milestone from falsely claiming device acceptance.
+- Local public/admin smoke checks caught stale story selection and verified the new flagship runtime still has five chapters.
+- Impact-aware lifecycle handling avoided orphaning chapters, content links, exploration events, sessions, and progress rows.
+- Operator support workflows became much more concrete once traveler events, rewards, and rule traces were connected.
+
+### What Was Inefficient
+
+- WeChat DevTools automation and local device evidence still lagged behind backend/admin implementation.
+- Several mini-program visual/runtime polish issues had to be captured as debug notes before they could be systematically closed.
+- The story page bundle-size warning remains unresolved and will need a dedicated split/lazy-load pass.
+
+### Patterns Established
+
+- Storyline deletion must be preview-first, dependency-aware, and archive-by-default.
+- Public runtime selection should prefer exact canonical codes and reject legacy duplicates explicitly.
+- Release UAT documents should keep automated, browser/admin, DevTools, physical-device, caveat, and future-scope rows separate.
+- Traveler support operations need both preview actions and audit evidence, not direct database fixes.
+
+### Key Lessons
+
+- Mini-program acceptance cannot be inferred from backend/API smoke; DevTools or physical-device evidence must be captured directly.
+- Duplicate content cleanup is a lifecycle problem, not a delete-button problem.
+- Keeping old story records archived is safer than deleting them when traveler progress or exploration events exist.
+- Gameplay runtime milestones should budget time for actual simulator/device observation, not just build success.
+
+### Cost Observations
+
+- v3.2 spent more effort on integration and verification than on new schema, which was the right tradeoff for live gameplay acceptance.
+- The remaining cost is mostly in manual device validation, bundle splitting, and advanced gameplay engines.
+- Future milestones should reserve explicit capacity for WeChat DevTools MCP/manual UAT before closeout.
+
 ## Cross-Milestone Trends
 
 - v1.0 established the project's baseline pattern: phased delivery, admin/public contract discipline, and smoke-first verification.
@@ -227,3 +273,4 @@
 - v2.1 established a stronger closure standard: late-phase verification, accepted-carryover discipline, and planning-state reconciliation are now part of milestone completion rather than optional cleanup.
 - v3.0 confirmed that the admin platform works best when domain workbenches sit on shared runtime models, and when deferred experiential/material work is named explicitly instead of hidden inside "complete" claims.
 - v3.1 confirmed that generated assets and mini-program runtime acceptance need production-style QA, safe public DTOs, and explicit manual-UAT boundaries.
+- v3.2 confirmed that mini-program gameplay acceptance needs direct simulator/device evidence, and that lifecycle safety matters once real traveler progress references content.

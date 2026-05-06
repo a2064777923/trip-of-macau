@@ -1,5 +1,27 @@
 # Milestones
 
+## v3.2 Traveler Gameplay Runtime and Operations Acceptance (Shipped: 2026-05-06)
+
+**Phases completed:** 5 phases, 16 plans
+**Status:** shipped with accepted WeChat DevTools/physical-device UAT caveat
+
+**Key accomplishments:**
+
+- Hardened the WeChat mini-program story entry path against the live public backend and kept backend failures visible instead of masked by mock fallback.
+- Added baseline traveler gameplay runtime handling for compiled story/POI events, pickups, tasks, rewards, titles, session exit/re-entry, and unsupported-feature fallback.
+- Built admin support operations for traveler progress, story sessions, reward/title state, timeline filters, annotations, reward resend, and rule trace.
+- Polished story/gameplay admin IA, media/material preview behavior, helper copy, and release-readiness reporting.
+- Added safe duplicate-storyline lifecycle handling: `macau_fire_route` is archived, `east_west_war_and_coexistence` is the selected public flagship runtime, and hard delete is blocked for dependency-bearing stories.
+
+**Accepted caveats:**
+
+- WeChat DevTools and physical-device flagship story smoke rows remain pending in `44-UAT.md`; this milestone archives with that caveat instead of claiming false PASS.
+- Full AR/photo recognition, speech-input NPC interactions, route-coverage games, puzzle/cannon-defense engines, and production indoor visual positioning remain future gameplay scope.
+- The mini-program story page still has an advisory bundle-size warning.
+- Three debug notes remain under `.planning/debug/` as investigation history for mini-program runtime/content UX issues.
+
+---
+
 ## v3.1 Material Production and Mini-program Experience Acceptance (Shipped: 2026-05-04)
 
 **Phases completed:** 5 phases, 18 plans, 30+ tracked tasks

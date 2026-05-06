@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v3.2
 milestone_name: Traveler Gameplay Runtime and Operations Acceptance
-current_phase: 45
-current_plan: 1
-status: completed
-stopped_at: Completed 45-01-PLAN.md
-last_updated: "2026-05-06T04:36:45.518Z"
+current_phase: null
+current_plan: null
+status: between_milestones
+stopped_at: Completed v3.2 milestone
+last_updated: "2026-05-06T12:55:00+08:00"
 last_activity: 2026-05-06
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 16
-  completed_plans: 16
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
   percent: 100
 ---
 
@@ -20,24 +20,24 @@ progress:
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-05-04)
+See: `.planning/PROJECT.md` (updated 2026-05-06)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Phase 45 — storyline-lifecycle-safety-and-runtime-selection
+**Current focus:** Between milestones — ready to plan the next milestone
 
 ## Current Position
 
-Phase: 45 (storyline-lifecycle-safety-and-runtime-selection) — COMPLETE
-Plan: 1 of 1
-Milestone: `v3.2`
-Current Phase: 45
-Total Phases Planned: 5
-Status: Phase 45 complete; v3.2 planned implementation phases complete, manual WeChat UAT caveat still open
-Current Plan: 1
+Phase: None
+Plan: None
+Milestone: `v3.2` archived
+Current Phase: None
+Total Phases Planned: 0
+Status: Between milestones; v3.2 shipped with accepted WeChat UAT caveat
+Current Plan: None
 Last activity: 2026-05-06
-Last Activity Description: Phase 45 complete
+Last Activity Description: v3.2 milestone completed and archived
 
-Progress: [██████████] 100% of planned v3.2 phases complete; milestone closeout or manual WeChat UAT evidence is next
+Progress: v3.2 complete; next step is `/gsd-new-milestone`
 
 ## Performance Metrics
 
@@ -48,7 +48,7 @@ Progress: [██████████] 100% of planned v3.2 phases complete;
 - `v2.1`: 14 phases, 44 plans, archived with one accepted future slice on 2026-04-19
 - `v3.0`: 8 phases, 33 plans, admin core domain completion and control-plane linkage shipped on 2026-04-30
 - `v3.1`: 5 phases, 18 plans, material production and mini-program story-mode baseline shipped on 2026-05-04 with accepted WeChat UAT caveat
-- `v3.2`: planned phases 41-45 complete; manual WeChat DevTools/physical-device UAT evidence remains a known caveat before final milestone archival
+- `v3.2`: 5 phases and 16 plans shipped on 2026-05-06 with accepted WeChat DevTools/physical-device UAT caveat
 
 ## Quick Tasks Completed
 

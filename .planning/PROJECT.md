@@ -2,9 +2,9 @@
 
 ## What This Is
 
-Trip of Macau is a brownfield WeChat mini-program plus admin platform for story-driven Macau exploration, map discovery, indoor navigation, check-ins, collectibles, rewards, AI-assisted operations, and lifecycle governance.
+Trip of Macau is a brownfield WeChat mini-program plus admin platform for story-driven Macau exploration, map discovery, indoor navigation, check-ins, collectibles, rewards, AI-assisted operations, lifecycle governance, and operator-supported traveler gameplay.
 
-The live backend cutover and three admin-platform milestones are archived. The current system has an admin-owned control plane for configuring story experiences, POI default flows, interaction/task templates, dynamic progress, seeded flagship content, public runtime DTOs, generated media packages, and operational lifecycle actions. The next focus is turning that configured runtime into a real device-verifiable traveler gameplay loop.
+The live backend cutover and five major platform milestones are archived or ready for archival through v3.2. The current system has an admin-owned control plane for configuring story experiences, POI default flows, interaction/task templates, dynamic progress, seeded flagship content, public runtime DTOs, generated media packages, operational lifecycle actions, traveler gameplay events, and support operations. The next milestone should be chosen around concrete device feedback, advanced gameplay depth, release governance, or production readiness.
 
 ## Core Value
 
@@ -26,14 +26,15 @@ Admins can configure the live mini-program experience end-to-end, and the mini-p
 - `public runtime generated-asset consumption exists` - `v3.1` Phase 38 enriched public runtime asset DTOs with availability/fallback/unsupported states, sanitized usage hints, privacy checks, and authenticated baseline story event/session smoke coverage.
 - `mini-program story-mode baseline exists` - `v3.1` Phase 39 connected the story page and map handoff to live public runtime data, generated media assets, idempotent story events, pickups/rewards/progress, and Traditional Chinese fallback states.
 - `release readiness and AI cost visibility exist` - `v3.1` Phase 40 added the release-readiness smoke bundle, AI monitoring/cost/job-history UI, scoped history visibility, acceptance report, and WeChat DevTools/device UAT checklist.
+- `traveler gameplay runtime baseline exists` - `v3.2` Phases 41-42 hardened the mini-program story entry path and added baseline event handling for runtime steps, pickups, tasks, rewards, titles, sessions, and unsupported-feature fallbacks.
+- `traveler support operations exist` - `v3.2` Phase 43 connected progress, sessions, events, rewards, titles, annotations, reward resend, and rule trace into admin support workflows.
+- `management-system release polish exists` - `v3.2` Phase 44 cleaned story/gameplay IA, media/material preview states, operator helper copy, and release-readiness evidence structure.
+- `storyline lifecycle safety exists` - `v3.2` Phase 45 added impact-aware archive/delete handling and made the mini-program prefer the canonical `east_west_war_and_coexistence` runtime over the archived duplicate.
 
 ### Active
 
-- [ ] Complete WeChat DevTools and device UAT for the live story-mode baseline, with documented fixes for environment, routing, auth, bundle-size, and media playback issues.
-- [ ] Convert public runtime flows into mini-program gameplay engines for POI walk-in, story chapter progression, pickups, task cards, rewards, titles, and safe unsupported-feature fallback.
-- [ ] Connect traveler progress, backpack, rewards, story sessions, and admin operations so user-facing gameplay state can be inspected, repaired, and supported from the management system.
-- [ ] Polish the remaining management-system IA and workflow rough edges that directly affect live story/gameplay operations, removing dead or misleading entries instead of leaving shell-only pages.
-- [ ] Produce a milestone acceptance pack that proves backend health, admin control paths, public runtime contracts, mini-program build, and manual device UAT status truthfully.
+- [ ] Collect concrete WeChat DevTools or physical-device flagship story smoke evidence for the v3.2 story journey.
+- [ ] Define the next milestone scope from real mini-program feedback, advanced gameplay priorities, release approval workflow, or production-readiness needs.
 
 ### Out of Scope Until Planned
 
@@ -56,7 +57,7 @@ This project began from an existing codebase, not a greenfield build.
 
 `v3.1` promoted the flagship story material package from planned records into generated/imported COS-backed assets, added QA/reuse controls, aligned public runtime asset/event contracts, and connected the mini-program story-mode baseline to the live public backend. It archived with an accepted caveat that manual WeChat DevTools/device UAT remains pending.
 
-`v3.2` starts from that caveat. It does not rebuild the admin orchestration substrate; it makes the configured story/gameplay runtime usable and verifiable in the mini-program, while tightening the management-system surfaces needed to operate, inspect, and support that runtime.
+`v3.2` started from that caveat and shipped the planned runtime/support/IA/lifecycle work. It keeps WeChat DevTools and physical-device flagship-story evidence as an accepted caveat instead of falsely marking device acceptance complete.
 
 ## Constraints
 
@@ -77,18 +78,20 @@ This project began from an existing codebase, not a greenfield build.
 - `v2.1 Interactive Rules Platform and AI Capability Center` archived on 2026-04-19 with one accepted future slice.
 - `v3.0 Admin Core Domain Completion and Control-Plane Linkage` shipped on 2026-04-30.
 - `v3.1 Material Production and Mini-program Experience Acceptance` shipped on 2026-05-04 with an accepted WeChat UAT caveat.
-- `v3.2 Traveler Gameplay Runtime and Operations Acceptance` is active as of 2026-05-04.
+- `v3.2 Traveler Gameplay Runtime and Operations Acceptance` shipped on 2026-05-06 with an accepted WeChat DevTools/physical-device UAT caveat.
 
-## Current Milestone: v3.2 Traveler Gameplay Runtime and Operations Acceptance
+## Between Milestones
 
-**Goal:** Turn the configured story/material/runtime platform into a device-verifiable mini-program gameplay loop, with operator support paths for progress, rewards, media, and runtime issues.
+v3.2 planned implementation is complete. The next step is to start a new milestone or collect concrete WeChat DevTools/physical-device UAT evidence before deciding the next scope.
 
-**Target features:**
-- WeChat DevTools and device UAT closure for the live flagship story route.
-- Mini-program gameplay engines for POI/story runtime steps, pickups, tasks, reward/title feedback, media playback, and fallback states.
-- User progress, backpack, reward, title, and story-session visibility tied back into admin support workflows.
-- Management-system IA cleanup for story/gameplay operations and removal of misleading or obsolete shells.
-- Release-readiness evidence that separates automated smoke, manual UAT, accepted caveats, and future gameplay scope.
+**Open caveat:**
+- `UAT-02`: concrete DevTools or physical-device flagship story smoke evidence is still pending in `44-UAT.md`.
+
+**Likely next milestone themes:**
+- Real device UAT and mini-program UX/gameplay polish.
+- Advanced gameplay engines for AR/photo, speech, puzzle, route coverage, cannon defense, and indoor positioning.
+- Release governance such as approval workflow and runtime snapshot comparison.
+- Performance hardening, especially story-page bundle splitting.
 
 ## Key Decisions
 
@@ -106,6 +109,7 @@ This project began from an existing codebase, not a greenfield build.
 | Archive v3.1 with pending manual WeChat UAT caveat | The backend/runtime/build evidence passed, but device UAT was not honestly completed | v3.1 is shipped with `40-UAT.md` pending; future milestones should not treat full gameplay as already delivered. |
 | Use `v3.2` for traveler gameplay runtime and operations acceptance | The admin configuration substrate exists, but the user-facing gameplay loop still needs real device validation and deeper runtime state handling | v3.2 starts at Phase 41 and prioritizes mini-program playability plus operator support over more admin-only scaffolding. |
 | Keep complex AR/speech/puzzle engines behind safe runtime templates until proven on device | These features affect device APIs, permissions, latency, and UX; implementing them as fully production-grade engines prematurely would create brittle scope | v3.2 can implement baseline playable engines and fallbacks, while production AR/speech/advanced minigames remain explicitly gated by device UAT evidence. |
+| Archive duplicate storylines rather than hard-delete them | Storylines can still be referenced by chapters, content relations, exploration events, sessions, and progress rows | Phase 45 archives `macau_fire_route`, blocks hard delete for dependency-bearing stories, and keeps `east_west_war_and_coexistence` as the canonical runtime. |
 
 ## Evolution
 
@@ -122,4 +126,4 @@ This document evolves at phase transitions and milestone boundaries.
 3. Refresh the current-state and milestone sections before reopening planning.
 
 ---
-*Last updated: 2026-05-04 after starting v3.2 traveler gameplay runtime and operations acceptance*
+*Last updated: 2026-05-06 after shipping v3.2 traveler gameplay runtime and operations acceptance*
