@@ -51,6 +51,7 @@ export interface PoiItem {
   subMapName?: string
   markerKey?: 'church' | 'ghost' | 'lisboa' | 'ruins' | 'theater' | 'user'
   mapIconUrl?: string
+  coverImageUrl?: string
   introTitle?: string
   introSummary?: string
   indoorMapTitle?: string
@@ -206,6 +207,9 @@ export interface StoryRuntimeStepItem {
   triggerType?: string
   mediaAssetId?: number
   mediaAsset?: StoryMediaAssetItem
+  triggerConfig?: Record<string, unknown>
+  conditionConfig?: Record<string, unknown>
+  effectConfig?: Record<string, unknown>
   rewardRuleIds?: unknown
   explorationWeightLevel?: string
   explorationWeightValue?: number
@@ -307,6 +311,8 @@ export interface StoryModeRouteChapter {
   anchorType?: string
   anchorTargetId?: number
   anchorTargetCode?: string
+  latitude?: number
+  longitude?: number
   status: 'completed' | 'current' | 'inactive' | 'locked'
 }
 

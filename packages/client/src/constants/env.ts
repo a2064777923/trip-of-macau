@@ -4,7 +4,7 @@ declare const __CDN_BASE_URL__: string
 declare const __WECHAT_DEV_BYPASS_ENABLED__: string
 
 export const USE_MOCK = __USE_MOCK__ === 'true'
-export const WECHAT_DEV_BYPASS_ENABLED = __WECHAT_DEV_BYPASS_ENABLED__ === 'true'
+const WECHAT_DEV_BYPASS_FLAG = __WECHAT_DEV_BYPASS_ENABLED__ === 'true'
 
 export const API_BASE_URL = USE_MOCK
   ? ''
@@ -30,5 +30,13 @@ function getPublicApiHostLabel() {
 
 export const RUNTIME_ENV_LABEL = USE_MOCK ? 'mock' : 'live'
 export const PUBLIC_API_HOST_LABEL = getPublicApiHostLabel()
-export const STORY_RUNTIME_DIAGNOSTICS_ENABLED =
+export const DEV_RUNTIME_DIAGNOSTICS_ENABLED =
   USE_MOCK || API_BASE_URL.includes('127.0.0.1') || API_BASE_URL.includes('localhost')
+
+export function isPublicApiMockMode() {
+  return !API_BASE_URL
+}
+
+export function isWechatDevBypassEnabled() {
+  return WECHAT_DEV_BYPASS_FLAG
+}

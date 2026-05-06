@@ -43,9 +43,10 @@ const config = {
         }
       }
     },
-    // 优化主包体积
     optimizeMainPackage: {
-      enable: true
+      // Keep disabled for WeChat DevTools 3.15.x + Taro 3.6.x.
+      // The optimizer can leave React pages registered without a Taro root in the simulator.
+      enable: false
     }
   },
   h5: {

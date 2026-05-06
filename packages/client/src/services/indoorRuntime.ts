@@ -332,13 +332,13 @@ export function describeIndoorBlockedReason(reason?: string | null) {
     case 'auth_required':
       return '這個互動會改變你的個人進度，需要先使用微信登入。'
     case 'unsupported_effect_category':
-      return '這個互動的部分效果尚未在小程序室內 runtime 開放，已為你安全停用。'
+      return '這個互動的部分效果仍在準備中，暫時先不開啟。'
     case 'unsupported_trigger_category':
       return '這個互動使用了尚未開放的觸發方式，暫時不能執行。'
     case 'unsupported_appearance_category':
       return '這個互動的顯示條件尚未開放，暫時只能查看說明。'
     case 'runtime_support_level_unsupported':
-      return '這個互動仍在後台治理流程中，尚未對外開放。'
+      return '這個互動玩法仍在準備中，尚未對外開放。'
     case 'behavior_not_visible':
       return '這個互動目前不在顯示時段內，請稍後再試。'
     case 'trigger_not_matched':

@@ -62,6 +62,10 @@ export default function RewardsPage() {
     }
   }
 
+  const handleContinueExploration = () => {
+    void Taro.switchTab({ url: '/pages/map/index' })
+  }
+
   if (state.user.authStatus === 'anonymous') {
     return (
       <PageShell className='rewards-page'>
@@ -84,26 +88,44 @@ export default function RewardsPage() {
       <ScrollView className='rewards-list' scrollY>
         {rewards.map((reward) => {
           const canRedeem = state.user.totalStamps >= reward.stampCost && reward.status === 'available'
+          const isStampShort = reward.status === 'available' && state.user.totalStamps < reward.stampCost
+          const statusText = reward.status === 'redeemed'
+            ? '已兌換'
+            : reward.status === 'coming_soon'
+              ? '即將開放'
+              : canRedeem
+                ? '可兌換'
+                : '印章不足'
           return (
             <View key={reward.id} className='reward-card'>
               <View className='reward-card__icon'>{reward.icon}</View>
               <View className='reward-card__body'>
                 <View className='reward-card__top'>
                   <Text className='reward-card__name'>{reward.name}</Text>
-                  <Text className={`reward-card__status ${reward.status}`}>
-                    {canRedeem ? '可兌換' : reward.status === 'coming_soon' ? '即將開放' : '已兌換'}
+                  <Text className={`reward-card__status ${reward.status} ${isStampShort ? 'short' : ''}`}>
+                    {statusText}
                   </Text>
                 </View>
                 <Text className='reward-card__subtitle'>{reward.subtitle}</Text>
                 <Text className='reward-card__desc'>{reward.description}</Text>
-                <Text className='reward-card__meta'>需要 {reward.stampCost} 枚印章，庫存 {reward.inventory}</Text>
+                <Text className='reward-card__meta'>
+                  {reward.status === 'coming_soon'
+                    ? '這份獎勵仍在準備中'
+                    : `需要 ${reward.stampCost} 枚印章`}
+                </Text>
                 <Text className='reward-card__highlight'>{reward.highlight}</Text>
               </View>
               <Button
                 className={`reward-card__btn ${canRedeem ? 'active' : ''}`}
-                onClick={() => void handleRedeem(reward)}
+                onClick={() => {
+                  if (canRedeem || reward.status === 'redeemed' || reward.status === 'coming_soon') {
+                    void handleRedeem(reward)
+                    return
+                  }
+                  handleContinueExploration()
+                }}
               >
-                {reward.status === 'redeemed' ? '已完成兌換' : canRedeem ? '立即兌換' : reward.status === 'coming_soon' ? '敬請期待' : '繼續探索'}
+                {reward.status === 'redeemed' ? '已完成兌換' : canRedeem ? '立即兌換' : reward.status === 'coming_soon' ? '稍後回來看看' : '回到探索路線'}
               </Button>
             </View>
           )

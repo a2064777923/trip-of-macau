@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Image, Text, Video, View } from '@tarojs/components'
+import { Button, Text, Video, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import LottieAssetPlayer from '../LottieAssetPlayer'
+import SafeStoryImage from '../SafeStoryImage'
 import type { StoryContentBlockItem, StoryMediaAssetItem } from '../../types/game'
 import {
   getStoryMediaFallbackReason,
@@ -24,8 +25,7 @@ function FallbackNotice({ asset }: { asset?: StoryMediaAssetItem | null }) {
   if (asset?.availability !== 'fallback' && asset?.fallbackUsed !== true) {
     return null
   }
-  const kind = asset.assetKind || asset.runtimeKind || '媒體'
-  return <Text className='story-block__fallbackNotice'>已使用備用媒體播放：{kind}</Text>
+  return <Text className='story-block__fallbackNotice'>已用較輕的方式呈現，旅程可以繼續。</Text>
 }
 
 function MissingMedia({
@@ -38,7 +38,7 @@ function MissingMedia({
   onViewed?: (reason: string) => void
 }) {
   const viewedRef = useRef(false)
-  const reason = getStoryMediaFallbackReason(asset, label || '此媒體暫時未能播放，請稍後再試。')
+  const reason = getStoryMediaFallbackReason(asset, label || '這段媒體可先以文字閱讀，前往現場時再試。')
 
   useEffect(() => {
     if (viewedRef.current) {
@@ -50,11 +50,11 @@ function MissingMedia({
 
   return (
     <View className='story-block__missingMedia'>
-      <Text className='story-block__missingMediaTitle'>媒體資源暫時未能載入</Text>
-      <Text className='story-block__missingMediaHint'>{reason}</Text>
-      {asset?.id ? (
-        <Text className='story-block__missingMediaId'>資源編號：{asset.id}</Text>
-      ) : null}
+      <Text className='story-block__missingMediaMark'>卷</Text>
+      <Text className='story-block__missingMediaTitle'>這段故事先以文字展開</Text>
+      <Text className='story-block__missingMediaHint'>
+        {reason || '可先閱讀章節內容與前往現場，媒體不會阻止你繼續探索。'}
+      </Text>
     </View>
   )
 }
@@ -110,10 +110,65 @@ function AudioAssetCard({
   return (
     <View className='story-block__audioCard'>
       <Text className='story-block__audioTitle'>{title || asset?.originalFilename || '語音片段'}</Text>
-      <Text className='story-block__audioHint'>可播放景點旁白、章節音效或故事導覽。</Text>
+      <Text className='story-block__audioHint'>戴上耳機會更有沉浸感，也可以先閱讀文字劇情。</Text>
       <Button className='story-block__audioButton' onClick={handleToggle}>
         {playing ? '暫停播放' : '播放音訊'}
       </Button>
+      <FallbackNotice asset={asset} />
+    </View>
+  )
+}
+
+function VideoAssetCard({
+  block,
+  asset,
+  assetUrl,
+  onCompleted,
+}: {
+  block: StoryContentBlockItem
+  asset: StoryMediaAssetItem
+  assetUrl: string
+  onCompleted?: (block: StoryContentBlockItem, asset: StoryMediaAssetItem, mediaKind: 'audio' | 'video') => void
+}) {
+  const [activated, setActivated] = useState(false)
+
+  if (!activated) {
+    return (
+      <View className='story-block__videoPoster'>
+        {asset.posterUrl || asset.fallbackUrl ? (
+          <SafeStoryImage
+            className='story-block__videoPosterImageFrame'
+            imageClassName='story-block__videoPosterImage'
+            src={asset.posterUrl || asset.fallbackUrl}
+            mode='aspectFill'
+            title={asset.originalFilename}
+            minHeight={260}
+          />
+        ) : (
+          <View className='story-block__videoPosterStage'>
+            <Text className='story-block__videoPosterMark'>影</Text>
+            <Text className='story-block__videoPosterTitle'>劇情影片片段</Text>
+            <Text className='story-block__videoPosterHint'>點擊後播放，讓故事畫面保持順暢。</Text>
+          </View>
+        )}
+        <Button className='story-block__videoPosterButton' onClick={() => setActivated(true)}>
+          播放影片
+        </Button>
+      </View>
+    )
+  }
+
+  return (
+    <View className='story-block__media'>
+      <Video
+        className='story-block__video'
+        src={assetUrl}
+        poster={asset.posterUrl || asset.fallbackUrl || ''}
+        controls
+        objectFit='contain'
+        autoplay
+        onEnded={() => onCompleted?.(block, asset, 'video')}
+      />
       <FallbackNotice asset={asset} />
     </View>
   )
@@ -152,6 +207,16 @@ export default function StoryContentBlockRenderer({
     () =>
       (blocks || [])
         .slice()
+        .filter((block) => {
+          if (!['image', 'gallery', 'audio', 'video', 'lottie', 'attachment_list'].includes(block.blockType || '')) {
+            return true
+          }
+          const asset = pickBlockAsset(block)
+          if (resolveStoryMediaUrl(asset)) {
+            return true
+          }
+          return !!block.title || !!block.summary || !!block.body
+        })
         .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0)),
     [blocks],
   )
@@ -188,13 +253,20 @@ export default function StoryContentBlockRenderer({
 
             {block.blockType === 'image' && assetUrl ? (
               <View className='story-block__media'>
-                <Image className='story-block__mediaImage' src={assetUrl} mode='widthFix' />
+                <SafeStoryImage
+                  className='story-block__mediaImageFrame'
+                  imageClassName='story-block__mediaImage'
+                  src={assetUrl}
+                  mode='widthFix'
+                  title={block.title || asset?.originalFilename}
+                  minHeight={240}
+                />
                 <FallbackNotice asset={asset} />
               </View>
             ) : null}
 
             {block.blockType === 'image' && !assetUrl ? (
-              <MissingMedia asset={asset} label='圖片資源未配置可用連結。' onViewed={notifyUnavailable(asset, '圖片資源未配置可用連結。')} />
+              <MissingMedia asset={asset} label='圖片暫時未能顯示，可先閱讀劇情。' onViewed={notifyUnavailable(asset, '圖片暫時未能顯示，可先閱讀劇情。')} />
             ) : null}
 
             {block.blockType === 'gallery' ? (
@@ -204,44 +276,36 @@ export default function StoryContentBlockRenderer({
                       {[asset, ...attachmentAssets]
                         .filter((item): item is StoryMediaAssetItem => !!item && isStoryMediaPlayable(item))
                         .map((galleryAsset) => (
-                          <Image
-                            className='story-block__galleryImage'
+                          <SafeStoryImage
+                            className='story-block__galleryImageFrame'
+                            imageClassName='story-block__galleryImage'
                             key={galleryAsset.id}
                             src={resolveStoryMediaUrl(galleryAsset)}
                             mode='widthFix'
+                            title={galleryAsset.originalFilename}
+                            minHeight={180}
                           />
                         ))}
                       {[asset, ...attachmentAssets].some((item) => item?.availability === 'fallback' || item?.fallbackUsed)
-                        ? <Text className='story-block__fallbackNotice'>已使用備用媒體播放：圖片</Text>
+                        ? <Text className='story-block__fallbackNotice'>部分圖片已用較輕的方式呈現。</Text>
                         : null}
                     </View>
                   )
-                : <MissingMedia asset={asset} label='圖片資源未配置可用連結。' onViewed={notifyUnavailable(asset, '圖片資源未配置可用連結。')} />
+                : <MissingMedia asset={asset} label='圖集暫時未能顯示，可先閱讀劇情。' onViewed={notifyUnavailable(asset, '圖集暫時未能顯示，可先閱讀劇情。')} />
             ) : null}
 
             {block.blockType === 'audio' ? (
               isStoryMediaPlayable(asset)
                 ? <AudioAssetCard block={block} asset={asset} title={block.title} onCompleted={onMediaCompleted} />
-                : <MissingMedia asset={asset} label='音訊資源未配置可用連結。' onViewed={notifyUnavailable(asset, '音訊資源未配置可用連結。')} />
+                : <MissingMedia asset={asset} label='音訊暫時未能播放，可先閱讀劇情。' onViewed={notifyUnavailable(asset, '音訊暫時未能播放，可先閱讀劇情。')} />
             ) : null}
 
             {block.blockType === 'video' && asset && assetUrl ? (
-              <View className='story-block__media'>
-                <Video
-                  className='story-block__video'
-                  src={assetUrl}
-                  poster={asset?.posterUrl || asset?.fallbackUrl || ''}
-                  controls
-                  objectFit='contain'
-                  autoplay={false}
-                  onEnded={() => onMediaCompleted?.(block, asset, 'video')}
-                />
-                <FallbackNotice asset={asset} />
-              </View>
+              <VideoAssetCard block={block} asset={asset} assetUrl={assetUrl} onCompleted={onMediaCompleted} />
             ) : null}
 
             {block.blockType === 'video' && !assetUrl ? (
-              <MissingMedia asset={asset} label='影片資源未配置可用連結。' onViewed={notifyUnavailable(asset, '影片資源未配置可用連結。')} />
+              <MissingMedia asset={asset} label='影片暫時未能播放，可先閱讀劇情。' onViewed={notifyUnavailable(asset, '影片暫時未能播放，可先閱讀劇情。')} />
             ) : null}
 
             {block.blockType === 'lottie' ? (
@@ -253,7 +317,7 @@ export default function StoryContentBlockRenderer({
                   />
                   <FallbackNotice asset={asset} />
                 </View>
-              ) : <MissingMedia asset={asset} label='Lottie 動畫資源未配置。' onViewed={notifyUnavailable(asset, 'Lottie 動畫資源未配置。')} />
+              ) : <MissingMedia asset={asset} label='動畫暫時未能播放，可先閱讀劇情。' onViewed={notifyUnavailable(asset, '動畫暫時未能播放，可先閱讀劇情。')} />
             ) : null}
 
             {block.blockType === 'attachment_list' && attachmentAssets.length ? (
@@ -261,13 +325,20 @@ export default function StoryContentBlockRenderer({
             ) : null}
 
             {block.blockType === 'attachment_list' && !attachmentAssets.length ? (
-              <MissingMedia asset={asset} label='附件列表暫無可顯示資源。' onViewed={notifyUnavailable(asset, '附件列表暫無可顯示資源。')} />
+              <MissingMedia asset={asset} label='附件內容暫時未能顯示。' onViewed={notifyUnavailable(asset, '附件內容暫時未能顯示。')} />
             ) : null}
 
             {!['image', 'gallery', 'audio', 'video', 'lottie', 'attachment_list', 'quote'].includes(block.blockType || '') && assetUrl ? (
               <View className='story-block__media'>
-                <Image className='story-block__mediaImage' src={assetUrl} mode='widthFix' />
-                <Text className='story-block__mediaCaption'>{asset?.originalFilename || '已掛載媒體資產'}</Text>
+                <SafeStoryImage
+                  className='story-block__mediaImageFrame'
+                  imageClassName='story-block__mediaImage'
+                  src={assetUrl}
+                  mode='widthFix'
+                  title={block.title || asset?.originalFilename}
+                  minHeight={240}
+                />
+                <Text className='story-block__mediaCaption'>{block.summary || asset?.originalFilename || '故事媒體'}</Text>
                 <FallbackNotice asset={asset} />
               </View>
             ) : null}

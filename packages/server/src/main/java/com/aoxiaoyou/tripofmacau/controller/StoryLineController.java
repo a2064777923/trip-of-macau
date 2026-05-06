@@ -18,13 +18,16 @@ import java.util.List;
 @Tag(name = "Public Storylines")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/story-lines")
 public class StoryLineController {
 
     private final StoryLineService storyLineService;
 
     @Operation(summary = "List published storylines")
-    @GetMapping
+    @GetMapping({
+            "/api/v1/story-lines",
+            "/api/v1/storylines",
+            "/api/v1/public/storylines"
+    })
     public ApiResponse<List<StoryLineResponse>> list(
             @Parameter(description = "Locale hint such as zh-Hans / zh-Hant / en")
             @RequestParam(required = false) String locale
@@ -33,7 +36,11 @@ public class StoryLineController {
     }
 
     @Operation(summary = "Get storyline detail")
-    @GetMapping("/{storyLineId}")
+    @GetMapping({
+            "/api/v1/story-lines/{storyLineId}",
+            "/api/v1/storylines/{storyLineId}",
+            "/api/v1/public/storylines/{storyLineId}"
+    })
     public ApiResponse<StoryLineResponse> detail(
             @PathVariable Long storyLineId,
             @RequestParam(required = false) String locale

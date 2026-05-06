@@ -1,6 +1,6 @@
 ﻿# Phase 43 Traveler Operations UAT
 
-Generated: 2026-05-04 20:11:57 +08:00
+Generated: 2026-05-05 12:09:15 +08:00
 
 | Area | Check | Status | Evidence | Command |
 | --- | --- | --- | --- | --- |
@@ -16,11 +16,11 @@ Generated: 2026-05-04 20:11:57 +08:00
 | admin filters | mapScopeType/mapScopeId | PASS | Returned 0 row(s) conforming to active filter. | /timeline |
 | admin filters | status | PASS | Returned 0 row(s) conforming to active filter. | /timeline |
 | admin filters | rewardType | PASS | Returned 1 row(s) conforming to active filter. | /timeline |
-| admin filters | from/to | PASS | Returned 7 row(s) conforming to active filter. | /timeline |
+| admin filters | from/to | PASS | Returned 15 row(s) conforming to active filter. | /timeline |
 | admin | progress breakdown | PASS | Progress percent=0.0. | /progress-breakdown?scopeType=global |
 | admin | reward state | PASS | gameRewards=0, titles=1, redeemable=0. | /reward-state |
 | admin | reward rule trace | PASS | traceStatus=missing_link; missingLinks=1. | /reward-rule-trace |
-| admin | audit listing | PASS | Loaded 6 audit row(s). | /progress-ops/audits |
+| admin | audit listing | PASS | Loaded 14 audit row(s). | /progress-ops/audits |
 | support ops | preview operation | PASS | Preview hash returned for ANNOTATE_ISSUE. | /progress-ops/repair-preview |
 | support ops | safe apply annotation | PASS | status=annotated. | /progress-ops/repair-apply |
 | support ops | audit verification | PASS | ANNOTATE_ISSUE audit row visible after apply. | /progress-ops/audits |

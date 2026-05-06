@@ -60,7 +60,12 @@ import {
   PublicUserSessionDto,
   PublicUserStateDto,
 } from './api'
-import { USE_MOCK, WECHAT_DEV_BYPASS_ENABLED } from '../constants/env'
+import {
+  DEV_RUNTIME_DIAGNOSTICS_ENABLED,
+  PUBLIC_API_HOST_LABEL,
+  isPublicApiMockMode,
+  isWechatDevBypassEnabled,
+} from '../constants/env'
 import { calculateDistance, formatDistance, isWithinTriggerRange } from '../utils/location'
 
 const STORAGE_KEY = 'trip-of-macau-game-state'
@@ -78,6 +83,9 @@ const DEFAULT_COMPLETED_STORY_IDS = [1, 2]
 const DEFAULT_COMPLETED_CHAPTER_IDS = [1011, 1012, 1021, 1022]
 const DEFAULT_UNREAD_NOTIFICATION_IDS = [1, 2]
 const DEFAULT_COLOR_PALETTE = ['#ffd9e5', '#dff7ef', '#dfeaff', '#fff0c8', '#e9defc', '#dff3ff']
+const FLAGSHIP_STORY_CODE = 'east_west_war_and_coexistence'
+const LEGACY_DUPLICATE_STORY_CODE = 'macau_fire_route'
+const FLAGSHIP_STORY_NAME = '東西方文明的戰火與共生'
 const AMAP_CONFIG = {
   key: '6fea5cb20fa631562465356be078d086',
   defaultCenter: {
@@ -108,6 +116,8 @@ export interface NearbyPoiView extends PoiItem {
   dynamicRadius: number
 }
 
+type LoosePublicStoryMediaAssetDto = PublicStoryMediaAssetDto | string | Record<string, any> | null | undefined
+
 interface PublicContentCache {
   locale: string
   updatedAt: string
@@ -128,6 +138,49 @@ interface PublicContentCache {
 
 let publicContentCache: PublicContentCache | null = null
 let authPromptVisible = false
+
+type PublicContentRefreshDiagnostics = {
+  refreshedAt?: string
+  status: 'idle' | 'success' | 'partial' | 'failed'
+  message: string
+  apiBaseMode: 'mock' | 'live'
+  failedSections: string[]
+  counts: {
+    cities: number
+    subMaps: number
+    pois: number
+    storylines: number
+    tips: number
+    activities: number
+    collectibles: number
+    badges: number
+    rewards: number
+    stamps: number
+    notifications: number
+    discoverCards: number
+  }
+}
+
+let publicContentRefreshDiagnostics: PublicContentRefreshDiagnostics = {
+  status: 'idle',
+  message: '尚未同步公開內容。',
+  apiBaseMode: isPublicApiMockMode() ? 'mock' : 'live',
+  failedSections: [],
+  counts: {
+    cities: 0,
+    subMaps: 0,
+    pois: 0,
+    storylines: 0,
+    tips: 0,
+    activities: 0,
+    collectibles: 0,
+    badges: 0,
+    rewards: 0,
+    stamps: 0,
+    notifications: 0,
+    discoverCards: 0,
+  },
+}
 
 export class AuthRequiredError extends Error {
   constructor(message = '此功能需要先使用微信登入。') {
@@ -245,7 +298,25 @@ function detectDevtoolsEnvironment() {
 }
 
 export function isDevBypassAvailable() {
-  return !USE_MOCK && WECHAT_DEV_BYPASS_ENABLED && detectDevtoolsEnvironment()
+  return !isPublicApiMockMode() && isWechatDevBypassEnabled() && detectDevtoolsEnvironment()
+}
+
+export async function ensureDevBypassSession() {
+  if (!isDevBypassAvailable()) {
+    return loadGameState().user
+  }
+
+  const current = loadGameState()
+  if (hasActiveSessionToken() && current.user.authStatus !== 'anonymous') {
+    return current.user
+  }
+
+  try {
+    return await loginWithDevBypass()
+  } catch (error) {
+    console.warn('Failed to prepare local mini-program session.', error)
+    return loadGameState().user
+  }
 }
 
 export function isAuthRequiredError(error: unknown) {
@@ -261,7 +332,7 @@ async function openAuthTarget(target: string) {
 }
 
 export async function requireAuth(reason: string, target = PROFILE_AUTH_WALL_PATH) {
-  if (USE_MOCK) {
+  if (isPublicApiMockMode()) {
     return true
   }
   if (hasActiveSessionToken() && loadGameState().user.authStatus !== 'anonymous') {
@@ -361,6 +432,83 @@ function normalizePublicContent(raw: any): PublicContentCache {
   }
 }
 
+function toPersistableStoryline(story: PublicStorylineDto): PublicStorylineDto {
+  const chapters = Array.isArray(story.chapters)
+    ? story.chapters.map((chapter) => ({
+        ...chapter,
+        contentBlocks: undefined,
+        primaryMediaAsset: undefined,
+        runtime: undefined,
+      }))
+    : story.chapters
+
+  return {
+    ...story,
+    chapters,
+    runtime: undefined,
+    attachmentAssets: undefined,
+  }
+}
+
+function toPersistableRuntimeGroup(group: PublicRuntimeGroupDto): PublicRuntimeGroupDto {
+  return {
+    ...group,
+    settings: group.settings,
+    items: Array.isArray(group.items) ? group.items.slice(0, 20) : group.items,
+  }
+}
+
+function buildPersistablePublicContent(content: PublicContentCache): PublicContentCache {
+  const runtimeGroups: Record<string, PublicRuntimeGroupDto> = {}
+  Object.entries(content.runtimeGroups || {}).forEach(([key, value]) => {
+    runtimeGroups[key] = toPersistableRuntimeGroup(value)
+  })
+
+  return {
+    ...content,
+    storylines: content.storylines.map((story) => toPersistableStoryline(story)),
+    runtimeGroups,
+  }
+}
+
+function hasHeavyPersistedPublicContent(content: PublicContentCache) {
+  return content.storylines.some((story) => (
+    !!story.runtime
+    || !!story.attachmentAssets?.length
+    || (story.chapters || []).some((chapter) => (
+      !!chapter.runtime
+      || !!chapter.primaryMediaAsset
+      || !!chapter.contentBlocks?.length
+    ))
+  ))
+}
+
+function reloadStoredPublicContent(): PublicContentCache | null {
+  try {
+    const stored = Taro.getStorageSync(PUBLIC_CONTENT_KEY)
+    if (!stored) {
+      return null
+    }
+    if (typeof stored !== 'object' || Array.isArray(stored)) {
+      Taro.removeStorageSync(PUBLIC_CONTENT_KEY)
+      return null
+    }
+    return normalizePublicContent(stored)
+  } catch (error) {
+    console.warn('Failed to reload public content cache from storage.', error)
+    return null
+  }
+}
+
+function contentHasCatalogData(content?: PublicContentCache | null) {
+  return !!content && (
+    content.cities.length > 0
+    || content.subMaps.length > 0
+    || content.pois.length > 0
+    || content.storylines.length > 0
+  )
+}
+
 function saveState(nextState: GameStateSnapshot) {
   const normalized = normalizeState(nextState)
   Taro.setStorageSync(STORAGE_KEY, normalized)
@@ -370,12 +518,21 @@ function saveState(nextState: GameStateSnapshot) {
 
 function loadPublicContent(): PublicContentCache {
   if (publicContentCache) {
+    if (!contentHasCatalogData(publicContentCache)) {
+      const stored = reloadStoredPublicContent()
+      if (contentHasCatalogData(stored)) {
+        publicContentCache = stored
+      }
+    }
     return publicContentCache
   }
 
   try {
-    const stored = Taro.getStorageSync(PUBLIC_CONTENT_KEY)
-    publicContentCache = normalizePublicContent(stored)
+    const stored = reloadStoredPublicContent()
+    publicContentCache = stored || createEmptyPublicContent()
+    if (hasHeavyPersistedPublicContent(publicContentCache)) {
+      Taro.setStorageSync(PUBLIC_CONTENT_KEY, buildPersistablePublicContent(publicContentCache))
+    }
   } catch (error) {
     console.warn('Failed to read public content cache.', error)
     publicContentCache = createEmptyPublicContent()
@@ -387,8 +544,114 @@ function loadPublicContent(): PublicContentCache {
 function savePublicContent(next: PublicContentCache) {
   const normalized = normalizePublicContent(next)
   publicContentCache = normalized
-  Taro.setStorageSync(PUBLIC_CONTENT_KEY, normalized)
+  try {
+    Taro.setStorageSync(PUBLIC_CONTENT_KEY, buildPersistablePublicContent(normalized))
+  } catch (error) {
+    console.warn('Failed to persist slim public content cache; continuing with memory cache.', error)
+  }
   return normalized
+}
+
+function mergePublicContent(next: Partial<PublicContentCache>) {
+  const current = loadPublicContent()
+  return savePublicContent({
+    ...current,
+    ...next,
+    runtimeGroups: {
+      ...current.runtimeGroups,
+      ...(next.runtimeGroups || {}),
+    },
+  })
+}
+
+function buildPublicContentCounts(content = loadPublicContent()): PublicContentRefreshDiagnostics['counts'] {
+  return {
+    cities: content.cities.length,
+    subMaps: content.subMaps.length,
+    pois: content.pois.length,
+    storylines: content.storylines.length,
+    tips: content.tips.length,
+    activities: content.activities.length,
+    collectibles: content.collectibles.length,
+    badges: content.badges.length,
+    rewards: content.rewards.length,
+    stamps: content.stamps.length,
+    notifications: content.notifications.length,
+    discoverCards: content.discoverCards.length,
+  }
+}
+
+function setPublicContentRefreshDiagnostics(
+  next: Partial<PublicContentRefreshDiagnostics> & Pick<PublicContentRefreshDiagnostics, 'status' | 'message'>,
+) {
+  publicContentRefreshDiagnostics = {
+    ...publicContentRefreshDiagnostics,
+    ...next,
+    apiBaseMode: isPublicApiMockMode() ? 'mock' : 'live',
+    refreshedAt: next.refreshedAt || new Date().toISOString(),
+    failedSections: next.failedSections || [],
+    counts: next.counts || buildPublicContentCounts(),
+  }
+}
+
+function logPublicContentDiagnostics(context: string, diagnostics = publicContentRefreshDiagnostics) {
+  if (!DEV_RUNTIME_DIAGNOSTICS_ENABLED) {
+    return
+  }
+
+  console.info('[TripOfMacau][public-content]', {
+    context,
+    apiHost: PUBLIC_API_HOST_LABEL,
+    status: diagnostics.status,
+    failedSections: diagnostics.failedSections,
+    counts: diagnostics.counts,
+    refreshedAt: diagnostics.refreshedAt,
+  })
+}
+
+export function getPublicContentRefreshDiagnostics(): PublicContentRefreshDiagnostics {
+  return {
+    ...publicContentRefreshDiagnostics,
+    failedSections: [...publicContentRefreshDiagnostics.failedSections],
+    counts: { ...publicContentRefreshDiagnostics.counts },
+  }
+}
+
+function reconcileCurrentCatalogSelection(content: PublicContentCache) {
+  const state = loadGameState()
+  const cityCodes = new Set(content.cities.map((city) => city.code).filter((value) => hasText(value)))
+  const fallbackCityCode = content.cities[0]?.code || DEFAULT_UNLOCKED_CITY_ID
+  const nextCityId = cityCodes.has(state.user.currentCityId)
+    ? state.user.currentCityId
+    : fallbackCityCode
+
+  const subMapsForCity = content.subMaps.filter((subMap) => subMap.cityCode === nextCityId)
+  const subMapCodes = new Set(subMapsForCity.map((subMap) => subMap.code).filter((value) => hasText(value)))
+  const nextSubMapId = state.user.currentSubMapId && subMapCodes.has(state.user.currentSubMapId)
+    ? state.user.currentSubMapId
+    : subMapsForCity[0]?.code
+
+  const knownUnlocks = new Set((state.cityUnlocks || []).map((item) => item.cityId))
+  const nextUnlocks = (state.cityUnlocks || []).slice()
+  if (!knownUnlocks.has(nextCityId)) {
+    nextUnlocks.push({ cityId: nextCityId, unlockedAt: new Date().toISOString() })
+  }
+
+  if (
+    state.user.currentCityId !== nextCityId
+    || state.user.currentSubMapId !== nextSubMapId
+    || nextUnlocks.length !== (state.cityUnlocks || []).length
+  ) {
+    saveState({
+      ...state,
+      cityUnlocks: nextUnlocks,
+      user: {
+        ...state.user,
+        currentCityId: nextCityId,
+        currentSubMapId: nextSubMapId,
+      },
+    })
+  }
 }
 
 function buildUserPreferencesPayload(user: AppUserProfile, extra?: Partial<PublicUserPreferencesDto> & {
@@ -469,7 +732,7 @@ function applyRemoteUserState(remote: PublicUserStateDto, current = loadGameStat
 
   const emergencyContact = {
     name: remote.preferences.emergencyContactName || '緊急聯絡人',
-    phone: remote.preferences.emergencyContactPhone || '10086',
+    phone: remote.preferences.emergencyContactPhone || '',
   }
   Taro.setStorageSync(EMERGENCY_CONTACT_KEY, emergencyContact)
   wx.setStorageSync('interfaceMode', nextUser.interfaceMode)
@@ -486,7 +749,7 @@ async function requestWeChatLoginCode() {
 }
 
 export async function loginWithWechat() {
-  if (USE_MOCK) {
+  if (isPublicApiMockMode()) {
     return loadGameState().user
   }
 
@@ -540,7 +803,7 @@ export async function loginWithDevBypass() {
 }
 
 export async function syncUserStateFromServer() {
-  if (USE_MOCK) {
+  if (isPublicApiMockMode()) {
     return loadGameState()
   }
 
@@ -574,6 +837,34 @@ function pickReadableText(...values: Array<string | undefined | null>) {
   return fallback ? fallback.trim() : ''
 }
 
+function localizeTravelerText(value?: string | null) {
+  const text = pickReadableText(value)
+  if (!text) {
+    return ''
+  }
+  const replacements: Array<[RegExp, string]> = [
+    [/\bOld Town Story Walk\b/gi, '老城故事漫步'],
+    [/\bMacau\b/g, '澳門'],
+    [/\bCity\b/g, '城市'],
+    [/\bExplorer\b/g, '探索者'],
+    [/\bStory\b/g, '故事'],
+    [/\bSub-map\b/g, '子地圖'],
+    [/\bMap zone\b/g, '地圖區域'],
+    [/\bStory driven city exploration\b/g, '故事驅動城市探索'],
+    [/\bUnlock this stamp during exploration\./g, '在探索中解鎖這枚印章。'],
+    [/\bRedeem with (\d+) stamps\./g, '使用 $1 枚印章兌換。'],
+    [/\bCheck in\b/gi, '去打卡'],
+    [/\bRedeem\b/gi, '去兌換'],
+    [/\bView\b/gi, '查看'],
+    [/\bRecently\b/gi, '剛剛'],
+    [/\b(\d+)\s*min ago\b/gi, '$1 分鐘前'],
+    [/\bCity Story Guide\b/gi, '城市故事導覽員'],
+    [/\bRoute Explorer\b/gi, '路線探索者'],
+    [/\bMacau Walker\b/gi, '澳門漫遊者'],
+  ]
+  return replacements.reduce((current, [pattern, replacement]) => current.replace(pattern, replacement), text).trim()
+}
+
 function humanizeCode(value?: string | null) {
   if (!hasText(value)) {
     return ''
@@ -583,6 +874,32 @@ function humanizeCode(value?: string | null) {
     .replace(/\s+/g, ' ')
     .trim()
     .replace(/\b\w/g, (character) => character.toUpperCase())
+}
+
+function findFlagshipStoryDto(content = loadPublicContent()) {
+  return content.storylines.find((story) => story.code === FLAGSHIP_STORY_CODE)
+    || content.storylines.find((story) => pickReadableText(story.name).includes(FLAGSHIP_STORY_NAME))
+}
+
+function isLegacyDuplicateStoryDto(story: PublicStorylineDto, content = loadPublicContent()) {
+  return story.code === LEGACY_DUPLICATE_STORY_CODE && !!findFlagshipStoryDto(content)
+}
+
+function getCanonicalStoryReference(storylineId?: number, storylineCode?: string, storylineName?: string) {
+  const content = loadPublicContent()
+  const flagship = findFlagshipStoryDto(content)
+  if (flagship && (storylineCode === LEGACY_DUPLICATE_STORY_CODE || pickReadableText(storylineName).includes('濠江烽煙'))) {
+    return {
+      id: flagship.id,
+      code: flagship.code,
+      name: pickReadableText(flagship.name, FLAGSHIP_STORY_NAME),
+    }
+  }
+  return {
+    id: storylineId,
+    code: storylineCode,
+    name: pickReadableText(storylineName, humanizeCode(storylineCode)),
+  }
 }
 
 function colorFromKey(key: string, palette = DEFAULT_COLOR_PALETTE) {
@@ -602,28 +919,28 @@ function formatMinutes(minutes?: number) {
   }
   const hours = Math.floor(minutes / 60)
   const remaining = minutes % 60
-  return remaining ? `${hours}h ${remaining}m` : `${hours}h`
+  return remaining ? `${hours} 小時 ${remaining} 分鐘` : `${hours} 小時`
 }
 
 function formatPublishedTime(value?: string) {
   if (!hasText(value)) {
-    return 'Recently'
+    return '剛剛'
   }
   const timestamp = new Date(value).getTime()
   if (Number.isNaN(timestamp)) {
-    return 'Recently'
+    return '剛剛'
   }
   const diffMinutes = Math.max(1, Math.floor((Date.now() - timestamp) / 60000))
   if (diffMinutes < 60) {
-    return `${diffMinutes} min ago`
+    return `${diffMinutes} 分鐘前`
   }
   const diffHours = Math.floor(diffMinutes / 60)
   if (diffHours < 24) {
-    return `${diffHours} h ago`
+    return `${diffHours} 小時前`
   }
   const diffDays = Math.floor(diffHours / 24)
   if (diffDays < 7) {
-    return `${diffDays} d ago`
+    return `${diffDays} 天前`
   }
   return new Date(timestamp).toLocaleDateString()
 }
@@ -728,20 +1045,21 @@ function resolveCategoryLabel(code?: string) {
 }
 
 function resolveCityRewardTitle(cityName: string) {
-  return `${cityName} Explorer`
+  return `${cityName}探索者`
 }
 
 function buildPoiSubtitle(dto: PublicPoiDto) {
+  const storyName = getCanonicalStoryReference(dto.storylineId, dto.storylineCode, dto.storylineName).name
   return pickReadableText(
     dto.subtitle,
-    dto.storylineName ? `${dto.storylineName} 站點` : '',
+    storyName ? `${storyName} 站點` : '',
     humanizeCode(dto.categoryCode),
     '精選路線站點',
   )
 }
 
 function buildPoiDescription(dto: PublicPoiDto) {
-  const storyName = pickReadableText(dto.storylineName, humanizeCode(dto.storylineCode))
+  const storyName = getCanonicalStoryReference(dto.storylineId, dto.storylineCode, dto.storylineName).name
   const poiName = pickReadableText(dto.name, humanizeCode(dto.code), '探索點')
   return pickReadableText(
     dto.description,
@@ -750,9 +1068,10 @@ function buildPoiDescription(dto: PublicPoiDto) {
 }
 
 function buildPoiTags(dto: PublicPoiDto) {
+  const storyName = getCanonicalStoryReference(dto.storylineId, dto.storylineCode, dto.storylineName).name
   const tags = [
     humanizeCode(dto.categoryCode),
-    pickReadableText(dto.storylineName, humanizeCode(dto.storylineCode)),
+    storyName || humanizeCode(dto.storylineCode),
     humanizeCode(dto.cityCode),
   ].filter(Boolean)
   return Array.from(new Set(tags)).slice(0, 3)
@@ -824,7 +1143,8 @@ function getPoiCatalog() {
     .slice()
     .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
     .map((dto) => {
-      const storyName = pickReadableText(dto.storylineName, humanizeCode(dto.storylineCode))
+      const canonicalStory = getCanonicalStoryReference(dto.storylineId, dto.storylineCode, dto.storylineName)
+      const storyName = canonicalStory.name
       const name = pickReadableText(dto.name, humanizeCode(dto.code), `POI ${dto.id}`)
       const relatedStamp = selectStampForPoi(dto.id, dto.storylineId)
       return {
@@ -835,15 +1155,13 @@ function getPoiCatalog() {
         icon: resolvePoiIcon(dto.categoryCode),
         latitude: dto.latitude,
         longitude: dto.longitude,
-        latitude: dto.latitude,
-        longitude: dto.longitude,
         address: pickReadableText(dto.address, name),
         geofenceRadius: dto.manualCheckinRadius || dto.triggerRadius || 200,
         triggerRadius: dto.triggerRadius || 50,
         difficulty: sanitizeDifficulty(dto.difficulty),
         category: pickReadableText(humanizeCode(dto.categoryCode), '探索點'),
         district: pickReadableText(humanizeCode(dto.district), humanizeCode(dto.cityCode), '澳門'),
-        storyLineId: dto.storylineId,
+        storyLineId: canonicalStory.id,
         storyName,
         description: buildPoiDescription(dto),
         checkInMethod: 'gps' as const,
@@ -856,6 +1174,7 @@ function getPoiCatalog() {
         subMapName: pickReadableText(dto.subMapName, humanizeCode(dto.subMapCode)),
         markerKey: resolvePoiMarkerKey(dto),
         mapIconUrl: dto.mapIconUrl,
+        coverImageUrl: dto.coverImageUrl,
         introTitle: pickReadableText(dto.introTitle, name),
         introSummary: pickReadableText(dto.introSummary, dto.description, `在${name}跟隨路線故事`),
         indoorMapTitle: `${name}指南`,
@@ -884,7 +1203,7 @@ function getRewardCatalog() {
         inventory: availableInventory,
         status: availableInventory > 0 ? 'available' as const : 'coming_soon' as const,
         description: pickReadableText(reward.description, '收集印章解鎖此獎勵'),
-        highlight: pickReadableText(reward.highlight, `Redeem with ${reward.stampCost} stamps.`),
+        highlight: localizeTravelerText(pickReadableText(reward.highlight, `使用 ${reward.stampCost} 枚印章兌換。`)),
         relatedStorylines: reward.relatedStorylines || [],
         relatedCities: reward.relatedCities || [],
         relatedSubMaps: reward.relatedSubMaps || [],
@@ -1005,6 +1324,10 @@ function mapStoryChapter(
   }
 }
 
+function getRuntimeStepsFromChapter(chapter: StoryChapterItem) {
+  return (chapter.runtimeSteps || chapter.runtime?.runtimeSteps || [])
+}
+
 function mapRuntimeStep(step: PublicExperienceRuntimeStepDto): StoryRuntimeStepItem {
   return {
     id: step.id,
@@ -1020,8 +1343,11 @@ function mapRuntimeStep(step: PublicExperienceRuntimeStepDto): StoryRuntimeStepI
     elementCode: step.elementCode,
     elementId: step.elementId,
     name: pickReadableText(step.name, step.template?.name, humanizeCode(step.stepCode), humanizeCode(step.stepType), '故事互動'),
-    description: pickReadableText(step.description, step.template?.summary, '依照後台配置完成這一步互動。'),
+    description: pickReadableText(step.description, step.template?.summary, '依照故事提示完成這一步互動。'),
     triggerType: step.triggerType,
+    triggerConfig: step.triggerConfig || undefined,
+    conditionConfig: step.conditionConfig || undefined,
+    effectConfig: step.effectConfig || undefined,
     mediaAssetId: step.mediaAssetId,
     mediaAsset: mapStoryMediaAsset(step.mediaAsset),
     rewardRuleIds: step.rewardRuleIds,
@@ -1084,41 +1410,98 @@ function mapStorylineRuntime(runtime: PublicStorylineRuntimeDto): StorylineRunti
   }
 }
 
-function mapStoryMediaAsset(asset?: PublicStoryMediaAssetDto | null): StoryMediaAssetItem | undefined {
+function parsePowerShellObjectLiteral(value: string): Record<string, any> | null {
+  const trimmed = value.trim()
+  if (!trimmed.startsWith('@{') || !trimmed.endsWith('}')) {
+    return null
+  }
+
+  const body = trimmed.slice(2, -1)
+  const output: Record<string, any> = {}
+  body.split(';').forEach((segment) => {
+    const separatorIndex = segment.indexOf('=')
+    if (separatorIndex <= 0) {
+      return
+    }
+    const key = segment.slice(0, separatorIndex).trim()
+    const rawValue = segment.slice(separatorIndex + 1).trim()
+    if (!key) {
+      return
+    }
+    if (rawValue === '') {
+      output[key] = undefined
+      return
+    }
+    if (rawValue === 'True' || rawValue === 'true') {
+      output[key] = true
+      return
+    }
+    if (rawValue === 'False' || rawValue === 'false') {
+      output[key] = false
+      return
+    }
+    const numericValue = Number(rawValue)
+    output[key] = Number.isFinite(numericValue) && String(numericValue) === rawValue
+      ? numericValue
+      : rawValue
+  })
+  return output
+}
+
+function normalizeStoryMediaAssetDto(asset?: LoosePublicStoryMediaAssetDto): PublicStoryMediaAssetDto | undefined {
   if (!asset) {
+    return undefined
+  }
+  if (typeof asset === 'string') {
+    const parsed = parsePowerShellObjectLiteral(asset)
+    if (!parsed) {
+      return undefined
+    }
+    return normalizeStoryMediaAssetDto(parsed)
+  }
+  if (typeof asset !== 'object') {
+    return undefined
+  }
+
+  return asset as PublicStoryMediaAssetDto
+}
+
+function mapStoryMediaAsset(asset?: LoosePublicStoryMediaAssetDto): StoryMediaAssetItem | undefined {
+  const normalized = normalizeStoryMediaAssetDto(asset)
+  if (!normalized) {
     return undefined
   }
 
   return {
-    id: asset.id,
-    assetKind: asset.assetKind,
-    url: asset.url,
-    mimeType: asset.mimeType,
-    originalFilename: asset.originalFilename,
-    widthPx: asset.widthPx,
-    heightPx: asset.heightPx,
-    animationSubtype: asset.animationSubtype,
-    defaultLoop: asset.defaultLoop,
-    defaultAutoplay: asset.defaultAutoplay,
-    posterAssetId: asset.posterAssetId,
-    posterUrl: asset.posterUrl,
-    fallbackAssetId: asset.fallbackAssetId,
-    fallbackUrl: asset.fallbackUrl,
-    availability: asset.availability,
-    unavailableReason: asset.unavailableReason,
-    fallbackUsed: asset.fallbackUsed,
-    runtimeKind: asset.runtimeKind,
-    fileSizeBytes: asset.fileSizeBytes,
-    durationMs: asset.durationMs,
-    usageHint: asset.usageHint
+    id: Number(normalized.id || 0),
+    assetKind: normalized.assetKind,
+    url: normalized.url,
+    mimeType: normalized.mimeType,
+    originalFilename: normalized.originalFilename,
+    widthPx: normalized.widthPx,
+    heightPx: normalized.heightPx,
+    animationSubtype: normalized.animationSubtype,
+    defaultLoop: normalized.defaultLoop,
+    defaultAutoplay: normalized.defaultAutoplay,
+    posterAssetId: normalized.posterAssetId,
+    posterUrl: normalized.posterUrl,
+    fallbackAssetId: normalized.fallbackAssetId,
+    fallbackUrl: normalized.fallbackUrl,
+    availability: normalized.availability,
+    unavailableReason: normalized.unavailableReason,
+    fallbackUsed: normalized.fallbackUsed,
+    runtimeKind: normalized.runtimeKind,
+    fileSizeBytes: normalized.fileSizeBytes,
+    durationMs: normalized.durationMs,
+    usageHint: normalized.usageHint
       ? {
-          materialItemKey: asset.usageHint.materialItemKey,
-          usageTarget: asset.usageHint.usageTarget,
-          chapterCode: asset.usageHint.chapterCode,
-          targetType: asset.usageHint.targetType,
-          targetCode: asset.usageHint.targetCode,
-          displayRole: asset.usageHint.displayRole,
-          sourceScope: asset.usageHint.sourceScope,
+          materialItemKey: normalized.usageHint.materialItemKey,
+          usageTarget: normalized.usageHint.usageTarget,
+          chapterCode: normalized.usageHint.chapterCode,
+          targetType: normalized.usageHint.targetType,
+          targetCode: normalized.usageHint.targetCode,
+          displayRole: normalized.usageHint.displayRole,
+          sourceScope: normalized.usageHint.sourceScope,
         }
       : undefined,
   }
@@ -1159,9 +1542,9 @@ function mapStoryContentBlock(block: PublicStoryContentBlockDto): StoryContentBl
     displayConditionJson: block.displayConditionJson,
     configJson: block.configJson,
     sortOrder: block.sortOrder,
-    primaryAsset: mapStoryMediaAsset(block.primaryAsset),
+    primaryAsset: mapStoryMediaAsset(block.primaryAsset as LoosePublicStoryMediaAssetDto),
     attachmentAssets: Array.isArray(block.attachmentAssets)
-      ? block.attachmentAssets.map((asset) => mapStoryMediaAsset(asset)).filter(Boolean) as StoryMediaAssetItem[]
+      ? block.attachmentAssets.map((asset) => mapStoryMediaAsset(asset as LoosePublicStoryMediaAssetDto)).filter(Boolean) as StoryMediaAssetItem[]
       : [],
   }
 }
@@ -1197,56 +1580,25 @@ function getStorySubMapBindingCodes(story: PublicStorylineDto) {
     : []
 }
 
-function ensureAtLeastOneCity(state = loadGameState()) {
-  const cities = loadPublicContent().cities
-  if (cities.length) {
-    return cities
-  }
-
-  return [{
-    id: 1,
-    code: state.user.currentCityId || DEFAULT_UNLOCKED_CITY_ID,
-    name: 'Macau',
-    subtitle: '',
-    description: 'Macau live content is loading.',
-    countryCode: 'MO',
-    centerLat: AMAP_CONFIG.defaultCenter.latitude,
-    centerLng: AMAP_CONFIG.defaultCenter.longitude,
-    defaultZoom: 14,
-    unlockType: 'auto',
-    coverImageUrl: '',
-    bannerImageUrl: '',
-    subMaps: [{
-      id: 11,
-      cityId: 1,
-      cityCode: DEFAULT_UNLOCKED_CITY_ID,
-      code: 'macau-peninsula',
-      name: 'Macau Peninsula',
-      centerLat: AMAP_CONFIG.defaultCenter.latitude,
-      centerLng: AMAP_CONFIG.defaultCenter.longitude,
-      sortOrder: 1,
-    }],
-    sortOrder: 1,
-  }]
-}
-
 function inferCityByLocation(lat: number, lng: number) {
-  const candidate = ensureAtLeastOneCity()
+  const candidate = loadPublicContent().cities
     .map((city) => ({
       code: city.code,
       distanceMeters: calculateDistance(lat, lng, city.centerLat || AMAP_CONFIG.defaultCenter.latitude, city.centerLng || AMAP_CONFIG.defaultCenter.longitude),
     }))
     .sort((left, right) => left.distanceMeters - right.distanceMeters)[0]
 
-  return candidate?.code || DEFAULT_UNLOCKED_CITY_ID
+  return candidate?.code || loadGameState().user.currentCityId || DEFAULT_UNLOCKED_CITY_ID
 }
 
 function getStoryCatalog(state = loadGameState()) {
   const pois = getPoiCatalog()
   const unlockedCities = new Set(getCities().filter((city) => city.unlocked).map((city) => city.id))
+  const content = loadPublicContent()
 
-  return loadPublicContent().storylines
+  return content.storylines
     .slice()
+    .filter((story) => !isLegacyDuplicateStoryDto(story, content))
     .sort((left, right) => (left.sortOrder || 0) - (right.sortOrder || 0))
     .map((story) => {
       const storyPoiIds = pois.filter((poi) => poi.storyLineId === story.id).map((poi) => poi.id)
@@ -1278,7 +1630,7 @@ function getStoryCatalog(state = loadGameState()) {
         code: story.code,
         name: pickReadableText(story.name, story.nameEn, humanizeCode(story.code), `Story ${story.id}`),
         nameEn: pickReadableText(story.nameEn, story.name, humanizeCode(story.code), `Story ${story.id}`),
-        description: pickReadableText(story.description, `${pickReadableText(story.name, story.nameEn, 'This route')} connects major Macau story stops.`),
+        description: localizeTravelerText(pickReadableText(story.description, `${pickReadableText(story.name, story.nameEn, '這條路線')}串連澳門主要故事地點。`)),
         icon: resolveStoryIcon(story.code),
         coverColor: colorFromKey(story.code || String(story.id)),
         coverImageUrl: story.coverImageUrl,
@@ -1293,9 +1645,9 @@ function getStoryCatalog(state = loadGameState()) {
         poiIds: storyPoiIds,
         chapterTitles: runtimeAwareChapters.map((chapter) => chapter.title),
         progress: Math.round((completedChapters / totalChapters) * 100),
-        rewardBadge: pickReadableText(story.rewardBadge, `${pickReadableText(story.name, story.nameEn, 'Story')} badge`),
+        rewardBadge: localizeTravelerText(pickReadableText(story.rewardBadge, `${pickReadableText(story.name, story.nameEn, '故事')}徽章`)),
         locked: !storyUnlocked,
-        unlockHint: storyUnlocked ? '' : `Explore ${humanizeCode(primaryCityCode)} to unlock this storyline.`,
+        unlockHint: storyUnlocked ? '' : `探索${localizeTravelerText(humanizeCode(primaryCityCode))}後解鎖這條主線。`,
         chapters: runtimeAwareChapters,
         cityBindingCodes,
         subMapBindingCodes,
@@ -1305,8 +1657,8 @@ function getStoryCatalog(state = loadGameState()) {
         runtimeStatusText: story.runtimeStatusText,
         moodTags: [
           sanitizeDifficulty(story.difficulty),
-          humanizeCode(primaryCityCode),
-          humanizeCode(story.code),
+          localizeTravelerText(humanizeCode(primaryCityCode)),
+          localizeTravelerText(humanizeCode(story.code)),
         ].filter(Boolean),
       }
     })
@@ -1418,7 +1770,7 @@ function getLiveDiscoverCards() {
       ),
       actionText: pickReadableText(
         card.actionText,
-        card.type === 'merchant' ? 'Redeem' : card.type === 'checkin' ? 'Check in' : 'View',
+        card.type === 'merchant' ? '去兌換' : card.type === 'checkin' ? '去打卡' : '查看',
       ),
       coverColor: pickReadableText(card.coverColor, colorFromKey(String(card.id))),
     }
@@ -1460,13 +1812,12 @@ function getTravelRecommendationProfiles() {
 
 function mergeStorylineRuntimeIntoCache(
   storylineId: number,
-  runtime: PublicStorylineRuntimeDto | undefined,
-  source: 'live' | 'fallback',
+  runtime: PublicStorylineRuntimeDto,
 ) {
   const existing = loadPublicContent()
-  const statusText = source === 'live' ? '即時故事資料已同步' : '使用本機快取'
+  const statusText = '即時故事資料已同步'
   const syncedAt = new Date().toISOString()
-  const runtimeStoryline = runtime?.storyline
+  const runtimeStoryline = runtime.storyline
   const hasExistingStoryline = existing.storylines.some((story) => story.id === storylineId)
   const nextStorylines = hasExistingStoryline
     ? existing.storylines.map((story) => {
@@ -1479,7 +1830,7 @@ function mergeStorylineRuntimeIntoCache(
           chapters: runtimeStoryline?.chapters || story.chapters,
           runtime,
           runtimeSyncedAt: syncedAt,
-          runtimeSource: source,
+          runtimeSource: 'live',
           runtimeStatusText: statusText,
         }
       })
@@ -1490,7 +1841,7 @@ function mergeStorylineRuntimeIntoCache(
             ...runtimeStoryline,
             runtime,
             runtimeSyncedAt: syncedAt,
-            runtimeSource: source,
+            runtimeSource: 'live',
             runtimeStatusText: statusText,
           },
         ]
@@ -1505,13 +1856,20 @@ function mergeStorylineRuntimeIntoCache(
 }
 
 export async function refreshPublicContent(locale: PublicLocaleCode = (loadGameState().user.localeCode as PublicLocaleCode) || DEFAULT_PUBLIC_LOCALE) {
-  if (USE_MOCK) {
+  if (isPublicApiMockMode()) {
+    setPublicContentRefreshDiagnostics({
+      status: 'success',
+      message: '目前使用本機示例內容。',
+    })
     return loadPublicContent()
   }
 
-  await syncUserStateFromServer()
+  if (hasActiveSessionToken() && loadGameState().user.authStatus !== 'anonymous') {
+    void syncUserStateFromServer().catch((error) => {
+      console.warn('Failed to sync user state before public content refresh.', error)
+    })
+  }
 
-  const existing = loadPublicContent()
   const [
     cities,
     subMaps,
@@ -1546,7 +1904,7 @@ export async function refreshPublicContent(locale: PublicLocaleCode = (loadGameS
     api.public.getPublicRuntimeGroup('travel', locale),
   ])
 
-  return savePublicContent({
+  const saved = savePublicContent({
     locale,
     updatedAt: new Date().toISOString(),
     cities,
@@ -1562,28 +1920,68 @@ export async function refreshPublicContent(locale: PublicLocaleCode = (loadGameS
     notifications,
     discoverCards,
     runtimeGroups: {
-      ...existing.runtimeGroups,
       discover: discoverRuntime,
       map: mapRuntime,
       travel: travelRuntime,
     },
   })
+  reconcileCurrentCatalogSelection(saved)
+
+  setPublicContentRefreshDiagnostics({
+    status: 'success',
+    message: '公開內容已同步。',
+    failedSections: [],
+    counts: buildPublicContentCounts(saved),
+  })
+  logPublicContentDiagnostics('refreshPublicContent')
+
+  if (!saved.storylines.length) {
+    throw new Error('故事內容暫時未能載入。')
+  }
+
+  return saved
+}
+
+export async function refreshStorylineCatalog(
+  locale: PublicLocaleCode = (loadGameState().user.localeCode as PublicLocaleCode) || DEFAULT_PUBLIC_LOCALE,
+) {
+  if (isPublicApiMockMode()) {
+    return getStorylines()
+  }
+
+  const existing = loadPublicContent()
+  const storylines = await api.public.getPublicStorylines(locale)
+  const saved = mergePublicContent({
+    locale,
+    updatedAt: new Date().toISOString(),
+    storylines,
+  })
+
+  setPublicContentRefreshDiagnostics({
+    status: 'success',
+    message: '故事內容已同步。',
+    failedSections: publicContentRefreshDiagnostics.failedSections.filter((section) => section !== 'storylines'),
+    counts: buildPublicContentCounts(saved),
+  })
+  logPublicContentDiagnostics('refreshStorylineCatalog')
+
+  return getStorylines()
 }
 
 export async function refreshStorylineRuntime(
   storylineId: number,
   locale: PublicLocaleCode = (loadGameState().user.localeCode as PublicLocaleCode) || DEFAULT_PUBLIC_LOCALE,
 ): Promise<StorylineItem | undefined> {
-  if (USE_MOCK) {
+  if (isPublicApiMockMode()) {
     return getStoryById(storylineId)
   }
 
   try {
     const runtime = await api.public.getPublicStorylineRuntime(storylineId, locale)
-    return mergeStorylineRuntimeIntoCache(storylineId, runtime, 'live')
+    return mergeStorylineRuntimeIntoCache(storylineId, runtime)
   } catch (error) {
-    console.warn('Failed to refresh storyline runtime, using cached story.', error)
-    return mergeStorylineRuntimeIntoCache(storylineId, undefined, 'fallback')
+    console.warn('Failed to refresh storyline runtime.', error)
+    throw error
   }
 }
 
@@ -1606,7 +2004,7 @@ function mapStorylineSession(session: PublicStorylineSessionDto): StorySessionIt
 }
 
 export async function startStorylineRuntimeSession(storylineId: number): Promise<StorySessionItem | undefined> {
-  if (USE_MOCK || !hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous') {
+  if (isPublicApiMockMode() || !hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous') {
     return undefined
   }
   const session = await api.public.startPublicStorylineSession(storylineId)
@@ -1614,7 +2012,7 @@ export async function startStorylineRuntimeSession(storylineId: number): Promise
 }
 
 export async function exitStorylineRuntimeSession(storylineId: number, sessionId: string): Promise<StorySessionItem | undefined> {
-  if (USE_MOCK || !hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous') {
+  if (isPublicApiMockMode() || !hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous') {
     return undefined
   }
   const session = await api.public.exitPublicStorylineSession(storylineId, sessionId)
@@ -1683,6 +2081,8 @@ function sanitizeStoryModeRouteChapter(value: unknown): StoryModeRouteChapter | 
     anchorType: readText(raw?.anchorType),
     anchorTargetId: toPositiveInteger(raw?.anchorTargetId),
     anchorTargetCode: readText(raw?.anchorTargetCode),
+    latitude: Number.isFinite(raw?.latitude) ? Number(raw?.latitude) : undefined,
+    longitude: Number.isFinite(raw?.longitude) ? Number(raw?.longitude) : undefined,
     status,
   }
 }
@@ -1748,6 +2148,8 @@ export function buildStoryModeRouteContext(
       const chapterOrder = toPositiveInteger(chapter.runtime?.chapterOrder) || index + 1
       const runtimeAnchorTargetId = toPositiveInteger(chapter.runtime?.anchorTargetId)
       const chapterAnchorTargetId = toPositiveInteger(chapter.anchorTargetId)
+      const anchorTargetId = runtimeAnchorTargetId || chapterAnchorTargetId
+      const anchorPoi = anchorTargetId ? getPoiById(anchorTargetId) : null
       const status: StoryModeRouteChapter['status'] = chapter.locked
         ? 'locked'
         : chapterId === selectedChapterId
@@ -1762,8 +2164,10 @@ export function buildStoryModeRouteContext(
         summary: pickReadableText(chapter.summary),
         locationName: pickReadableText(chapter.locationName),
         anchorType: pickReadableText(chapter.runtime?.anchorType, chapter.anchorType),
-        anchorTargetId: runtimeAnchorTargetId || chapterAnchorTargetId,
+        anchorTargetId,
         anchorTargetCode: pickReadableText(chapter.runtime?.anchorTargetCode, chapter.anchorTargetCode),
+        latitude: anchorPoi?.latitude,
+        longitude: anchorPoi?.longitude,
         status,
       }
     })
@@ -1974,7 +2378,7 @@ export async function recordStoryRuntimeEvent(input: {
     throw new AuthRequiredError('這個故事進度需要先開始故事模式。')
   }
 
-  if (USE_MOCK || (!sessionId && (!hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous'))) {
+  if (isPublicApiMockMode() || (!sessionId && (!hasActiveSessionToken() || loadGameState().user.authStatus === 'anonymous'))) {
     return undefined
   }
 
@@ -2086,7 +2490,7 @@ export async function registerCityVisitByLocation(lat: number, lng: number) {
     },
   }
   saveState(next)
-  if (!USE_MOCK && state.user.authStatus !== 'anonymous' && hasActiveSessionToken()) {
+  if (!isPublicApiMockMode() && state.user.authStatus !== 'anonymous' && hasActiveSessionToken()) {
     try {
       const current = await syncUserStateFromServer()
       assertAuthenticatedSnapshot(current)
@@ -2101,7 +2505,7 @@ export async function registerCityVisitByLocation(lat: number, lng: number) {
 
 export function getCities(): CityProgressItem[] {
   const state = loadGameState()
-  const publicCities = ensureAtLeastOneCity(state)
+  const publicCities = loadPublicContent().cities
   const publicPois = getPoiCatalog()
 
   return publicCities.map((city) => {
@@ -2166,7 +2570,7 @@ export async function switchCurrentCity(cityId: string) {
     },
   }
   saveState(next)
-  if (!USE_MOCK && state.user.authStatus !== 'anonymous' && hasActiveSessionToken()) {
+  if (!isPublicApiMockMode() && state.user.authStatus !== 'anonymous' && hasActiveSessionToken()) {
     const current = await syncUserStateFromServer()
     assertAuthenticatedSnapshot(current)
     await api.user.updateUserCurrentCity({ cityCode: cityId })
@@ -2320,11 +2724,11 @@ export function getTravelRecommendation(answer?: TravelAssessmentAnswer | null, 
     }
   }
 
-  let selectedStory = stories[0]
+  let selectedStory = stories.find((story) => story.code === FLAGSHIP_STORY_CODE || story.name.includes(FLAGSHIP_STORY_NAME)) || stories[0]
   if (target?.interests.some((interest) => interest.toLowerCase().includes('photo'))) {
     selectedStory = stories.find((story) => story.difficulty !== 'easy') || selectedStory
   } else if (target?.interests.some((interest) => interest.toLowerCase().includes('history'))) {
-    selectedStory = stories.find((story) => story.name.toLowerCase().includes('silk')) || selectedStory
+    selectedStory = stories.find((story) => story.code === FLAGSHIP_STORY_CODE || story.name.includes(FLAGSHIP_STORY_NAME)) || selectedStory
   }
 
   const selectedPoi = pois.find((poi) => poi.storyLineId === selectedStory.id) || pois[0]
@@ -2376,7 +2780,7 @@ export async function redeemReward(rewardId: number) {
   if (state.user.totalStamps < reward.stampCost) {
     throw new Error('Not enough stamps yet.')
   }
-  if (!USE_MOCK) {
+  if (!isPublicApiMockMode()) {
     const current = await syncUserStateFromServer()
     assertAuthenticatedSnapshot(current)
     const result = await api.user.redeemUserReward(rewardId)
@@ -2452,17 +2856,20 @@ export function getNearbyPois(lat: number, lng: number, accuracy: number, cityId
 
 export function getMapBootstrapConfig() {
   const state = loadGameState()
-  const currentCity = ensureAtLeastOneCity(state).find((city) => city.code === state.user.currentCityId) || ensureAtLeastOneCity(state)[0]
-  const currentSubMap = getCitySubMapDtos(currentCity.code).find((subMap) => subMap.code === state.user.currentSubMapId)
+  const cities = loadPublicContent().cities
+  const currentCity = cities.find((city) => city.code === state.user.currentCityId) || cities[0]
+  const currentSubMap = currentCity
+    ? getCitySubMapDtos(currentCity.code).find((subMap) => subMap.code === state.user.currentSubMapId)
+    : undefined
   const mapRules = getObjectRecord(getRuntimeGroupSettings('map').checkin_rules)
   return {
     amapKey: AMAP_CONFIG.key,
     center: {
-      latitude: currentSubMap?.centerLat || currentCity.centerLat || AMAP_CONFIG.defaultCenter.latitude,
-      longitude: currentSubMap?.centerLng || currentCity.centerLng || AMAP_CONFIG.defaultCenter.longitude,
+      latitude: currentSubMap?.centerLat || currentCity?.centerLat || AMAP_CONFIG.defaultCenter.latitude,
+      longitude: currentSubMap?.centerLng || currentCity?.centerLng || AMAP_CONFIG.defaultCenter.longitude,
     },
-    city: pickReadableText(currentCity.name, humanizeCode(currentCity.code), 'Macau'),
-    cityCode: currentCity.code || DEFAULT_UNLOCKED_CITY_ID,
+    city: currentCity ? pickReadableText(currentCity.name, humanizeCode(currentCity.code)) : '',
+    cityCode: currentCity?.code || '',
     subMapCode: currentSubMap?.code,
     subMapName: currentSubMap ? pickReadableText(currentSubMap.name, humanizeCode(currentSubMap.code)) : '',
     checkinRules: {
@@ -2585,9 +2992,9 @@ export function getWalkingRouteSummary(poi: PoiItem, location: { latitude: numbe
     distance: String(Math.round(distance)),
     duration: String(minutes * 60),
     steps: [
-      `Head toward ${poi.district}.`,
-      `Use ${poi.name} as your next route anchor.`,
-      `Stay around ${poi.name} for about ${poi.staySeconds} seconds to complete the stop.`,
+      `朝${poi.district || '當前區域'}方向前進。`,
+      `把「${poi.name}」設為下一個故事目的地。`,
+      `抵達後在附近停留約 ${poi.staySeconds || 30} 秒，現場提示會接上。`,
     ],
   }
 }
@@ -2601,7 +3008,7 @@ export async function performMockCheckin(poiId: number, triggerMode: 'gps' | 'ma
     throw new Error('This stop is not available for check-in.')
   }
 
-  if (!USE_MOCK) {
+  if (!isPublicApiMockMode()) {
     const current = await syncUserStateFromServer()
     assertAuthenticatedSnapshot(current)
     const remote = await api.user.createUserCheckin({
@@ -2687,7 +3094,7 @@ export async function performMockCheckin(poiId: number, triggerMode: 'gps' | 'ma
     next.user.level += 1
     next.user.currentExp -= next.user.nextLevelExp
     next.user.nextLevelExp += 120
-    next.user.title = next.user.level >= 5 ? 'City Story Guide' : next.user.level >= 4 ? 'Route Explorer' : 'Macau Walker'
+    next.user.title = next.user.level >= 5 ? '城市故事導覽員' : next.user.level >= 4 ? '路線探索者' : '澳門漫遊者'
   }
 
   saveState(next)
@@ -2707,9 +3114,16 @@ export function getCheckinHistory() {
 }
 
 export function getEmergencyContact() {
-  return Taro.getStorageSync(EMERGENCY_CONTACT_KEY) || {
+  const stored = Taro.getStorageSync(EMERGENCY_CONTACT_KEY)
+  if (stored && typeof stored === 'object') {
+    return {
+      name: stored.name || '緊急聯絡人',
+      phone: stored.phone || '',
+    }
+  }
+  return {
     name: '緊急聯絡人',
-    phone: '10086',
+    phone: '',
   }
 }
 
@@ -2717,7 +3131,7 @@ export async function updateEmergencyContact(contact: { name: string; phone: str
   if (!(await requireAuth('保存緊急聯絡人前，請先使用微信登入。'))) {
     throw new AuthRequiredError()
   }
-  if (!USE_MOCK) {
+  if (!isPublicApiMockMode()) {
     const current = await syncUserStateFromServer()
     assertAuthenticatedSnapshot(current)
     const preferences = await api.user.updateUserPreferences(buildUserPreferencesPayload(current.user, {

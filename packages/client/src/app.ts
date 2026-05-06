@@ -1,6 +1,6 @@
 import { useLaunch } from '@tarojs/taro'
 import './styles/index.scss'
-import { hasActiveSessionToken, loadGameState, syncUserStateFromServer } from './services/gameService'
+import { ensureDevBypassSession, hasActiveSessionToken, loadGameState, syncUserStateFromServer } from './services/gameService'
 
 function applyInterfaceMode(mode) {
   try {
@@ -32,11 +32,16 @@ function App({ children }) {
     const state = loadGameState()
     wx.setStorageSync('userInfo', state.user)
     applyInterfaceMode(state.user.interfaceMode)
-    if (hasActiveSessionToken()) {
-      void syncUserStateFromServer().catch((error) => {
+    void ensureDevBypassSession()
+      .then(() => {
+        if (hasActiveSessionToken()) {
+          return syncUserStateFromServer()
+        }
+        return null
+      })
+      .catch((error) => {
         console.warn('Failed to bootstrap remote user state.', error)
       })
-    }
     logSystemInfo()
   })
 

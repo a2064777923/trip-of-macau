@@ -166,7 +166,7 @@ function resolveEventType(step: StoryRuntimeStepItem, category: StoryRuntimeStep
 function resolveLabel(category: StoryRuntimeStepCategory) {
   switch (category) {
     case 'unsupported':
-      return '稍後開放'
+      return '現場玩法'
     case 'pickup':
       return '拾取線索'
     case 'task':
@@ -184,23 +184,23 @@ function resolveLabel(category: StoryRuntimeStepCategory) {
 
 function resolveButtonText(eventType: StoryRuntimeEventType, category: StoryRuntimeStepCategory) {
   if (category === 'unsupported') {
-    return '查看玩法說明'
+    return '查看現場提示'
   }
   switch (eventType) {
     case 'pickup_interacted':
       return '拾取線索'
     case 'proximity_reached':
-      return '標記已到達'
+      return '我已到達'
     case 'checkin_completed':
-      return '同步打卡完成'
+      return '完成打卡'
     case 'task_completed':
-      return '標記任務完成'
+      return '完成任務'
     case 'reward_acquired':
-      return '領取後端獎勵'
+      return '領取獎勵'
     case 'click_interacted':
-      return '同步點擊互動'
+      return '完成互動'
     default:
-      return '同步互動進度'
+      return '記錄進度'
   }
 }
 
@@ -273,7 +273,7 @@ export function resolveStoryRuntimeFeedback(
     return {
       status: fallback?.status || 'synced',
       title: fallback?.title || '本機已記錄',
-      message: fallback?.message || '目前使用本機或只讀模式，未向後端寫入互動事件。',
+      message: fallback?.message || '這一步已在本機記錄，開始故事模式後可保存完整旅程進度。',
       outcomeType: fallback?.outcomeType,
       outcomeLabels: fallback?.outcomeLabels,
       updatedAt: new Date().toISOString(),
@@ -283,11 +283,11 @@ export function resolveStoryRuntimeFeedback(
   const status: StoryRuntimeActionState['status'] = alreadySynced ? 'already_synced' : 'synced'
   return {
     status,
-    title: response.feedbackTitle || fallback?.title || (alreadySynced ? '已記錄過' : '進度已同步'),
+    title: response.feedbackTitle || fallback?.title || (alreadySynced ? '已記錄過' : '旅程已記錄'),
     message: response.feedbackMessage
       || response.message
       || fallback?.message
-      || (alreadySynced ? '已記錄過，不會重複發放' : '互動事件已同步到後端。'),
+      || (alreadySynced ? '這一步已完成，不會重複發放獎勵。' : '旅程進度已保存。'),
     outcomeType: response.outcomeType || fallback?.outcomeType,
     outcomeLabels: response.outcomeLabels || fallback?.outcomeLabels,
     eventId: response.eventId,

@@ -322,7 +322,7 @@ export default function IndoorMapPage() {
         if (!mounted) {
           return
         }
-        setRuntimeNotice(floorError instanceof Error ? floorError.message : '樓層 runtime 載入失敗')
+        setRuntimeNotice(floorError instanceof Error ? floorError.message : '樓層內容暫時未能載入')
       } finally {
         if (mounted) {
           setFloorLoadingId((current) => (current === activeFloorId ? null : current))
@@ -661,7 +661,7 @@ export default function IndoorMapPage() {
         {loading ? (
           <View className='indoor-map-hint'>
             <Text className='indoor-map-hint__title'>正在載入室內資料</Text>
-            <Text className='indoor-map-hint__desc'>系統會先讀取建築、樓層與已發佈的室內 runtime 設定。</Text>
+            <Text className='indoor-map-hint__desc'>正在整理樓層圖、標記點與可互動內容。</Text>
           </View>
         ) : error ? (
           <View className='indoor-map-error'>
@@ -706,7 +706,7 @@ export default function IndoorMapPage() {
                 <View className='indoor-map-hint indoor-map-hint--embedded'>
                   <Text className='indoor-map-hint__title'>這一層尚未上傳圖資</Text>
                   <Text className='indoor-map-hint__desc'>
-                    請回到後台為「{floorDisplayName(activeBaseFloor)}」上傳樓層地圖或瓦片資料。
+                    「{floorDisplayName(activeBaseFloor)}」的室內地圖正在準備中，請稍後再試。
                   </Text>
                 </View>
               )}
@@ -781,8 +781,8 @@ export default function IndoorMapPage() {
             {activeFloorLoading ? (
               <View className='indoor-loading-mask'>
                 <View className='indoor-loading-mask__card'>
-                  <Text className='indoor-loading-mask__title'>樓層 runtime 載入中</Text>
-                  <Text className='indoor-loading-mask__desc'>正在同步圖資、標記與互動規則，完成後才會顯示。</Text>
+                  <Text className='indoor-loading-mask__title'>樓層內容載入中</Text>
+                  <Text className='indoor-loading-mask__desc'>正在同步圖資、標記與現場提示，完成後才會顯示。</Text>
                 </View>
               </View>
             ) : null}
@@ -790,7 +790,7 @@ export default function IndoorMapPage() {
         ) : (
           <View className='indoor-map-hint'>
             <Text className='indoor-map-hint__title'>尚未建立樓層</Text>
-            <Text className='indoor-map-hint__desc'>請先在後台建立至少一個樓層，再回到小程序查看。</Text>
+            <Text className='indoor-map-hint__desc'>這座室內地圖正在準備樓層內容，請稍後再來查看。</Text>
           </View>
         )}
 
@@ -816,8 +816,8 @@ export default function IndoorMapPage() {
                 </Text>
                 <Text className='indoor-runtime-drawer__subtitle'>
                   {activeFloor.source === 'runtime'
-                    ? `Runtime 版本 ${activeFloor.runtimeVersion || '載入中'}`
-                    : '目前為靜態 fallback，互動規則尚未連上。'}
+                    ? '可探索內容已開啟'
+                    : '這一層暫時只能查看地圖。'}
                 </Text>
               </View>
               {selectedNode?.blockedBehaviorCount ? (
@@ -830,7 +830,7 @@ export default function IndoorMapPage() {
             {selectedNode?.description ? (
               <Text className='indoor-runtime-drawer__body'>{selectedNode.description}</Text>
             ) : (
-              <Text className='indoor-runtime-drawer__body'>選取一個標記點，查看它的互動規則與即時效果。</Text>
+              <Text className='indoor-runtime-drawer__body'>選取一個標記點，查看可以觸發的現場提示。</Text>
             )}
 
             {selectedNode ? (
@@ -869,10 +869,10 @@ export default function IndoorMapPage() {
                       </Text>
                     </View>
                     <Text className='indoor-runtime-behavior-card__meta'>
-                      觸發：{(behavior.triggerRules || []).map((rule) => rule.category).filter(Boolean).join('、') || '無'}
+                      開啟方式：{(behavior.triggerRules || []).map((rule) => rule.category).filter(Boolean).join('、') || '接近或點擊'}
                     </Text>
                     <Text className='indoor-runtime-behavior-card__meta'>
-                      效果：{(behavior.effectRules || []).map((rule) => rule.category).filter(Boolean).join('、') || '無'}
+                      觸發後：{(behavior.effectRules || []).map((rule) => rule.category).filter(Boolean).join('、') || '顯示提示'}
                     </Text>
                     {!behavior.supported && behavior.blockedReason ? (
                       <Text className='indoor-runtime-behavior-card__warn'>

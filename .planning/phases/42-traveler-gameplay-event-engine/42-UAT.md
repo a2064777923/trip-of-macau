@@ -1,7 +1,7 @@
-# Phase 42 Gameplay Event Engine UAT
+﻿# Phase 42 Gameplay Event Engine UAT
 
-Generated: 2026-05-04T15:52:52
-Mode: Quick=False; IncludeBuild=True; RequireBackend=False
+Generated: 2026-05-05T12:24:12
+Mode: Quick=False; IncludeBuild=False; RequireBackend=False
 Locale: zh-Hant
 Storyline code: east_west_war_and_coexistence
 
@@ -16,6 +16,6 @@ Storyline code: east_west_war_and_coexistence
 | duplicate | idempotent duplicate submit | PASS | duplicate=True; eventStatus=already_synced | POST same clientEventId |
 | exploration | dynamic exploration summary | PASS | progressPercent=0.0; completed=0; available=37 | GET /users/me/exploration |
 | exit | exit story session | PASS | status=exited; exitClearedTemporaryState=True | POST /storylines/{id}/sessions/{sessionId}/exit |
-| client build | mini-program build | PASS | npm run build:weapp exited 0. | npm run build:weapp |
+| client build | mini-program build | SKIP | run with -IncludeBuild to execute npm run build:weapp. | npm run build:weapp |
 
 Final outcome: PASS

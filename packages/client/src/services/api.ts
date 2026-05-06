@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro'
-import { API_BASE_URL } from '../constants/env'
+import { API_BASE_URL, DEV_RUNTIME_DIAGNOSTICS_ENABLED, PUBLIC_API_HOST_LABEL } from '../constants/env'
 
 export type PublicLocaleCode = 'zh-Hant' | 'zh-Hans' | 'en' | 'pt'
 
@@ -16,6 +16,8 @@ interface RequestOptions<TBody = unknown> {
   query?: RequestQuery
   loading?: boolean
   header?: Record<string, string>
+  maxRetries?: number
+  timeoutMs?: number
 }
 
 interface ApiEnvelope<T> {
@@ -1025,20 +1027,20 @@ function buildQuery(query?: RequestQuery) {
     return ''
   }
 
-  const params = Object.entries(query).reduce((accumulator, [key, value]) => {
-    if (value === undefined || value === null || value === '') {
-      return accumulator
-    }
-    accumulator.append(key, String(value))
-    return accumulator
-  }, new URLSearchParams())
-
-  const output = params.toString()
+  const output = Object.entries(query)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .join('&')
   return output ? `?${output}` : ''
 }
 
 async function request<TResponse, TBody = unknown>(options: RequestOptions<TBody>): Promise<TResponse> {
-  const maxRetries = 3
+  const method = options.method || 'GET'
+  const query = buildQuery(options.query)
+  const requestUrl = `${API_BASE_URL}${options.url}${query}`
+  const isPublicRead = method === 'GET' && !options.url.startsWith('/user') && !options.url.startsWith('/users/me')
+  const maxRetries = options.maxRetries ?? (isPublicRead ? 0 : 3)
+  const timeoutMs = options.timeoutMs ?? (isPublicRead ? 8000 : 30000)
   const retryDelay = 1000 // 1 second
   let lastError: Error | null = null
 
@@ -1049,17 +1051,30 @@ async function request<TResponse, TBody = unknown>(options: RequestOptions<TBody
 
     try {
       const token = Taro.getStorageSync('token')
+      const startedAt = Date.now()
+      if (DEV_RUNTIME_DIAGNOSTICS_ENABLED) {
+        console.info('[TripOfMacau][request:start]', {
+          method,
+          path: options.url,
+          query,
+          apiHost: PUBLIC_API_HOST_LABEL,
+          attempt: attempt + 1,
+          maxAttempts: maxRetries + 1,
+          timeoutMs,
+        })
+      }
       const response = await Taro.request<ApiEnvelope<TResponse>>({
-        url: `${API_BASE_URL}${options.url}${buildQuery(options.query)}`,
-        method: options.method || 'GET',
+        url: requestUrl,
+        method,
         data: options.data,
         header: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...options.header,
         },
-        timeout: 30000,
+        timeout: timeoutMs,
       })
+      const elapsedMs = Date.now() - startedAt
 
       if (options.loading !== false) {
         Taro.hideLoading()
@@ -1068,6 +1083,16 @@ async function request<TResponse, TBody = unknown>(options: RequestOptions<TBody
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (response.data?.code !== 0) {
           throw new Error(response.data?.message || 'Request failed')
+        }
+        if (DEV_RUNTIME_DIAGNOSTICS_ENABLED) {
+          const payload = response.data.data
+          console.info('[TripOfMacau][request:success]', {
+            method,
+            path: options.url,
+            statusCode: response.statusCode,
+            elapsedMs,
+            count: Array.isArray(payload) ? payload.length : payload ? 1 : 0,
+          })
         }
         return response.data.data
       }
@@ -1080,6 +1105,16 @@ async function request<TResponse, TBody = unknown>(options: RequestOptions<TBody
       throw new Error(response.data?.message || 'Request failed')
     } catch (error: any) {
       lastError = error
+      if (DEV_RUNTIME_DIAGNOSTICS_ENABLED) {
+        console.warn('[TripOfMacau][request:failed]', {
+          method,
+          path: options.url,
+          query,
+          attempt: attempt + 1,
+          maxAttempts: maxRetries + 1,
+          message: error?.message || error?.errMsg || String(error),
+        })
+      }
 
       // Don't retry on auth errors or client errors
       if (error.message === 'AUTH_REQUIRED' || (error.statusCode && error.statusCode >= 400 && error.statusCode < 500)) {

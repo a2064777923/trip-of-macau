@@ -14,12 +14,19 @@ import {
   saveTravelAssessment,
   switchCurrentCity,
 } from '../../services/gameService'
+import type { CityProgressItem } from '../../types/game'
 import './index.scss'
 
 
 const ageGroups = ['18歲以下', '18-30歲', '31-55歲', '55歲以上']
 const durations = ['1小時內', '半天慢遊', '一整天', '兩天以上']
 const interests = ['歷史故事', '拍照打卡', '美食慢遊', '親子輕鬆', '海邊散步']
+const FLAGSHIP_STORY_CODE = 'east_west_war_and_coexistence'
+const FLAGSHIP_STORY_NAME = '東西方文明的戰火與共生'
+const isFlagshipStory = (story: ReturnType<typeof getStorylines>[number]) => (
+  story.code === FLAGSHIP_STORY_CODE
+  || story.name.includes(FLAGSHIP_STORY_NAME)
+)
 
 export default function IndexPage() {
   const [stories, setStories] = useState(() => getStorylines())
@@ -30,16 +37,7 @@ export default function IndexPage() {
   const [assessmentResult, setAssessmentResult] = useState<ReturnType<typeof getTravelRecommendation> | null>(null)
   const [loadingAssessment, setLoadingAssessment] = useState(false)
   const [showMapSelector, setShowMapSelector] = useState(false)
-  const [currentMap, setCurrentMap] = useState(() => getCities()[0] || {
-    id: 'macau',
-    name: '澳門',
-    subtitle: '',
-    coverColor: '#ffd9e5',
-    unlocked: true,
-    explorationProgress: 0,
-    titleReward: 'Macau Explorer',
-    landmarkCount: 0,
-  })
+  const [currentMap, setCurrentMap] = useState<CityProgressItem | null>(() => getCities()[0] || null)
   const [assessment, setAssessment] = useState({
     ageGroup: '18-30歲',
     playDuration: '半天慢遊',
@@ -67,7 +65,7 @@ export default function IndexPage() {
       setRewards(getRewards())
       setCities(nextCities)
       setState(nextState)
-      setCurrentMap(nextCities.find((item) => item.id === nextState.user.currentCityId) || nextCities[0])
+      setCurrentMap(nextCities.find((item) => item.id === nextState.user.currentCityId) || nextCities[0] || null)
     }
 
     void hydrateHomePage()
@@ -77,9 +75,35 @@ export default function IndexPage() {
     }
   }, [])
 
-  const recommendation = useMemo(() => getTravelRecommendation(state.travelAssessment), [state])
+  const hasPublicCatalog = cities.length > 0 && stories.length > 0
   const featuredReward = rewards[0]
+  const flagshipStory = stories.find(isFlagshipStory) || stories[0]
+  const visibleStoryCount = stories.filter((story) => !story.locked).length || stories.length
+  const flagshipFirstChapter = flagshipStory?.chapters?.[0]
+  const flagshipStartName = flagshipFirstChapter?.locationName || '媽閣廟'
+  const recommendation = useMemo(() => {
+    const base = getTravelRecommendation(state.travelAssessment)
+    if (flagshipStory && isFlagshipStory(flagshipStory)) {
+      return {
+        ...base,
+        storyId: flagshipStory.id,
+        storyName: FLAGSHIP_STORY_NAME,
+        activityTitle: '五章主線旅程',
+        poiName: flagshipStartName,
+        ugcTitle: '跟隨海防銅鏡碎片前進',
+        reason: state.travelAssessment
+          ? '根據你的偏好，這條主線會以歷史劇情、現場打卡和分章任務串起今天的路線。'
+          : '先從媽閣廟出發，沿亞婆井前地、崗頂前地、大炮台與議事亭前地逐步走入故事。',
+      }
+    }
+    return base
+  }, [flagshipFirstChapter?.locationName, flagshipStory?.id, state.travelAssessment, stories.length])
   const selectedInterestCount = assessment.interests.length
+
+  const openStoryPage = (storyId?: number) => {
+    const query = storyId ? `?storyId=${encodeURIComponent(String(storyId))}` : ''
+    Taro.navigateTo({ url: `/pages/story/index${query}` })
+  }
 
   const assessmentSteps = [
     { id: 'age', label: '年齡', value: assessment.ageGroup },
@@ -100,7 +124,10 @@ export default function IndexPage() {
     let userLocation: { latitude: number; longitude: number } | null = null
     if (assessment.allowLocation) {
       try {
-        const res = await Taro.getLocation({ type: 'gcj02' })
+        const res = await Promise.race([
+          Taro.getLocation({ type: 'gcj02' }),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('location timeout')), 2500)),
+        ])
         userLocation = { latitude: res.latitude, longitude: res.longitude }
       } catch (error) {
         Taro.showToast({ title: '先按你目前的偏好為你安排', icon: 'none' })
@@ -110,7 +137,10 @@ export default function IndexPage() {
     // Simulate AI loading
     setTimeout(async () => {
       try {
-        const result = await saveTravelAssessment(assessment, userLocation || undefined)
+        const isAnonymousPreview = loadGameState().user.authStatus === 'anonymous'
+        const result = isAnonymousPreview
+          ? getTravelRecommendation(assessment, userLocation || undefined)
+          : await saveTravelAssessment(assessment, userLocation || undefined)
         setState(loadGameState())
         setStories(getStorylines())
         setAssessmentResult(result)
@@ -170,11 +200,11 @@ export default function IndexPage() {
           <View className='map-selector-btn' onClick={() => setShowMapSelector(true)}>
             <Image className='map-icon' src={cosAssetManifest.tabbar.iconMapActiveSvg} mode='aspectFit' />
 
-            <Text className='map-name'>{currentMap.name}</Text>
+            <Text className='map-name'>{currentMap?.name || '載入地圖'}</Text>
           </View>
         </View>
         <View className='hero-content'>
-          <Text className='app-subtitle'>跟着故事去散步，把沿途的风景、印章和惊喜都收进行囊里。</Text>
+          <Text className='app-subtitle'>跟著故事去散步，把沿途的風景、印章和驚喜都收進行囊裡。</Text>
 
           <View className='user-level-card'>
             <View className='level-badge'>
@@ -182,7 +212,7 @@ export default function IndexPage() {
             </View>
             <View className='level-info'>
               <Text className='level-title'>{state.user.title}</Text>
-              <Text className='stamp-count'>已收集 {state.user.totalStamps} 枚印章 · 已解鎖 {state.user.unlockedStorylines} 條主線</Text>
+              <Text className='stamp-count'>已收集 {state.user.totalStamps} 枚印章 · 可探索 {visibleStoryCount} 條主線</Text>
             </View>
           </View>
         </View>
@@ -213,7 +243,7 @@ export default function IndexPage() {
                       <Text className='assessment-result__label'>今日亮點活動</Text>
                       <Text className='assessment-result__value'>{assessmentResult.activityTitle}</Text>
                       <View className='assessment-result__image-placeholder'>
-                        <Text className='assessment-result__image-text'>推薦圖文內容載入中...</Text>
+                        <Text className='assessment-result__image-text'>先看看今日亮點，圖文會跟著旅程展開。</Text>
                       </View>
                       <Text className='assessment-result__desc'>點擊查看達人分享的詳細圖文筆記，為您的旅程增添靈感。</Text>
                     </View>
@@ -284,20 +314,24 @@ export default function IndexPage() {
         <View className='map-selector-modal'>
           <View className='map-selector-modal__mask' onClick={() => setShowMapSelector(false)} />
           <View className='map-selector-modal__content'>
-            <Text className='map-selector-modal__title'>選擇探索城市</Text>
+            <Text className='map-selector-modal__title'>選擇大地圖</Text>
             <ScrollView scrollX className='map-selector-scroll'>
               <View className='map-list'>
                 {cities.map((map) => (
                   <View 
                     key={map.id} 
-                    className={`map-item ${!map.unlocked ? 'locked' : ''} ${currentMap.id === map.id ? 'active' : ''}`}
+                    className={`map-item ${!map.unlocked ? 'locked' : ''} ${currentMap?.id === map.id ? 'active' : ''}`}
                     onClick={() => void handleMapSelection(map)}
                   >
-                    <View className='map-item__image-placeholder'>
+                    <View
+                      className='map-item__image-placeholder'
+                      style={{ background: map.coverColor || 'linear-gradient(135deg, #2d405f 0%, #d58f57 100%)' }}
+                    >
                       {!map.unlocked && <Text className='map-item__lock'>🔒</Text>}
+                      {map.unlocked ? <Text className='map-item__mark'>{map.name.slice(0, 2)}</Text> : null}
                     </View>
                     <Text className='map-item__name'>{map.name}</Text>
-                    <Text className='map-item__status'>{map.unlocked ? '已解鎖' : '未解鎖'}</Text>
+                    <Text className='map-item__status'>{map.unlocked ? `${map.explorationProgress || 0}% 已探索` : '未解鎖'}</Text>
                   </View>
                 ))}
               </View>
@@ -320,21 +354,31 @@ export default function IndexPage() {
         </View>
       )}
 
+      {hasPublicCatalog ? (
       <View className='recommend-panel'>
         <Text className='section-title'>為你準備的今日路線</Text>
-        <View className='recommend-card'>
-          <Text className='recommend-card__title'>{recommendation.storyName}</Text>
+        <View className='recommend-card' onClick={() => openStoryPage(recommendation.storyId || flagshipStory?.id)}>
+          <Text className='recommend-card__title'>{isFlagshipStory(flagshipStory) ? FLAGSHIP_STORY_NAME : recommendation.storyName}</Text>
           <Text className='recommend-card__reason'>{recommendation.reason}</Text>
-          <Text className='recommend-card__meta'>推薦活動：{recommendation.activityTitle}</Text>
-          <Text className='recommend-card__meta'>先去這裡：{recommendation.poiName}</Text>
-          <Text className='recommend-card__meta'>搭配秘籍：{recommendation.ugcTitle}</Text>
+          <Text className='recommend-card__meta'>旅程結構：{recommendation.activityTitle}</Text>
+          <Text className='recommend-card__meta'>第一站：{recommendation.poiName}</Text>
+          <Text className='recommend-card__meta'>故事線索：{recommendation.ugcTitle}</Text>
         </View>
       </View>
+      ) : (
+        <View className='recommend-panel'>
+          <Text className='section-title'>正在整理今日旅程</Text>
+          <View className='recommend-card'>
+            <Text className='recommend-card__title'>載入真實故事與地圖</Text>
+            <Text className='recommend-card__reason'>旅程內容正在同步，稍後會顯示可開始的故事線與地圖。</Text>
+          </View>
+        </View>
+      )}
 
       <View className='quick-access'>
         <Text className='section-title'>今天想怎麼玩</Text>
         <View className='quick-grid'>
-          <View className='quick-item' onClick={() => Taro.navigateTo({ url: '/pages/story/index' })}>
+          <View className='quick-item' onClick={() => openStoryPage(flagshipStory?.id)}>
             <View className='quick-icon'>📖</View>
             <Text className='quick-text'>故事主線</Text>
           </View>
@@ -353,11 +397,12 @@ export default function IndexPage() {
         </View>
       </View>
 
+      {hasPublicCatalog && (
       <View className='featured-stories'>
-        <Text className='section-title'>推薦探索路线</Text>
+        <Text className='section-title'>推薦探索路線</Text>
         <ScrollView className='story-scroll' scrollX>
           {stories.slice(0, 4).map((story) => (
-            <View key={story.id} className='story-card' onClick={() => Taro.navigateTo({ url: '/pages/story/index' })}>
+            <View key={story.id} className='story-card' onClick={() => openStoryPage(story.id)}>
               <View className='story-cover' style={{ background: story.coverColor }}>
                 <Text className='story-emoji'>{story.icon}</Text>
               </View>
@@ -370,6 +415,7 @@ export default function IndexPage() {
           ))}
         </ScrollView>
       </View>
+      )}
 
       {featuredReward && (
         <View className='reward-highlight' onClick={() => Taro.navigateTo({ url: '/pages/rewards/index' })}>

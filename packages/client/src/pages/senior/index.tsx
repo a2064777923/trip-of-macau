@@ -71,6 +71,15 @@ export default function SeniorPage() {
     }
   }
 
+  const callEmergencyContact = () => {
+    const targetPhone = phone.trim()
+    if (!targetPhone) {
+      Taro.showToast({ title: '請先設定緊急聯絡電話', icon: 'none' })
+      return
+    }
+    Taro.makePhoneCall({ phoneNumber: targetPhone })
+  }
+
   if (user.authStatus === 'anonymous') {
     return (
       <View className='senior-page'>
@@ -119,7 +128,7 @@ export default function SeniorPage() {
         <Input className='senior-input' value={phone} placeholder='聯絡電話' type='number' onInput={(event) => setPhone(event.detail.value || '')} />
         <View className='senior-actions'>
           <Button className='senior-outline' onClick={() => void saveEmergencyContact()}>保存聯絡人</Button>
-          <Button className='senior-solid' onClick={() => Taro.makePhoneCall({ phoneNumber: phone || '10086' })}>一鍵求助</Button>
+          <Button className='senior-solid' onClick={callEmergencyContact}>一鍵求助</Button>
         </View>
       </View>
 
