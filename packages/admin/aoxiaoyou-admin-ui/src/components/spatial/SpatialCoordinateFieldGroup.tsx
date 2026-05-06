@@ -10,9 +10,9 @@ const { Text } = Typography;
 type NamePath = string | number | Array<string | number>;
 
 const coordinateSystemOptions: Array<{ label: string; value: CoordinateSystem }> = [
-  { label: 'GCJ-02（高德 / 騰訊）', value: 'GCJ02' },
-  { label: 'WGS84（GPS）', value: 'WGS84' },
-  { label: 'BD-09（百度）', value: 'BD09' },
+  { label: 'GCJ-02（高德 / 騰訊 / 微信地圖）', value: 'GCJ02' },
+  { label: 'WGS84（GPS / Google / 原始經緯度）', value: 'WGS84' },
+  { label: 'BD-09（百度地圖）', value: 'BD09' },
   { label: '未知 / 待確認', value: 'UNKNOWN' },
 ];
 
@@ -137,6 +137,14 @@ const SpatialCoordinateFieldGroup: React.FC<SpatialCoordinateFieldGroupProps> = 
           </Form.Item>
         </Col>
       </Row>
+
+      <Alert
+        type="warning"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message="微信小程序地圖固定使用 GCJ-02 展示坐標"
+        description="如果坐標來自高德、騰訊或微信，選 GCJ-02；如果是 GPS、Google 或相機 EXIF 原始坐標，選 WGS84；如果來自百度地圖，選 BD-09。保存後前台只使用換算後 GCJ-02，選錯會造成數百米偏移。"
+      />
 
       <Row gutter={16} align="top">
         {normalizedLatitudeName ? (

@@ -8,10 +8,12 @@ import com.aoxiaoyou.admin.dto.request.AdminPoiUpsertRequest;
 import com.aoxiaoyou.admin.dto.response.AdminPoiDetailResponse;
 import com.aoxiaoyou.admin.dto.response.AdminPoiListItemResponse;
 import com.aoxiaoyou.admin.entity.City;
+import com.aoxiaoyou.admin.entity.ContentAsset;
 import com.aoxiaoyou.admin.entity.Poi;
 import com.aoxiaoyou.admin.entity.StoryLine;
 import com.aoxiaoyou.admin.entity.SubMap;
 import com.aoxiaoyou.admin.mapper.CityMapper;
+import com.aoxiaoyou.admin.mapper.ContentAssetMapper;
 import com.aoxiaoyou.admin.mapper.PoiMapper;
 import com.aoxiaoyou.admin.mapper.StoryLineMapper;
 import com.aoxiaoyou.admin.mapper.SubMapMapper;
@@ -34,6 +36,7 @@ public class AdminPoiServiceImpl implements AdminPoiService {
     private final StoryLineMapper storyLineMapper;
     private final CityMapper cityMapper;
     private final SubMapMapper subMapMapper;
+    private final ContentAssetMapper contentAssetMapper;
     private final CoordinateNormalizationService coordinateNormalizationService;
     private final AdminSpatialAssetLinkService adminSpatialAssetLinkService;
 
@@ -214,12 +217,15 @@ public class AdminPoiServiceImpl implements AdminPoiService {
                 .categoryCode(poi.getCategoryCode())
                 .difficulty(poi.getDifficulty())
                 .sourceCoordinateSystem(poi.getSourceCoordinateSystem())
+                .sourceLatitude(poi.getSourceLatitude())
+                .sourceLongitude(poi.getSourceLongitude())
                 .latitude(poi.getLatitude())
                 .longitude(poi.getLongitude())
                 .status(poi.getStatus())
                 .sortOrder(poi.getSortOrder())
                 .coverAssetId(poi.getCoverAssetId())
                 .mapIconAssetId(poi.getMapIconAssetId())
+                .mapIconUrl(resolveAssetUrl(poi.getMapIconAssetId()))
                 .createdAt(poi.getCreatedAt())
                 .build();
     }
@@ -266,6 +272,7 @@ public class AdminPoiServiceImpl implements AdminPoiService {
                 .districtPt(poi.getDistrictPt())
                 .coverAssetId(poi.getCoverAssetId())
                 .mapIconAssetId(poi.getMapIconAssetId())
+                .mapIconUrl(resolveAssetUrl(poi.getMapIconAssetId()))
                 .audioAssetId(poi.getAudioAssetId())
                 .descriptionZh(poi.getDescriptionZh())
                 .descriptionEn(poi.getDescriptionEn())
@@ -292,5 +299,13 @@ public class AdminPoiServiceImpl implements AdminPoiService {
 
     private LocalDateTime parseDateTime(String value) {
         return StringUtils.hasText(value) ? LocalDateTime.parse(value) : null;
+    }
+
+    private String resolveAssetUrl(Long assetId) {
+        if (assetId == null) {
+            return null;
+        }
+        ContentAsset asset = contentAssetMapper.selectById(assetId);
+        return asset == null ? null : asset.getCanonicalUrl();
     }
 }

@@ -23,11 +23,14 @@ public class AdminPoiListItemResponse {
     private String categoryCode;
     private String difficulty;
     private String sourceCoordinateSystem;
+    private BigDecimal sourceLatitude;
+    private BigDecimal sourceLongitude;
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String status;
     private Integer sortOrder;
     private Long coverAssetId;
     private Long mapIconAssetId;
+    private String mapIconUrl;
     private LocalDateTime createdAt;
 }

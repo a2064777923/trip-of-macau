@@ -11,6 +11,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Image,
   Row,
   Select,
   Space,
@@ -44,6 +45,13 @@ import SpatialPopupDisplayField from '../../components/spatial/SpatialPopupDispl
 import { hydrateSpatialAttachmentDrafts, normalizeSpatialAttachmentDrafts } from '../../utils/spatialAttachments';
 
 const { Paragraph, Text } = Typography;
+
+function formatCoordinate(latitude?: number | null, longitude?: number | null) {
+  if (latitude == null || longitude == null) {
+    return '未設定';
+  }
+  return `${Number(latitude).toFixed(7)}, ${Number(longitude).toFixed(7)}`;
+}
 
 const statusOptions = [
   { label: '未發佈', value: 'unpublished' },
@@ -302,7 +310,17 @@ const POIManagement: React.FC = () => {
       {
         title: '坐標',
         key: 'coordinate',
-        render: (_: unknown, record: AdminPoiListItem) => `${record.latitude}, ${record.longitude}`,
+        render: (_: unknown, record: AdminPoiListItem) => (
+          <Space direction="vertical" size={0}>
+            <Text>{formatCoordinate(record.latitude, record.longitude)}</Text>
+            <Text type="secondary">
+              小程序 / 微信地圖 GCJ-02
+            </Text>
+            <Text type="secondary">
+              來源 {record.sourceCoordinateSystem || 'GCJ02'}：{formatCoordinate(record.sourceLatitude, record.sourceLongitude)}
+            </Text>
+          </Space>
+        ),
       },
       {
         title: '分類',
@@ -312,7 +330,23 @@ const POIManagement: React.FC = () => {
       {
         title: '地圖圖標',
         key: 'mapIcon',
-        render: (_: unknown, record: AdminPoiListItem) => record.mapIconAssetId || '未設定',
+        render: (_: unknown, record: AdminPoiListItem) => (
+          <Space>
+            {record.mapIconUrl ? (
+              <Image
+                src={record.mapIconUrl}
+                width={44}
+                height={44}
+                preview={false}
+                style={{ objectFit: 'contain', borderRadius: 12, background: '#fff7ec', padding: 4 }}
+              />
+            ) : null}
+            <Space direction="vertical" size={0}>
+              <Text>{record.mapIconAssetId || '未設定'}</Text>
+              <Text type="secondary">建議使用 PNG/JPG，避免 SVG/data URL</Text>
+            </Space>
+          </Space>
+        ),
       },
       {
         title: '狀態',

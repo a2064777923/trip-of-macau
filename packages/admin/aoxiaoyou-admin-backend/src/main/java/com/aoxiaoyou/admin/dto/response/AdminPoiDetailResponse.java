@@ -47,6 +47,7 @@ public class AdminPoiDetailResponse {
     private String districtPt;
     private Long coverAssetId;
     private Long mapIconAssetId;
+    private String mapIconUrl;
     private Long audioAssetId;
     private String descriptionZh;
     private String descriptionEn;

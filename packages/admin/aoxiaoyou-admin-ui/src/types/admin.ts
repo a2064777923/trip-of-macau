@@ -1567,18 +1567,19 @@ export interface AdminPoiListItem {
   categoryCode?: string;
   difficulty?: string;
   sourceCoordinateSystem?: CoordinateSystem;
+  sourceLatitude?: number | null;
+  sourceLongitude?: number | null;
   latitude: number;
   longitude: number;
   status?: string;
   sortOrder?: number;
   coverAssetId?: number | null;
   mapIconAssetId?: number | null;
+  mapIconUrl?: string | null;
   createdAt?: string;
 }
 
 export interface AdminPoiDetail extends AdminPoiListItem {
-  sourceLatitude?: number | null;
-  sourceLongitude?: number | null;
   addressZh?: string;
   addressEn?: string;
   addressZht?: string;
