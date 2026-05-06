@@ -6,30 +6,32 @@ import {
   Alert,
   Button,
   DatePicker,
+  Descriptions,
   Drawer,
   Form,
   Input,
   InputNumber,
-  Popconfirm,
   Select,
   Space,
   Tag,
   Typography,
   message,
 } from 'antd';
-import { BranchesOutlined, PlusOutlined } from '@ant-design/icons';
+import { BranchesOutlined, PlusOutlined, WarningOutlined } from '@ant-design/icons';
 import { useRequest } from 'ahooks';
 import dayjs, { type Dayjs } from 'dayjs';
 import {
   createAdminStoryline,
-  deleteAdminStoryline,
+  getAdminStorylineDeleteImpact,
   getAdminStorylineDetail,
   getAdminStorylines,
   getAdminTranslationSettings,
   getCities,
   updateAdminStoryline,
+  updateAdminStorylineLifecycle,
 } from '../../services/api';
 import type {
+  AdminStorylineDeleteImpact,
   AdminStorylineDetail,
   AdminStorylineListItem,
   AdminStorylinePayload,
@@ -42,6 +44,23 @@ import SpatialAssetPickerField from '../../components/spatial/SpatialAssetPicker
 import MediaAssetArrayField from '../../components/media/MediaAssetArrayField';
 
 const { Text } = Typography;
+
+const dependencyCountLabels: Record<string, string> = {
+  chapters: '章節',
+  chapterBlockLinks: '章節內容積木',
+  contentRelationOwnerLinks: '此故事線對外關聯',
+  contentRelationTargetLinks: '其他內容綁定此故事線',
+  contentAssetLinks: '內容資產',
+  experienceBindings: '體驗流程綁定',
+  experienceOverrides: '體驗覆寫',
+  explorationElements: '探索元素',
+  userExplorationEvents: '旅客探索事件',
+  userStorylineSessions: '旅客故事 session',
+  userProgressRows: '旅客進度記錄',
+  storyMaterialPackages: '故事素材包',
+  storyMaterialPackageItems: '故事素材項',
+  storyMaterialPackageItemVersions: '故事素材版本',
+};
 
 const statusOptions = [
   { label: '草稿', value: 'draft' },
@@ -141,11 +160,33 @@ function renderStatus(status?: string) {
   return <Tag color="gold">草稿</Tag>;
 }
 
+function renderDependencyCounts(impact?: AdminStorylineDeleteImpact | null) {
+  const entries = Object.entries(impact?.dependencyCounts || {}).filter(([, count]) => Number(count || 0) > 0);
+  if (!entries.length) {
+    return <Text type="secondary">未檢測到章節、素材、體驗流程或旅客進度依賴。</Text>;
+  }
+  return (
+    <Space wrap size={[8, 8]}>
+      {entries.map(([key, count]) => (
+        <Tag key={key} color={key.startsWith('user') ? 'red' : 'orange'}>
+          {dependencyCountLabels[key] || key}：{count}
+        </Tag>
+      ))}
+    </Space>
+  );
+}
+
 const StorylineManagement: React.FC = () => {
   const navigate = useNavigate();
   const actionRef = useRef<ActionType>();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<AdminStorylineDetail | null>(null);
+  const [lifecycleOpen, setLifecycleOpen] = useState(false);
+  const [lifecycleRecord, setLifecycleRecord] = useState<AdminStorylineListItem | null>(null);
+  const [deleteImpact, setDeleteImpact] = useState<AdminStorylineDeleteImpact | null>(null);
+  const [loadingImpact, setLoadingImpact] = useState(false);
+  const [lifecycleSubmitting, setLifecycleSubmitting] = useState(false);
+  const [hardDeleteCode, setHardDeleteCode] = useState('');
   const [form] = Form.useForm<StorylineFormValues>();
 
   const translationSettingsRequest = useRequest(getAdminTranslationSettings);
@@ -189,6 +230,54 @@ const StorylineManagement: React.FC = () => {
     });
     return map;
   }, [allSubMaps, cityMap]);
+
+  const openLifecycleDrawer = async (record: AdminStorylineListItem) => {
+    setLifecycleRecord(record);
+    setLifecycleOpen(true);
+    setDeleteImpact(null);
+    setHardDeleteCode('');
+    setLoadingImpact(true);
+    try {
+      const response = await getAdminStorylineDeleteImpact(record.storylineId);
+      if (!response.success || !response.data) {
+        message.error(response.message || '無法載入刪除影響評估');
+        return;
+      }
+      setDeleteImpact(response.data);
+    } catch (error) {
+      console.warn('Failed to load storyline delete impact.', error);
+      message.error('無法載入刪除影響評估');
+    } finally {
+      setLoadingImpact(false);
+    }
+  };
+
+  const applyLifecycleAction = async (action: 'archive' | 'hard_delete') => {
+    if (!lifecycleRecord || !deleteImpact) {
+      return;
+    }
+    setLifecycleSubmitting(true);
+    try {
+      const response = await updateAdminStorylineLifecycle(lifecycleRecord.storylineId, {
+        action,
+        confirmationText: action === 'hard_delete' ? hardDeleteCode.trim() : undefined,
+      });
+      if (!response.success) {
+        message.error(response.message || '故事線生命週期操作失敗');
+        return;
+      }
+      message.success(action === 'archive' ? '故事線已封存，小程序公開列表將不再顯示。' : '故事線已永久刪除');
+      setLifecycleOpen(false);
+      setLifecycleRecord(null);
+      setDeleteImpact(null);
+      actionRef.current?.reload();
+    } catch (error) {
+      console.warn('Failed to update storyline lifecycle.', error);
+      message.error('故事線生命週期操作失敗');
+    } finally {
+      setLifecycleSubmitting(false);
+    }
+  };
 
   const columns = useMemo<ProColumns<AdminStorylineListItem>[]>(
     () => [
@@ -305,24 +394,9 @@ const StorylineManagement: React.FC = () => {
           >
             路線與覆寫
           </Button>,
-          <Popconfirm
-            key="delete"
-            title="確定刪除這條故事線？"
-            description="刪除後需要重新編排章節與關聯內容。"
-            onConfirm={async () => {
-              const response = await deleteAdminStoryline(record.storylineId);
-              if (!response.success) {
-                message.error(response.message || '故事線刪除失敗');
-                return;
-              }
-              message.success('故事線已刪除');
-              actionRef.current?.reload();
-            }}
-          >
-            <Button type="link" danger>
-              刪除
-            </Button>
-          </Popconfirm>,
+          <Button key="delete" type="link" danger onClick={() => openLifecycleDrawer(record)}>
+            下線 / 刪除
+          </Button>,
         ],
       },
     ],
@@ -377,6 +451,128 @@ const StorylineManagement: React.FC = () => {
         search={{ labelWidth: 'auto' }}
         pagination={{ pageSize: 10 }}
       />
+
+      <Drawer
+        open={lifecycleOpen}
+        width={720}
+        destroyOnHidden
+        title={`故事線下線 / 刪除：${pickStorylineName(lifecycleRecord) || lifecycleRecord?.code || ''}`}
+        onClose={() => {
+          setLifecycleOpen(false);
+          setLifecycleRecord(null);
+          setDeleteImpact(null);
+        }}
+        extra={
+          <Space>
+            <Button onClick={() => setLifecycleOpen(false)}>取消</Button>
+            <Button
+              type="primary"
+              danger
+              loading={lifecycleSubmitting}
+              disabled={loadingImpact || !deleteImpact}
+              onClick={() => applyLifecycleAction('archive')}
+            >
+              封存並從小程序下線
+            </Button>
+          </Space>
+        }
+      >
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Alert
+            showIcon
+            type={deleteImpact?.hardDeleteAllowed ? 'warning' : 'info'}
+            icon={<WarningOutlined />}
+            message="先下線，後清理"
+            description="已發布、已編排或已有旅客進度的故事線不應直接永久刪除。封存會從小程序公開列表移除，但保留章節、素材、體驗流程與旅客記錄供追溯。"
+          />
+
+          <Descriptions title="公開狀態" column={1} bordered size="small">
+            <Descriptions.Item label="故事線代碼">
+              <Text code copyable>
+                {deleteImpact?.code || lifecycleRecord?.code || '-'}
+              </Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="目前狀態">{renderStatus(deleteImpact?.status || lifecycleRecord?.status)}</Descriptions.Item>
+            <Descriptions.Item label="小程序可見">
+              {deleteImpact?.publicVisible ? <Tag color="green">公開中</Tag> : <Tag>未公開</Tag>}
+            </Descriptions.Item>
+          </Descriptions>
+
+          <Descriptions title="影響範圍" column={1} bordered size="small">
+            <Descriptions.Item label="依賴統計">{renderDependencyCounts(deleteImpact)}</Descriptions.Item>
+          </Descriptions>
+
+          <Descriptions title="建議操作" column={1} bordered size="small">
+            <Descriptions.Item label="系統建議">
+              {deleteImpact?.recommendedAction === 'hard_delete' ? '可永久刪除無依賴草稿' : '封存並從小程序下線'}
+            </Descriptions.Item>
+            <Descriptions.Item label="預設操作">
+              <Button
+                type="primary"
+                danger
+                loading={lifecycleSubmitting}
+                disabled={loadingImpact || !deleteImpact}
+                onClick={() => applyLifecycleAction('archive')}
+              >
+                封存並從小程序下線
+              </Button>
+            </Descriptions.Item>
+          </Descriptions>
+
+          <Descriptions title="不能直接刪除的原因" column={1} bordered size="small">
+            <Descriptions.Item label="阻擋項">
+              {deleteImpact?.blockingReasons?.length ? (
+                <Space direction="vertical" size={4}>
+                  {deleteImpact.blockingReasons.map((reason) => (
+                    <Text key={reason}>• {reason}</Text>
+                  ))}
+                </Space>
+              ) : (
+                <Text type="secondary">無阻擋項。</Text>
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label="提醒">
+              {deleteImpact?.warningReasons?.length ? (
+                <Space direction="vertical" size={4}>
+                  {deleteImpact.warningReasons.map((reason) => (
+                    <Text key={reason} type="secondary">
+                      • {reason}
+                    </Text>
+                  ))}
+                </Space>
+              ) : (
+                <Text type="secondary">無額外提醒。</Text>
+              )}
+            </Descriptions.Item>
+          </Descriptions>
+
+          {deleteImpact?.hardDeleteAllowed ? (
+            <Alert
+              showIcon
+              type="warning"
+              message="永久刪除只適用於無依賴草稿"
+              description={
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text>如確定要永久刪除，請輸入故事線代碼。</Text>
+                  <Input
+                    value={hardDeleteCode}
+                    onChange={(event) => setHardDeleteCode(event.target.value)}
+                    placeholder={deleteImpact.code}
+                  />
+                  <Button
+                    danger
+                    loading={lifecycleSubmitting}
+                    disabled={hardDeleteCode.trim() !== deleteImpact.code}
+                    onClick={() => applyLifecycleAction('hard_delete')}
+                  >
+                    永久刪除
+                  </Button>
+                </Space>
+              }
+            />
+          ) : null}
+        </Space>
+      </Drawer>
 
       <Drawer
         open={editorOpen}

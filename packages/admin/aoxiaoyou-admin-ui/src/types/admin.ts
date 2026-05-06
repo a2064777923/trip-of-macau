@@ -1722,6 +1722,24 @@ export interface AdminStorylinePayload {
   publishedAt?: string | null;
 }
 
+export interface AdminStorylineDeleteImpact {
+  storylineId: number;
+  code: string;
+  name?: string;
+  status?: string;
+  publicVisible?: boolean;
+  dependencyCounts?: Record<string, number>;
+  hardDeleteAllowed?: boolean;
+  recommendedAction?: 'archive' | 'unpublish' | 'hard_delete' | string;
+  blockingReasons?: string[];
+  warningReasons?: string[];
+}
+
+export interface AdminStorylineLifecyclePayload {
+  action: 'archive' | 'unpublish' | 'hard_delete' | string;
+  confirmationText?: string;
+}
+
 export interface AdminStoryChapterPayload {
   storylineId?: number;
   chapterOrder: number;

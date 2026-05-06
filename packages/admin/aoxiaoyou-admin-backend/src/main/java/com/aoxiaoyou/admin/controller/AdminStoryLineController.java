@@ -2,7 +2,9 @@ package com.aoxiaoyou.admin.controller;
 
 import com.aoxiaoyou.admin.common.api.ApiResponse;
 import com.aoxiaoyou.admin.common.api.PageResponse;
+import com.aoxiaoyou.admin.dto.request.AdminStoryLineLifecycleRequest;
 import com.aoxiaoyou.admin.dto.request.AdminStoryLineUpsertRequest;
+import com.aoxiaoyou.admin.dto.response.AdminStoryLineDeleteImpactResponse;
 import com.aoxiaoyou.admin.dto.response.AdminStoryLineDetailResponse;
 import com.aoxiaoyou.admin.dto.response.AdminStoryLineListItemResponse;
 import com.aoxiaoyou.admin.service.AdminStoryLineService;
@@ -48,7 +50,21 @@ public class AdminStoryLineController {
         return ApiResponse.success(adminStoryLineService.update(storylineId, request));
     }
 
-    @Operation(summary = "后台删除故事线")
+    @Operation(summary = "后台故事线删除影响预览")
+    @GetMapping("/{storylineId}/delete-impact")
+    public ApiResponse<AdminStoryLineDeleteImpactResponse> deleteImpact(@PathVariable Long storylineId) {
+        return ApiResponse.success(adminStoryLineService.deleteImpact(storylineId));
+    }
+
+    @Operation(summary = "后台故事线生命周期操作")
+    @PostMapping("/{storylineId}/lifecycle")
+    public ApiResponse<AdminStoryLineDetailResponse> lifecycle(
+            @PathVariable Long storylineId,
+            @Valid @RequestBody AdminStoryLineLifecycleRequest request) {
+        return ApiResponse.success(adminStoryLineService.updateLifecycle(storylineId, request));
+    }
+
+    @Operation(summary = "后台硬删除故事线")
     @DeleteMapping("/{storylineId}")
     public ApiResponse<Boolean> delete(@PathVariable Long storylineId) {
         adminStoryLineService.delete(storylineId);

@@ -23,9 +23,10 @@ const durations = ['1小時內', '半天慢遊', '一整天', '兩天以上']
 const interests = ['歷史故事', '拍照打卡', '美食慢遊', '親子輕鬆', '海邊散步']
 const FLAGSHIP_STORY_CODE = 'east_west_war_and_coexistence'
 const FLAGSHIP_STORY_NAME = '東西方文明的戰火與共生'
+const LEGACY_DUPLICATE_STORY_CODE = 'macau_fire_route'
 const isFlagshipStory = (story: ReturnType<typeof getStorylines>[number]) => (
   story.code === FLAGSHIP_STORY_CODE
-  || story.name.includes(FLAGSHIP_STORY_NAME)
+  || (story.code !== LEGACY_DUPLICATE_STORY_CODE && story.name === FLAGSHIP_STORY_NAME)
 )
 
 export default function IndexPage() {
@@ -77,7 +78,9 @@ export default function IndexPage() {
 
   const hasPublicCatalog = cities.length > 0 && stories.length > 0
   const featuredReward = rewards[0]
-  const flagshipStory = stories.find(isFlagshipStory) || stories[0]
+  const flagshipStory = stories.find((story) => story.code === FLAGSHIP_STORY_CODE)
+    || stories.find((story) => story.code !== LEGACY_DUPLICATE_STORY_CODE && story.name === FLAGSHIP_STORY_NAME)
+    || stories[0]
   const visibleStoryCount = stories.filter((story) => !story.locked).length || stories.length
   const flagshipFirstChapter = flagshipStory?.chapters?.[0]
   const flagshipStartName = flagshipFirstChapter?.locationName || '媽閣廟'

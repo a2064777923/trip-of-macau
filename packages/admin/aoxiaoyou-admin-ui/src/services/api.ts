@@ -96,7 +96,9 @@ import type {
   AdminStoryContentBlockItem,
   AdminStoryContentBlockPayload,
   AdminStoryChapterPayload,
+  AdminStorylineDeleteImpact,
   AdminStorylineDetail,
+  AdminStorylineLifecyclePayload,
   AdminStorylineListItem,
   AdminStorylinePayload,
   AdminSystemConfigItem,
@@ -368,6 +370,14 @@ export const updateAdminStoryline = (storylineId: number, data: AdminStorylinePa
 
 export const deleteAdminStoryline = (storylineId: number) => {
   return request.delete<boolean>(`/api/admin/v1/storylines/${storylineId}`);
+};
+
+export const getAdminStorylineDeleteImpact = (storylineId: number) => {
+  return request.get<AdminStorylineDeleteImpact>(`/api/admin/v1/storylines/${storylineId}/delete-impact`);
+};
+
+export const updateAdminStorylineLifecycle = (storylineId: number, data: AdminStorylineLifecyclePayload) => {
+  return request.post<AdminStorylineDetail>(`/api/admin/v1/storylines/${storylineId}/lifecycle`, data);
 };
 
 export const getStorylineChapters = (storylineId: number, params?: { pageNum?: number; pageSize?: number }) => {

@@ -1,7 +1,9 @@
 package com.aoxiaoyou.admin.service;
 
 import com.aoxiaoyou.admin.common.api.PageResponse;
+import com.aoxiaoyou.admin.dto.request.AdminStoryLineLifecycleRequest;
 import com.aoxiaoyou.admin.dto.request.AdminStoryLineUpsertRequest;
+import com.aoxiaoyou.admin.dto.response.AdminStoryLineDeleteImpactResponse;
 import com.aoxiaoyou.admin.dto.response.AdminStoryLineDetailResponse;
 import com.aoxiaoyou.admin.dto.response.AdminStoryLineListItemResponse;
 
@@ -14,6 +16,10 @@ public interface AdminStoryLineService {
     AdminStoryLineDetailResponse create(AdminStoryLineUpsertRequest.Upsert request);
 
     AdminStoryLineDetailResponse update(Long storylineId, AdminStoryLineUpsertRequest.Upsert request);
+
+    AdminStoryLineDeleteImpactResponse deleteImpact(Long storylineId);
+
+    AdminStoryLineDetailResponse updateLifecycle(Long storylineId, AdminStoryLineLifecycleRequest request);
 
     void delete(Long storylineId);
 }

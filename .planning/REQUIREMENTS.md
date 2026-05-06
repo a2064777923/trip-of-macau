@@ -9,7 +9,7 @@
 
 - [x] **UAT-01**: Operator can build and open the mini-program in WeChat DevTools against the local public backend without route-load, auth, or config mismatch failures.
 - [ ] **UAT-02**: Operator can run a documented flagship story smoke on a real device or DevTools simulator and capture the exact pass/fail evidence.
-- [ ] **UAT-03**: Operator can distinguish automated smoke, DevTools checks, physical-device checks, and accepted caveats in one release-readiness report.
+- [x] **UAT-03**: Operator can distinguish automated smoke, DevTools checks, physical-device checks, and accepted caveats in one release-readiness report.
 
 ### Traveler Gameplay Runtime
 
@@ -28,10 +28,10 @@
 
 ### Management System Polish
 
-- [ ] **ADMIN-01**: Operator-facing story/gameplay/admin navigation has no misleading shell-only entries, duplicate missions, or wrong redirects for v3.2-owned workflows.
-- [ ] **ADMIN-02**: Operator can use the story/gameplay operations pages with stable layout, readable columns, responsive panels, and Traditional Chinese labels.
-- [ ] **ADMIN-03**: Operator can open relevant media/material/detail drawers without broken previews, overlong URL overflow, or dead package-version links.
-- [ ] **ADMIN-04**: Operator can access concise inline explanations for interaction templates, governance checks, and runtime-state actions so the pages are usable without reading raw JSON.
+- [x] **ADMIN-01**: Operator-facing story/gameplay/admin navigation has no misleading shell-only entries, duplicate missions, or wrong redirects for v3.2-owned workflows.
+- [x] **ADMIN-02**: Operator can use the story/gameplay operations pages with stable layout, readable columns, responsive panels, and Traditional Chinese labels.
+- [x] **ADMIN-03**: Operator can open relevant media/material/detail drawers without broken previews, overlong URL overflow, or dead package-version links.
+- [x] **ADMIN-04**: Operator can access concise inline explanations for interaction templates, governance checks, and runtime-state actions so the pages are usable without reading raw JSON.
 
 ## Future Requirements
 
@@ -63,20 +63,20 @@
 |-------------|-------|--------|
 | UAT-01 | Phase 41 | Verified |
 | UAT-02 | Phase 44 | Pending |
-| UAT-03 | Phase 44 | Pending |
-| PLAY-01 | Phase 41 | Verified |
+| UAT-03 | Phase 44 | Complete with caveat: report structure exists and separates automated/manual evidence; DevTools/device rows remain pending until actually run |
+| PLAY-01 | Phase 41 / Phase 45 | Verified |
 | PLAY-02 | Phase 42 | Complete |
 | PLAY-03 | Phase 42 | Complete |
 | PLAY-04 | Phase 42 | Complete |
-| PLAY-05 | Phase 41 | Verified |
+| PLAY-05 | Phase 41 / Phase 45 | Verified |
 | OPS-01 | Phase 43 | Complete |
 | OPS-02 | Phase 43 | Complete |
-| OPS-03 | Phase 43 | Complete |
+| OPS-03 | Phase 43 / Phase 45 | Complete |
 | OPS-04 | Phase 43 | Complete |
-| ADMIN-01 | Phase 44 | Pending |
-| ADMIN-02 | Phase 44 | Pending |
-| ADMIN-03 | Phase 44 | Pending |
-| ADMIN-04 | Phase 44 | Pending |
+| ADMIN-01 | Phase 44 / Phase 45 | Complete |
+| ADMIN-02 | Phase 44 | Complete |
+| ADMIN-03 | Phase 44 | Complete |
+| ADMIN-04 | Phase 44 | Complete |
 
 **Coverage:**
 - v3.2 requirements: 16 total
@@ -85,4 +85,4 @@
 
 ---
 *Requirements defined: 2026-05-04*  
-*Last updated: 2026-05-04 after Phase 43 execution*
+*Last updated: 2026-05-06 after Phase 45 execution*

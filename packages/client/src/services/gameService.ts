@@ -59,6 +59,7 @@ import {
   PublicUserExplorationDto,
   PublicUserSessionDto,
   PublicUserStateDto,
+  isPublicApiError,
 } from './api'
 import {
   DEV_RUNTIME_DIAGNOSTICS_ENABLED,
@@ -84,8 +85,8 @@ const DEFAULT_COMPLETED_CHAPTER_IDS = [1011, 1012, 1021, 1022]
 const DEFAULT_UNREAD_NOTIFICATION_IDS = [1, 2]
 const DEFAULT_COLOR_PALETTE = ['#ffd9e5', '#dff7ef', '#dfeaff', '#fff0c8', '#e9defc', '#dff3ff']
 const FLAGSHIP_STORY_CODE = 'east_west_war_and_coexistence'
-const LEGACY_DUPLICATE_STORY_CODE = 'macau_fire_route'
 const FLAGSHIP_STORY_NAME = '東西方文明的戰火與共生'
+const LEGACY_DUPLICATE_STORY_CODE = 'macau_fire_route'
 const AMAP_CONFIG = {
   key: '6fea5cb20fa631562465356be078d086',
   defaultCenter: {
@@ -878,11 +879,11 @@ function humanizeCode(value?: string | null) {
 
 function findFlagshipStoryDto(content = loadPublicContent()) {
   return content.storylines.find((story) => story.code === FLAGSHIP_STORY_CODE)
-    || content.storylines.find((story) => pickReadableText(story.name).includes(FLAGSHIP_STORY_NAME))
+    || content.storylines.find((story) => story.code !== LEGACY_DUPLICATE_STORY_CODE && pickReadableText(story.name) === FLAGSHIP_STORY_NAME)
 }
 
 function isLegacyDuplicateStoryDto(story: PublicStorylineDto, content = loadPublicContent()) {
-  return story.code === LEGACY_DUPLICATE_STORY_CODE && !!findFlagshipStoryDto(content)
+  return story.code === LEGACY_DUPLICATE_STORY_CODE
 }
 
 function getCanonicalStoryReference(storylineId?: number, storylineCode?: string, storylineName?: string) {
@@ -1968,6 +1969,33 @@ export async function refreshStorylineCatalog(
   return getStorylines()
 }
 
+export function isStorylineUnavailableError(error: unknown) {
+  return isPublicApiError(error, 4042)
+    || (error instanceof Error && /Storyline not found/i.test(error.message))
+}
+
+export function clearStaleStorylineRuntimeSelection(storylineId: number) {
+  const numericStorylineId = Number(storylineId)
+  if (!Number.isFinite(numericStorylineId)) {
+    return
+  }
+  const state = loadGameState()
+  if (Number(state.activeStoryId) === numericStorylineId) {
+    saveState({
+      ...state,
+      activeStoryId: undefined,
+    })
+  }
+  const activeSession = getActiveStoryModeSession(numericStorylineId)
+  if (activeSession) {
+    saveActiveStoryModeSession(null)
+  }
+  const routeContext = getStoryModeRouteContext()
+  if (routeContext?.storylineId === numericStorylineId) {
+    clearStoryModeRouteContext()
+  }
+}
+
 export async function refreshStorylineRuntime(
   storylineId: number,
   locale: PublicLocaleCode = (loadGameState().user.localeCode as PublicLocaleCode) || DEFAULT_PUBLIC_LOCALE,
@@ -1981,6 +2009,9 @@ export async function refreshStorylineRuntime(
     return mergeStorylineRuntimeIntoCache(storylineId, runtime)
   } catch (error) {
     console.warn('Failed to refresh storyline runtime.', error)
+    if (isStorylineUnavailableError(error)) {
+      clearStaleStorylineRuntimeSelection(storylineId)
+    }
     throw error
   }
 }
@@ -2724,11 +2755,15 @@ export function getTravelRecommendation(answer?: TravelAssessmentAnswer | null, 
     }
   }
 
-  let selectedStory = stories.find((story) => story.code === FLAGSHIP_STORY_CODE || story.name.includes(FLAGSHIP_STORY_NAME)) || stories[0]
+  let selectedStory = stories.find((story) => story.code === FLAGSHIP_STORY_CODE)
+    || stories.find((story) => story.code !== LEGACY_DUPLICATE_STORY_CODE && story.name === FLAGSHIP_STORY_NAME)
+    || stories[0]
   if (target?.interests.some((interest) => interest.toLowerCase().includes('photo'))) {
     selectedStory = stories.find((story) => story.difficulty !== 'easy') || selectedStory
   } else if (target?.interests.some((interest) => interest.toLowerCase().includes('history'))) {
-    selectedStory = stories.find((story) => story.code === FLAGSHIP_STORY_CODE || story.name.includes(FLAGSHIP_STORY_NAME)) || selectedStory
+    selectedStory = stories.find((story) => story.code === FLAGSHIP_STORY_CODE)
+      || stories.find((story) => story.code !== LEGACY_DUPLICATE_STORY_CODE && story.name === FLAGSHIP_STORY_NAME)
+      || selectedStory
   }
 
   const selectedPoi = pois.find((poi) => poi.storyLineId === selectedStory.id) || pois[0]

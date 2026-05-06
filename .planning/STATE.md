@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v3.2
 milestone_name: Traveler Gameplay Runtime and Operations Acceptance
-current_phase: 44
-current_plan: 0
-status: planning
-stopped_at: Completed 43-04-PLAN.md
-last_updated: "2026-05-04T12:09:51.695Z"
+current_phase: 45
+current_plan: 1
+status: completed
+stopped_at: Completed 45-01-PLAN.md
+last_updated: "2026-05-06T04:36:45.518Z"
 last_activity: 2026-05-06
 progress:
-  total_phases: 4
-  completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_phases: 5
+  completed_phases: 5
+  total_plans: 16
+  completed_plans: 16
   percent: 100
 ---
 
@@ -23,21 +23,21 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-05-04)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Phase 44 — management-system-ia-polish-and-release-acceptance
+**Current focus:** Phase 45 — storyline-lifecycle-safety-and-runtime-selection
 
 ## Current Position
 
-Phase: 44 (management-system-ia-polish-and-release-acceptance) — READY
-Plan: 0 of 0
+Phase: 45 (storyline-lifecycle-safety-and-runtime-selection) — COMPLETE
+Plan: 1 of 1
 Milestone: `v3.2`
-Current Phase: 44
-Total Phases Planned: 4
-Status: Ready to plan
-Current Plan: 0
+Current Phase: 45
+Total Phases Planned: 5
+Status: Phase 45 complete; v3.2 planned implementation phases complete, manual WeChat UAT caveat still open
+Current Plan: 1
 Last activity: 2026-05-06
-Last Activity Description: Quick task 260506-e2m completed image-1 sprite-board POI marker production and binding
+Last Activity Description: Phase 45 complete
 
-Progress: [███████░░░] 75% of v3.2 phases complete; Phase 44 is next
+Progress: [██████████] 100% of planned v3.2 phases complete; milestone closeout or manual WeChat UAT evidence is next
 
 ## Performance Metrics
 
@@ -48,7 +48,7 @@ Progress: [███████░░░] 75% of v3.2 phases complete; Phase 44
 - `v2.1`: 14 phases, 44 plans, archived with one accepted future slice on 2026-04-19
 - `v3.0`: 8 phases, 33 plans, admin core domain completion and control-plane linkage shipped on 2026-04-30
 - `v3.1`: 5 phases, 18 plans, material production and mini-program story-mode baseline shipped on 2026-05-04 with accepted WeChat UAT caveat
-- `v3.2`: active milestone for traveler gameplay runtime and operations acceptance
+- `v3.2`: planned phases 41-45 complete; manual WeChat DevTools/physical-device UAT evidence remains a known caveat before final milestone archival
 
 ## Quick Tasks Completed
 
@@ -88,12 +88,14 @@ Progress: [███████░░░] 75% of v3.2 phases complete; Phase 44
 - Manual WeChat DevTools/device UAT remains pending but accepted as a milestone caveat.
 - Phase 36 publish/rollback operations require both `SUPER_ADMIN` / `ROLE_SUPER_ADMIN` and an explicit confirmation flag; a confirmation boolean alone is not enough permission.
 - Phase 43 support operations are validated by local smoke: preview/apply annotation, idempotent reward resend, audit evidence, and public/admin reward consistency all passed on 2026-05-04.
+- Phase 45 duplicate-storyline cleanup archives `macau_fire_route` instead of deleting it because chapters, content relations, exploration events, sessions, and progress rows still reference it; the mini-program should prefer `east_west_war_and_coexistence`.
 
 ### Pending Todos
 
 - Run manual physical-device UAT for Phase 41 when ready.
 - Complete manual WeChat DevTools/device UAT instead of treating automated build smoke as equivalent.
 - Complete Phase 42 manual WeChat DevTools/device UAT for real GPS/proximity behavior when device testing is available.
+- Decide whether to close v3.2 with the accepted WeChat UAT caveat or collect concrete DevTools/device evidence first.
 - Keep provider, COS, and AI keys outside tracked files.
 
 ### Blockers/Concerns

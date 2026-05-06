@@ -6,17 +6,20 @@ import PageShell from '../../components/PageShell'
 import SafeStoryImage from '../../components/SafeStoryImage'
 import {
   buildStoryModeRouteContext,
+  clearStaleStorylineRuntimeSelection,
   exitStoryModeSession,
   getActiveStoryModeSession,
   getStorylines,
   hasActiveSessionToken,
   isAuthRequiredError,
   isDevBypassAvailable,
+  isStorylineUnavailableError,
   loadGameState,
   loginWithDevBypass,
   mapStoryExplorationSummary,
   recordStoryRuntimeEvent,
   refreshPublicContent,
+  refreshStorylineCatalog,
   refreshStoryExplorationSummary,
   refreshStorylineRuntime,
   saveStoryModeRouteContext,
@@ -42,6 +45,8 @@ type StoryViewMode = 'intro' | 'chapters' | 'playing'
 
 const FLAGSHIP_STORY_CODE = 'east_west_war_and_coexistence'
 const STORYLINE_NAME_KEYWORD = '東西方文明的戰火與共生'
+const LEGACY_DUPLICATE_STORY_CODE = 'macau_fire_route'
+const STALE_STORY_MESSAGE = '這條故事線已下線或暫時不可用，請返回故事列表選擇最新路線。'
 const FLAGSHIP_INTRO_COPY = '你是一名穿越時空的「濠江歷史見證者」，追隨一枚殘缺的海防銅鏡，踏遍澳門的軍事要塞。從明朝葡人登岸的武裝衝突，到明清官軍築台禦敵，再到近代列強環伺的邊境戰火，最終見證戰火落幕、東西方從對抗走向共生。'
 const FORBIDDEN_TRAVELER_TEXT_PATTERN = /章節工作台|互動流程|體驗流程|流程配置|配置詳情|綁定地圖|綁定子地圖|錨點類型|後台|后台|運營|运营|開發|开发|runtime|JSON/gi
 const DEFAULT_POI_EXPERIENCE_STEP_CODES = new Set([
@@ -78,11 +83,36 @@ function pickStoryTitle(story?: StorylineItem | null) {
     : cleanTravelerText(story.name)
 }
 
+function isPreferredFlagshipStory(story?: StorylineItem | null) {
+  return story?.code === FLAGSHIP_STORY_CODE
+}
+
+function isExactFlagshipNameStory(story?: StorylineItem | null) {
+  return story?.code !== LEGACY_DUPLICATE_STORY_CODE && story?.name === STORYLINE_NAME_KEYWORD
+}
+
+function pickPreferredStory(stories: StorylineItem[], preferredStoryId?: number) {
+  return (preferredStoryId ? stories.find((story) => story.id === preferredStoryId) : undefined)
+    || stories.find(isPreferredFlagshipStory)
+    || stories.find(isExactFlagshipNameStory)
+    || stories.find((story) => !story.locked)
+    || stories[0]
+}
+
+async function refreshStorylineCatalogSafely() {
+  try {
+    await refreshStorylineCatalog()
+  } catch (error) {
+    console.warn('Failed to reload public story list after stale storyline.', error)
+  }
+  return getStorylines()
+}
+
 function pickStoryIntro(story?: StorylineItem | null) {
   if (!story) {
     return ''
   }
-  if (story.code === FLAGSHIP_STORY_CODE || story.name.includes(STORYLINE_NAME_KEYWORD)) {
+  if (isPreferredFlagshipStory(story) || isExactFlagshipNameStory(story)) {
     return FLAGSHIP_INTRO_COPY
   }
   return cleanTravelerText(story.description)
@@ -536,10 +566,7 @@ export default function StoryPage() {
         return matched
       }
     }
-    return stories.find((story) => story.code === FLAGSHIP_STORY_CODE)
-      || stories.find((story) => story.name.includes(STORYLINE_NAME_KEYWORD))
-      || unlockedStories[0]
-      || stories[0]
+    return pickPreferredStory(stories) || unlockedStories[0]
   }, [activeStoryId, stories, unlockedStories])
 
   const activeChapter = useMemo(() => {
@@ -591,12 +618,10 @@ export default function StoryPage() {
     if (!nextStories.length) {
       return
     }
-    const preferredStory = (preferredStoryId ? nextStories.find((story) => story.id === preferredStoryId) : undefined)
-      || (activeStoryId ? nextStories.find((story) => story.id === activeStoryId) : undefined)
-      || nextStories.find((story) => story.code === FLAGSHIP_STORY_CODE)
-      || nextStories.find((story) => story.name.includes(STORYLINE_NAME_KEYWORD))
-      || nextStories.find((story) => !story.locked)
-      || nextStories[0]
+    const preferredStory = pickPreferredStory(
+      nextStories,
+      preferredStoryId || (activeStoryId ? activeStoryId : undefined),
+    )
     if (preferredStory) {
       setActiveStoryId(preferredStory.id)
       const next = preferredStory.chapters?.find((chapter) => !chapter.locked) || preferredStory.chapters?.[0]
@@ -620,7 +645,14 @@ export default function StoryPage() {
     } catch (error) {
       console.warn('Failed to synchronize story runtime.', error)
       if (shouldCommit()) {
-        setLoadError('旅程內容暫時未能載入，請稍後重試。')
+        if (isStorylineUnavailableError(error)) {
+          clearStaleStorylineRuntimeSelection(storyId)
+          const nextStories = await refreshStorylineCatalogSafely()
+          applyStoryCatalog(nextStories)
+          setLoadError(STALE_STORY_MESSAGE)
+        } else {
+          setLoadError('旅程內容暫時未能載入，請稍後重試。')
+        }
       }
     } finally {
       if (shouldCommit()) {
@@ -641,16 +673,14 @@ export default function StoryPage() {
       }
       const nextStories = getStorylines()
       applyStoryCatalog(nextStories)
-      const preferred = nextStories.find((story) => story.code === FLAGSHIP_STORY_CODE)
-        || nextStories.find((story) => story.name.includes(STORYLINE_NAME_KEYWORD))
-        || nextStories[0]
+      const preferred = pickPreferredStory(nextStories)
       if (preferred) {
         await syncActiveStoryRuntime(preferred.id, () => hydrateSeqRef.current === hydrateSeq)
       }
     } catch (error) {
       console.warn('Failed to refresh public story content.', error)
       if (hydrateSeqRef.current === hydrateSeq) {
-        setLoadError('旅程內容暫時未能載入，請稍後重試。')
+        setLoadError(isStorylineUnavailableError(error) ? STALE_STORY_MESSAGE : '旅程內容暫時未能載入，請稍後重試。')
       }
     } finally {
       if (hydrateSeqRef.current === hydrateSeq) {

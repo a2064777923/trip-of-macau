@@ -26,6 +26,25 @@ interface ApiEnvelope<T> {
   data: T
 }
 
+export class PublicApiError extends Error {
+  apiCode?: number
+  statusCode?: number
+
+  constructor(message: string, options?: { apiCode?: number; statusCode?: number }) {
+    super(message)
+    this.name = 'PublicApiError'
+    this.apiCode = options?.apiCode
+    this.statusCode = options?.statusCode
+  }
+}
+
+export function isPublicApiError(error: unknown, apiCode?: number) {
+  if (!(error instanceof PublicApiError)) {
+    return false
+  }
+  return apiCode === undefined || error.apiCode === apiCode
+}
+
 export interface PublicUserProfileDto {
   id: number
   openId: string
@@ -1082,7 +1101,10 @@ async function request<TResponse, TBody = unknown>(options: RequestOptions<TBody
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (response.data?.code !== 0) {
-          throw new Error(response.data?.message || 'Request failed')
+          throw new PublicApiError(response.data?.message || 'Request failed', {
+            apiCode: response.data?.code,
+            statusCode: response.statusCode,
+          })
         }
         if (DEV_RUNTIME_DIAGNOSTICS_ENABLED) {
           const payload = response.data.data
@@ -1099,10 +1121,13 @@ async function request<TResponse, TBody = unknown>(options: RequestOptions<TBody
 
       if (response.statusCode === 401) {
         Taro.removeStorageSync('token')
-        throw new Error('AUTH_REQUIRED')
+        throw new PublicApiError('AUTH_REQUIRED', { statusCode: response.statusCode })
       }
 
-      throw new Error(response.data?.message || 'Request failed')
+      throw new PublicApiError(response.data?.message || 'Request failed', {
+        apiCode: response.data?.code,
+        statusCode: response.statusCode,
+      })
     } catch (error: any) {
       lastError = error
       if (DEV_RUNTIME_DIAGNOSTICS_ENABLED) {
