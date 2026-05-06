@@ -4,7 +4,7 @@
 
 Trip of Macau is a brownfield WeChat mini-program plus admin platform for story-driven Macau exploration, map discovery, indoor navigation, check-ins, collectibles, rewards, AI-assisted operations, lifecycle governance, and operator-supported traveler gameplay.
 
-The live backend cutover and five major platform milestones are archived or ready for archival through v3.2. The current system has an admin-owned control plane for configuring story experiences, POI default flows, interaction/task templates, dynamic progress, seeded flagship content, public runtime DTOs, generated media packages, operational lifecycle actions, traveler gameplay events, and support operations. The next milestone should be chosen around concrete device feedback, advanced gameplay depth, release governance, or production readiness.
+The live backend cutover and five major platform milestones are archived through v3.2. The current system has an admin-owned control plane for configuring story experiences, POI default flows, interaction/task templates, dynamic progress, seeded flagship content, public runtime DTOs, generated media packages, operational lifecycle actions, traveler gameplay events, and support operations. v3.3 now focuses on turning that configured data into a credible WeChat mini-program gameplay experience with real backend services, correct map presentation, step-by-step story interactions, reliable media playback, bounded cache behavior, and concrete DevTools/device acceptance evidence.
 
 ## Core Value
 
@@ -33,8 +33,11 @@ Admins can configure the live mini-program experience end-to-end, and the mini-p
 
 ### Active
 
-- [ ] Collect concrete WeChat DevTools or physical-device flagship story smoke evidence for the v3.2 story journey.
-- [ ] Define the next milestone scope from real mini-program feedback, advanced gameplay priorities, release approval workflow, or production-readiness needs.
+- [ ] `v3.3 mini-program device acceptance`: Collect concrete WeChat DevTools and, where possible, physical-device flagship story smoke evidence.
+- [ ] `v3.3 live runtime wiring`: Ensure the mini-program only uses the real public backend for city/map/story/runtime data, with no mock fallback masking service failures.
+- [ ] `v3.3 map and spatial UX`: Make the home/map surfaces show the intended large-map switching, correct POI coordinates, story routes, and 2.5D admin-managed marker icons.
+- [ ] `v3.3 story gameplay presentation`: Replace static configuration dumps with a user-facing story mode that reveals goals, media, overlays, tasks, pickups, and rewards step by step.
+- [ ] `v3.3 media and performance`: Make image/audio/video/Lottie story assets visible and playable in the mini-program with bounded cache/memory behavior.
 
 ### Out of Scope Until Planned
 
@@ -80,18 +83,25 @@ This project began from an existing codebase, not a greenfield build.
 - `v3.1 Material Production and Mini-program Experience Acceptance` shipped on 2026-05-04 with an accepted WeChat UAT caveat.
 - `v3.2 Traveler Gameplay Runtime and Operations Acceptance` shipped on 2026-05-06 with an accepted WeChat DevTools/physical-device UAT caveat.
 
-## Between Milestones
+## Current Milestone: v3.3 Mini-program Gameplay UX and Device Acceptance
 
-v3.2 planned implementation is complete. The next step is to start a new milestone or collect concrete WeChat DevTools/physical-device UAT evidence before deciding the next scope.
+**Goal:** Make the live mini-program behave like the intended story-driven travel game, not an operator information display, and verify it through WeChat DevTools / device evidence against real backend services.
 
-**Open caveat:**
-- `UAT-02`: concrete DevTools or physical-device flagship story smoke evidence is still pending in `44-UAT.md`.
+**Target features:**
+- Reliable local service startup and live-data-only mini-program runtime, with backend failures surfaced clearly and no mock fallback masking.
+- Home and map UX that supports large-map switching, correct Macau POI positioning, story-route highlighting, and admin-managed 2.5D marker icons.
+- Storyline entry, introduction, chapter list, optional branch insertion, and story-mode map presentation for `東西方文明的戰火與共生`.
+- Step-by-step chapter gameplay that reveals interactions, overlays, pickups, hidden challenges, rewards, titles, and feedback progressively.
+- Visible media playback for generated image/audio/video/Lottie assets, with fallback handling, lifecycle cleanup, and cache/memory limits.
+- Repeatable WeChat DevTools MCP/manual UAT evidence, with screenshots/logs separating automated, simulator, and device checks.
 
-**Likely next milestone themes:**
-- Real device UAT and mini-program UX/gameplay polish.
-- Advanced gameplay engines for AR/photo, speech, puzzle, route coverage, cannon defense, and indoor positioning.
-- Release governance such as approval workflow and runtime snapshot comparison.
-- Performance hardening, especially story-page bundle splitting.
+**Carryover caveat being closed:**
+- `UAT-02`: concrete DevTools or physical-device flagship story smoke evidence remains pending from `44-UAT.md` and is now in v3.3 scope.
+
+**Deferred beyond v3.3 unless needed for baseline flow:**
+- Full production AR/photo recognition, speech-input NPC gameplay, complex puzzle/cannon-defense engines, and production indoor visual positioning.
+- Formal publish approval workflow and runtime snapshot comparison.
+- End-user AI assistant pages beyond existing admin AI tooling.
 
 ## Key Decisions
 
@@ -110,6 +120,7 @@ v3.2 planned implementation is complete. The next step is to start a new milesto
 | Use `v3.2` for traveler gameplay runtime and operations acceptance | The admin configuration substrate exists, but the user-facing gameplay loop still needs real device validation and deeper runtime state handling | v3.2 starts at Phase 41 and prioritizes mini-program playability plus operator support over more admin-only scaffolding. |
 | Keep complex AR/speech/puzzle engines behind safe runtime templates until proven on device | These features affect device APIs, permissions, latency, and UX; implementing them as fully production-grade engines prematurely would create brittle scope | v3.2 can implement baseline playable engines and fallbacks, while production AR/speech/advanced minigames remain explicitly gated by device UAT evidence. |
 | Archive duplicate storylines rather than hard-delete them | Storylines can still be referenced by chapters, content relations, exploration events, sessions, and progress rows | Phase 45 archives `macau_fire_route`, blocks hard delete for dependency-bearing stories, and keeps `east_west_war_and_coexistence` as the canonical runtime. |
+| Use v3.3 to close mini-program experiential truth | v3.2 proved runtime/support contracts but still lacked credible user-facing gameplay and concrete DevTools/device acceptance | v3.3 prioritizes WeChat mini-program UX, map correctness, progressive gameplay, media playback, cache stability, and UAT evidence before deeper engines or release governance. |
 
 ## Evolution
 
@@ -126,4 +137,4 @@ This document evolves at phase transitions and milestone boundaries.
 3. Refresh the current-state and milestone sections before reopening planning.
 
 ---
-*Last updated: 2026-05-06 after shipping v3.2 traveler gameplay runtime and operations acceptance*
+*Last updated: 2026-05-06 after starting v3.3 mini-program gameplay UX and device acceptance*

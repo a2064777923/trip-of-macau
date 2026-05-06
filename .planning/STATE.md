@@ -1,19 +1,19 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.2
-milestone_name: Traveler Gameplay Runtime and Operations Acceptance
-current_phase: null
+milestone: v3.3
+milestone_name: Mini-program Gameplay UX and Device Acceptance
+current_phase: 46
 current_plan: null
-status: between_milestones
-stopped_at: Completed v3.2 milestone
-last_updated: "2026-05-06T12:55:00+08:00"
+status: defining_requirements
+stopped_at: Started v3.3 milestone
+last_updated: "2026-05-06T14:10:00+08:00"
 last_activity: 2026-05-06
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
-  percent: 100
+  percent: 0
 ---
 
 # Project State
@@ -23,21 +23,21 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-05-06)
 
 **Core value:** Admins can configure the live mini-program experience end-to-end, and the mini-program consumes that managed data reliably through real backend APIs instead of mocks.
-**Current focus:** Between milestones — ready to plan the next milestone
+**Current focus:** v3.3 mini-program gameplay UX and device acceptance
 
 ## Current Position
 
-Phase: None
+Phase: 46 (planned)
 Plan: None
-Milestone: `v3.2` archived
-Current Phase: None
-Total Phases Planned: 0
-Status: Between milestones; v3.2 shipped with accepted WeChat UAT caveat
+Milestone: `v3.3`
+Current Phase: 46
+Total Phases Planned: 6
+Status: Defining requirements and roadmap for mini-program gameplay UX/device acceptance
 Current Plan: None
 Last activity: 2026-05-06
-Last Activity Description: v3.2 milestone completed and archived
+Last Activity Description: v3.3 milestone started
 
-Progress: v3.2 complete; next step is `/gsd-new-milestone`
+Progress: v3.3 planning in progress; next step is `/gsd-plan-phase 46`
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Progress: v3.2 complete; next step is `/gsd-new-milestone`
 - `v3.0`: 8 phases, 33 plans, admin core domain completion and control-plane linkage shipped on 2026-04-30
 - `v3.1`: 5 phases, 18 plans, material production and mini-program story-mode baseline shipped on 2026-05-04 with accepted WeChat UAT caveat
 - `v3.2`: 5 phases and 16 plans shipped on 2026-05-06 with accepted WeChat DevTools/physical-device UAT caveat
+- `v3.3`: started on 2026-05-06 to close mini-program gameplay UX and device acceptance gaps
 
 ## Quick Tasks Completed
 
@@ -89,13 +90,15 @@ Progress: v3.2 complete; next step is `/gsd-new-milestone`
 - Phase 36 publish/rollback operations require both `SUPER_ADMIN` / `ROLE_SUPER_ADMIN` and an explicit confirmation flag; a confirmation boolean alone is not enough permission.
 - Phase 43 support operations are validated by local smoke: preview/apply annotation, idempotent reward resend, audit evidence, and public/admin reward consistency all passed on 2026-05-04.
 - Phase 45 duplicate-storyline cleanup archives `macau_fire_route` instead of deleting it because chapters, content relations, exploration events, sessions, and progress rows still reference it; the mini-program should prefer `east_west_war_and_coexistence`.
+- v3.3 uses the WeChat mini-program experience as the source of truth for acceptance: map display, story entry, gameplay progression, media playback, cache stability, and DevTools/device evidence must be observed directly.
 
 ### Pending Todos
 
-- Run manual physical-device UAT for Phase 41 when ready.
-- Complete manual WeChat DevTools/device UAT instead of treating automated build smoke as equivalent.
-- Complete Phase 42 manual WeChat DevTools/device UAT for real GPS/proximity behavior when device testing is available.
-- Decide whether to close v3.2 with the accepted WeChat UAT caveat or collect concrete DevTools/device evidence first.
+- Run v3.3 WeChat DevTools MCP/manual UAT for the full flagship story baseline.
+- Verify mini-program service startup uses the real public backend and does not rely on mock fallback.
+- Verify map coordinate correctness, story route presentation, and 2.5D marker icon assets.
+- Verify story gameplay reveals user-facing steps progressively instead of displaying operator configuration details.
+- Verify media playback and cache/memory behavior under repeated story entry/exit.
 - Keep provider, COS, and AI keys outside tracked files.
 
 ### Blockers/Concerns
